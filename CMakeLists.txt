@@ -130,6 +130,7 @@ set(INTERFACE_FILES
         Interface/ImguiFormulaEditor.cpp
         Interface/ImguiConvergencePlotter.cpp
         Interface/ImguiTexturePlotter.cpp
+        Interface/ImguiProfilePlotter.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

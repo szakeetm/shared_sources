@@ -1,6 +1,11 @@
 #include "ImguiWindowBase.h"
 #include "imgui.h"
 
+void ImWindow::Init(Interface* mApp_)
+{
+	mApp = mApp_;
+}
+
 void ImWindow::Show()
 {
 	drawn = true;

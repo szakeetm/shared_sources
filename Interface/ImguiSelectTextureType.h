@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "ImguiWindowBase.h"
+#include "Interface.h"
 
 class ImSelectTextureType : public ImWindow{
 public:
@@ -12,7 +13,6 @@ public:
 		addSelect,
 		rmvSelect
 	};
-	void Init();
 	void Draw();
 protected:
 	size_t squareTextrueCheck = 2;
@@ -30,6 +30,6 @@ protected:
 	std::string exactlyInput = "";
 	std::string minInput = "";
 	std::string maxInput = "";
-	void (*select)(int src);
 	void Preprocess();
+	void Select(int src);
 };

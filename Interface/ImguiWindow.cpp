@@ -186,7 +186,7 @@ void ImguiWindow::init() {
     smartSelect = ImSmartSelection();
     selByNum = ImSelectDialog();
     selByTex = ImSelectTextureType();
-    selByTex.Init();
+    selByTex.Init(mApp);
     facetMov = ImFacetMove();
     facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
@@ -202,6 +202,8 @@ void ImguiWindow::init() {
     convPlot.Init(mApp);
     textPlot = ImTexturePlotter();
     textPlot.Init(mApp);
+    profPlot = ImProfilePlotter();
+    profPlot.Init(mApp);
 
     RegisterShortcuts();
 
@@ -387,6 +389,7 @@ void ImguiWindow::renderSingle() {
         formulaEdit.Draw();
         convPlot.Draw();
         textPlot.Draw();
+        profPlot.Draw();
 
         shortcutMan.DoShortcuts();
 

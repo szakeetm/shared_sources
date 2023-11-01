@@ -14,4 +14,5 @@ public:
 protected:
 	bool drawn = false;
 	float txtW=0, txtH=0;
+	Interface* mApp;
 };
