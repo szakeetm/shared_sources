@@ -21,7 +21,6 @@ protected:
 	bool isDragging = false;
 	// UI variables
 	float dummyWidth = 0;
-	bool autoSize = true;
 	std::string name = "Texture Plotter []###TexturePlotter";
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
@@ -34,4 +33,7 @@ protected:
 	size_t selFacetId;
 	double maxValue;
 	size_t maxX, maxY;
+	int columnFlags = 0;
+	int tableFlags = 0;
+	int columnWidth;
 };

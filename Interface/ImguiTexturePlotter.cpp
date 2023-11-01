@@ -14,7 +14,16 @@ extern MolFlow* mApp;
 
 void ImTexturePlotter::Draw()
 {
+	// todo: shortcuts tooltip
+	static bool resizableColumns = false;
+	static bool fitToWindow = false;
 	if (!drawn) return;
+	
+	// assemble table & columns flags
+	tableFlags = 0;
+	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
+	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
+	
 	std::vector<size_t> facets = interfGeom->GetSelectedFacets();
 	if (facets.size() > 0) {
 		if (facets[0] != selFacetId) {
@@ -30,13 +39,13 @@ void ImTexturePlotter::Draw()
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
 	}
-	ImGui::SetNextWindowSizeConstraints(ImVec2(65 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(75 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
 	if (ImGui::Button("Save")) {
-		
+		SaveToFile();
 	} ImGui::SameLine();
 	if (ImGui::Button("FindMax")) {
 		selection.clear();
@@ -47,15 +56,25 @@ void ImTexturePlotter::Draw()
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
 	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingment rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
-	if (ImGui::Button("Autosize")) {} ImGui::SameLine();
-	ImGui::Checkbox("Autosize on every update (disable for smooth scrolling)", &autoSize);
+	ImGui::Checkbox("Resizable columns", &resizableColumns); ImGui::SameLine();
+	ImGui::Checkbox("Fit to window", &fitToWindow);
 	ImGui::SameLine();
+	if (ImGui::Button("Autosize to data")) {
+		resizableColumns = false;
+		fitToWindow = false;
+	}
+	ImGui::SameLine();
+	if (ImGui::Button("Autosize to window")) {
+		resizableColumns = false;
+		fitToWindow = true;
+	}
 	ImGui::SameLine();
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (8.25));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();
+
 }
 
 void ImTexturePlotter::Init(Interface* mApp_)
@@ -75,9 +94,7 @@ void ImTexturePlotter::DrawTextureTable()
 	if (width < 1 || height < 1) return;
 	if (data.size() != width) getData();
 	
-	if (ImGui::BeginTable("##TPTable", width+1,	  ImGuiTableFlags_Borders
-												| ImGuiTableFlags_ScrollX
-												| ImGuiTableFlags_ScrollY)) {
+	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags)) {
 		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
 			selectionStart = ImGui::GetMousePos();
 			isDragging = true;
@@ -89,14 +106,20 @@ void ImTexturePlotter::DrawTextureTable()
 
 		if (isDragging) {
 			selectionEnd = ImGui::GetMousePos();
-			if (selectionStart.x < selectionEnd.x) selectionRect = ImRect(selectionStart, selectionEnd);
-			else selectionRect = ImRect(selectionEnd, selectionStart); // in case the selection starts further down the table than it ends
+			double startx, starty, endx, endy;
+			startx = selectionStart.x < selectionEnd.x ? selectionStart.x : selectionEnd.x;
+			starty = selectionStart.y < selectionEnd.y ? selectionStart.y : selectionEnd.y;
+
+			endx = selectionStart.x > selectionEnd.x ? selectionStart.x : selectionEnd.x;
+			endy = selectionStart.y > selectionEnd.y ? selectionStart.y : selectionEnd.y;
+
+			selectionRect = ImRect(startx,starty,endx,endy); // in case the selection starts further down the table than it ends
 		}
 		ImGui::TableSetupScrollFreeze(1, 1);
 		//headers
-		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 4); // corner
+		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < width; ++i) {
-			ImGui::TableSetupColumn(std::to_string(i + 1).c_str());
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), columnFlags, columnWidth*txtW);
 		}
 		ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 		ImGui::TableSetColumnIndex(0);
@@ -107,8 +130,6 @@ void ImTexturePlotter::DrawTextureTable()
 			ImGui::PushID(i+1);
 			std::string id(column_name);
 			if (ImGui::Selectable(id, false)) SelectColumn(i);
-			//ImGui::SameLine();
-			//ImGui::TableHeader(column_name);
 			ImGui::PopID();
 		}
 		hovered = false;
@@ -153,7 +174,7 @@ void ImTexturePlotter::DrawTextureTable()
 		}
 		ImGui::EndTable();
 		if (!ImGui::IsMouseDown(0)) isDragging = false; // end drag
-		if(isDragging) ImGui::GetWindowDrawList()->AddRectFilled(selectionStart, selectionEnd, IM_COL32(100, 100, 255, 64));
+		if(isDragging) ImGui::GetWindowDrawList()->AddRectFilled(selectionStart, selectionEnd, IM_COL32(64, 128, 255, 64));
 	}
 }
 
@@ -422,44 +443,45 @@ bool ImTexturePlotter::SaveToFile()
 	if (!selFacet) return false;
 
 	// find selection bounds
-	int startRow=-1, startCol=-1, endRow=-1, endCol=-1;
-	if (selection.size() == 0) {
+	int startRow=height, startCol=width, endRow=0, endCol=0;
+	if (selection.size() == 0) { // no selection, export all
 		startRow = 0;
 		startCol = 0;
-		endRow = height;
-		endCol = width;
+		endRow = height-1;
+		endCol = width-1;
 	}
 	else {
 		for (size_t y = 0; y < height; y++) {
 			for (size_t x = 0; x < width; x++) {
 				bool isSel = IsCellSelected(y, x);
-				if (isSel && startRow == -1) startRow = y;
-				if (isSel && startCol == -1) startCol = x;
-				if (isSel && x > endCol) endCol = x;
-				if (isSel && x > endRow) endRow = y;
-				if (!isSel && (x < endRow || y < endCol)) {
-					ImIOWrappers::InfoPopup("Error", "Selection is not square");
-					return false;
+				if (isSel) {
+					if (y < startRow) startRow = y;
+					if (x < startCol) startCol = x;
+					if (y > endRow) endRow = y;
+					if (x > endCol) endCol = x;
 				}
 			}
 		}
 	}
-	
+	// wrtie to file
 	std::string fileFilters = "txt";
 	std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 	if (!fn.empty()) {
 		FILE* f = fopen(fn.c_str(), "w");
-		if (f == NULL) ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
-		return false;
-
-		std::string out;
-		for (size_t row = startRow; row < endRow; row++) {
-			for (size_t col = startCol; col < endCol; col++) {
-
-			}
+		if (f == NULL) {
+			ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
+			return false;
 		}
-		// wrtie to file
+		std::string out;
+		for (size_t row = startRow; row <= endRow; row++) {
+			for (size_t col = startCol; col <= endCol; col++) {
+				out.append(data[row][col]);
+				out.append("\t");
+			}
+			out.append("\n");
+		}
 		fprintf(f, out.c_str());
+		fclose(f);
 	}
-	return false;
+	return true;
 }
