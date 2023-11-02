@@ -257,6 +257,28 @@ std::string molflowToAscii(std::string text) {
     return text;
 }
 
+std::string findAndReplace(std::string text, std::string find, std::string replace) {
+    size_t pos = 0;
+    std::string out = text;
+    while ((pos = out.find(find, pos)) != std::string::npos) {
+        out.replace(pos, find.length(), replace);
+        pos += replace.length();
+    }
+    return out;
+}
+
+std::string molflowToUnicode(std::string text)
+{
+    std::string out = text;
+    
+    out = findAndReplace(out, "\201", u8"u\u20D7"); // vector u
+    out = findAndReplace(out, "\202", u8"v\u20D7"); // vector v
+    out = findAndReplace(out, "\262", u8"\u00B4"); // ^2
+    out = findAndReplace(out, "\263", u8"\u00B3"); // ^3
+    
+    return out;
+}
+
 bool iequals(const std::string& str1, const std::string& str2)
 {
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
