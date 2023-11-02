@@ -52,6 +52,7 @@ void ImProfilePlotter::Draw()
 	} ImGui::SameLine();
 	if(ImGui::Button("Remove all")) {
 		data.clear();
+		data.shrink_to_fit();
 		drawManual = false;
 	}
 	ImGui::Text("Display as:");
@@ -67,13 +68,13 @@ void ImProfilePlotter::Draw()
 		if (lineWidth < 0.5) lineWidth = 0.5;
 	}
 	ImGui::SameLine();
-	ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom);
+	ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom); // todo
 
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	if (ImGui::Button("Select plotted facets")) {
-		interfGeom->Clear();
+		interfGeom->UnselectAll();
 		for (const auto& facet : data) {
 			interfGeom->GetFacet(facet.facetID)->selected = true;
 		}
@@ -106,7 +107,7 @@ void ImProfilePlotter::DrawProfileGraph()
 {
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 8.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (const auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.facetID+1);
 			ImPlot::PlotLine(name.c_str(), profile.x.data(), profile.y.data(),profile.x.size());
@@ -147,7 +148,7 @@ void ImProfilePlotter::AddCurve()
 	std::vector<size_t> facetIds = manualFacetList();
 
 	for (const auto& facetId : facetIds) {
-		if (!IsPlotted(facetId)) {
+		if (!IsPlotted(facetId)&&interfGeom->GetFacet(facetId)->sh.isProfile) {
 			data.push_back({ facetId, std::vector<double>(), std::vector<double>() });
 		}
 	}
@@ -155,16 +156,25 @@ void ImProfilePlotter::AddCurve()
 
 void ImProfilePlotter::RemoveCurve()
 {
-	std::vector<size_t> facetIds = manualFacetList();
-	facetIds.push_back(selectedProfile);
-	for (size_t i = data.size(); i > 0; --i) {
-		for (const auto& facetId : facetIds) {
-			if (data[i].facetID == facetId) {
-				data.erase(data.begin() + i);
-				break;
+	if (data.size() == 0) return;
+	if (selectedProfile == -1) {
+		std::vector<size_t> facetIds = manualFacetList();
+		long long i = data.size()-1; // has to be signed
+		for (; i >= 0 && i<data.size(); i--) {
+			for (const auto& facetId : facetIds) {
+				if (data[i].facetID == facetId) {
+					data.erase(data.begin() + i);
+					break;
+				}
 			}
 		}
+		return;
 	}
+	for (size_t i = 0; i < data.size(); i++)
+		if (data[i].facetID == selectedProfile) {
+			data.erase(data.begin() + i);
+			return;
+		}
 }
 
 void ImProfilePlotter::computeProfiles()
