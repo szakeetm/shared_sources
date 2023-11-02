@@ -18,6 +18,10 @@ bool ImConvergencePlotter::PlotNewExpression() {
 	// Behaviour copied from old gui without full understanding of it
 	// Verification needed
 	// It seems legacy was not working
+	if (expression.empty())
+	{
+		return false;
+	}
 	formula = GLFormula();
 	formula.SetExpression(expression);
 	if (!formula.Parse()) {
@@ -44,6 +48,7 @@ bool ImConvergencePlotter::PlotNewExpression() {
 
 void ImConvergencePlotter::computeManual()
 {
+	if (!drawManual) return;
 	std::vector<double>().swap(manualxValues);
 	std::vector<double>().swap(manualyValues);
 	auto xVariable = formula.GetVariableAt(0);
@@ -104,10 +109,9 @@ void ImConvergencePlotter::Draw()
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 
 	if (ImGui::Button("Add curve")) {
-		// todo add check if already added
 		if (Contains(drawnFormulas, selectedFormula)) {
 			ImIOWrappers::InfoPopup("Info", "Profile already plotted");
-		} else	drawnFormulas.push_back(selectedFormula);
+		} else if(selectedFormula!=-1)	drawnFormulas.push_back(selectedFormula);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove curve")) {
 		if (Contains(drawnFormulas, selectedFormula)) {

@@ -13,16 +13,16 @@ enum class ProfileRecordModes {
 	TanSpeed,
 	NUMITEMS
 };
-
+// explicidly defined values to save many lines of ImGui code
 enum class ProfileDisplayModes {
-	Raw,
-	Pressure,
-	ImpRate,
-	Density,
-	Speed,
-	Angle,
-	NormalizeTo1,
-	NUMITEMS
+	Raw = 0,
+	Pressure = 1,
+	ImpRate = 2,
+	Density = 3,
+	Speed = 4,
+	Angle = 5,
+	NormalizeTo1 = 6,
+	NUMITEMS = 7
 };
 
 extern std::map<ProfileRecordModes, std::pair<std::string, std::string>> profileRecordModeDescriptions;

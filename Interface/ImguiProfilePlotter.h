@@ -1,6 +1,8 @@
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
 #include <string>
+#include <vector>
+#include "GLFormula.h"
 
 class ImProfilePlotter : public ImWindow {
 public:
@@ -8,15 +10,41 @@ public:
 	void Init(Interface* mApp_);
 private:
 	void DrawProfileGraph();
+	void ShowFacet();
+	void AddCurve();
+	void RemoveCurve();
+	void computeProfiles();
+
+	void UpdateSelection();
+
 	bool PlotNewExpression();
 	void computeManual();
+
+	bool IsPlotted(size_t facetId);
+
+	std::vector<size_t> manualFacetList();
+
+	typedef struct {
+		size_t facetID;
+		std::vector<double> x;
+		std::vector<double> y;
+	} ImProfile;
+
+	// data in a vector, one entry per facet
+	std::vector<ImProfile> data;
+	ImProfile manualPlot;
+	int viewIdx = 1;
+
+	size_t profileSize = 100;
+	bool correctForGas = false;
 	InterfaceGeometry* interfGeom;
+	size_t selectedProfile = -1;
+	InterfaceFacet* f = 0;
 	int nProfileFacets = 0;
 	std::string manualFacetSel;
 	bool colorBlind = false, identProfilesInGeom = false;
 	float lineWidth = 2;
 	std::string expression;
-	double step = 1.0;
-	int startX = 0, endX = 1000;
+	GLFormula formula;
 	bool drawManual = false;
 };
