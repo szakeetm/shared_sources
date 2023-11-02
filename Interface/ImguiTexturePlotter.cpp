@@ -123,7 +123,7 @@ void ImTexturePlotter::DrawTextureTable()
 		}
 		ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
 		ImGui::TableSetColumnIndex(0);
-		ImGui::Text("v\\u"); // todo unicode vector symbols
+		ImGui::Text(u8"v\u20D7\\u\u20D7");
 		for (int i = 0; i < width; ++i) {
 			ImGui::TableSetColumnIndex(i + 1);
 			const char* column_name = ImGui::TableGetColumnName(i+1); // Retrieve name passed to TableSetupColumn()
@@ -139,8 +139,10 @@ void ImTexturePlotter::DrawTextureTable()
 			if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
 				SelectRow(i);
 			}
-			for (int j = 0; j < width; j++) {
-				ImGui::TableSetColumnIndex(j+1);
+			for (int j = 0; j <= width; j++) {
+				if (j != width) {
+					ImGui::TableSetColumnIndex(j+1);
+				}
 				bool isSelected = IsCellSelected(i,j);
 				if (isDragging) {
 					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
@@ -154,6 +156,7 @@ void ImTexturePlotter::DrawTextureTable()
 					}
 				}
 				if (ImGui::IsItemHovered()) hovered = true;
+				if (j == width) continue;
 				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + std::to_string(j), isSelected)) {
 					if (isDragging) continue;
 					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
@@ -180,7 +183,10 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::getData()
 {
-	if (!mApp->worker.ReloadIfNeeded()) return;
+	{
+		LockWrapper lWrap(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded()) return;
+	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
 	
