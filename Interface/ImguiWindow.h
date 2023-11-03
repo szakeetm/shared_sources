@@ -36,6 +36,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiConvergencePlotter.h"
 #include "ImguiTexturePlotter.h"
 #include "ImguiProfilePlotter.h"
+#include "ImguiHistogramPlotter.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -82,6 +83,7 @@ public:
     ImConvergencePlotter convPlot;
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
+    ImHistogramPlotter histPlot;
 protected:
     ImGuiConfigFlags storedConfigFlags;
 

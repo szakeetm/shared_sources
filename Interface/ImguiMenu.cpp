@@ -639,11 +639,14 @@ void ProfilePlotterMenuPress() {
 #endif //MOLFLOW
 
 void HistogramPlotterMenuPress() {
+    mApp->imWnd->histPlot.Show();
+    /*
     if (!mApp->histogramPlotter || !mApp->histogramPlotter->IsVisible()) {
         SAFE_DELETE(mApp->histogramPlotter);
         mApp->histogramPlotter = new HistogramPlotter(&mApp->worker);
     }
     mApp->histogramPlotter->SetVisible(true);
+    */
 }
 void TextureScalingMenuPress() {
     if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {

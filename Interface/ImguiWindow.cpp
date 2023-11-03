@@ -204,6 +204,8 @@ void ImguiWindow::init() {
     textPlot.Init(mApp);
     profPlot = ImProfilePlotter();
     profPlot.Init(mApp);
+    histPlot = ImHistogramPlotter();
+    histPlot.Init(mApp);
 
     RegisterShortcuts();
 
@@ -390,6 +392,7 @@ void ImguiWindow::renderSingle() {
         convPlot.Draw();
         textPlot.Draw();
         profPlot.Draw();
+        histPlot.Draw();
 
         shortcutMan.DoShortcuts();
 

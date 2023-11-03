@@ -117,6 +117,7 @@ void ImProfilePlotter::DrawProfileGraph()
 		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x.data(), manualPlot.y.data(), manualPlot.x.size());
 		ImPlot::EndPlot();
 	}
+	FacetHiglighting(identProfilesInGeom);
 }
 
 void ImProfilePlotter::ShowFacet()
