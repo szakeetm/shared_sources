@@ -5,6 +5,7 @@
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Interface.h"
 #include "ImguiMenu.h"
+#include "ImguiExtensions.h"
 #include <sstream>
 
 
@@ -345,9 +346,17 @@ void ImFormulaEditor::Draw() {
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
 	ImGui::SameLine();
 	if (ImGui::Button("Open convergence plotter >>")) {
+		ImVec2 pos;
+		pos.x = ImGui::GetWindowPos().x + ImGui::GetWindowSize().x + txtW;
+		pos.y = ImGui::GetWindowPos().y;
+		ImGui::SetWindowPos("Convergence Plotter", pos);
 		ImMenu::ConvergencePlotterMenuPress();
 	}
 	if (ImGui::Button("Syntax help")) {
+		ImVec2 pos;
+		pos.x = ImGui::GetWindowPos().x + ImGui::GetWindowSize().x + txtW;
+		pos.y = ImGui::GetWindowPos().y;
+		ImGui::SetWindowPos("Formula Editor Syntax Help", pos);
 		help.Show();
 	}
 	ImGui::End();
@@ -371,6 +380,7 @@ void ImFormulaEditor::ImFormattingHelp::Draw()
 	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH));
 	ImGui::TextWrapped(formulaSyntax);
 	ImGui::EndChild();
+	ImGui::PlaceAtRegionCenter("Close");
 	if (ImGui::Button("Close")) this->Hide();
 	ImGui::End();
 }

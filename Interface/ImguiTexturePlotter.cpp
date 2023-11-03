@@ -6,6 +6,7 @@
 #include "Helper/MathTools.h"
 #include "ImguiPopup.h"
 #include <imgui_internal.h>
+#include "ImguiExtensions.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -14,7 +15,6 @@ extern MolFlow* mApp;
 
 void ImTexturePlotter::Draw()
 {
-	// todo: shortcuts tooltip
 	static bool resizableColumns = false;
 	static bool fitToWindow = false;
 	if (!drawn) return;
@@ -39,7 +39,7 @@ void ImTexturePlotter::Draw()
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
 	}
-	ImGui::SetNextWindowSizeConstraints(ImVec2(75 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 5 * txtH),true);
 	DrawTextureTable();
@@ -69,8 +69,10 @@ void ImTexturePlotter::Draw()
 		fitToWindow = true;
 	}
 	ImGui::SameLine();
-	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (8.25));
+	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (11.25));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
+	ImGui::HelpMarker("Click, hold and drag to select multiple\nSelect one and shift+click another to select all inbetween\nHold ctrl to add/substract from selection\nClick selected to deselect");
+	ImGui::SameLine();
 	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();

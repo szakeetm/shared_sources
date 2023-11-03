@@ -6,6 +6,7 @@
 #include "Helper/StringHelper.h"
 #include "Helper/MathTools.h"
 #include "ImguiPopup.h"
+#include "ImguiExtensions.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -58,6 +59,12 @@ void ImProfilePlotter::Draw()
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 30);
 	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
+	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
+		ImGui::SameLine();
+		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
+	}
+
+
 	ImGui::Checkbox("Colorblind mode", &colorBlind);
 	ImGui::SameLine();
 	ImGui::Text("Change linewidth:");
@@ -85,13 +92,16 @@ void ImProfilePlotter::Draw()
 	ImGui::SetNextItemWidth(txtW * 40);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
-		drawManual = PlotNewExpression();
-		computeManual();
+		drawManual = ImUtils::ParseExpression(expression, formula);
+		ImUtils::ComputeManualExpression(drawManual, formula, manualPlot.x, manualPlot.y, profileSize);
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (8.25);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (11.25);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
+	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move");
+	ImGui::SameLine();
 	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();
@@ -134,7 +144,6 @@ void ImProfilePlotter::ShowFacet()
 		}
 	}
 	UpdateSelection();
-
 }
 
 void ImProfilePlotter::AddCurve()
@@ -294,63 +303,6 @@ void ImProfilePlotter::UpdateSelection()
 	interfGeom->UpdateSelection();
 	mApp->UpdateFacetParams(true);
 	mApp->UpdateFacetlistSelected();
-}
-
-bool ImProfilePlotter::PlotNewExpression()
-{
-	// repeated code from Convergence Plotter - todo - move it out of those classes
-	if (expression.empty())
-	{
-		return false;
-	}
-	formula = GLFormula();
-	formula.SetExpression(expression);
-	if (!formula.Parse()) {
-		ImIOWrappers::InfoPopup("Error", formula.GetParseErrorMsg());
-		return false;
-	}
-	int nbVar = formula.GetNbVariable();
-	if (nbVar == 0) {
-		ImIOWrappers::InfoPopup("Error", "Variable x not found");
-		return false;
-	}
-	if (nbVar > 1) {
-		ImIOWrappers::InfoPopup("Error", "Too many varuables or an unknown constant"); // Legacy had grammar issiues
-		return false;
-	}
-	auto xVariable = formula.GetVariableAt(0);
-	if (!iequals(xVariable->varName, "x")) {
-		ImIOWrappers::InfoPopup("Error", "Variable x not found");
-		return false;
-	}
-	formula.SetName(expression);
-	return true;
-}
-
-void ImProfilePlotter::computeManual()
-{
-	if (!drawManual) return;
-	manualPlot.x.clear();
-	manualPlot.y.clear();
-	auto xVariable = formula.GetVariableAt(0);
-	for (double i = 0; i < profileSize; i++) {
-		xVariable->value = static_cast<double>(i);
-		double y;
-		try {
-			y = formula.Evaluate();
-		}
-		catch (...) {
-			if (formula.hasEvalError) std::cout << formula.evalErrorMsg << std::endl;
-			formula.hasEvalError = false;
-			continue; //Eval. error, but maybe for other x it is possible to evaluate (ex. div by zero)
-		}
-		manualPlot.y.push_back(y);
-		manualPlot.x.push_back(i);
-	}
-	if (manualPlot.x.size() == 0) {
-		ImIOWrappers::InfoPopup("Error", "Error evaluating formula");
-		drawManual = false;
-	}
 }
 
 // using GLColor type because it is deeply engrained

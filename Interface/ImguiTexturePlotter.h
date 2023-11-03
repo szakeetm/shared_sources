@@ -18,22 +18,23 @@ protected:
 	void SelectColumn(size_t col);
 	void BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end);
 	bool SaveToFile();
-	bool isDragging = false;
+
 	// UI variables
+	bool isDragging = false;
 	float dummyWidth = 0;
 	std::string name = "Texture Plotter []###TexturePlotter";
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
+	
 	// app + data variables
-	Interface* mApp;
 	InterfaceGeometry* interfGeom;
 	InterfaceFacet* selFacet;
-	size_t width = 0, height = 0;
-	std::vector<std::vector<std::string>> data;
+	size_t width = 0, height = 0; // table size
+	std::vector<std::vector<std::string>> data; // 2d vector for values
 	size_t selFacetId;
-	double maxValue;
-	size_t maxX, maxY;
+	double maxValue; // value of max value
+	size_t maxX, maxY; // column and row of max value
 	int columnFlags = 0;
 	int tableFlags = 0;
-	int columnWidth;
+	int columnWidth; // column width (is multiplied by character width)
 };

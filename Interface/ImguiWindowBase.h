@@ -1,4 +1,7 @@
 #pragma once
+#include <string>
+#include <vector>
+#include "GLFormula.h"
 
 class Interface;
 
@@ -16,3 +19,9 @@ protected:
 	float txtW=0, txtH=0;
 	Interface* mApp;
 };
+
+// functions used by some(>1) ImWindows but not common enough (==2) to be member functions
+namespace ImUtils {
+	bool ParseExpression(const std::string& expression, GLFormula& formula);
+	void ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, size_t count);
+}

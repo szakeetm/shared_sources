@@ -7,69 +7,11 @@
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
+#include "ImguiExtensions.h"
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
 	ImPlot::GetStyle().AntiAliasedLines = true;
-}
-
-bool ImConvergencePlotter::PlotNewExpression() {
-	// Could not find documentation or help on how this is supposed to behave
-	// Behaviour copied from old gui without full understanding of it
-	// Verification needed
-	// It seems legacy was not working
-	if (expression.empty())
-	{
-		return false;
-	}
-	formula = GLFormula();
-	formula.SetExpression(expression);
-	if (!formula.Parse()) {
-		ImIOWrappers::InfoPopup("Error", formula.GetParseErrorMsg());
-		return false;
-	}
-	int nbVar = formula.GetNbVariable();
-	if (nbVar == 0) {
-		ImIOWrappers::InfoPopup("Error", "Variable x not found");
-		return false;
-	}
-	if (nbVar > 1) {
-		ImIOWrappers::InfoPopup("Error", "Too many varuables or an unknown constant"); // Legacy had grammar issiues
-		return false;
-	}
-	auto xVariable = formula.GetVariableAt(0);
-	if (!iequals(xVariable->varName, "x")) {
-		ImIOWrappers::InfoPopup("Error", "Variable x not found");
-		return false;
-	}
-	formula.SetName(expression);
-	return true;
-}
-
-void ImConvergencePlotter::computeManual()
-{
-	if (!drawManual) return;
-	std::vector<double>().swap(manualxValues);
-	std::vector<double>().swap(manualyValues);
-	auto xVariable = formula.GetVariableAt(0);
-	for (double i = startX; i < endX; i+=step) {
-		xVariable->value = static_cast<double>(i);
-		double y;
-		try {
-			y = formula.Evaluate();
-		}
-		catch (...) {
-			if (formula.hasEvalError) std::cout << formula.evalErrorMsg << std::endl;
-			formula.hasEvalError = false;
-			continue; //Eval. error, but maybe for other x it is possible to evaluate (ex. div by zero)
-		}
-		manualyValues.push_back(y);
-		manualxValues.push_back(i);
-	}
-	if (manualxValues.size() == 0) {
-		ImIOWrappers::InfoPopup("Error", "Error evaluating formula");
-		drawManual = false;
-	}
 }
 
 void ImConvergencePlotter::Draw()
@@ -152,8 +94,8 @@ void ImConvergencePlotter::Draw()
 	ImGui::SetNextItemWidth(txtW * 40);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
-		drawManual = PlotNewExpression();
-		computeManual();
+		drawManual = ImUtils::ParseExpression(expression, formula);
+		ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX - startX);
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Start X:"); ImGui::SameLine();
@@ -166,8 +108,11 @@ void ImConvergencePlotter::Draw()
 	ImGui::SetNextItemWidth(txtW * 12);
 	ImGui::InputDouble("##Step", &step,1,4,"%.2f");
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (8.25);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (11.25);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
+	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move");
+	ImGui::SameLine();
 	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();

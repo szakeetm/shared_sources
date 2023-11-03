@@ -11,18 +11,16 @@ public:
 	void Init(Interface* mApp_);
 private:
 	void DrawProfileGraph();
+
+	// button actions
 	void ShowFacet();
 	void AddCurve();
 	void RemoveCurve();
 	void computeProfiles();
-
-	void UpdateSelection();
-
-	bool PlotNewExpression();
-	void computeManual();
-
 	void FacetHiglighting(bool toggle);
 
+	// helper / utility functions
+	void UpdateSelection();
 	bool IsPlotted(size_t facetId);
 
 	std::vector<size_t> manualFacetList();
@@ -34,13 +32,13 @@ private:
 		ImVec4 color;
 	} ImProfile;
 
-	// data in a vector, one entry per facet
+	int viewIdx = 1;
 	std::vector<ImProfile> data;
 	ImProfile manualPlot;
-	int viewIdx = 1;
-
 	size_t profileSize = 100;
+
 	bool correctForGas = false;
+
 	InterfaceGeometry* interfGeom;
 	size_t selectedProfile = -1;
 	InterfaceFacet* f = 0;

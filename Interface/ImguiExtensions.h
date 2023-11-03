@@ -58,5 +58,6 @@ namespace ImGui {
     Spinner(const char *label, float radius, int thickness, const ImU32 &color);
 
     void Loader(float& progress, float& time);
+    void HelpMarker(const std::string& text);
 }
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H
