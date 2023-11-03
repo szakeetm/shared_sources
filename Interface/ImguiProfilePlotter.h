@@ -1,3 +1,4 @@
+#include <imgui.h>
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
 #include <string>
@@ -20,6 +21,8 @@ private:
 	bool PlotNewExpression();
 	void computeManual();
 
+	void FacetHiglighting(bool toggle);
+
 	bool IsPlotted(size_t facetId);
 
 	std::vector<size_t> manualFacetList();
@@ -28,6 +31,7 @@ private:
 		size_t facetID;
 		std::vector<double> x;
 		std::vector<double> y;
+		ImVec4 color;
 	} ImProfile;
 
 	// data in a vector, one entry per facet

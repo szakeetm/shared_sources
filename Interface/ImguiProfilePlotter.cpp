@@ -1,5 +1,4 @@
 #include "ImguiProfilePlotter.h"
-#include <imgui.h>
 #include "Facet_shared.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "implot/implot.h"
@@ -68,7 +67,9 @@ void ImProfilePlotter::Draw()
 		if (lineWidth < 0.5) lineWidth = 0.5;
 	}
 	ImGui::SameLine();
-	ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom); // todo
+	if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
+		FacetHiglighting(identProfilesInGeom);
+	}
 
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18);
@@ -108,9 +109,10 @@ void ImProfilePlotter::DrawProfileGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
-		for (const auto& profile : data) {
+		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.facetID+1);
 			ImPlot::PlotLine(name.c_str(), profile.x.data(), profile.y.data(),profile.x.size());
+			profile.color = ImPlot::GetLastItemColor();
 		}
 		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x.data(), manualPlot.y.data(), manualPlot.x.size());
 		ImPlot::EndPlot();
@@ -348,6 +350,27 @@ void ImProfilePlotter::computeManual()
 		ImIOWrappers::InfoPopup("Error", "Error evaluating formula");
 		drawManual = false;
 	}
+}
+
+// using GLColor type because it is deeply engrained
+// in geometry shared code, could potentially modify
+// geometry code to use ImVec4 in the future
+void ImProfilePlotter::FacetHiglighting(bool toggle)
+{
+	if (!toggle) {
+		interfGeom->SetPlottedFacets(std::map<int, GLColor>());
+		UpdateSelection();
+		return;
+	}
+	std::map<int, GLColor> colormap;
+	for (const auto& plot : data) {
+		std::pair<int, GLColor> pair;
+		pair.first = plot.facetID;
+		pair.second = GLColor(plot.color.x*255, plot.color.y*255, plot.color.z*255);
+		colormap.emplace(pair);
+	}
+	interfGeom->SetPlottedFacets(colormap);
+	UpdateSelection();
 }
 
 bool ImProfilePlotter::IsPlotted(size_t facetId)
