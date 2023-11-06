@@ -42,8 +42,23 @@ void ImHistogramPlotter::Draw()
 		settingsWindow.Toggle();
 	} ImGui::SameLine();
 	
+	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
+		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
+		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime));
+
+	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
-	if(ImGui::BeginCombo("##HIST","")) {
+	if (ImGui::BeginCombo("##HIST", comboOpts.size()==0 || comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
+		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
+
+		for (const auto facetId : comboOpts) {
+			InterfaceFacet* f = interfGeom->GetFacet(facetId);
+			bool showFacet = (plotTab == bounces && f->sh.facetHistogramParams.recordBounce)
+				|| (plotTab == distance && f->sh.facetHistogramParams.recordDistance)
+				|| (plotTab == time && f->sh.facetHistogramParams.recordTime);
+			if (showFacet && ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
+		}
+
 		ImGui::EndCombo();
 	} ImGui::SameLine();
 	if (ImGui::Button("<- Show Facet")) {} ImGui::SameLine();
@@ -57,9 +72,11 @@ void ImHistogramPlotter::Draw()
 
 void ImHistogramPlotter::Init(Interface* mApp_)
 {
-	__super::Init(mApp_);
+	ImWindow::Init(mApp_);
+	interfGeom = mApp->worker.GetGeometry();
 	settingsWindow = ImHistagramSettings();
 	settingsWindow.Init(mApp_);
+	settingsWindow.parent = this;
 }
 
 void ImHistogramPlotter::DrawPlot()
@@ -254,6 +271,7 @@ bool ImHistogramPlotter::ImHistagramSettings::Apply()
 #endif
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	for (const auto facetId : selectedFacets) {
+		parent->comboOpts.push_back(facetId);
 		InterfaceFacet* f = interfGeom->GetFacet(facetId);
 		f->sh.facetHistogramParams.recordBounce = globalHistSet.globalRecBounce;
 		if (globalHistSet.maxRecNbBouncesInput != "...") f->sh.facetHistogramParams.nbBounceMax = globalHistSet.nbBouncesMax;
@@ -299,5 +317,7 @@ void ImHistogramPlotter::ImHistagramSettings::Settings(histSet& set)
 	ImGui::InputTextRightSide("Time bin size (s):", &set.timeBinSizeInput, 0, txtW * 6);
 	if (!set.amIDisabled && !set.recTime) ImGui::EndDisabled();
 
+	// to the best of my understanding, this does not do anything in the Legacy code
+	// if that is the case it can be removed
 	ImGui::Text("Memory estimate of histogram: " + (set.showMemEst ? std::to_string(set.memEst) : ""));
 }

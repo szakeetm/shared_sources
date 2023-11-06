@@ -17,6 +17,7 @@ protected:
 	public:
 		void Draw();
 		float width;
+		ImHistogramPlotter* parent;
 	protected:
 		typedef struct {
 			bool amIDisabled = true;
@@ -52,4 +53,6 @@ protected:
 	plotTabs plotTab = bounces;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
+	std::vector<size_t> comboOpts;
+	long comboSelection=-2;
 };
