@@ -56,6 +56,18 @@ size_t countLines(const std::stringstream& ss, bool countEmpty=true);
 
 namespace Util {
     std::string getTimepointString();
-    bool getNumber(double* num, std::string str);
+
+    template<typename T>
+    bool getNumber(T* num, std::string str)
+    {
+        try {
+            *num = static_cast<T>(std::stod(str));
+            return true;
+        }
+        catch (std::exception e)
+        {
+            return false;
+        }
+    }
 }
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

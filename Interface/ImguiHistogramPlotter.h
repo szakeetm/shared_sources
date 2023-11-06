@@ -20,9 +20,9 @@ protected:
 	protected:
 		typedef struct {
 			bool amIDisabled = true;
-			bool recBounce = false;
+			bool globalRecBounce = false;
 			std::string maxRecNbBouncesInput = "10000";
-			size_t maxRecNbBounces = 10000;
+			size_t nbBouncesMax = 10000;
 			std::string bouncesBinSizeInput = "1";
 			int bouncesBinSize = 1;
 

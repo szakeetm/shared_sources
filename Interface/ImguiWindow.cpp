@@ -184,7 +184,9 @@ void ImguiWindow::init() {
     progress = ImProgress();
     progress.Hide();
     smartSelect = ImSmartSelection();
+    smartSelect.Init(mApp);
     selByNum = ImSelectDialog();
+    selByNum.Init(mApp);
     selByTex = ImSelectTextureType();
     selByTex.Init(mApp);
     facetMov = ImFacetMove();
