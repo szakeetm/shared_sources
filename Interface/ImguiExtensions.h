@@ -18,8 +18,7 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-#define MOLFLOW_PROJ_IMGUIEXTENSIONS_H
+#pragma once
 
 #include "imgui/imgui.h"
 #include <string>
@@ -46,6 +45,7 @@ namespace ImGui {
 
     bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f");
     bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
+    bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width = 0);
     bool TriState(const char* desc, size_t* v);
 
 // Add spacing of checkbox width
@@ -60,4 +60,3 @@ namespace ImGui {
     void Loader(float& progress, float& time);
     void HelpMarker(const std::string& text);
 }
-#endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

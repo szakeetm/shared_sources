@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "GLFormula.h"
+#include "Geometry_shared.h"
 
 class Interface;
 
@@ -18,6 +19,7 @@ protected:
 	bool drawn = false;
 	float txtW=0, txtH=0;
 	Interface* mApp;
+	InterfaceGeometry* interfGeom;
 };
 
 // functions used by some(>1) ImWindows but not common enough (==2) to be member functions

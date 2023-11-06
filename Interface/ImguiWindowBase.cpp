@@ -3,9 +3,15 @@
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
 
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+extern MolFlow* mApp;
+#endif
+
 void ImWindow::Init(Interface* mApp_)
 {
 	mApp = mApp_;
+	interfGeom = mApp->worker.GetGeometry();
 }
 
 void ImWindow::Show()

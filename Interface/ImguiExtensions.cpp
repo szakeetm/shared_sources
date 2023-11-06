@@ -23,10 +23,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "imgui/imgui.h"
 #include <string>
-#include "imgui_stdlib/imgui_stdlib.h"
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include <imgui/imgui_internal.h>
+#include "ImguiExtensions.h"
+
+#include "imgui_stdlib/imgui_stdlib.h"
 
 namespace ImGui {
 // Make the UI compact because there are so many fields
@@ -106,7 +108,7 @@ namespace ImGui {
         return *val != tmp; // true if changed
     }
 
-    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags=0) {
+    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags) {
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
 
@@ -123,6 +125,18 @@ namespace ImGui {
         }
 
         return strcmp(buf,text); // true if changed
+    }
+
+    bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags, float width)
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(desc); ImGui::SameLine();
+        if (width == 0) width = ImGui::CalcTextSize("X").x * 10;
+        ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - width - ImGui::CalcTextSize("X").x,0));
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(width);
+        bool out = ImGui::InputText(("##" + desc), text, flags);
+        return out;
     }
 
 // Add spacing of checkbox width
