@@ -3,6 +3,7 @@
 #include <vector>
 #include "GLFormula.h"
 #include "Geometry_shared.h"
+#include "imgui.h"
 
 class Interface;
 
@@ -27,3 +28,10 @@ namespace ImUtils {
 	bool ParseExpression(const std::string& expression, GLFormula& formula);
 	void ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, size_t count);
 }
+
+typedef struct {
+	size_t facetID;
+	std::vector<double>* x;
+	std::vector<double>* y;
+	ImVec4 color;
+} ImPlotData;

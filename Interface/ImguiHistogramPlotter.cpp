@@ -1,11 +1,11 @@
 #include "ImguiHistogramPlotter.h"
 #include "imgui.h"
-#include "implot/implot.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "Facet_shared.h"
+#include "implot/implot.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -48,7 +48,7 @@ void ImHistogramPlotter::Draw()
 
 	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
-	if (ImGui::BeginCombo("##HIST", comboOpts.size()==0 || comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
+	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
 		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
 
 		for (const auto facetId : comboOpts) {
@@ -61,10 +61,19 @@ void ImHistogramPlotter::Draw()
 
 		ImGui::EndCombo();
 	} ImGui::SameLine();
-	if (ImGui::Button("<- Show Facet")) {} ImGui::SameLine();
-	if (ImGui::Button("Add")) {} ImGui::SameLine();
-	if (ImGui::Button("Remove")) {} ImGui::SameLine();
-	if (ImGui::Button("Remove all")) {} ImGui::SameLine();
+	if (ImGui::Button("<- Show Facet")) {
+		interfGeom->UnselectAll();
+		interfGeom->GetFacet(comboSelection)->selected = true;
+	} ImGui::SameLine();
+	if (ImGui::Button("Add")) {
+		AddPlot();
+	} ImGui::SameLine();
+	if (ImGui::Button("Remove")) {
+		RemovePlot();
+	} ImGui::SameLine();
+	if (ImGui::Button("Remove all")) {
+		data[plotTab].clear();
+	} ImGui::SameLine();
 	ImGui::Checkbox("Normalize", &normalize);
 	ImGui::End();
 	settingsWindow.Draw();
@@ -85,8 +94,51 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==distance) xAxisName = "Distance [cm]";
 	if(plotTab==time) xAxisName = "Time [s]";
 	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH))) {
+		for (auto& plot : data[plotTab]) {
+			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
+			std::string name = plot.facetID == -1 ? "Global" : ("Facet #" + std::to_string(plot.facetID + 1));
+			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), plot.x->size());
+			plot.color = ImPlot::GetLastItemColor();
+		}
 		ImPlot::EndPlot();
 	}
+}
+
+void ImHistogramPlotter::RemovePlot()
+{
+	if (data[plotTab].size() == 0) return;
+	for (size_t i = 0; i < data[plotTab].size(); i++) {
+		if (data[plotTab][i].facetID == comboSelection) {
+			data[plotTab].erase(data[plotTab].begin() + i);
+			return;
+		}
+	}
+}
+
+void ImHistogramPlotter::AddPlot()
+{
+	ImPlotData newPlot;
+	if(comboSelection!=-1) newPlot.facetID = comboSelection;
+	double xSpacing=1;
+	size_t nBins=0;
+	// thanks to pass by reference the values should updata automatically without extra calls
+	switch (plotTab) {
+	case bounces:
+		newPlot.y = comboSelection == -1 ? &mApp->worker.globalHistogramCache.nbHitsHistogram : 0; //y axis
+		xSpacing = comboSelection == -1 ? (double)mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize : 1;
+		nBins = comboSelection == -1 ? mApp->worker.model->sp.globalHistogramParams.GetBounceHistogramSize() : 0;
+		break;
+	case distance:
+		break;
+	case time:
+		break;
+	}
+	// x axis
+	newPlot.x = &std::vector<double>();
+	for (size_t n = 0; n < nBins; n++) {
+		newPlot.x->push_back((double)n * xSpacing);
+	}
+	data[plotTab].push_back(newPlot);
 }
 
 void ImHistogramPlotter::ImHistagramSettings::Draw()
@@ -101,7 +153,7 @@ void ImHistogramPlotter::ImHistagramSettings::Draw()
 	if (ImGui::BeginChild("Global histogram", ImVec2(0, childHeight), true)) {
 		ImGui::TextDisabled("Global histogram");
 		globalHistSet.amIDisabled = false;
-		Settings(globalHistSet);
+		DrawSettingsGroup(globalHistSet);
 	}
 	ImGui::EndChild();
 	if (ImGui::BeginChild("Facet histogram", ImVec2(0, childHeight), true)) {
@@ -112,7 +164,7 @@ void ImHistogramPlotter::ImHistagramSettings::Draw()
 		}
 		
 		// internal ImGui structure for data storage
-		Settings(facetHistSet);
+		DrawSettingsGroup(facetHistSet);
 
 		if (facetHistSet.amIDisabled) ImGui::EndDisabled();
 	}
@@ -297,7 +349,7 @@ bool ImHistogramPlotter::ImHistagramSettings::Apply()
 	return true;
 }
 
-void ImHistogramPlotter::ImHistagramSettings::Settings(histSet& set)
+void ImHistogramPlotter::ImHistagramSettings::DrawSettingsGroup(histSet& set)
 {
 	ImGui::Checkbox("Record bounces until absorbtion", &set.globalRecBounce);
 	if (!set.amIDisabled && !set.globalRecBounce) ImGui::BeginDisabled();

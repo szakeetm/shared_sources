@@ -9,9 +9,11 @@ public:
 protected:
 	//functions
 	void DrawPlot();
+	void RemovePlot();
+	void AddPlot();
 
 	//types
-	enum plotTabs {bounces, distance, time};
+	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
 	
 	class ImHistagramSettings : public ImWindow {
 	public:
@@ -44,7 +46,7 @@ protected:
 		} histSet;
 		histSet globalHistSet, facetHistSet;
 		bool Apply();
-		void Settings(histSet& set);
+		void DrawSettingsGroup(histSet& set);
 	};
 
 	//variables
@@ -54,5 +56,6 @@ protected:
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
 	std::vector<size_t> comboOpts;
+	std::vector<ImPlotData> data[3];
 	long comboSelection=-2;
 };

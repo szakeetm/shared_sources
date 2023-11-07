@@ -93,7 +93,7 @@ void ImProfilePlotter::Draw()
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
 		drawManual = ImUtils::ParseExpression(expression, formula);
-		ImUtils::ComputeManualExpression(drawManual, formula, manualPlot.x, manualPlot.y, profileSize);
+		ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x, *manualPlot.y, profileSize);
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::SameLine();
@@ -121,10 +121,10 @@ void ImProfilePlotter::DrawProfileGraph()
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.facetID+1);
-			ImPlot::PlotLine(name.c_str(), profile.x.data(), profile.y.data(),profile.x.size());
+			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(),profile.x->size());
 			profile.color = ImPlot::GetLastItemColor();
 		}
-		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x.data(), manualPlot.y.data(), manualPlot.x.size());
+		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
 		ImPlot::EndPlot();
 	}
 	FacetHiglighting(identProfilesInGeom);
@@ -153,7 +153,7 @@ void ImProfilePlotter::AddCurve()
 			ImIOWrappers::InfoPopup("Error", "Already Plotted");
 			return;
 		}
-		data.push_back({ selectedProfile, std::vector<double>(), std::vector<double>() });
+		data.push_back({ selectedProfile, &std::vector<double>(), &std::vector<double>() });
 		return;
 	}
 
@@ -161,7 +161,7 @@ void ImProfilePlotter::AddCurve()
 
 	for (const auto& facetId : facetIds) {
 		if (!IsPlotted(facetId)&&interfGeom->GetFacet(facetId)->sh.isProfile) {
-			data.push_back({ facetId, std::vector<double>(), std::vector<double>() });
+			data.push_back({ facetId, &std::vector<double>(), &std::vector<double>() });
 		}
 	}
 }
@@ -202,24 +202,24 @@ void ImProfilePlotter::computeProfiles()
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
 
-		if (plot.x.size() != profileSize) {
-			plot.x.clear();
-			for (size_t i = 0; i < profileSize; i++) plot.x.push_back(i);
+		if (plot.x->size() != profileSize) {
+			plot.x->clear();
+			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(i);
 		}
-		plot.y.clear();
+		plot.y->clear();
 		InterfaceFacet* f = interfGeom->GetFacet(plot.facetID);
 		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.facetID].momentResults[mApp->worker.displayedMoment].profile;
 		switch (viewIdx) {
 		case static_cast<int>(ProfileDisplayModes::Raw):
 			for (size_t j = 0; j < profileSize; j++)
-				plot.y.push_back(profile[j].countEquiv);
+				plot.y->push_back(profile[j].countEquiv);
 			break;
 		case static_cast<int>(ProfileDisplayModes::Pressure):
 		{
 			double scaleY = 1.0 / (f->GetArea() * 1E-4 / (double)PROFILE_SIZE) * mApp->worker.model->sp.gasMass / 1000 / 6E23 * 0.0100; //0.01: Pa->mbar
 			scaleY *= mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 			for (size_t j = 0; j < profileSize; j++)
-				plot.y.push_back(profile[j].sum_v_ort * scaleY);
+				plot.y->push_back(profile[j].sum_v_ort * scaleY);
 		}
 			break;
 		case static_cast<int>(ProfileDisplayModes::ImpRate):
@@ -227,7 +227,7 @@ void ImProfilePlotter::computeProfiles()
 			double scaleY = 1.0 / (f->GetArea() * 1E-4 / (double)PROFILE_SIZE);
 			scaleY *= mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 			for (size_t j = 0; j < profileSize; j++)
-				plot.y.push_back(profile[j].countEquiv * scaleY);
+				plot.y->push_back(profile[j].countEquiv * scaleY);
 		}
 			break;
 		case static_cast<int>(ProfileDisplayModes::Density):
@@ -236,7 +236,7 @@ void ImProfilePlotter::computeProfiles()
 			scaleY *= mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment) * f->DensityCorrection();
 
 			for (int j = 0; j < PROFILE_SIZE; j++)
-				plot.y.push_back(profile[j].sum_1_per_ort_velocity * scaleY);
+				plot.y->push_back(profile[j].sum_1_per_ort_velocity * scaleY);
 		}
 			break;
 		case static_cast<int>(ProfileDisplayModes::Speed):
@@ -253,10 +253,10 @@ void ImProfilePlotter::computeProfiles()
 				sum += val;
 				values.push_back(val);
 			}
-			plot.x.clear();
+			plot.x->clear();
 			for (int j = 0; j < PROFILE_SIZE; j++) {
-				plot.x.push_back((double)j * scaleX);
-				plot.y.push_back(values.at(j) / sum);
+				plot.x->push_back((double)j * scaleX);
+				plot.y->push_back(values.at(j) / sum);
 			}
 		}
 			break;
@@ -275,8 +275,8 @@ void ImProfilePlotter::computeProfiles()
 				values.push_back(val);
 			}
 			for (int j = 0; j < PROFILE_SIZE; j++) {
-				plot.x.push_back((double)j * scaleX);
-				plot.y.push_back(values[j] / sum);
+				plot.x->push_back((double)j * scaleX);
+				plot.y->push_back(values[j] / sum);
 			}
 		}
 			break;
@@ -290,7 +290,7 @@ void ImProfilePlotter::computeProfiles()
 			double scaleY = 1.0 / (double)max;
 
 			for (int j = 0; j < PROFILE_SIZE; j++)
-				plot.y.push_back(profile[j].countEquiv * scaleY);
+				plot.y->push_back(profile[j].countEquiv * scaleY);
 		}
 			break;
 		}

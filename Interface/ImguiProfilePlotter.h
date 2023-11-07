@@ -25,16 +25,9 @@ private:
 
 	std::vector<size_t> manualFacetList();
 
-	typedef struct {
-		size_t facetID;
-		std::vector<double> x;
-		std::vector<double> y;
-		ImVec4 color;
-	} ImProfile;
-
 	int viewIdx = 1;
-	std::vector<ImProfile> data;
-	ImProfile manualPlot;
+	std::vector<ImPlotData> data;
+	ImPlotData manualPlot;
 	size_t profileSize = 100;
 
 	bool correctForGas = false;
