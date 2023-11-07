@@ -75,14 +75,14 @@ void GlobalSettingsBase::SMPUpdate() {
         worker->GetProcStatus(procInfo);
 
         processList->ClearValues();
-        double byte_to_mbyte = 1.0/(1024.0*1024.0);
+        const double byte_to_mbyte = 1.0/(1024.0*1024.0);
         //Interface
 #ifdef _WIN32
         size_t currPid = GetCurrentProcessId();
-        double memDenominator_sys = (1024.0 * 1024.0);
+        const double memDenominator_sys = (1024.0 * 1024.0);
 #else
         size_t currPid = getpid();
-        double memDenominator_sys = (1024.0);
+        const double memDenominator_sys = (1024.0);
 #endif
         PROCESS_INFO parentInfo{};
         GetProcInfo(currPid, &parentInfo);
