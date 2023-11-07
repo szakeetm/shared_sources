@@ -1,7 +1,6 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiTexturePlotter.h"
 #include "Geometry_shared.h"
-#include <imgui.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Helper/MathTools.h"
 #include "ImguiPopup.h"
@@ -180,6 +179,11 @@ void ImTexturePlotter::DrawTextureTable()
 		ImGui::EndTable();
 		if (!ImGui::IsMouseDown(0)) isDragging = false; // end drag
 		if(isDragging) ImGui::GetWindowDrawList()->AddRectFilled(selectionStart, selectionEnd, IM_COL32(64, 128, 255, 64));
+		if (selection.size()!=0)
+		{
+			ImVec4 bounds = SelectionBounds();
+			selFacet->SelectElem(bounds.y, bounds.x, bounds.w - bounds.y + 1, bounds.z-bounds.x+1);
+		}
 	}
 }
 
@@ -446,6 +450,22 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 	}
 }
 
+ImVec4 ImTexturePlotter::SelectionBounds() {
+	int startRow = height, startCol = width, endRow = 0, endCol = 0;
+	for (size_t y = 0; y < height; y++) {
+		for (size_t x = 0; x < width; x++) {
+			bool isSel = IsCellSelected(y, x);
+			if (isSel) {
+				if (y < startRow) startRow = y;
+				if (x < startCol) startCol = x;
+				if (y > endRow) endRow = y;
+				if (x > endCol) endCol = x;
+			}
+		}
+	}
+	return ImVec4(startRow,startCol,endRow,endCol);
+}
+
 bool ImTexturePlotter::SaveToFile()
 {
 	if (!selFacet) return false;
@@ -459,17 +479,11 @@ bool ImTexturePlotter::SaveToFile()
 		endCol = width-1;
 	}
 	else {
-		for (size_t y = 0; y < height; y++) {
-			for (size_t x = 0; x < width; x++) {
-				bool isSel = IsCellSelected(y, x);
-				if (isSel) {
-					if (y < startRow) startRow = y;
-					if (x < startCol) startCol = x;
-					if (y > endRow) endRow = y;
-					if (x > endCol) endCol = x;
-				}
-			}
-		}
+		ImVec4 bounds = SelectionBounds();
+		startRow = bounds.x;
+		startCol = bounds.y;
+		endRow = bounds.z;
+		endCol = bounds.w;
 	}
 	// wrtie to file
 	std::string fileFilters = "txt";

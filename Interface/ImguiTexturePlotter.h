@@ -4,6 +4,7 @@
 #include <string>
 #include "Facet_shared.h"
 #include <vector>
+#include <imgui.h>
 
 class ImTexturePlotter : public ImWindow {
 public:
@@ -17,6 +18,7 @@ protected:
 	void SelectRow(size_t row);
 	void SelectColumn(size_t col);
 	void BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end);
+	ImVec4 SelectionBounds();
 	bool SaveToFile();
 
 	// UI variables
