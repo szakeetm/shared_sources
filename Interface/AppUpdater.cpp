@@ -818,7 +818,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					const auto& binaryName = update.executableBinaries[i];
 					std::string displayedResult;
 					try {
-						GiveExecPermission(binaryName);
+						GiveExecPermission(folderDest.str() + "/" + binaryName);
 						displayedResult = "success";
 					} catch (const Error& err) {
 						displayedResult = err.what();
