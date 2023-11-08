@@ -18,12 +18,15 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
+#include "AppUpdaterRemoteFeed.hpp"
 #include <ZipLib/ZipArchive.h>
 #include <ZipLib/ZipArchiveEntry.h>
 #include <ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
 #include <sstream>
+#include <filesystem>
+
 #include "Helper/MathTools.h" //Contains
 #include "Helper/StringHelper.h"
 
@@ -66,7 +69,7 @@ void AppUpdater::MakeDefaultConfig(){
     xml_node rootNode = configDoc.append_child("UpdaterConfigFile"); //XML specifications require a root node
 
     xml_node serverNode = rootNode.append_child("ServerConfig");
-    serverNode.append_child("RemoteFeed").append_attribute("url") = REMOTE_FEED;
+    //serverNode.append_child("RemoteFeed").append_attribute("url") = REMOTE_FEED; //Hard-code to avoid tampering
     serverNode.append_child("PublicWebsite").append_attribute("url") = PUBLIC_WEBSITE;
     serverNode.child("PublicWebsite").append_attribute("downloadsPage") = DOWNLOAD_PAGE;
 	auto matomoNode = serverNode.append_child("MatomoAnalytics");
@@ -94,7 +97,7 @@ void AppUpdater::SaveConfig() {
 	xml_node rootNode = configDoc.append_child("UpdaterConfigFile"); //XML specifications require a root node
 
 	xml_node serverNode = rootNode.append_child("ServerConfig");
-	serverNode.append_child("RemoteFeed").append_attribute("url") = feedUrl.c_str();
+	//serverNode.append_child("RemoteFeed").append_attribute("url") = feedUrl.c_str(); //Hard-code to avoid tampering
 	serverNode.append_child("PublicWebsite").append_attribute("url") = publicWebsite.c_str();
 	serverNode.child("PublicWebsite").append_attribute("downloadsPage") = publicDownloadsPage.c_str();
 	auto matomoNode = serverNode.append_child("MatomoAnalytics");
@@ -126,7 +129,7 @@ void AppUpdater::LoadConfig() {
 	xml_node rootNode = loadXML.child("UpdaterConfigFile"); //XML specifications require a root node
 
 	xml_node serverNode = rootNode.child("ServerConfig");
-	feedUrl = serverNode.child("RemoteFeed").attribute("url").as_string();
+	//feedUrl = serverNode.child("RemoteFeed").attribute("url").as_string(); //Hard-code to avoid tampering
 	publicWebsite = serverNode.child("PublicWebsite").attribute("url").as_string();
 	publicDownloadsPage = serverNode.child("PublicWebsite").attribute("downloadsPage").as_string();
 	tracker.siteId = serverNode.child("MatomoAnalytics").attribute("siteId").as_string();
@@ -311,7 +314,8 @@ void AppUpdater::PerformUpdateCheck(bool forceCheck) {
 		std::string resultCategory;
 		std::stringstream resultDetail;
 
-		auto[downloadResult, body] = DownloadString(feedUrl);
+		//auto[downloadResult, body] = DownloadString(feedUrl);
+		auto[downloadResult, body] = DownloadString(REMOTE_FEED);
 
         bool errorState = false;
 		//Handle errors
@@ -452,6 +456,31 @@ std::vector<UpdateManifest> AppUpdater::DetermineAvailableUpdates(const pugi::xm
 					for (const xml_node& fileNode : updateNode.child("FilesToCopy").child("Global").children("File")) {
 
 						newUpdate.filesToCopy.emplace_back(fileNode.attribute("name").as_string());
+					}
+
+					//Executable permissions
+					for (const xml_node& execNode : updateNode.child("GiveExecPermissions").children("BinaryCollection")) {
+						bool validOs = false;
+						const xml_node& validOsNode = execNode.child("ValidForOS");
+						if (!validOsNode) {
+							validOs = true; //No ValidForOS node, so valid for all
+						}
+						else {
+							for (const xml_node& osNode : validOsNode.children("OS")) {
+								std::string nodeOs = osNode.attribute("id").as_string();
+								std::string thisOs = OS_ID; //Convert to string
+								if (nodeOs == thisOs) { //OS_ID: as defined in MatomoAnalytics.h by preprocessor macros: win, mac_arm, mac_intel, fedora, debian)
+									// found
+									validOs = true;
+									break;
+								}
+							}
+						}
+						if (validOs) {
+							for (const xml_node& fileNode : execNode.children("File")) {
+								newUpdate.executableBinaries.push_back(fileNode.attribute("name").as_string());
+							}
+						}
 					}
 
 					//Post-install scripts
@@ -784,6 +813,22 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					userResult << "Copied " << copyFile << " to " << configDest.str();
 					logWindow->Log(userResult.str());
 				}
+				//Give executable permissions
+				if (update.executableBinaries.size()>0) logWindow->Log("Setting executable permissions for binaries:");
+				for (int i = 0; i < update.executableBinaries.size();i++) {
+					const auto& binaryName = update.executableBinaries[i];
+					std::string displayedResult;
+					try {
+						GiveExecPermission(binaryName);
+						displayedResult = "success";
+					} catch (const Error& err) {
+						displayedResult = err.what();
+					}
+					logWindow->Log(fmt::format("   [{}/{}] {}... {}.", i+1,update.executableBinaries.size(), binaryName,displayedResult));
+				}
+
+				std::string workDir = folderDest.str();
+				ExecutePostInstallScripts( update.postInstallScripts, workDir);
 
 				//Post install scripts
 				if (update.postInstallScripts.size()>0) logWindow->Log("Executing post-install scripts asynchronously (check console for results):");
@@ -843,6 +888,29 @@ void AppUpdater::ExecutePostInstallScripts(const std::vector<std::pair<std::stri
 	}
 	std::filesystem::current_path(oldCwd); //to release OS lock on folder
 	std::cout << "Post install scripts finished.\n" << std::flush;
+}
+
+void AppUpdater::GiveExecPermission(const std::string& binaryName) {
+	std::filesystem::path filePath = binaryName;
+	std::error_code ec;
+
+	// Check the current permissions
+	std::filesystem::perms currentPerms = std::filesystem::status(filePath, ec).permissions();
+
+	if (ec) {
+		throw Error(ec.message());
+	}
+
+	// Check if the owner execute permission is missing
+	if ((currentPerms & std::filesystem::perms::owner_exec) != std::filesystem::perms::none) {
+		throw Error("already executable");
+	}
+	// Add owner execute permission
+	std::filesystem::permissions(filePath, std::filesystem::perms::owner_exec, std::filesystem::perm_options::add, ec);
+
+	if (ec) {
+		throw Error(ec.message());
+	}
 }
 
 /**
