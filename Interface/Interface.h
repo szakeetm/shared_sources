@@ -429,7 +429,7 @@ public:
 
 	// Views
 	void SelectView(int v);
-	void AddView(CameraView v);
+	void AddView(const CameraView& v);
 	void AddView();
 	void ClearViewMenus() const;
 	void ClearAllViews();

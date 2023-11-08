@@ -1,6 +1,21 @@
 .vs
 .DS_Store
 out/
+**/*.make
+**/*.cmake
+**/*.ts
+**/*Makefile
+**/*.d
+**/*.o
+**/*.txt
+**/*.marks
+*cmake*
+*make*
+*CMake*
+*Make*
+*lib-*
+nfd-*
+**/*.pc
 
 obj/
 Obj/
@@ -14,3 +29,4 @@ Obj/
 *.tlog
 
 **/*.vcxproj?*
+external/ziplib/Makefile
