@@ -4,6 +4,7 @@
 #include "GLFormula.h"
 #include "Geometry_shared.h"
 #include "imgui.h"
+#include <memory>
 
 class Interface;
 
@@ -31,7 +32,7 @@ namespace ImUtils {
 
 typedef struct {
 	size_t facetID;
-	std::vector<double>* x;
-	std::vector<double>* y;
+	std::shared_ptr<std::vector<double>> x;
+	std::shared_ptr<std::vector<double>> y;
 	ImVec4 color;
 } ImPlotData;

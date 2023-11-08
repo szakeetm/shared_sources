@@ -153,7 +153,7 @@ void ImProfilePlotter::AddCurve()
 			ImIOWrappers::InfoPopup("Error", "Already Plotted");
 			return;
 		}
-		data.push_back({ selectedProfile, &std::vector<double>(), &std::vector<double>() });
+		data.push_back({ selectedProfile, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 		return;
 	}
 
@@ -161,7 +161,7 @@ void ImProfilePlotter::AddCurve()
 
 	for (const auto& facetId : facetIds) {
 		if (!IsPlotted(facetId)&&interfGeom->GetFacet(facetId)->sh.isProfile) {
-			data.push_back({ facetId, &std::vector<double>(), &std::vector<double>() });
+			data.push_back({ facetId, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 		}
 	}
 }

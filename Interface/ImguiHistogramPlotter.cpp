@@ -124,7 +124,7 @@ void ImHistogramPlotter::AddPlot()
 	// thanks to pass by reference the values should updata automatically without extra calls
 	switch (plotTab) {
 	case bounces:
-		newPlot.y = comboSelection == -1 ? &mApp->worker.globalHistogramCache.nbHitsHistogram : 0; //y axis
+		newPlot.y = comboSelection == -1 ? std::make_shared<std::vector<double>>(mApp->worker.globalHistogramCache.nbHitsHistogram) : 0; //y axis
 		xSpacing = comboSelection == -1 ? (double)mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize : 1;
 		nBins = comboSelection == -1 ? mApp->worker.model->sp.globalHistogramParams.GetBounceHistogramSize() : 0;
 		break;
@@ -134,7 +134,7 @@ void ImHistogramPlotter::AddPlot()
 		break;
 	}
 	// x axis
-	newPlot.x = &std::vector<double>();
+	newPlot.x = std::make_shared<std::vector<double>>();
 	for (size_t n = 0; n < nBins; n++) {
 		newPlot.x->push_back((double)n * xSpacing);
 	}
