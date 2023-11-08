@@ -180,7 +180,6 @@ void AppUpdater::InstallLatestUpdate(UpdateLogWindow* logWindow) {
 	UpdateManifest latestUpdate = GetLatest(availableUpdates);
 	std::thread t = std::thread(&AppUpdater::DownloadInstallUpdate, this, latestUpdate, logWindow);
 	t.detach();
-	//DownloadInstallUpdate(GetLatest(availableUpdates),logWindow);
 }
 
 /**
@@ -827,10 +826,10 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 					logWindow->Log(fmt::format("   [{}/{}] {}... {}.", i+1,update.executableBinaries.size(), binaryName,displayedResult));
 				}
 
-				std::string workDir = folderDest.str();
-				ExecutePostInstallScripts( update.postInstallScripts, workDir);
 
 				//Post install scripts
+				//Commented out for security reasons. If re-enabling in the future, user should be prompted to confirm script content
+				/*
 				if (update.postInstallScripts.size()>0) logWindow->Log("Executing post-install scripts asynchronously (check console for results):");
 				for (int i = 0; i < update.postInstallScripts.size();i++) {
 					const auto& script = update.postInstallScripts[i];
@@ -839,6 +838,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 
 				std::string workDir = folderDest.str();
 				ExecutePostInstallScripts( update.postInstallScripts, workDir);
+				*/
 
 				resultCategory = "updateSuccess";
 				resultDetail << "updateSuccess_" << applicationName << "_" << currentVersionId << "_to_" << update.versionId;
@@ -871,6 +871,7 @@ void AppUpdater::DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWi
 	tracker.Send(request, GLToolkit::GetScreenSize());
 }
 
+/* //Commented out for security
 void AppUpdater::ExecutePostInstallScripts(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir) {
 	
 	auto oldCwd = std::filesystem::current_path();
@@ -878,17 +879,16 @@ void AppUpdater::ExecutePostInstallScripts(const std::vector<std::pair<std::stri
 	std::cout << "\n";
 	for (int i = 0; i < postInstallScripts.size();i++) {
 		const auto& script = postInstallScripts[i];
-		//std::cout << fmt::format("Post install script [{}/{}]: {}\n", i + 1, postInstallScripts.size(), script.first);
 		for (int j = 0; j < script.second.size(); j++) {
 			const auto& command = script.second[j];
 			std::cout << fmt::format("Script [{}/{}], command [{}/{}]: \"{}\"\n", i + 1, postInstallScripts.size(),j + 1, script.second.size(), command) << std::flush;
-			//std::cout << FileUtils::exec(command.c_str()) << std::flush;
 			system(command.c_str());
 		}
 	}
 	std::filesystem::current_path(oldCwd); //to release OS lock on folder
 	std::cout << "Post install scripts finished.\n" << std::flush;
 }
+*/
 
 void AppUpdater::GiveExecPermission(const std::string& binaryName) {
 	std::filesystem::path filePath = binaryName;
