@@ -129,11 +129,10 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
         SDL_EnableScreenSaver();
 // THIS IS THE FEDORA BREAKING CHANGE
-        /*// start ImGui
-        if (!imWnd) {
-            imWnd = new ImguiWindow(this);
-            imWnd->init();
-        }*/
+    // start ImGui
+    if (!imWnd) {
+        imWnd = new ImguiWindow(this);
+    }
 // END OF FEDORA BRAKING CHANGE
 	}
 

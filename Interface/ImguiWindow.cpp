@@ -108,6 +108,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // Setup Dear ImGui context and various default values (font, colors etc.)
 void ImguiWindow::init() {
+    if(didIinit) return;
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -192,6 +193,7 @@ void ImguiWindow::init() {
     popup = MyPopup();
 
     start_time = ImGui::GetTime();
+    didIinit = true;
 }
 
 // Gracefully clears and shutsdown Dear ImGui context
@@ -251,6 +253,7 @@ void ImguiWindow::destruct() {
 // Function for an individual frame rendering step
 // If active, renders the individual components and handles the corresponding user actions
 void ImguiWindow::renderSingle() {
+    this->init();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 

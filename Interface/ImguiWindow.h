@@ -60,6 +60,7 @@ public:
     void ShowWindowLicense();
 
 protected:
+    bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
     MyPopup popup;
 
