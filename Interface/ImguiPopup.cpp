@@ -10,7 +10,7 @@ MyPopup::MyPopup()
 	this->buttons = std::vector<button>();
 }
 
-int MyPopup::ImMsgBox(std::string title, std::string message, std::vector<button> buttons)
+int MyPopup::OpenImMsgBox(std::string title, std::string message, std::vector<button> buttons)
 {
 	if (this->returnValue == DrawnNoResponse) {
 		return this->returnValue;
