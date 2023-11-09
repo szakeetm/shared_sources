@@ -4,7 +4,7 @@ void ShowAppFacetMove(bool* p_open, Interface* mApp, InterfaceGeometry* interfGe
 {
     int txtW = ImGui::CalcTextSize(" ").x;
     int txtH = ImGui::GetTextLineHeightWithSpacing();
-    float width{}, cursorY;
+    float width, cursorY;
     ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
     ImGui::Begin("Facet Move", p_open,  0 | ImGuiWindowFlags_NoSavedSettings);
     
