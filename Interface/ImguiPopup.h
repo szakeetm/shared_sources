@@ -1,22 +1,29 @@
+#pragma once
 #include "imgui.h"
 #include <string>
 #include <vector>
+enum code { // most common responses and buttons
+	NotDrawn =				1 << 0,
+	DrawnNoResponse =		1 << 1,
+	popupError =			1 << 2,
+	buttonCancel =			1 << 3,
+	buttonOk =				1 << 4,
+};
 
-class ImGui::MyPopup {
+class MyPopup {
 public:
-	int MessageBox(); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+	typedef struct {
+		std::string name;
+		int retVal;
+	} button;
+	int ImMsgBox(std::string title, std::string message, std::vector<button> buttons); // main popup function to be called by others, should toggle a popup, set it's message, define buttons and if available return the button pressed
+	void Draw();
+	MyPopup();
+	int GetResponse();
 protected:
 	int returnValue;
 	std::string message;
 	std::string title;
-	std::vector<std::string> buttons;
+	std::vector<button> buttons;
 	bool drawn;
-	void DrawMessageBox();
-	enum button { // most common responses and buttons
-		NotDrawn = -3,
-		DrawnNoResponse = -2,
-		Error = -1,
-		Cancel = 0,
-		Ok = 1,
-	};
 };

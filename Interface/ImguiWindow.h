@@ -22,6 +22,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <GLApp/GLApp.h>
 #include <imgui/imgui.h>
 #include "AppUpdater.h"
+#include "ImguiPopup.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -60,6 +61,7 @@ public:
 
 protected:
     ImGuiConfigFlags storedConfigFlags;
+    MyPopup popup;
 
     double start_time; // to keep track how long the ImGui GUI is running
 };
