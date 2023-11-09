@@ -63,8 +63,8 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
 #endif
 
 #ifdef _WIN32
-  m_fscreenWidth = GetSystemMetrics(SM_CXSCREEN);
-  m_fscreenHeight = GetSystemMetrics(SM_CYSCREEN);
+  m_fullScreenWidth = GetSystemMetrics(SM_CXSCREEN);
+  m_fullScreenHeight = GetSystemMetrics(SM_CYSCREEN);
 
 /*  LARGE_INTEGER qwTicksPerSec;
   QueryPerformanceFrequency( &qwTicksPerSec );
@@ -73,8 +73,8 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
 
 #else
   // TODO
-  m_fscreenWidth=1280;
-  m_fscreenHeight=1024;
+  m_fullScreenWidth=1280;
+  m_fullScreenHeight=1024;
 #endif
 
     nbMouse=nbWheel=nbMouseMotion=nbJoystic=nbKey=nbSystem=nbActive=nbResize=nbExpose=nbOther=0;
@@ -110,26 +110,9 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 	int errCode;
 	if (doFirstInit) {
 
-
-		/*
-		Uint32 flags;
-		flags  = SDL_OPENGL;
-		flags |= (m_bWindowed?0:SDL_FULLSCREEN);
-		flags |= (m_bResizable?SDL_RESIZABLE:0);
-
-		if( SDL_SetVideoMode( m_screenWidth, m_screenHeight, 0, flags ) == NULL )
-		{
-		  GLToolkit::Log("GLApplication::setUpSDL SDL_SetVideoMode() failed.");
-		  return GL_FAIL;
-		}
-
-		SDL_Surface *vSurf = SDL_GetVideoSurface();
-		m_bitsPerPixel = vSurf->format->BitsPerPixel;
-		*/
-
 		Uint32 flags;
 		flags = SDL_WINDOW_OPENGL;
-		flags |= (m_bWindowed ? 0 : SDL_WINDOW_FULLSCREEN);
+		flags |= (m_bWindowed ? 0 : SDL_WINDOW_FULLSCREEN_DESKTOP);
 		flags |= (m_bResizable ? SDL_WINDOW_RESIZABLE : 0);
 
 		mainScreen = SDL_CreateWindow("My Game Window",
@@ -183,16 +166,31 @@ int GLApplication::ToggleFullscreen() {
   InvalidateDeviceObjects();
 
   m_bWindowed = !m_bWindowed;
-  m_screenWidth = m_fscreenWidth;
-  m_screenHeight = m_fscreenHeight;
 
-  if( setUpSDL() == GL_OK ) {
-    GLWindowManager::Resize();
-    return GL_OK;
-  } else {
-    return GL_FAIL;
+  Uint32 flags = SDL_GetWindowFlags(mainScreen);
+  if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
+  {
+      //Restore windowed size
+      m_screenWidth = m_windowedScreenWidth;
+      m_screenHeight = m_windowedScreenHeight;
+      //Set to windowed mode
+      SDL_SetWindowFullscreen(mainScreen, 0); 
+      Resize(m_screenWidth, m_screenHeight);
+  }
+  else
+  {
+      //Remember windowed size
+      m_windowedScreenWidth = m_screenWidth;
+      m_windowedScreenHeight = m_screenHeight;
+      //Set to full screen size
+      m_screenWidth = m_fullScreenWidth;
+      m_screenHeight = m_fullScreenHeight;
+      //Set to fullscreen mode
+      SDL_SetWindowFullscreen(mainScreen, SDL_WINDOW_FULLSCREEN_DESKTOP);
+      Resize(m_screenWidth, m_screenHeight);
   }
 
+  return setUpSDL();
 }
 
 void GLApplication::SetTitle(std::string title) {

@@ -1638,12 +1638,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     return true;
 
                 case MENU_VIEW_FULLSCREEN:
-                    if (m_bWindowed) {
-                        ToggleFullscreen();
-                        PlaceComponents();
-                    } else {
-                        Resize(1024, 800, true);
-                    }
+                    ToggleFullscreen();
                     menu->GetSubMenu("View")->SetCheck(MENU_VIEW_FULLSCREEN, !m_bWindowed);
                     return true;
 
