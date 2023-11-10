@@ -98,3 +98,36 @@ void ImUtils::ComputeManualExpression(bool& drawManual, GLFormula& formula, std:
 		drawManual = false;
 	}
 }
+
+long long ImUtils::EntryIndexFromXAxisValue(double xAxisValue, const ImPlotData& plot)
+{
+	std::vector<double> data = *plot.x;
+	return EntryIndexFromXAxisValue(xAxisValue, data);
+}
+
+long long ImUtils::EntryIndexFromXAxisValue(double xAxisValue, const std::vector<double>& vector)
+{
+	if (vector.size() == 0) return -1;
+	if (xAxisValue < vector[0]) return -1;
+	if (xAxisValue > vector[vector.size()-1]) return -1;
+	double bestMatchDiff = abs(xAxisValue - vector[0]);
+	long long idxOfBestMatch = 0;
+	for (size_t i = 0; i < vector.size(); i++) {
+		if (abs(xAxisValue - vector[i]) < bestMatchDiff) {
+			bestMatchDiff = abs(xAxisValue - vector[i]);
+			idxOfBestMatch = i;
+		}
+	}
+
+	return idxOfBestMatch;
+}
+
+ImPlotData ImUtils::MakePlotData(size_t id, std::shared_ptr<std::vector<double>> x, std::shared_ptr<std::vector<double>> y, ImVec4 color)
+{
+	ImPlotData out = ImPlotData();
+	out.id = id;
+	out.x = x;
+	out.y = y;
+	out.color = color;
+	return out;
+}

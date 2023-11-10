@@ -84,7 +84,7 @@ void ImProfilePlotter::Draw()
 	if (ImGui::Button("Select plotted facets")) {
 		interfGeom->UnselectAll();
 		for (const auto& facet : data) {
-			interfGeom->GetFacet(facet.facetID)->selected = true;
+			interfGeom->GetFacet(facet.id)->selected = true;
 		}
 		UpdateSelection();
 	}
@@ -120,7 +120,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
-			std::string name = "F#" + std::to_string(profile.facetID+1);
+			std::string name = "F#" + std::to_string(profile.id+1);
 			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(),profile.x->size());
 			profile.color = ImPlot::GetLastItemColor();
 		}
@@ -174,7 +174,7 @@ void ImProfilePlotter::RemoveCurve()
 		long long i = data.size()-1; // has to be signed
 		for (; i >= 0 && i<data.size(); i--) {
 			for (const auto& facetId : facetIds) {
-				if (data[i].facetID == facetId) {
+				if (data[i].id == facetId) {
 					data.erase(data.begin() + i);
 					break;
 				}
@@ -183,7 +183,7 @@ void ImProfilePlotter::RemoveCurve()
 		return;
 	}
 	for (size_t i = 0; i < data.size(); i++)
-		if (data[i].facetID == selectedProfile) {
+		if (data[i].id == selectedProfile) {
 			data.erase(data.begin() + i);
 			return;
 		}
@@ -207,8 +207,8 @@ void ImProfilePlotter::computeProfiles()
 			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(i);
 		}
 		plot.y->clear();
-		InterfaceFacet* f = interfGeom->GetFacet(plot.facetID);
-		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.facetID].momentResults[mApp->worker.displayedMoment].profile;
+		InterfaceFacet* f = interfGeom->GetFacet(plot.id);
+		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.id].momentResults[mApp->worker.displayedMoment].profile;
 		switch (viewIdx) {
 		case static_cast<int>(ProfileDisplayModes::Raw):
 			for (size_t j = 0; j < profileSize; j++)
@@ -318,7 +318,7 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 	std::map<int, GLColor> colormap;
 	for (const auto& plot : data) {
 		std::pair<int, GLColor> pair;
-		pair.first = plot.facetID;
+		pair.first = plot.id;
 		pair.second = GLColor(plot.color.x*255, plot.color.y*255, plot.color.z*255);
 		colormap.emplace(pair);
 	}
@@ -329,7 +329,7 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 bool ImProfilePlotter::IsPlotted(size_t facetId)
 {
 	for (auto plot : data) {
-		if (plot.facetID == facetId) return true;
+		if (plot.id == facetId) return true;
 	}
 	return false;
 }

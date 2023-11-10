@@ -85,6 +85,7 @@ public:
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
 protected:
+    bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
 
     double start_time; // to keep track how long the ImGui GUI is running

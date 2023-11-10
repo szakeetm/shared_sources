@@ -9,7 +9,7 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 protected:
-	std::vector<int> drawnFormulas;
+	std::vector<ImPlotData> drawnFormulas;
 	Interface* mApp;
 	bool logY = false;
 	bool colorBlind = false;
@@ -21,4 +21,6 @@ protected:
 	int startX=0, endX=1000;
 	double step = 1.0;
 	GLFormula formula;
+	bool IsPlotted(size_t idx);
+	void DrawValueOnHover();
 };

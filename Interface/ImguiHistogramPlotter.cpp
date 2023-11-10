@@ -93,10 +93,10 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==bounces) xAxisName = "Number of bounces";
 	if(plotTab==distance) xAxisName = "Distance [cm]";
 	if(plotTab==time) xAxisName = "Time [s]";
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH))) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
-			std::string name = plot.facetID == -1 ? "Global" : ("Facet #" + std::to_string(plot.facetID + 1));
+			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));
 			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), plot.x->size());
 			plot.color = ImPlot::GetLastItemColor();
 		}
@@ -108,7 +108,7 @@ void ImHistogramPlotter::RemovePlot()
 {
 	if (data[plotTab].size() == 0) return;
 	for (size_t i = 0; i < data[plotTab].size(); i++) {
-		if (data[plotTab][i].facetID == comboSelection) {
+		if (data[plotTab][i].id == comboSelection) {
 			data[plotTab].erase(data[plotTab].begin() + i);
 			return;
 		}
@@ -118,7 +118,7 @@ void ImHistogramPlotter::RemovePlot()
 void ImHistogramPlotter::AddPlot()
 {
 	ImPlotData newPlot;
-	if(comboSelection!=-1) newPlot.facetID = comboSelection;
+	if(comboSelection!=-1) newPlot.id = comboSelection;
 	double xSpacing=1;
 	size_t nBins=0;
 	// thanks to pass by reference the values should updata automatically without extra calls
