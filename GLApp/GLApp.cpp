@@ -127,13 +127,7 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 		}
 
 		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
-        SDL_EnableScreenSaver();
-// THIS IS THE FEDORA BREAKING CHANGE
-    // start ImGui
-    if (!imWnd) {
-        imWnd = new ImguiWindow(this);
-    }
-// END OF FEDORA BRAKING CHANGE
+    SDL_EnableScreenSaver();
 	}
 
 	errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth, m_screenHeight);
