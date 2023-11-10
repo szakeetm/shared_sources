@@ -2,6 +2,7 @@
 #include "Facet_shared.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "implot/implot.h"
+#include "implot/implot_internal.h"
 #include "ProfileModes.h"
 #include "Helper/StringHelper.h"
 #include "Helper/MathTools.h"
@@ -125,9 +126,62 @@ void ImProfilePlotter::DrawProfileGraph()
 			profile.color = ImPlot::GetLastItemColor();
 		}
 		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
+		DrawValueOnHover();
 		ImPlot::EndPlot();
 	}
 	FacetHiglighting(identProfilesInGeom);
+}
+
+void ImProfilePlotter::DrawValueOnHover()
+{
+	if (ImPlot::IsPlotHovered()) {
+		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+		if (data.size() != 0 || drawManual) {
+			int entryIdx = -1;
+			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y*10;
+			int plotIdx = -2;
+			for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
+				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
+				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
+				if (entryIdxTmp != -1 && dist < minYDiff) {
+					minYDiff = dist;
+					plotIdx = i;
+					entryIdx = entryIdxTmp;
+				}
+			}
+			if (drawManual) {
+				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualPlot);
+				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualPlot.y->at(entryIdxTmp))).y);
+				if (entryIdxTmp != -1 && dist < minYDiff) {
+					minYDiff = dist;
+					plotIdx = -1;
+					entryIdx = entryIdxTmp;
+				}
+			}
+			if (plotIdx == -1) {
+				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualPlot);
+			}
+			else if (plotIdx >= 0 && plotIdx < data.size()) {
+				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
+			}
+			if (plotIdx < data.size() && plotIdx >= -1 && entryIdx >= 0 && entryIdx < (plotIdx < 0 ? manualPlot.x->size() : data[plotIdx].x->size())) {
+				double X = plotIdx == -1 ? manualPlot.x->at(entryIdx) : data[plotIdx].x->at(entryIdx);
+				double Y = plotIdx == -1 ? manualPlot.y->at(entryIdx) : data[plotIdx].y->at(entryIdx);
+				ImPlot::PushStyleColor(0, ImVec4(0, 0, 0, 1));
+				ImPlot::PlotScatter("", &X, &Y, 1);
+				ImPlot::PopStyleColor();
+
+				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
+				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2 * txtH;
+				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= 17 * txtW;
+
+				ImGui::SetNextWindowPos(tooltipPos);
+				ImGui::BeginTooltipEx(0, 0);
+				ImGui::Text("X=" + std::to_string(X) + "\nY=" + std::to_string(Y));
+				ImGui::EndTooltip();
+			}
+		}
+	}
 }
 
 void ImProfilePlotter::ShowFacet()

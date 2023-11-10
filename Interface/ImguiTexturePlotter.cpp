@@ -37,6 +37,7 @@ void ImTexturePlotter::Draw()
 		width = 0;
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
+		selection.clear();
 	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
@@ -49,6 +50,7 @@ void ImTexturePlotter::Draw()
 	if (ImGui::Button("FindMax")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
+		scrollToMax = true;
 	} ImGui::SameLine();
 
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5));
@@ -86,14 +88,15 @@ void ImTexturePlotter::Init(Interface* mApp_)
 
 void ImTexturePlotter::DrawTextureTable()
 {
+	if( selFacet!=nullptr) getData();
+	if (width < 1 || height < 1) return;
+
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
 	static ImRect selectionRect;
 	static bool hovered;
 
 	static ImGuiIO& io = ImGui::GetIO();
-	if (width < 1 || height < 1) return;
-	if (data.size() != width) getData();
 	
 	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags)) {
 		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
@@ -145,6 +148,14 @@ void ImTexturePlotter::DrawTextureTable()
 					ImGui::TableSetColumnIndex(j+1);
 				}
 				bool isSelected = IsCellSelected(i,j);
+				if (scrollToMax && isSelected && i==maxY && j==maxX) { // works but not well because ImGui is not redrawn all the time
+					if (!isSelected) {
+						scrollToMax = false;
+						return;
+					}
+					ImGui::SetScrollHereX(0.5f);
+					ImGui::SetScrollHereY(0.5f);
+				}
 				if (isDragging) {
 					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 					if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
@@ -183,6 +194,9 @@ void ImTexturePlotter::DrawTextureTable()
 		{
 			ImVec4 bounds = SelectionBounds();
 			selFacet->SelectElem(bounds.y, bounds.x, bounds.w - bounds.y + 1, bounds.z-bounds.x+1);
+		}
+		else {
+			selFacet->UnselectElem();
 		}
 	}
 }

@@ -11,6 +11,7 @@ public:
 	void Init(Interface* mApp_);
 private:
 	void DrawProfileGraph();
+	void DrawValueOnHover();
 
 	// button actions
 	void ShowFacet();
