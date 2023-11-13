@@ -132,7 +132,8 @@ void ImProfilePlotter::DrawProfileGraph()
 		DrawValueOnHover();
 		ImPlot::EndPlot();
 	}
-	FacetHiglighting(identProfilesInGeom);
+	ImPlot::PopStyleVar();
+	if (colorBlind) ImPlot::PopColormap();
 }
 
 void ImProfilePlotter::DrawValueOnHover()
@@ -255,7 +256,7 @@ void ImProfilePlotter::computeProfiles()
 	
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
-
+	
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
 
