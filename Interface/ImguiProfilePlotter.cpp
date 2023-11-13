@@ -122,6 +122,9 @@ void ImProfilePlotter::DrawProfileGraph()
 {
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
+	static double miny = 0;
+	ImPlot::LinkNextPlotLimits(nullptr, nullptr, &miny, nullptr);
+	miny = 0;
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
@@ -146,7 +149,8 @@ void ImProfilePlotter::DrawValueOnHover()
 			int plotIdx = -2;
 			for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
 				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
-				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
+				double dist = minYDiff;
+				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
 				if (entryIdxTmp != -1 && dist < minYDiff) {
 					minYDiff = dist;
 					plotIdx = i;
@@ -155,7 +159,8 @@ void ImProfilePlotter::DrawValueOnHover()
 			}
 			if (drawManual) {
 				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualPlot);
-				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualPlot.y->at(entryIdxTmp))).y);
+				double dist = minYDiff;
+				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualPlot.y->at(entryIdxTmp))).y);
 				if (entryIdxTmp != -1 && dist < minYDiff) {
 					minYDiff = dist;
 					plotIdx = -1;
@@ -168,7 +173,7 @@ void ImProfilePlotter::DrawValueOnHover()
 			else if (plotIdx >= 0 && plotIdx < data.size()) {
 				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
 			}
-			if (plotIdx < data.size() && plotIdx >= -1 && entryIdx >= 0 && entryIdx < (plotIdx < 0 ? manualPlot.x->size() : data[plotIdx].x->size())) {
+			if ( (plotIdx == -1 && entryIdx>=0 && entryIdx<manualPlot.x->size()) || (plotIdx>=0 && plotIdx<data.size() && entryIdx>=0 && entryIdx<data[plotIdx].x->size())) {
 				double X = plotIdx == -1 ? manualPlot.x->at(entryIdx) : data[plotIdx].x->at(entryIdx);
 				double Y = plotIdx == -1 ? manualPlot.y->at(entryIdx) : data[plotIdx].y->at(entryIdx);
 				ImPlot::PushStyleColor(0, ImVec4(0, 0, 0, 1));

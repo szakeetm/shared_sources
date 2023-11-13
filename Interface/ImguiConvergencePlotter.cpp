@@ -169,11 +169,12 @@ void ImConvergencePlotter::DrawValueOnHover() {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 		if (drawnFormulas.size() != 0 || drawManual) {
 			int entryIdx = -1;
-			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y;
+			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y*10;
 			int plotIdx = -2;
 			for (int i = 0; i < drawnFormulas.size(); i++) { // find which plot contains the value closest to cursor
 				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, drawnFormulas[i]);
-				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, drawnFormulas[i].y->at(entryIdxTmp))).y);
+				double dist;
+				if (entryIdxTmp != -1 ) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, drawnFormulas[i].y->at(entryIdxTmp))).y);
 				if (entryIdxTmp != -1 && dist < minYDiff) {
 					minYDiff = dist;
 					plotIdx = i;
@@ -182,7 +183,8 @@ void ImConvergencePlotter::DrawValueOnHover() {
 			}
 			if (drawManual) {
 				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualxValues);
-				double dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues[entryIdxTmp])).y);
+				double dist = minYDiff;
+				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues[entryIdxTmp])).y);
 				if (entryIdxTmp != -1 && dist < minYDiff) {
 					minYDiff = dist;
 					plotIdx = -1;
@@ -195,7 +197,7 @@ void ImConvergencePlotter::DrawValueOnHover() {
 			else if (plotIdx >= 0 && plotIdx < drawnFormulas.size()) {
 				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, drawnFormulas[plotIdx]);
 			}
-			if (plotIdx < drawnFormulas.size() && plotIdx >= -1 && entryIdx >= 0 && entryIdx < (plotIdx < 0 ? manualxValues.size() : drawnFormulas[plotIdx].x->size())) {
+			if ((plotIdx == -1 && entryIdx != -1) || (plotIdx >= 0 && plotIdx<drawnFormulas.size() && entryIdx>=0 && entryIdx<drawnFormulas[plotIdx].x->size())) {
 				double X = plotIdx == -1 ? manualxValues[entryIdx] : drawnFormulas[plotIdx].x->at(entryIdx);
 				double Y = plotIdx == -1 ? manualyValues[entryIdx] : drawnFormulas[plotIdx].y->at(entryIdx);
 				ImPlot::PushStyleColor(0, ImVec4(0, 0, 0, 1));
