@@ -39,5 +39,5 @@ protected:
 	int columnFlags = 0;
 	int tableFlags = 0;
 	int columnWidth; // column width (is multiplied by character width)
-	bool scrollToMax = false;
+	bool scrollToSelected = false;
 };

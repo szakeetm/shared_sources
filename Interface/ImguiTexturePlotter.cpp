@@ -50,7 +50,7 @@ void ImTexturePlotter::Draw()
 	if (ImGui::Button("FindMax")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
-		scrollToMax = true;
+		scrollToSelected = true;
 	} ImGui::SameLine();
 
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5));
@@ -148,13 +148,13 @@ void ImTexturePlotter::DrawTextureTable()
 					ImGui::TableSetColumnIndex(j+1);
 				}
 				bool isSelected = IsCellSelected(i,j);
-				if (scrollToMax && isSelected && i==maxY && j==maxX) { // works but not well because ImGui is not redrawn all the time
-					if (!isSelected) {
-						scrollToMax = false;
-						return;
-					}
+				if (scrollToSelected && isSelected) { // works but not well because ImGui is not redrawn all the time
 					ImGui::SetScrollHereX(0.5f);
 					ImGui::SetScrollHereY(0.5f);
+					if (!isSelected) {
+						scrollToSelected = false;
+						return;
+					}
 				}
 				if (isDragging) {
 					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
@@ -197,6 +197,18 @@ void ImTexturePlotter::DrawTextureTable()
 		}
 		else {
 			selFacet->UnselectElem();
+		}
+		if (selection.size() == 1) {
+			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))		selection[0].first--;
+			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))		selection[0].first++;
+			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		selection[0].second--;
+			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))	selection[0].second++;
+
+			if (selection[0].second < 0) selection[0].second = 0;
+			if (selection[0].second > width-1) selection[0].second = width-1;
+			if (selection[0].first < 0) selection[0].first = 0;
+			if (selection[0].first > height-1) selection[0].first = height-1;
+			scrollToSelected = true;
 		}
 	}
 }
