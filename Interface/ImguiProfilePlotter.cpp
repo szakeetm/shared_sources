@@ -17,7 +17,7 @@ void ImProfilePlotter::Draw()
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 108, txtH * 15), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 93, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings);
 
 	computeProfiles();
@@ -37,7 +37,7 @@ void ImProfilePlotter::Draw()
 		ImGui::EndCombo();
 	} ImGui::SameLine();
 	
-	ImGui::SetNextItemWidth(txtW * 30);
+	ImGui::SetNextItemWidth(txtW * 15);
 	if (selectedProfile != -1) ImGui::BeginDisabled();
 	ImGui::InputText("##manualFacetSel", &manualFacetSel);
 	if (selectedProfile != -1) ImGui::EndDisabled();
@@ -58,7 +58,7 @@ void ImProfilePlotter::Draw()
 	}
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 30);
+	ImGui::SetNextItemWidth(txtW * 15);
 	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
@@ -94,7 +94,10 @@ void ImProfilePlotter::Draw()
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
 		drawManual = ImUtils::ParseExpression(expression, formula);
-		ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x, *manualPlot.y, profileSize);
+		if (manualPlot.x.get() == nullptr) manualPlot.x = std::make_shared<std::vector<double>>();
+		if (manualPlot.y.get() == nullptr) manualPlot.y = std::make_shared<std::vector<double>>();
+
+		ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::SameLine();

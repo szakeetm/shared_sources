@@ -76,8 +76,7 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 void ImUtils::ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, size_t count)
 {
 	if (!drawManual) return;
-	xVals.clear();
-	yVals.clear();
+
 	auto xVariable = formula.GetVariableAt(0);
 	for (double i = 0; i < count; i++) {
 		xVariable->value = static_cast<double>(i);

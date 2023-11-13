@@ -20,7 +20,7 @@ void ImConvergencePlotter::Draw()
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3*txtW, 4*txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 77, txtH * 15), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 77, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Convergence Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings);
 	
 	DrawConvergenceGraph();
@@ -97,7 +97,7 @@ void ImConvergencePlotter::Draw()
 		}
 	}
 	
-	ImGui::SetNextItemWidth(txtW * 40);
+	ImGui::SetNextItemWidth(txtW * 15);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
 		drawManual = ImUtils::ParseExpression(expression, formula);
