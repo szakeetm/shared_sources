@@ -151,10 +151,6 @@ void ImTexturePlotter::DrawTextureTable()
 				if (scrollToSelected && isSelected) { // works but not well because ImGui is not redrawn all the time
 					ImGui::SetScrollHereX(0.5f);
 					ImGui::SetScrollHereY(0.5f);
-					if (!isSelected) {
-						scrollToSelected = false;
-						return;
-					}
 				}
 				if (isDragging) {
 					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
@@ -198,7 +194,11 @@ void ImTexturePlotter::DrawTextureTable()
 		else {
 			selFacet->UnselectElem();
 		}
-		if (selection.size() == 1) {
+		bool anyKeyDown = false;
+		for (const bool& key : io.KeysDown) {
+			if (key) { anyKeyDown = true; break; }
+		}
+		if (selection.size() == 1 && anyKeyDown) {
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))		selection[0].first--;
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))		selection[0].first++;
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		selection[0].second--;
@@ -210,6 +210,7 @@ void ImTexturePlotter::DrawTextureTable()
 			if (selection[0].first > height-1) selection[0].first = height-1;
 			scrollToSelected = true;
 		}
+		if (io.MouseDown[0]) scrollToSelected = false;
 	}
 }
 
@@ -243,7 +244,7 @@ void ImTexturePlotter::getData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(std::to_string(val));
+				data[j].push_back(fmt::format("{:.4f}", val));
 			}
 		}
 		break; }
@@ -261,7 +262,7 @@ void ImTexturePlotter::getData()
 					maxValue = realVal;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(std::to_string(realVal));
+				data[j].push_back(fmt::format("{:.4f}", realVal));
 			}
 		}
 		break; }
@@ -278,7 +279,7 @@ void ImTexturePlotter::getData()
 						maxValue = realVal;
 						maxX = i; maxY = j;
 					}
-					data[j].push_back(std::to_string(realVal));
+					data[j].push_back(fmt::format("{:.4f}", realVal));
 				} catch (...) {
 					data[j].push_back("Error");
 
@@ -304,8 +305,7 @@ void ImTexturePlotter::getData()
 					maxValue = rho;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(std::to_string(rho));
-
+				data[j].push_back(fmt::format("{:.4f}", rho));
 			}
 		}
 
@@ -326,8 +326,7 @@ void ImTexturePlotter::getData()
 					maxValue = rho_mass;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(std::to_string(rho_mass));
-
+				data[j].push_back(fmt::format("{:.4f}", rho_mass));
 			}
 		}
 
@@ -348,7 +347,7 @@ void ImTexturePlotter::getData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(std::to_string(p));
+				data[j].push_back(fmt::format("{:.4f}", p));
 			}
 		}
 		break; }
@@ -366,7 +365,7 @@ void ImTexturePlotter::getData()
 					maxValue = realVal;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(std::to_string(realVal));
+				data[j].push_back(fmt::format("{:.4f}", realVal));
 			}
 		}
 		break; }
@@ -379,16 +378,16 @@ void ImTexturePlotter::getData()
 		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				if (selFacet->sh.countDirection) {
+				if (selFacet->sh.countDirection && facetSnapshot.direction.size()!=0) {
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::GasVelocityVector, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
 					Vector3d v_vect = val.vect;
 
 					std::string out;
-					out.append(std::to_string(v_vect.x));
+					out.append(fmt::format("{:.4f}", v_vect.x));
 					out.append(",");
-					out.append(std::to_string(v_vect.y));
+					out.append(fmt::format("{:.4f}", v_vect.y));
 					out.append(",");
-					out.append(std::to_string(v_vect.z));
+					out.append(fmt::format("{:.4f}", v_vect.z));
 					data[j].push_back(out);
 
 					double length = v_vect.Norme();
@@ -417,7 +416,7 @@ void ImTexturePlotter::getData()
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::NbVelocityVectors, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
 					size_t count = val.count;
 
-					data[j].push_back(std::to_string(count));
+					data[j].push_back(fmt::format("{:.4f}", count));
 					double countEq = (double)count;
 					if (countEq > maxValue) {
 						maxValue = countEq;
