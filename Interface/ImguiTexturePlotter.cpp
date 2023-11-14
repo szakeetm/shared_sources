@@ -516,7 +516,7 @@ void ImTexturePlotter::MenuBar()
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Export")) {
 			if (ImGui::MenuItem("To clipboard")) SaveTexturePlotter(false);
-			if (ImGui::MenuItem("To csv")) SaveTexturePlotter();
+			if (ImGui::MenuItem("To file")) SaveTexturePlotter();
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
@@ -543,9 +543,9 @@ std::string ImTexturePlotter::Serialize(SelRect bounds, std::string lineBreak, s
 	for (size_t row = bounds.startRow; row <= bounds.endRow; row++) {
 		for (size_t col = bounds.startCol; col <= bounds.endCol; col++) {
 			out.append(data[row][col]);
-			out.append("\t");
+			out.append(rowBreak);
 		}
-		out.append("\n");
+		out.append(lineBreak);
 	}
 	return out;
 }

@@ -1,3 +1,4 @@
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiProfilePlotter.h"
 #include "Facet_shared.h"
 #include "imgui_stdlib/imgui_stdlib.h"
@@ -18,8 +19,9 @@ void ImProfilePlotter::Draw()
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 93, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
-	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
+	MenuBar();
 	computeProfiles();
 	DrawProfileGraph();
 
@@ -58,27 +60,13 @@ void ImProfilePlotter::Draw()
 	}
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 15);
+	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
 		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
 	}
-
-
-	ImGui::Checkbox("Colorblind mode", &colorBlind);
-	ImGui::SameLine();
-	ImGui::Text("Change linewidth:");
-	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 12);
-	if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
-		if (lineWidth < 0.5) lineWidth = 0.5;
-	}
-	ImGui::SameLine();
-	if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
-		FacetHiglighting(identProfilesInGeom);
-	}
-
+	
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
@@ -90,7 +78,7 @@ void ImProfilePlotter::Draw()
 		UpdateSelection();
 	}
 
-	ImGui::SetNextItemWidth(txtW * 40);
+	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
 		drawManual = ImUtils::ParseExpression(expression, formula);
@@ -101,11 +89,10 @@ void ImProfilePlotter::Draw()
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (11.25);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (3);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move\nHold right and drag for box select (auto-fit must be disabled first)");
-	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
 	ImGui::End();
 }
@@ -124,11 +111,13 @@ void ImProfilePlotter::DrawProfileGraph()
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
-			if (profile.x->size() == 0) continue;
+			//if (profile.x->size() == 0) continue;
 			std::string name = "F#" + std::to_string(profile.id+1);
+			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(),profile.x->size());
 			profile.color = ImPlot::GetLastItemColor();
 		}
+		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
 		DrawValueOnHover();
 		ImPlot::EndPlot();
@@ -273,14 +262,15 @@ void ImProfilePlotter::computeProfiles()
 	
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
-
-		if (plot.x->size() != profileSize) {
-			plot.x->clear();
-			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(i);
-		}
 		plot.y->clear();
 		InterfaceFacet* f = interfGeom->GetFacet(plot.id);
 		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.id].momentResults[mApp->worker.displayedMoment].profile;
+		bool isEmpty = true;
+		for (const auto& value : profile) if (value.countEquiv != 0) isEmpty = false;
+		if (isEmpty) {
+			plot.x->clear();
+			continue;
+		}
 		switch (viewIdx) {
 		case static_cast<int>(ProfileDisplayModes::Raw):
 			for (size_t j = 0; j < profileSize; j++)
@@ -366,6 +356,10 @@ void ImProfilePlotter::computeProfiles()
 		}
 			break;
 		}
+		if (plot.x->size() != profileSize) {
+			plot.x->clear();
+			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(i);
+		}
 	}
 }
 
@@ -396,6 +390,70 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 	}
 	interfGeom->SetPlottedFacets(colormap);
 	UpdateSelection();
+}
+
+void ImProfilePlotter::MenuBar()
+{
+	if (ImGui::BeginMenuBar()) {
+		if(ImGui::BeginMenu("Export")) {
+			if (ImGui::MenuItem("To clipboard")) Export();
+			if (ImGui::MenuItem("To file")) Export(true);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("View")) {
+			ImGui::Checkbox("Colorblind mode", &colorBlind);
+			ImGui::Checkbox("Datapoints", &showDatapoints);
+			ImGui::Text("Change linewidth:");
+			ImGui::SameLine();
+			ImGui::SetNextItemWidth(txtW * 12);
+			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
+				if (lineWidth < 0.5) lineWidth = 0.5;
+			}
+			if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
+				FacetHiglighting(identProfilesInGeom);
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+}
+
+bool ImProfilePlotter::Export(bool toFile)
+{
+	if (data.size() == 0) {
+		ImIOWrappers::InfoPopup("Error", "Nothing to export");
+		return false;
+	}
+	std::string out;
+	// first row (headers)
+	out.append("X axis\t");
+	for (const auto& profile : data) {
+		out.append("F#"+std::to_string(profile.id)+"\t");
+	}
+	out.append("\n");
+	// rows
+	for (int i = 0; i < data[0].x->size(); i++) {
+		out.append(fmt::format("{}",data[0].x->at(i))+"\t");
+		for (const auto& profile : data) {
+			out.append(fmt::format("{}", profile.y->at(i))+"\t");
+		}
+		out.append("\n");
+	}
+	if(!toFile) SDL_SetClipboardText(out.c_str());
+	else {
+		std::string fileFilters = "txt";
+		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
+		if (!fn.empty()) {
+			FILE* f = fopen(fn.c_str(), "w");
+			if (f == NULL) {
+				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
+				return false;
+			}
+			fprintf(f, out.c_str());
+			fclose(f);
+		}
+	}
+	return true;
 }
 
 bool ImProfilePlotter::IsPlotted(size_t facetId)

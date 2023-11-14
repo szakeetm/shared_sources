@@ -19,6 +19,8 @@ private:
 	void RemoveCurve();
 	void computeProfiles();
 	void FacetHiglighting(bool toggle);
+	void MenuBar();
+	bool Export(bool toFile = false);
 
 	// helper / utility functions
 	void UpdateSelection();
@@ -44,4 +46,5 @@ private:
 	GLFormula formula;
 	bool drawManual = false;
 	bool lockYtoZero = false;
+	bool showDatapoints = false;
 };

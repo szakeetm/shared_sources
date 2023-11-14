@@ -117,7 +117,7 @@ void ImConvergencePlotter::Draw()
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (11.25);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move\nHold right and drag for box select (auto-fit must be disabled first)");
+	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 	ImGui::SameLine();
 
 	ImGui::End();
