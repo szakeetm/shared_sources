@@ -23,4 +23,5 @@ protected:
 	GLFormula formula;
 	bool IsPlotted(size_t idx);
 	void DrawValueOnHover();
+	bool lockYtoZero = false;
 };

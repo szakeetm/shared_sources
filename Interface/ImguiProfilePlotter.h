@@ -43,4 +43,5 @@ private:
 	std::string expression;
 	GLFormula formula;
 	bool drawManual = false;
+	bool lockYtoZero = false;
 };

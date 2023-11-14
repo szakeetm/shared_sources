@@ -117,7 +117,7 @@ void ImConvergencePlotter::Draw()
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (11.25);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move");
+	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move\nHold right and drag for box select (auto-fit must be disabled first)");
 	ImGui::SameLine();
 	if (ImGui::Button("Dismiss")) { Hide(); }
 
@@ -126,10 +126,17 @@ void ImConvergencePlotter::Draw()
 
 void ImConvergencePlotter::DrawConvergenceGraph()
 {
+	lockYtoZero = drawnFormulas.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, 1000, 0, 1000, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-7.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+		if (lockYtoZero) {
+			ImPlotPlot& thisPlot = *ImPlot::GetPlot("##Convergence");
+			thisPlot.YAxis->SetMin(0, true);
+			thisPlot.XAxis.SetMin(0, true);
+			lockYtoZero = false;
+		}
 		for (int i = 0; i < drawnFormulas.size(); i++) {
 			const std::vector<FormulaHistoryDatapoint>& data = mApp->appFormulas->convergenceData[drawnFormulas[i].id];
 			int count = data.size()>1000 ? 1000 : data.size();
@@ -139,6 +146,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 				drawnFormulas[i].x->push_back(data[j].nbDes);
 				drawnFormulas[i].y->push_back(data[j].value);
 			}
+			if (drawnFormulas[i].x->size() == 0) continue;
 			std::string name = mApp->appFormulas->formulas[drawnFormulas[i].id].GetName();
 			if(name=="") name = mApp->appFormulas->formulas[drawnFormulas[i].id].GetExpression();
 			ImPlot::PlotLine(name.c_str(), drawnFormulas[i].x->data(), drawnFormulas[i].y->data(),count);
