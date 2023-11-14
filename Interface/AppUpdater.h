@@ -249,6 +249,7 @@ public:
 	void IncreaseSessionCount();
 	FetchStatus GetStatus(){return lastFetchStatus;};
 	std::string GetPublicWebsiteAddress() { return publicWebsite; };
+	int GetNbCheckFailsInRow() { return nbUpdateFailsInRow; };
 private:
 
 	//Initialized by constructor:
