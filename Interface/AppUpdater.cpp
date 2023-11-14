@@ -240,7 +240,7 @@ UpdateWarningDialog::UpdateWarningDialog(AppUpdater* appUpdater) {
     std::string question = fmt::format(
             "Updates could not be fetched from the server for a while (failed {} times in a row).\n"
             "Please check " + appUpdater->GetPublicWebsiteAddress() + "manually.\n"
-            "Would you like to be reminded again in the future?", appUpdater->GetNbCheckFailsInRow());
+            "Would you like to be reminded again in the future?", appUpdater->GetNbCheckFailsInRow()+1);
 
     questionLabel = new GLLabel(question.c_str());
     questionLabel->SetBounds(5, 5, 150, 60);
