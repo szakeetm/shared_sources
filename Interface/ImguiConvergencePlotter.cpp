@@ -131,12 +131,6 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, 1000, 0, 1000, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-7.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
-		if (lockYtoZero) {
-			ImPlotPlot& thisPlot = *ImPlot::GetPlot("##Convergence");
-			thisPlot.YAxis->SetMin(0, true);
-			thisPlot.XAxis.SetMin(0, true);
-			lockYtoZero = false;
-		}
 		for (int i = 0; i < drawnFormulas.size(); i++) {
 			const std::vector<FormulaHistoryDatapoint>& data = mApp->appFormulas->convergenceData[drawnFormulas[i].id];
 			int count = data.size()>1000 ? 1000 : data.size();
@@ -162,6 +156,12 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	if (lockYtoZero) {
+		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##Convergence");
+		thisPlot.YAxis->SetMin(0, true);
+		thisPlot.XAxis.SetMin(0, true);
+		lockYtoZero = false;
+	}
 }
 
 bool ImConvergencePlotter::IsPlotted(size_t idx)
@@ -172,6 +172,7 @@ bool ImConvergencePlotter::IsPlotted(size_t idx)
 	return false;
 }
 
+// repeated code with Profile Plotter, todo: consolidate
 void ImConvergencePlotter::DrawValueOnHover() {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
@@ -212,13 +213,17 @@ void ImConvergencePlotter::DrawValueOnHover() {
 				ImPlot::PlotScatter("", &X, &Y, 1);
 				ImPlot::PopStyleColor();
 
+				std::string xVal, yVal;
+				xVal = fmt::format("{:.4}", X);
+				yVal = fmt::format("{:.4}", Y);
+
 				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
-				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2 * txtH;
-				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= 17 * txtW;
+				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2.5 * txtH;
+				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= (std::max(xVal.length(), yVal.length()) + 2.5) * txtW;
 
 				ImGui::SetNextWindowPos(tooltipPos);
 				ImGui::BeginTooltipEx(0, 0);
-				ImGui::Text("X=" + std::to_string(X) + "\nY=" + std::to_string(Y));
+				ImGui::Text("X=" + xVal + "\nY=" + yVal);
 				ImGui::EndTooltip();
 			}
 		}

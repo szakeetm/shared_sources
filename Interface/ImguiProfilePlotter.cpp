@@ -124,12 +124,6 @@ void ImProfilePlotter::DrawProfileGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
-		if (lockYtoZero) {
-			ImPlotPlot& thisPlot = *ImPlot::GetPlot("##ProfilePlot");
-			thisPlot.YAxis->SetMin(0, true);
-			thisPlot.XAxis.SetMin(0, true);
-			lockYtoZero = false;
-		}
 		for (auto& profile : data) {
 			if (profile.x->size() == 0) continue;
 			std::string name = "F#" + std::to_string(profile.id+1);
@@ -142,8 +136,15 @@ void ImProfilePlotter::DrawProfileGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	if (lockYtoZero) {
+		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##ProfilePlot");
+		thisPlot.YAxis->SetMin(0, true);
+		thisPlot.XAxis.SetMin(0, true);
+		lockYtoZero = false;
+	}
 }
 
+// repeated code with Convergence Plotter, todo: consolidate
 void ImProfilePlotter::DrawValueOnHover()
 {
 	if (ImPlot::IsPlotHovered()) {
@@ -185,13 +186,17 @@ void ImProfilePlotter::DrawValueOnHover()
 				ImPlot::PlotScatter("", &X, &Y, 1);
 				ImPlot::PopStyleColor();
 
+				std::string xVal, yVal;
+				xVal = fmt::format("{:.4}", X);
+				yVal = fmt::format("{:.4}", Y);
+
 				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
-				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2 * txtH;
-				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= 17 * txtW;
+				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2.5 * txtH;
+				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= (std::max(xVal.length(), yVal.length())+2.5) * txtW;
 
 				ImGui::SetNextWindowPos(tooltipPos);
 				ImGui::BeginTooltipEx(0, 0);
-				ImGui::Text("X=" + std::to_string(X) + "\nY=" + std::to_string(Y));
+				ImGui::Text("X=" + xVal + "\nY=" + yVal);
 				ImGui::EndTooltip();
 			}
 		}
