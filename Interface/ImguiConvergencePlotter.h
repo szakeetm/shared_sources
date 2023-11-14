@@ -9,7 +9,11 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 protected:
-	std::vector<ImPlotData> drawnFormulas;
+	void MenuBar();
+	bool Export(bool toFile = false);
+
+	bool showDatapoints = false;
+	std::vector<ImPlotData> data;
 	Interface* mApp;
 	bool logY = false;
 	bool colorBlind = false;
