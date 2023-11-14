@@ -54,7 +54,7 @@ void ImTexturePlotter::Draw()
 	ImGui::SetNextItemWidth(30 * txtW);
 	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingement rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
 	ImGui::SameLine();
-	ImGui::HelpMarker("Click, hold and drag to select multiple\nSelect one and shift+click another to select all inbetween\nHold ctrl to add/substract from selection\nClick selected to deselect");
+	ImGui::HelpMarker("Click, hold and drag to select multiple\nSelect one and shift+click another to select all inbetween\nClick selected to deselect");
 	ImGui::SameLine();
 
 	ImGui::End();
@@ -83,10 +83,7 @@ void ImTexturePlotter::DrawTextureTable()
 		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
 			selectionStart = ImGui::GetMousePos();
 			isDragging = true;
-			if (!io.KeysDown[SDL_SCANCODE_LCTRL]) // control to not clear selection
-			{
-				selection.clear();
-			}
+			selection.clear();
 		}
 
 		if (isDragging) {
@@ -152,10 +149,9 @@ void ImTexturePlotter::DrawTextureTable()
 						BoxSelect(selection[0], std::pair<int, int>(i, j));
 						continue;
 					}
-					if (!io.KeysDown[SDL_SCANCODE_LCTRL]) // control to not clear selection
-					{
-						selection.clear();
-					}
+
+					selection.clear();
+
 					if (isSelected) { // deselect if was selected
 						selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int,int>(i,j)), selection.end());
 						continue;
