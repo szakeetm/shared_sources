@@ -66,9 +66,9 @@ bool GLTitledPanel::IsClosed() {
 }
 
 void GLTitledPanel::SetTextColor(int r,int g,int b) {
-  rText = r/255.0f;
-  gText = g/255.0f;
-  bText = b/255.0f;
+  rText = (float)r/255.0f;
+  gText = (float)g/255.0f;
+  bText = (float)b/255.0f;
 }
 
 void GLTitledPanel::ManageEvent(SDL_Event *evt) {
