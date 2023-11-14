@@ -119,7 +119,6 @@ void ImConvergencePlotter::Draw()
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move\nHold right and drag for box select (auto-fit must be disabled first)");
 	ImGui::SameLine();
-	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();
 }

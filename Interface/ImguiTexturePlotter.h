@@ -19,7 +19,10 @@ protected:
 	void SelectColumn(size_t col);
 	void BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end);
 	ImVec4 SelectionBounds();
-	bool SaveToFile();
+	bool SaveTexturePlotter(bool toFile=true);
+	void MenuBar();
+	typedef struct SelRect { int startRow, startCol, endRow, endCol; };
+	std::string Serialize(SelRect bounds = { 0,0,0,0 }, std::string lineBreak = "\n", std::string rowBreak = "\t");
 
 	// UI variables
 	bool isDragging = false;
@@ -27,7 +30,9 @@ protected:
 	std::string name = "Texture Plotter []###TexturePlotter";
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
-	
+	bool resizableColumns = false;
+	bool fitToWindow = false;
+
 	// app + data variables
 	InterfaceGeometry* interfGeom;
 	InterfaceFacet* selFacet;

@@ -14,10 +14,8 @@ extern MolFlow* mApp;
 
 void ImTexturePlotter::Draw()
 {
-	static bool resizableColumns = false;
-	static bool fitToWindow = false;
 	if (!drawn) return;
-	
+
 	// assemble table & columns flags
 	tableFlags = 0;
 	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
@@ -40,41 +38,24 @@ void ImTexturePlotter::Draw()
 		selection.clear();
 	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
-	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 5 * txtH),true);
+	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
+	MenuBar();
+	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
-	if (ImGui::Button("Save")) {
-		SaveToFile();
-	} ImGui::SameLine();
 	if (ImGui::Button("FindMax")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
-	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5));
+	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
 	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingement rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
-	ImGui::Checkbox("Resizable columns", &resizableColumns); ImGui::SameLine();
-	ImGui::Checkbox("Fit to window", &fitToWindow);
 	ImGui::SameLine();
-	if (ImGui::Button("Autosize to data")) {
-		resizableColumns = false;
-		fitToWindow = false;
-	}
-	ImGui::SameLine();
-	if (ImGui::Button("Autosize to window")) {
-		resizableColumns = false;
-		fitToWindow = true;
-	}
-	ImGui::SameLine();
-	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (11.25));
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::HelpMarker("Click, hold and drag to select multiple\nSelect one and shift+click another to select all inbetween\nHold ctrl to add/substract from selection\nClick selected to deselect");
 	ImGui::SameLine();
-	if (ImGui::Button("Dismiss")) { Hide(); }
 
 	ImGui::End();
 
@@ -491,7 +472,7 @@ ImVec4 ImTexturePlotter::SelectionBounds() {
 	return ImVec4(startRow,startCol,endRow,endCol);
 }
 
-bool ImTexturePlotter::SaveToFile()
+bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 {
 	if (!selFacet) return false;
 
@@ -511,24 +492,60 @@ bool ImTexturePlotter::SaveToFile()
 		endCol = bounds.w;
 	}
 	// wrtie to file
-	std::string fileFilters = "txt";
-	std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
-	if (!fn.empty()) {
-		FILE* f = fopen(fn.c_str(), "w");
-		if (f == NULL) {
-			ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
-			return false;
-		}
-		std::string out;
-		for (size_t row = startRow; row <= endRow; row++) {
-			for (size_t col = startCol; col <= endCol; col++) {
-				out.append(data[row][col]);
-				out.append("\t");
+	if (toFile) {
+		std::string fileFilters = "txt";
+		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
+		if (!fn.empty()) {
+			FILE* f = fopen(fn.c_str(), "w");
+			if (f == NULL) {
+				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
+				return false;
 			}
-			out.append("\n");
+			fprintf(f, Serialize({startRow,startCol,endRow,endCol}).c_str());
+			fclose(f);
 		}
-		fprintf(f, out.c_str());
-		fclose(f);
+	}
+	else {
+		SDL_SetClipboardText(Serialize({ startRow,startCol,endRow,endCol }).c_str());
 	}
 	return true;
+}
+
+void ImTexturePlotter::MenuBar()
+{
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("Export")) {
+			if (ImGui::MenuItem("To clipboard")) SaveTexturePlotter(false);
+			if (ImGui::MenuItem("To csv")) SaveTexturePlotter();
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("View")) {
+			ImGui::Checkbox("Resizable columns", &resizableColumns);
+			ImGui::Checkbox("Fit to window", &fitToWindow);
+			if (ImGui::MenuItem("Autosize to data")) {
+				resizableColumns = false;
+				fitToWindow = false;
+			}
+			if (ImGui::MenuItem("Autosize to window")) {
+				resizableColumns = false;
+				fitToWindow = true;
+			}
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
+}
+
+// pass bounds as {startRow, startCol, endRow, endCol}
+std::string ImTexturePlotter::Serialize(SelRect bounds, std::string lineBreak, std::string rowBreak)
+{
+	std::string out;
+	for (size_t row = bounds.startRow; row <= bounds.endRow; row++) {
+		for (size_t col = bounds.startCol; col <= bounds.endCol; col++) {
+			out.append(data[row][col]);
+			out.append("\t");
+		}
+		out.append("\n");
+	}
+	return out;
 }
