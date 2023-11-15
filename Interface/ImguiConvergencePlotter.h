@@ -26,6 +26,5 @@ protected:
 	double step = 1.0;
 	GLFormula formula;
 	bool IsPlotted(size_t idx);
-	void DrawValueOnHover();
 	bool lockYtoZero = false;
 };

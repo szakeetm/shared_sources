@@ -1,5 +1,8 @@
 #include "ImguiWindowBase.h"
 #include "imgui.h"
+#include "imgui_internal.h"
+#include "imgui_stdlib/imgui_stdlib.h"
+#include "implot/implot.h"
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
 
@@ -129,4 +132,63 @@ ImPlotData ImUtils::MakePlotData(size_t id, std::shared_ptr<std::vector<double>>
 	out.y = y;
 	out.color = color;
 	return out;
+}
+
+void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawManual, const std::vector<double>* manualxValues, const std::vector<double>* manualyValues) {
+	if (ImPlot::IsPlotHovered()) {
+		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
+		if (data.size() != 0 || drawManual) {
+			int entryIdx = -1;
+			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y * 10;
+			int plotIdx = -2;
+			for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
+				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
+				double dist;
+				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
+				if (entryIdxTmp != -1 && dist < minYDiff) {
+					minYDiff = dist;
+					plotIdx = i;
+					entryIdx = entryIdxTmp;
+				}
+			}
+			if (drawManual) {
+				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
+				double dist = minYDiff;
+				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues->at(entryIdxTmp))).y);
+				if (entryIdxTmp != -1 && dist < minYDiff) {
+					minYDiff = dist;
+					plotIdx = -1;
+					entryIdx = entryIdxTmp;
+				}
+			}
+			if (plotIdx == -1) {
+				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
+			}
+			else if (plotIdx >= 0 && plotIdx < data.size()) {
+				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
+			}
+			if ((plotIdx == -1 && entryIdx != -1) || (plotIdx >= 0 && plotIdx < data.size() && entryIdx >= 0 && entryIdx < data[plotIdx].x->size())) {
+				double X = plotIdx == -1 ? manualxValues->at(entryIdx) : data[plotIdx].x->at(entryIdx);
+				double Y = plotIdx == -1 ? manualyValues->at(entryIdx) : data[plotIdx].y->at(entryIdx);
+				ImPlot::PushStyleColor(0, ImVec4(0, 0, 0, 1));
+				ImPlot::PlotScatter("", &X, &Y, 1);
+				ImPlot::PopStyleColor();
+
+				std::string xVal, yVal;
+				xVal = fmt::format("{:.4}", X);
+				yVal = fmt::format("{:.4}", Y);
+
+				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
+				float txtW = ImGui::CalcTextSize("X").x;
+				float txtH = ImGui::GetTextLineHeightWithSpacing();
+				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2.5 * txtH;
+				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= (std::max(xVal.length(), yVal.length()) + 3.5) * txtW;
+
+				ImGui::SetNextWindowPos(tooltipPos);
+				ImGui::BeginTooltipEx(0, 0);
+				ImGui::Text("X=" + xVal + "\nY=" + yVal);
+				ImGui::EndTooltip();
+			}
+		}
+	}
 }

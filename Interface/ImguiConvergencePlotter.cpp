@@ -52,7 +52,6 @@ bool ImConvergencePlotter::Export(bool toFile)
 		}
 	}
 	return true;
-	return false;
 }
 
 void ImConvergencePlotter::MenuBar()
@@ -120,8 +119,6 @@ void ImConvergencePlotter::Draw()
 		ImGui::EndCombo();
 	}
 	if (nFormulas == 0) ImGui::EndDisabled();
-	//ImGui::SameLine();
-	//ImGui::Checkbox("Log Y", &logY); // available by right click in ImPlot
 	
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (33.5);
@@ -202,7 +199,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 		if (drawManual)	ImPlot::PlotLine(formula.GetName().c_str(), manualxValues.data(), manualyValues.data(), manualxValues.size());
 		// value tooltip
-		DrawValueOnHover();
+		ImUtils::DrawValueOnHover(data,drawManual, &manualxValues, &manualyValues);
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -221,62 +218,4 @@ bool ImConvergencePlotter::IsPlotted(size_t idx)
 		if (idx == formula.id) return true;
 	}
 	return false;
-}
-
-// repeated code with Profile Plotter, todo: consolidate
-void ImConvergencePlotter::DrawValueOnHover() {
-	if (ImPlot::IsPlotHovered()) {
-		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
-		if (data.size() != 0 || drawManual) {
-			int entryIdx = -1;
-			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y*10;
-			int plotIdx = -2;
-			for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
-				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
-				double dist;
-				if (entryIdxTmp != -1 ) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
-				if (entryIdxTmp != -1 && dist < minYDiff) {
-					minYDiff = dist;
-					plotIdx = i;
-					entryIdx = entryIdxTmp;
-				}
-			}
-			if (drawManual) {
-				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualxValues);
-				double dist = minYDiff;
-				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues[entryIdxTmp])).y);
-				if (entryIdxTmp != -1 && dist < minYDiff) {
-					minYDiff = dist;
-					plotIdx = -1;
-					entryIdx = entryIdxTmp;
-				}
-			}
-			if (plotIdx == -1) {
-				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, manualxValues);
-			}
-			else if (plotIdx >= 0 && plotIdx < data.size()) {
-				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
-			}
-			if ((plotIdx == -1 && entryIdx != -1) || (plotIdx >= 0 && plotIdx<data.size() && entryIdx>=0 && entryIdx<data[plotIdx].x->size())) {
-				double X = plotIdx == -1 ? manualxValues[entryIdx] : data[plotIdx].x->at(entryIdx);
-				double Y = plotIdx == -1 ? manualyValues[entryIdx] : data[plotIdx].y->at(entryIdx);
-				ImPlot::PushStyleColor(0, ImVec4(0, 0, 0, 1));
-				ImPlot::PlotScatter("", &X, &Y, 1);
-				ImPlot::PopStyleColor();
-
-				std::string xVal, yVal;
-				xVal = fmt::format("{:.4}", X);
-				yVal = fmt::format("{:.4}", Y);
-
-				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
-				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2.5 * txtH;
-				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x - tooltipPos.x < 20 * txtW) tooltipPos.x -= (std::max(xVal.length(), yVal.length()) + 2.5) * txtW;
-
-				ImGui::SetNextWindowPos(tooltipPos);
-				ImGui::BeginTooltipEx(0, 0);
-				ImGui::Text("X=" + xVal + "\nY=" + yVal);
-				ImGui::EndTooltip();
-			}
-		}
-	}
 }
