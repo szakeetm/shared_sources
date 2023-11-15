@@ -57,6 +57,8 @@ void ImProfilePlotter::Draw()
 		data.clear();
 		data.shrink_to_fit();
 		drawManual = false;
+		manualPlot.x = nullptr;
+		manualPlot.y = nullptr;
 	}
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
@@ -84,8 +86,10 @@ void ImProfilePlotter::Draw()
 		drawManual = ImUtils::ParseExpression(expression, formula);
 		if (manualPlot.x.get() == nullptr) manualPlot.x = std::make_shared<std::vector<double>>();
 		if (manualPlot.y.get() == nullptr) manualPlot.y = std::make_shared<std::vector<double>>();
+		manualPlot.x->clear();
+		manualPlot.y->clear();
 
-		ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
+		if(drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
 	}
 	ImGui::AlignTextToFramePadding();
 	ImGui::SameLine();
@@ -111,7 +115,6 @@ void ImProfilePlotter::DrawProfileGraph()
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
-			//if (profile.x->size() == 0) continue;
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(),profile.x->size());

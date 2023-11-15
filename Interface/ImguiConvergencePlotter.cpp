@@ -144,13 +144,17 @@ void ImConvergencePlotter::Draw()
 	{
 		data.clear();
 		drawManual = false;
+		manualxValues.clear();
+		manualyValues.clear();
 	}
 	
 	ImGui::SetNextItemWidth(txtW * 15);
 	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 	if (ImGui::Button("-> Plot expression")) {
 		drawManual = ImUtils::ParseExpression(expression, formula);
-		ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX - startX);
+		manualxValues.clear();
+		manualyValues.clear();
+		if(drawManual) ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX - startX);
 	}
 	ImGui::SameLine();
 	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (31+3);

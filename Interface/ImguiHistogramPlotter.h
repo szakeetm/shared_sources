@@ -11,6 +11,8 @@ protected:
 	void DrawPlot();
 	void RemovePlot();
 	void AddPlot();
+	void MenuBar();
+	void RefreshPlots();
 
 	//types
 	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
@@ -57,5 +59,6 @@ protected:
 	bool normalize = false;
 	std::vector<size_t> comboOpts;
 	std::vector<ImPlotData> data[3];
+	ImPlotData globals[3];
 	long comboSelection=-2;
 };

@@ -6,6 +6,7 @@
 #include "ImguiPopup.h"
 #include "Facet_shared.h"
 #include "implot/implot.h"
+#include "implot/implot_internal.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -18,8 +19,8 @@ void ImHistogramPlotter::Draw()
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(settingsWindow.width + (3 * txtW), 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
-	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings);
-
+	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
+	MenuBar();
 	if (ImGui::BeginTabBar("Histogram types")) {
 		
 		if (ImGui::BeginTabItem("Bounces before absorption")) {
@@ -93,15 +94,22 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==bounces) xAxisName = "Number of bounces";
 	if(plotTab==distance) xAxisName = "Distance [cm]";
 	if(plotTab==time) xAxisName = "Time [s]";
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));
 			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), plot.x->size());
 			plot.color = ImPlot::GetLastItemColor();
 		}
+		if (globals[plotTab].x != nullptr && globals[plotTab].x->size() != 0) {
+			ImPlot::PlotScatter("Global", globals[plotTab].x->data(), globals[plotTab].y->data(), globals[plotTab].x->size());
+			globals[plotTab].color = ImPlot::GetLastItemColor();
+		}
 		ImPlot::EndPlot();
 	}
+	ImPlot::PopStyleVar();
+	RefreshPlots();
 }
 
 void ImHistogramPlotter::RemovePlot()
@@ -118,27 +126,100 @@ void ImHistogramPlotter::RemovePlot()
 void ImHistogramPlotter::AddPlot()
 {
 	ImPlotData newPlot;
-	if(comboSelection!=-1) newPlot.id = comboSelection;
-	double xSpacing=1;
-	size_t nBins=0;
-	// thanks to pass by reference the values should updata automatically without extra calls
-	switch (plotTab) {
+	if (comboSelection != -1) newPlot.id = comboSelection;
+	else newPlot.id = plotTab;
+	
+	newPlot.x = std::make_shared<std::vector<double>>();
+	newPlot.y = std::make_shared<std::vector<double>>();
+
+	if (comboSelection != -1) {
+		data[plotTab].push_back(newPlot);
+		return;
+	}
+	globals[plotTab] = newPlot;
+	RefreshPlots();
+}
+
+void ImHistogramPlotter::RefreshPlots()
+{
+	GetHitLock(mApp->worker.globalState.get(), 1000);
+	float xMax = 1;
+
+	for (auto& plot : data[plotTab]) { // facet histograms
+		double xSpacing = 1;
+		size_t nBins = 0;
+		size_t facetId = plot.id;
+		switch (plotTab) {
+		case bounces:
+			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram; // yaxis
+			xMax = (double)interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
+			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize;
+			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
+			break;
+		case distance:
+			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.distanceHistogram; // yaxis
+			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
+			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
+			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
+			break;
+		case time:
+			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram; // yaxis
+			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
+			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
+			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
+			break;
+		}
+		
+		// x axis
+		if (plot.x->size() != nBins) {
+			plot.x = std::make_shared<std::vector<double>>();
+			for (size_t n = 0; n < nBins && n < 1000; n++) {
+				plot.x->push_back((double)n * xSpacing);
+			}
+		}
+	}
+	if (globals[plotTab].x.get() == nullptr || globals[plotTab].y.get() == nullptr) return;
+	double xSpacing = 1;
+	size_t nBins = 0;
+	switch (plotTab) { // global histograms
 	case bounces:
-		newPlot.y = comboSelection == -1 ? std::make_shared<std::vector<double>>(mApp->worker.globalHistogramCache.nbHitsHistogram) : 0; //y axis
-		xSpacing = comboSelection == -1 ? (double)mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize : 1;
-		nBins = comboSelection == -1 ? mApp->worker.model->sp.globalHistogramParams.GetBounceHistogramSize() : 0;
+		*globals[plotTab].y.get() = mApp->worker.globalHistogramCache.nbHitsHistogram;
+		xMax = (float)mApp->worker.model->sp.globalHistogramParams.nbBounceMax;
+		xSpacing = (double)mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize;
+		nBins = mApp->worker.model->sp.globalHistogramParams.GetBounceHistogramSize();
 		break;
 	case distance:
+		*globals[plotTab].y.get() = mApp->worker.globalHistogramCache.distanceHistogram;
+		xMax = mApp->worker.model->sp.globalHistogramParams.distanceMax;
+		xSpacing = (double)mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
+		nBins = mApp->worker.model->sp.globalHistogramParams.GetDistanceHistogramSize();
 		break;
 	case time:
+		*globals[plotTab].y.get() = mApp->worker.globalHistogramCache.timeHistogram;
+		xMax = mApp->worker.model->sp.globalHistogramParams.timeMax;
+		xSpacing = (double)mApp->worker.model->sp.globalHistogramParams.timeBinsize;
+		nBins = mApp->worker.model->sp.globalHistogramParams.GetTimeHistogramSize();
 		break;
 	}
 	// x axis
-	newPlot.x = std::make_shared<std::vector<double>>();
-	for (size_t n = 0; n < nBins; n++) {
-		newPlot.x->push_back((double)n * xSpacing);
+	if (globals[plotTab].x->size() != nBins) {
+		globals[plotTab].x = std::make_shared<std::vector<double>>();
+		for (size_t n = 0; n < nBins && n < 1000; n++) {
+			globals[plotTab].x->push_back((double)n * xSpacing);
+		}
 	}
-	data[plotTab].push_back(newPlot);
+}
+
+void ImHistogramPlotter::MenuBar()
+{
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("Export")) {
+			if (ImGui::MenuItem("To clipboard")) ;
+			if (ImGui::MenuItem("To file")) ;
+			ImGui::EndMenu();
+		}
+		ImGui::EndMenuBar();
+	}
 }
 
 void ImHistogramPlotter::ImHistagramSettings::Draw()
