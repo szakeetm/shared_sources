@@ -76,7 +76,7 @@ void ImHistogramPlotter::Draw()
 		data[plotTab].clear();
 		globals[plotTab] = ImPlotData();
 	} ImGui::SameLine();
-	ImGui::Checkbox("Normalize", &normalize);
+	if (ImGui::Checkbox("Normalize", &normalize)) RefreshPlots();
 	ImGui::End();
 	settingsWindow.Draw();
 }
@@ -107,6 +107,8 @@ void ImHistogramPlotter::DrawPlot()
 			ImPlot::PlotScatter("Global", globals[plotTab].x->data(), globals[plotTab].y->data(), globals[plotTab].x->size());
 			globals[plotTab].color = ImPlot::GetLastItemColor();
 		}
+		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
+		ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -177,6 +179,17 @@ void ImHistogramPlotter::RefreshPlots()
 		for (size_t n = 0; n < nBins && limitPoints ? n < maxDisplayed : true; n++) {
 			plot.x->push_back((double)n * xSpacing);
 		}
+		if (normalize) {
+			double maxY = 0;
+			for (unsigned int i = 0; i < plot.x->size(); i++) {
+				maxY = std::max(maxY, plot.y->at(i));
+			}
+			if (maxY == 0) continue;
+			double scaleY = 1 / maxY;
+			for (unsigned int i = 0; i < plot.x->size(); i++) {
+				plot.y->at(i) *= scaleY;
+			}
+		}
 	}
 	if (globals[plotTab].x.get() == nullptr || globals[plotTab].y.get() == nullptr) return;
 	double xSpacing = 1;
@@ -207,7 +220,17 @@ void ImHistogramPlotter::RefreshPlots()
 	for (size_t n = 0; n < nBins-1 && (!limitPoints || n < maxDisplayed); n++) {
 		globals[plotTab].x->push_back((double)n * xSpacing);
 	}
-
+	if (normalize) {
+		double maxY = 0;
+		for (unsigned int i = 0; i < globals[plotTab].x->size(); i++) {
+			maxY = std::max(maxY, globals[plotTab].y->at(i));
+		}
+		if (maxY == 0) return;
+		double scaleY = 1 / maxY;
+		for (unsigned int i = 0; i < globals[plotTab].x->size(); i++) {
+			globals[plotTab].y->at(i) *= scaleY;
+		}
+	}
 }
 
 void ImHistogramPlotter::MenuBar()
