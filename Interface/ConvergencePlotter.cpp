@@ -475,7 +475,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 int idx = profCombo->GetSelectedIndex();
                 if (idx >= 0 && !appFormulas->formulas.empty()) { //Something selected (not -1)
                     if(appFormulas->formulas[profCombo->GetUserValueAt(idx)].hasEvalError){
-                        GLMessageBox::Display("Formula can't be evaluated.", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        GLMessageBox::Display(fmt::format("Formula can't be evaluated:\n{}", appFormulas->formulas[profCombo->GetUserValueAt(idx)].GetEvalErrorMsg()).c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
                         break;
                     }
                     int str_hash = std::hash<std::string>{}(
