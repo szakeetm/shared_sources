@@ -16,7 +16,7 @@ void ImConvergencePlotter::Init(Interface* mApp_) {
 	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
-bool ImConvergencePlotter::Export(bool toFile)
+bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 {
 	if (data.size() == 0) {
 		ImIOWrappers::InfoPopup("Error", "Nothing to export");
@@ -30,7 +30,7 @@ bool ImConvergencePlotter::Export(bool toFile)
 	}
 	out.append("\n");
 	// rows
-	for (int i = 0; i < data[0].x->size(); i++) {
+	for (int i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
 		for (const auto& formula : data) {
 			out.append(fmt::format("{}", formula.y->at(i)) + "\t");
@@ -58,8 +58,11 @@ void ImConvergencePlotter::MenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Export")) {
-			if (ImGui::MenuItem("To clipboard")) Export();
-			if (ImGui::MenuItem("To file")) Export(true);
+			if (ImGui::MenuItem("All to clipboard")) Export();
+			if (ImGui::MenuItem("All to file")) Export(true);
+			ImGui::Separator();
+			if (ImGui::MenuItem("Plotted to clipboard")) Export(false, true);
+			if (ImGui::MenuItem("Plotted to file")) Export(true, true);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
@@ -203,7 +206,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();
 			data[i].x->clear();
 			data[i].y->clear();
-			for (int j = std::max(0, (int)values.size() - maxDatapoints); j < values.size(); j++) {
+			for (int j = 0; j < values.size(); j++) {
 				data[i].x->push_back(values[j].nbDes);
 				data[i].y->push_back(values[j].value);
 			}

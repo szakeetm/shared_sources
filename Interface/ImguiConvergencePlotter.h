@@ -10,7 +10,7 @@ public:
 	void Init(Interface* mApp);
 protected:
 	void MenuBar();
-	bool Export(bool toFile = false);
+	bool Export(bool toFile = false, bool onlyVisible = false);
 
 	bool showDatapoints = false;
 	std::vector<ImPlotData> data;
