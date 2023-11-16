@@ -74,6 +74,7 @@ void ImHistogramPlotter::Draw()
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove all")) {
 		data[plotTab].clear();
+		globals[plotTab] = ImPlotData();
 	} ImGui::SameLine();
 	ImGui::Checkbox("Normalize", &normalize);
 	ImGui::End();
@@ -95,7 +96,7 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==distance) xAxisName = "Distance [cm]";
 	if(plotTab==time) xAxisName = "Time [s]";
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), "Number of particles", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));
@@ -114,13 +115,13 @@ void ImHistogramPlotter::DrawPlot()
 
 void ImHistogramPlotter::RemovePlot()
 {
-	if (data[plotTab].size() == 0) return;
 	for (size_t i = 0; i < data[plotTab].size(); i++) {
 		if (data[plotTab][i].id == comboSelection) {
 			data[plotTab].erase(data[plotTab].begin() + i);
 			return;
 		}
 	}
+	globals[plotTab] = ImPlotData();
 }
 
 void ImHistogramPlotter::AddPlot()
@@ -171,11 +172,10 @@ void ImHistogramPlotter::RefreshPlots()
 		}
 		
 		// x axis
-		if (plot.x->size() != nBins) {
-			plot.x = std::make_shared<std::vector<double>>();
-			for (size_t n = 0; n < nBins && n < 1000; n++) {
-				plot.x->push_back((double)n * xSpacing);
-			}
+		plot.x->swap(std::vector<double>());
+		plot.x = std::make_shared<std::vector<double>>();
+		for (size_t n = 0; n < nBins && limitPoints ? n < maxDisplayed : true; n++) {
+			plot.x->push_back((double)n * xSpacing);
 		}
 	}
 	if (globals[plotTab].x.get() == nullptr || globals[plotTab].y.get() == nullptr) return;
@@ -202,12 +202,12 @@ void ImHistogramPlotter::RefreshPlots()
 		break;
 	}
 	// x axis
-	if (globals[plotTab].x->size() != nBins) {
-		globals[plotTab].x = std::make_shared<std::vector<double>>();
-		for (size_t n = 0; n < nBins && n < 1000; n++) {
-			globals[plotTab].x->push_back((double)n * xSpacing);
-		}
+	globals[plotTab].x->swap( std::vector<double>() );
+	globals[plotTab].x = std::make_shared<std::vector<double>>();
+	for (size_t n = 0; n < nBins-1 && (!limitPoints || n < maxDisplayed); n++) {
+		globals[plotTab].x->push_back((double)n * xSpacing);
 	}
+
 }
 
 void ImHistogramPlotter::MenuBar()
@@ -216,6 +216,14 @@ void ImHistogramPlotter::MenuBar()
 		if (ImGui::BeginMenu("Export")) {
 			if (ImGui::MenuItem("To clipboard")) ;
 			if (ImGui::MenuItem("To file")) ;
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("View")) {
+			if(ImGui::Checkbox("Limit points", &limitPoints)) RefreshPlots();
+			if (!limitPoints) ImGui::BeginDisabled();
+			ImGui::Text("Limit"); ImGui::SameLine();
+			if(ImGui::InputInt("##plotMax", &maxDisplayed, 100, 1000)) RefreshPlots();
+			if (!limitPoints) ImGui::EndDisabled();
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();

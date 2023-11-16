@@ -61,4 +61,6 @@ protected:
 	std::vector<ImPlotData> data[3];
 	ImPlotData globals[3];
 	long comboSelection=-2;
+	int maxDisplayed = 1000;
+	bool limitPoints = true;
 };
