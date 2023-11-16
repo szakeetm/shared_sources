@@ -65,12 +65,20 @@ void ImConvergencePlotter::MenuBar()
 		if (ImGui::BeginMenu("View")) {
 			ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
-			ImGui::Text("Change linewidth:");
+			ImGui::Text("Linewidth:");
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(txtW * 12);
 			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
 				if (lineWidth < 0.5) lineWidth = 0.5;
 			}
+			ImGui::Text("Limit"); ImGui::SameLine();
+			if (ImGui::InputInt("##plotMax", &maxDatapoints, 100, 1000)) {
+				if (maxDatapoints < 0) maxDatapoints = 0;
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Data")) {
+			// TODO remove every Nth, remove first N
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
@@ -85,6 +93,12 @@ void ImConvergencePlotter::MenuBar()
 			ImGui::InputDouble("##Step", &step, 1, 4, "%.2f");
 			ImGui::EndMenu();
 		}
+
+		if (data.size()!=0 && maxDatapoints< actualNbValues) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the last {} of {} values", maxDatapoints, actualNbValues).c_str());
+		}
+
 		ImGui::EndMenuBar();
 	}
 }
@@ -181,14 +195,15 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
-	ImPlot::SetNextPlotLimits(0, 1000, 0, 1000, ImGuiCond_FirstUseEver);
+	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-6*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (int i = 0; i < data.size(); i++) {
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
-			int count = values.size()>1000 ? 1000 : values.size();
+			actualNbValues = values.size();
+			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();
 			data[i].x->clear();
 			data[i].y->clear();
-			for (int j = std::max(0, (int)values.size() - 1000); j < values.size(); j++) {
+			for (int j = std::max(0, (int)values.size() - maxDatapoints); j < values.size(); j++) {
 				data[i].x->push_back(values[j].nbDes);
 				data[i].y->push_back(values[j].value);
 			}

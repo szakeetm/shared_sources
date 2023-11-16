@@ -27,4 +27,6 @@ protected:
 	GLFormula formula;
 	bool IsPlotted(size_t idx);
 	bool lockYtoZero = false;
+	int maxDatapoints = 1000;
+	int actualNbValues = 0;
 };
