@@ -135,38 +135,49 @@ ImPlotData ImUtils::MakePlotData(size_t id, std::shared_ptr<std::vector<double>>
 }
 
 void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawManual, const std::vector<double>* manualxValues, const std::vector<double>* manualyValues) {
+	enum distanceMode : short {yAxis, euclidian};
+	distanceMode mode = yAxis;
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 		if (data.size() != 0 || drawManual) {
+			int plotIdx = -2;
 			int entryIdx = -1;
 			double minYDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y * 10;
-			int plotIdx = -2;
-			for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
-				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
-				double dist;
-				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
-				if (entryIdxTmp != -1 && dist < minYDiff) {
-					minYDiff = dist;
-					plotIdx = i;
-					entryIdx = entryIdxTmp;
+			switch (mode)
+			{
+			case yAxis:
+				for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
+					int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
+					double dist;
+					if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
+					if (entryIdxTmp != -1 && dist < minYDiff) {
+						minYDiff = dist;
+						plotIdx = i;
+						entryIdx = entryIdxTmp;
+					}
 				}
-			}
-			if (drawManual) {
-				int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
-				double dist = minYDiff;
-				if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues->at(entryIdxTmp))).y);
-				if (entryIdxTmp != -1 && dist < minYDiff) {
-					minYDiff = dist;
-					plotIdx = -1;
-					entryIdx = entryIdxTmp;
+				if (drawManual) {
+					int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
+					double dist = minYDiff;
+					if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues->at(entryIdxTmp))).y);
+					if (entryIdxTmp != -1 && dist < minYDiff) {
+						minYDiff = dist;
+						plotIdx = -1;
+						entryIdx = entryIdxTmp;
+					}
 				}
+				if (plotIdx == -1) {
+					entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
+				}
+				else if (plotIdx >= 0 && plotIdx < data.size()) {
+					entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
+				}
+				break;
+			case euclidian:
+
+				break;
 			}
-			if (plotIdx == -1) {
-				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
-			}
-			else if (plotIdx >= 0 && plotIdx < data.size()) {
-				entryIdx = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
-			}
+			// do the actual drawing
 			if ((plotIdx == -1 && entryIdx != -1) || (plotIdx >= 0 && plotIdx < data.size() && entryIdx >= 0 && entryIdx < data[plotIdx].x->size())) {
 				double X = plotIdx == -1 ? manualxValues->at(entryIdx) : data[plotIdx].x->at(entryIdx);
 				double Y = plotIdx == -1 ? manualyValues->at(entryIdx) : data[plotIdx].y->at(entryIdx);

@@ -96,7 +96,7 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==distance) xAxisName = "Distance [cm]";
 	if(plotTab==time) xAxisName = "Time [s]";
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), "Number of particles", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));
@@ -174,7 +174,6 @@ void ImHistogramPlotter::RefreshPlots()
 		}
 		
 		// x axis
-		plot.x->swap(std::vector<double>());
 		plot.x = std::make_shared<std::vector<double>>();
 		for (size_t n = 0; n < nBins && limitPoints ? n < maxDisplayed : true; n++) {
 			plot.x->push_back((double)n * xSpacing);
@@ -215,7 +214,6 @@ void ImHistogramPlotter::RefreshPlots()
 		break;
 	}
 	// x axis
-	globals[plotTab].x->swap( std::vector<double>() );
 	globals[plotTab].x = std::make_shared<std::vector<double>>();
 	for (size_t n = 0; n < nBins-1 && (!limitPoints || n < maxDisplayed); n++) {
 		globals[plotTab].x->push_back((double)n * xSpacing);
@@ -245,10 +243,21 @@ void ImHistogramPlotter::MenuBar()
 			if(ImGui::Checkbox("Limit points", &limitPoints)) RefreshPlots();
 			if (!limitPoints) ImGui::BeginDisabled();
 			ImGui::Text("Limit"); ImGui::SameLine();
-			if(ImGui::InputInt("##plotMax", &maxDisplayed, 100, 1000)) RefreshPlots();
+			if (ImGui::InputInt("##plotMax", &maxDisplayed, 100, 1000)) {
+				if (maxDisplayed < 0) maxDisplayed = 0;
+				RefreshPlots(); 
+			}
 			if (!limitPoints) ImGui::EndDisabled();
 			ImGui::EndMenu();
 		}
+		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
+		bool isFacet = data[plotTab].size() != 0;
+		long long bins = isGlobal ? globals[plotTab].y->size() : data[plotTab].at(0).y->size();
+		if ((isGlobal || isFacet) && bins>maxDisplayed && limitPoints) {
+			ImGui::SameLine();
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the first {} of {} values", maxDisplayed, bins).c_str());
+		}
+
 		ImGui::EndMenuBar();
 	}
 }
