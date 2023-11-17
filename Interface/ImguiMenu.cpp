@@ -649,11 +649,12 @@ void HistogramPlotterMenuPress() {
     */
 }
 void TextureScalingMenuPress() {
-    if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {
+    mApp->imWnd->textScale.Show();
+    /*if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {
         SAFE_DELETE(mApp->textureScaling);
         mApp->textureScaling = new TextureScaling();
         mApp->textureScaling->Display(&mApp->worker, mApp->viewers);
-    }
+    }*/
 }
 void ParticleLoggerMenuPress() {
     if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {

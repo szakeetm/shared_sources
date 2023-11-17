@@ -37,6 +37,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiTexturePlotter.h"
 #include "ImguiProfilePlotter.h"
 #include "ImguiHistogramPlotter.h"
+#include "ImguiTextureScaling.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -84,6 +85,7 @@ public:
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
+    ImTextureScailing textScale;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

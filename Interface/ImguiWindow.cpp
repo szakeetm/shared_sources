@@ -214,6 +214,8 @@ void ImguiWindow::init() {
     profPlot.Init(mApp);
     histPlot = ImHistogramPlotter();
     histPlot.Init(mApp);
+    textScale = ImTextureScailing();
+    textScale.Init(mApp);
 
     RegisterShortcuts();
 
@@ -403,6 +405,7 @@ void ImguiWindow::renderSingle() {
         textPlot.Draw();
         profPlot.Draw();
         histPlot.Draw();
+        textScale.Draw();
 
         shortcutMan.DoShortcuts();
 
