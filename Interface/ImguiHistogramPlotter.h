@@ -63,4 +63,5 @@ protected:
 	long comboSelection=-2;
 	int maxDisplayed = 1000;
 	bool limitPoints = true;
+	bool showValueOnHover = true;
 };

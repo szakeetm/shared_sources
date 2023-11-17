@@ -38,6 +38,5 @@ namespace ImUtils {
 	long long EntryIndexFromXAxisValue(double xAxisValue, const ImPlotData& plot);
 	long long EntryIndexFromXAxisValue(double xAxisValue, const std::vector<double>& vector);
 	ImPlotData MakePlotData(size_t id = 0, std::shared_ptr<std::vector<double>> x=std::make_shared<std::vector<double>>(), std::shared_ptr<std::vector<double>> y = std::make_shared<std::vector<double>>(), ImVec4 color = ImVec4(0,0,0,0));
-	enum distanceMode : short { yAxis = 0, euclidian = 1 };
-	void DrawValueOnHover(const std::vector<ImPlotData>& data, distanceMode mode=yAxis, bool drawManual = false, const std::vector<double>* manualxValues = 0, const std::vector<double>* manualyValues = 0);
+	void DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawManual = false, const std::vector<double>* manualxValues = 0, const std::vector<double>* manualyValues = 0);
 }

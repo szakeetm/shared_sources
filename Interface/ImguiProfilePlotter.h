@@ -46,4 +46,5 @@ private:
 	bool drawManual = false;
 	bool lockYtoZero = false;
 	bool showDatapoints = false;
+	bool showValueOnHover = true;
 };

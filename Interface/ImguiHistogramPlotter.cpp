@@ -108,7 +108,7 @@ void ImHistogramPlotter::DrawPlot()
 			globals[plotTab].color = ImPlot::GetLastItemColor();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
-		ImUtils::DrawValueOnHover(data[plotTab], ImUtils::euclidian, isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
+		if (showValueOnHover) ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -248,6 +248,7 @@ void ImHistogramPlotter::MenuBar()
 				RefreshPlots(); 
 			}
 			if (!limitPoints) ImGui::EndDisabled();
+			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);

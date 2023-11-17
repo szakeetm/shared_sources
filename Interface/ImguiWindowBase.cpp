@@ -134,69 +134,36 @@ ImPlotData ImUtils::MakePlotData(size_t id, std::shared_ptr<std::vector<double>>
 	return out;
 }
 
-void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, distanceMode mode, bool drawManual, const std::vector<double>* manualxValues, const std::vector<double>* manualyValues) {
+void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawManual, const std::vector<double>* manualxValues, const std::vector<double>* manualyValues) {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();
 		if (data.size() != 0 || drawManual) {
 			int plotIdx = -2;
 			int idxX = -1;
 			double minDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y * 10;
-			switch (mode)
-			{
-			case yAxis:
-				for (int i = 0; i < data.size(); i++) { // find which plot contains the value closest to cursor
-					int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[i]);
-					double dist;
-					if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, data[i].y->at(entryIdxTmp))).y);
-					if (entryIdxTmp != -1 && dist < minDiff) {
-						minDiff = dist;
-						plotIdx = i;
-						idxX = entryIdxTmp;
+			for (size_t p = 0; p < data.size(); p++) { // for every plot
+				for (size_t i = 0; i < data[p].x->size(); i++) { // for every datapoint
+					ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(data[p].x->at(i), data[p].y->at(i)));
+					ImVec2 mousePos = ImGui::GetMousePos();
+					double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
+					if (newDist < minDiff) {
+						minDiff = newDist;
+						plotIdx = p;
+						idxX = i;
 					}
 				}
-				if (drawManual) {
-					int entryIdxTmp = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
-					double dist = minDiff;
-					if (entryIdxTmp != -1) dist = abs(ImPlot::PlotToPixels(ImPlotPoint(0, mouse.y)).y - ImPlot::PlotToPixels(ImPlotPoint(0, manualyValues->at(entryIdxTmp))).y);
-					if (entryIdxTmp != -1 && dist < minDiff) {
-						minDiff = dist;
+			}
+			if (drawManual) {
+				for (size_t i = 0; i < manualxValues->size(); i++) { // for every datapoint
+					ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(manualxValues->at(i), manualyValues->at(i)));
+					ImVec2 mousePos = ImGui::GetMousePos();
+					double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
+					if (newDist < minDiff) {
+						minDiff = newDist;
 						plotIdx = -1;
-						idxX = entryIdxTmp;
+						idxX = i;
 					}
 				}
-				if (plotIdx == -1) {
-					idxX = ImUtils::EntryIndexFromXAxisValue(mouse.x, *manualxValues);
-				}
-				else if (plotIdx >= 0 && plotIdx < data.size()) {
-					idxX = ImUtils::EntryIndexFromXAxisValue(mouse.x, data[plotIdx]);
-				}
-				break;
-			case euclidian:
-				for (size_t p = 0; p < data.size(); p++) { // for every plot
-					for (size_t i = 0; i < data[p].x->size(); i++) { // for every datapoint
-						ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(data[p].x->at(i), data[p].y->at(i)));
-						ImVec2 mousePos = ImGui::GetMousePos();
-						double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
-						if (newDist < minDiff) {
-							minDiff = newDist;
-							plotIdx = p;
-							idxX = i;
-						}
-					}
-				}
-				if (drawManual) {
-					for (size_t i = 0; i < manualxValues->size(); i++) { // for every datapoint
-						ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(manualxValues->at(i), manualyValues->at(i)));
-						ImVec2 mousePos = ImGui::GetMousePos();
-						double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
-						if (newDist < minDiff) {
-							minDiff = newDist;
-							plotIdx = -1;
-							idxX = i;
-						}
-					}
-				}
-				break;
 			}
 			// do the actual drawing
 			if ((plotIdx == -1 && idxX != -1) || (plotIdx >= 0 && plotIdx < data.size() && idxX >= 0 && idxX < data[plotIdx].x->size())) {
@@ -209,21 +176,12 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, distanceMode
 				std::string xVal, yVal;
 				xVal = fmt::format("{:.4}", X);
 				yVal = fmt::format("{:.4}", Y);
+				ImVec4 col(0.5, 0.5, 0.5, 0.8);
 
 				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
 				float txtW = ImGui::CalcTextSize("X").x;
 				float txtH = ImGui::GetTextLineHeightWithSpacing();
-				if (ImPlot::GetPlotPos().y + ImPlot::GetPlotSize().y + txtW - tooltipPos.y < 2 * txtH) tooltipPos.y -= 2.5 * txtH;
-				if (ImPlot::GetPlotPos().x + ImPlot::GetPlotSize().x + txtH - tooltipPos.x < 20 * txtW) tooltipPos.x -= (std::max(xVal.length(), yVal.length()) + 3.5) * txtW;
-
-				ImGui::SetNextWindowPos(tooltipPos);
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5);
-				ImGui::BeginTooltipEx(0, 0);
-				ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 1);
-				ImGui::Text("X=" + xVal + "\nY=" + yVal);
-				ImGui::PopStyleVar();
-				ImGui::EndTooltip();
-				ImGui::PopStyleVar();
+				ImPlot::AnnotateClamped(X, Y, ImVec2(txtH,txtH), col, ("X=" + xVal + "\nY=" + yVal).c_str());
 			}
 		}
 	}

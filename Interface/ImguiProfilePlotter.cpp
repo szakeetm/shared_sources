@@ -122,7 +122,7 @@ void ImProfilePlotter::DrawProfileGraph()
 		}
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
-		ImUtils::DrawValueOnHover(data, ImUtils::yAxis, drawManual, manualPlot.x.get(), manualPlot.y.get());
+		if (showValueOnHover) ImUtils::DrawValueOnHover(data, drawManual, manualPlot.x.get(), manualPlot.y.get());
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -356,6 +356,7 @@ void ImProfilePlotter::MenuBar()
 			if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
 				FacetHiglighting(identProfilesInGeom);
 			}
+			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();

@@ -29,4 +29,5 @@ protected:
 	bool lockYtoZero = false;
 	int maxDatapoints = 1000;
 	int actualNbValues = 0;
+	bool showValueOnHover = true;
 };

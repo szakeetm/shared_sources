@@ -78,6 +78,7 @@ void ImConvergencePlotter::MenuBar()
 			if (ImGui::InputInt("##plotMax", &maxDatapoints, 100, 1000)) {
 				if (maxDatapoints < 0) maxDatapoints = 0;
 			}
+			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Data")) {
@@ -221,7 +222,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 		if (drawManual)	ImPlot::PlotLine(formula.GetName().c_str(), manualxValues.data(), manualyValues.data(), manualxValues.size());
 		// value tooltip
-		ImUtils::DrawValueOnHover(data, ImUtils::yAxis, drawManual, &manualxValues, &manualyValues);
+		if(showValueOnHover) ImUtils::DrawValueOnHover(data, drawManual, &manualxValues, &manualyValues);
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
