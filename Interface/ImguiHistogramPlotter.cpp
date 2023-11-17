@@ -248,7 +248,7 @@ void ImHistogramPlotter::MenuBar()
 				RefreshPlots(); 
 			}
 			if (!limitPoints) ImGui::EndDisabled();
-			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
+			ImGui::Checkbox("Display hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);

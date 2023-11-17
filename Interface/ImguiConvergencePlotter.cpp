@@ -68,21 +68,40 @@ void ImConvergencePlotter::MenuBar()
 		if (ImGui::BeginMenu("View")) {
 			ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Linewidth:");
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(txtW * 12);
 			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
 				if (lineWidth < 0.5) lineWidth = 0.5;
 			}
+			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Limit"); ImGui::SameLine();
+			ImGui::SetNextItemWidth(15 * txtW);
 			if (ImGui::InputInt("##plotMax", &maxDatapoints, 100, 1000)) {
 				if (maxDatapoints < 0) maxDatapoints = 0;
 			}
-			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
+			ImGui::Checkbox("Display hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Data")) {
-			// TODO remove every Nth, remove first N
+			static int N=2;
+			ImGui::AlignTextToFramePadding();
+			ImGui::Text("N"); ImGui::SameLine();
+			ImGui::SetNextItemWidth(15*txtW);
+			if (ImGui::InputInt("##N", &N, 1, 100)) {
+				if (N < 1) N = 1;
+			}
+			if (ImGui::MenuItem(fmt::format("Remove every Nth element"))) {
+				for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
+					mApp->appFormulas->removeEveryNth(N, formulaId, 0);
+				}
+			}
+			if (ImGui::MenuItem(fmt::format("Remove the first N elements"))) {
+				for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
+					mApp->appFormulas->removeFirstN(N, formulaId);
+				}
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
@@ -175,19 +194,8 @@ void ImConvergencePlotter::Draw()
 		if(drawManual) ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX - startX);
 	}
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (31+3);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * 3;
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
-
-	if (ImGui::Button("Remove every 4th")) {
-		for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
-			mApp->appFormulas->removeEveryNth(4, formulaId, 0);
-		}
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove first 100")) {
-		for (int formulaId = 0; formulaId < mApp->appFormulas->formulas.size(); ++formulaId) {
-			mApp->appFormulas->removeFirstN(100, formulaId);
-		}
-	}
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 

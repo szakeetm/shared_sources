@@ -356,7 +356,7 @@ void ImProfilePlotter::MenuBar()
 			if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
 				FacetHiglighting(identProfilesInGeom);
 			}
-			ImGui::Checkbox("Displayed Hovered value", &showValueOnHover);
+			ImGui::Checkbox("Display hovered value", &showValueOnHover);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
