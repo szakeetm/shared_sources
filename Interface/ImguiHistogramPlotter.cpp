@@ -108,7 +108,7 @@ void ImHistogramPlotter::DrawPlot()
 			globals[plotTab].color = ImPlot::GetLastItemColor();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
-		ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
+		ImUtils::DrawValueOnHover(data[plotTab], ImUtils::euclidian, isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -252,7 +252,7 @@ void ImHistogramPlotter::MenuBar()
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
 		bool isFacet = data[plotTab].size() != 0;
-		long long bins = isGlobal ? globals[plotTab].y->size() : data[plotTab].at(0).y->size();
+		long long bins = isGlobal ? globals[plotTab].y->size() : isFacet ? data[plotTab].at(0).y->size() : 0;
 		if ((isGlobal || isFacet) && bins>maxDisplayed && limitPoints) {
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the first {} of {} values", maxDisplayed, bins).c_str());

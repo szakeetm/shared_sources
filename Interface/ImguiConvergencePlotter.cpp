@@ -221,7 +221,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
 		if (drawManual)	ImPlot::PlotLine(formula.GetName().c_str(), manualxValues.data(), manualyValues.data(), manualxValues.size());
 		// value tooltip
-		ImUtils::DrawValueOnHover(data,drawManual, &manualxValues, &manualyValues);
+		ImUtils::DrawValueOnHover(data, ImUtils::yAxis, drawManual, &manualxValues, &manualyValues);
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
