@@ -1,3 +1,4 @@
+#include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiHistogramPlotter.h"
 #include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
@@ -175,7 +176,7 @@ void ImHistogramPlotter::RefreshPlots()
 		
 		// x axis
 		plot.x = std::make_shared<std::vector<double>>();
-		for (size_t n = 0; n < nBins && limitPoints ? n < maxDisplayed : true; n++) {
+		for (size_t n = 0; n < nBins && (limitPoints ? n < maxDisplayed : true); n++) {
 			plot.x->push_back((double)n * xSpacing);
 		}
 		if (normalize) {
@@ -231,12 +232,66 @@ void ImHistogramPlotter::RefreshPlots()
 	}
 }
 
+void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
+{
+	if (!plottedOnly && limitPoints) { // get all available histogram data
+		limitPoints = false;
+		RefreshPlots();
+		limitPoints = true;
+	}
+	bool exportGlobal = globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr;
+	if (!exportGlobal && data[plotTab].size() == 0) {
+		ImIOWrappers::InfoPopup("Error", "Nothing to export");
+		return;
+	}
+	std::string out;
+	out.append("X axis\t");
+	// headers row
+	if (exportGlobal) {
+		out.append("Global\t");
+	}
+	for (const auto& plot : data[plotTab]) {
+		out.append(fmt::format("Facet #{}\t", plot.id + 1));
+	}
+	out.append("\n");
+	int n = exportGlobal ? globals[plotTab].x->size() : data[plotTab][0].x->size();
+	for (int i = 0; i < n; ++i) {
+		out.append(fmt::format("{}\t", exportGlobal ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
+		
+		if (exportGlobal) {
+			out.append(fmt::format("{}\t", globals[plotTab].y->at(i)));
+		}
+		for (const auto& plot : data[plotTab]) {
+			out.append(fmt::format("{}\t", plot.y->at(i)));
+		}
+		out.append("\n");
+	}
+
+	if (!toFile) SDL_SetClipboardText(out.c_str());
+	else {
+		std::string fileFilters = "txt";
+		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
+		if (!fn.empty()) {
+			FILE* f = fopen(fn.c_str(), "w");
+			if (f == NULL) {
+				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
+				return;
+			}
+			fprintf(f, out.c_str());
+			fclose(f);
+		}
+	}
+}
+
 void ImHistogramPlotter::MenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Export")) { // TODO
-			if (ImGui::MenuItem("To clipboard")) ;
-			if (ImGui::MenuItem("To file")) ;
+			if (ImGui::MenuItem("All to clipboard")) Export(false, false);
+			if (ImGui::MenuItem("All to file")) Export(true, false);
+			ImGui::Separator();
+			if (ImGui::MenuItem("Plotted to clipboard")) Export(false, true);
+			if (ImGui::MenuItem("Plotted to file")) Export(true, true);
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
@@ -252,7 +307,7 @@ void ImHistogramPlotter::MenuBar()
 			ImGui::EndMenu();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
-		bool isFacet = data[plotTab].size() != 0;
+		bool isFacet =  data[plotTab].size() != 0;
 		long long bins = isGlobal ? globals[plotTab].y->size() : isFacet ? data[plotTab].at(0).y->size() : 0;
 		if ((isGlobal || isFacet) && bins>maxDisplayed && limitPoints) {
 			ImGui::SameLine();
@@ -298,8 +353,15 @@ void ImHistogramPlotter::ImHistagramSettings::Draw()
 
 bool ImHistogramPlotter::ImHistagramSettings::Apply()
 {
-	// global
+	// wipe all data
+	for (int i = 0; i < 3;i++) {
+		parent->globals[i] = ImPlotData();
+		for (int j = 0; j < parent->data[i].size(); j++) {
+			parent->data[i][j] = ImPlotData();
+		}
+	}
 
+	// global
 	if (globalHistSet.globalRecBounce) {
 		if (globalHistSet.maxRecNbBouncesInput == "...") {} // empty if just to pass this check when "..." is input, todo this is an ugly solution, restructure the if
 		else if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {
