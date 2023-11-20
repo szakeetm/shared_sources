@@ -268,7 +268,7 @@ void ConvergencePlotter::Update(float appTime) {
 /**
 * \brief Creates a plot from the expression given in the textbox of the form f(x)=EXPRESSION (e.g. 2*x+50)
 */
-void ConvergencePlotter::plot() {
+void ConvergencePlotter::PlotUserExpression() {
 
     GLFormula formula;
     formula.SetExpression(formulaText->GetText().c_str());
@@ -498,7 +498,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == removeAllButton) {
                 Reset();
             } else if (src == plotExpressionBtn) {
-                plot();
+                PlotUserExpression();
             } else if (src == fixedLineWidthButton) {
                 int linW;
                 fixedLineWidthField->GetNumberInt(&linW);
