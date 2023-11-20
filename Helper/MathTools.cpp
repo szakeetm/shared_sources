@@ -285,3 +285,6 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 	return u * U + v * V + n * N;
 }
 
+double Utils::mapRange(double value, double inMin, double inMax, double outMin, double outMax) {
+	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+}

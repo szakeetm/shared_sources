@@ -7,6 +7,7 @@
 #include "ImguiPopup.h"
 #include "Interface.h"
 #include "ImguiExtensions.h"
+#include <math.h>
 
 void ImTextureScailing::Draw()
 {
@@ -70,8 +71,9 @@ void ImTextureScailing::Draw()
 	ImGui::SameLine();
 	ImGui::BeginChild("Current", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
 	ImGui::TextDisabled("Current");
-	ImGui::Text(fmt::format("Min: {:.3f}", minScale));
-	ImGui::Text(fmt::format("Max: {:.3f}", maxScale));
+	GetCurrentRange();
+	ImGui::Text(fmt::format("Min: {:.3f}", cMinScale));
+	ImGui::Text(fmt::format("Max: {:.3f}", cMaxScale));
 	ImGui::EndChild();
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
@@ -115,24 +117,7 @@ void ImTextureScailing::UpdateSize()
 
 // get toggle states and values from molflow
 void ImTextureScailing::Update() {
-	if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
-		minScale =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
-		maxScale =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
-	}
-	else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
-		minScale =
-			std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
-		maxScale =
-			std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
-	}
-	else { // == 2
-		minScale =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
-		maxScale =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
-	}
+	GetCurrentRange();
 	autoscale = molflowGeom->texAutoScale;
 	includeComboVal = molflowGeom->texAutoScaleIncludeConstantFlow;
 	logScale = molflowGeom->texLogScale;
@@ -147,29 +132,12 @@ void ImTextureScailing::Update() {
 
 void ImTextureScailing::SetCurrent()
 {
-	if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
-	}
-	else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state =
-			std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state =
-			std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
-	}
-	else { // == 2
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state =
-			molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
-	}
-	minInput = minScale;
-	maxInput = maxScale;
-	autoscale = false;
-	molflowGeom->texAutoScale = false;
-	WorkerUpdate();
+	autoscale = molflowGeom->texAutoScale;
+	GetCurrentRange();
+	minScale = cMinScale;
+	maxScale = cMaxScale;
+	minInput = std::to_string(minScale);
+	maxInput = std::to_string(maxScale);
 }
 
 void ImTextureScailing::Apply()
@@ -191,7 +159,8 @@ void ImTextureScailing::Apply()
 	}
 	molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state = minScale;
 	molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state = maxScale;
-	if (!WorkerUpdate()) return;
+	molflowGeom->texAutoScale = false;
+	WorkerUpdate();
 }
 
 bool ImTextureScailing::WorkerUpdate()
@@ -209,7 +178,7 @@ bool ImTextureScailing::WorkerUpdate()
 
 void ImTextureScailing::DrawGradient()
 {
-	ImGui::BeginChild("##ImGradient");
+	ImGui::BeginChild("##ImGradient", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 1 * txtH));
 	ImVec2 availableSpace = ImGui::GetWindowSize();
 	ImVec2 availableTLcorner = ImGui::GetWindowPos();
 
@@ -221,16 +190,66 @@ void ImTextureScailing::DrawGradient()
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-	float offset = gradientSize.x / (colorMap.size() - 1);
-	ImVec2 TLtmp = TLcorner, BRtmp = ImVec2(TLcorner.x+offset, BRcorner.y);
+	std::string hoveredVal = "";
 
-	for (int i = 0; i < colorMap.size()-1; ++i) {
-		drawList->AddRectFilledMultiColor(TLtmp, BRtmp, colorMap[i], colorMap[i+1], colorMap[i+1], colorMap[i]);
-		TLtmp.x += offset;
-		BRtmp.x += offset;
+	if (colors) {
+		float offset = gradientSize.x / (colorMap.size() - 1);
+		ImVec2 TLtmp = TLcorner, BRtmp = ImVec2(TLcorner.x+offset, BRcorner.y);
+		for (int i = 0; i < colorMap.size()-1; ++i) {
+			drawList->AddRectFilledMultiColor(TLtmp, BRtmp, colorMap[i], colorMap[i+1], colorMap[i+1], colorMap[i]);
+			TLtmp.x += offset;
+			BRtmp.x += offset;
+		}
+	}
+	else {
+		drawList->AddRectFilledMultiColor(TLcorner, BRcorner, colorMap[0], IM_COL32(255, 255, 255, 255), IM_COL32(255,255,255,255), colorMap[0]);
+	}
+	ImVec2 mousePos = ImGui::GetMousePos();
+	if (ImMath::inside(TLcorner, BRcorner, mousePos)) {
+		if(!logScale)
+			hoveredVal = fmt::format("{:.4f}", Utils::mapRange(mousePos.x,TLcorner.x,BRcorner.x,minScale,maxScale));
+		else {
+			// TODO: fix: produces incorrect values
+			long double ln10 = 2.3025850929940456840179914546843642076011014886287729760333279009f;
+			//hoveredVal = fmt::format("{:.4f}", Utils::mapRange(log(mousePos.x)/ln10, log(TLcorner.x)/ln10, log(BRcorner.x)/ln10, minScale, maxScale));
+		}
 	}
 
 	ImGui::EndChild();
+	ImGui::Text(hoveredVal);
+}
+
+void ImTextureScailing::GetCurrentRange()
+{
+	if (molflowGeom->texAutoScale) {
+		if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
+			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
+			cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
+		}
+		else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
+			cMinScale =	std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
+			cMaxScale =	std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
+		}
+		else { // == 2
+			cMinScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
+			cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
+		}
+	}
+	else {
+		if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
+			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.moments_only;
+			cMaxScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.moments_only;
+		}
+		else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
+			cMinScale = std::min(molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.moments_only);
+			cMaxScale = std::max(molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.moments_only);
+		}
+		else { // == 2
+			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state;
+			cMaxScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state;
+		}
+	}
+
 }
 
 std::vector<ImU32> ImTextureScailing::GenerateColorMap()

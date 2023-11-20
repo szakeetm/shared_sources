@@ -254,6 +254,9 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 
 	return lhs;
 }
+namespace Utils {
+	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
+}
 
 #ifdef _WIN32
 #define DEBUG_BREAK __debugbreak()

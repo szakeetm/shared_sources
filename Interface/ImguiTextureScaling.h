@@ -13,6 +13,7 @@ protected:
 	void Apply();
 	bool WorkerUpdate();
 	void DrawGradient();
+	void GetCurrentRange();
 	std::vector<ImU32> GenerateColorMap();
 
 	std::vector<ImU32> colorMap;
@@ -21,6 +22,7 @@ protected:
 
 	std::string minInput = "0", maxInput = "1";
 	double minScale = 0, maxScale = 1;
+	double cMinScale = 0, cMaxScale = 1;
 	bool autoscale = true, colors = true, logScale = true;
 	short includeComboVal = 1, showComboVal=0;
 	std::string includeComboLabels[3] = {"Only moments", "Include constant flow", "Only constant flow"};
