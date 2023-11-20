@@ -266,76 +266,6 @@ void ConvergencePlotter::Update(float appTime) {
 }
 
 /**
-* \brief Creates a plot from the expression given in the textbox of the form f(x)=EXPRESSION (e.g. 2*x+50)
-*/
-void ConvergencePlotter::PlotUserExpression() {
-
-    GLFormula formula;
-    formula.SetExpression(formulaText->GetText().c_str());
-    if (!formula.Parse()) {
-        GLMessageBox::Display(formula.GetParseErrorMsg().c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-
-    int nbVar = formula.GetNbVariable();
-    if (nbVar == 0) {
-        GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-    if (nbVar > 1) {
-        GLMessageBox::Display("Too much variables or unknown constant", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-    auto xVariable = formula.GetVariableAt(0);
-    if (!iequals(xVariable->varName, "x")) {
-        GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
-        return;
-    }
-
-    GLDataView *v;
-
-    // Check that view is not already added
-    bool found = false;
-    int i = 0;
-    while (i < nbView && !found) {
-        found = (views[i]->userData1 == -1);
-        if (!found) i++;
-    }
-
-    if (found) {
-        v = views[i];
-        v->SetName(formulaText->GetText().c_str());
-        v->Reset();
-    } else {
-
-        if (nbView < 50) {
-            v = new GLDataView();
-            v->SetName(formulaText->GetText().c_str());
-            v->userData1 = -1;
-            chart->GetY1Axis()->AddDataView(v);
-            views[nbView] = v;
-            nbView++;
-        } else {
-            return;
-        }
-    }
-
-    // Plot
-    for (i = 0; i < 1000; i++) {
-        double x = (double)i;
-        xVariable->value = x;
-        try {
-            v->Add(x, formula.Evaluate());
-        }
-        catch (...) {
-            continue; //Eval. error, but maybe for other x it is possible to evaluate (ex. div by zero)
-        }
-    }
-    v->CommitChange();
-
-}
-
-/**
 * \brief Refreshes view by updating the data for the plot
 */
 void ConvergencePlotter::refreshViews() {
@@ -498,7 +428,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
             } else if (src == removeAllButton) {
                 Reset();
             } else if (src == plotExpressionBtn) {
-                PlotUserExpression();
+                chart->PlotUserExpression(formulaText->GetText(), views, nbView);
             } else if (src == fixedLineWidthButton) {
                 int linW;
                 fixedLineWidthField->GetNumberInt(&linW);

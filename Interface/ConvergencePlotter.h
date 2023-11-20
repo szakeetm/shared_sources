@@ -66,7 +66,6 @@ public:
 private:  
   int remView(int formulaHash);
   void refreshViews();
-  void PlotUserExpression();
 
   Worker      *worker;
   GLButton    *dismissButton;
