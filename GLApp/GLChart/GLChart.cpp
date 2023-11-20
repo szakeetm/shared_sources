@@ -7,6 +7,9 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "../GLMessageBox.h"
 #include "../GLButton.h"
+#include "../GLFormula.h" //for plotting user expression
+#include "../Helper/StringHelper.h"
+#include "../Buffer_shared.h" //PROFILE_SIZE
 
 //#include <malloc.h>
 #include <list>
@@ -1464,4 +1467,89 @@ void GLChart::SetColorSchemeDefault(){
 
 const std::vector<GLColor> & GLChart::GetColorScheme() const{
     return this->colors;
+}
+
+/**
+* \brief Creates a plot from the expression given in the textbox of the form f(x)=EXPRESSION (e.g. 2*x+50)
+*/
+void GLChart::PlotUserExpression(const std::string& formulaText, GLAxis* yAxis, GLDataView** views, int nbView) {
+
+	GLFormula formula;
+	formula.SetExpression(formulaText);
+	if (!formula.Parse()) {
+		GLMessageBox::Display(formula.GetParseErrorMsg().c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+		return;
+	}
+
+	size_t nbVar = formula.GetNbVariable();
+
+
+	if (nbVar > 1) {
+		GLMessageBox::Display("Only X can be used as variable", "Error", GLDLG_OK, GLDLG_ICONERROR);
+		return;
+	}
+	else if (nbVar == 1) {
+		auto xVariable = formula.GetVariableAt(0);
+		if (!iequals(xVariable->varName, "x")) {
+			GLMessageBox::Display("Only X can be used as variable", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			return;
+		}
+	}
+
+	//Commented out: allow const. expressions (without X variable)
+	/*
+	if (nbVar == 0) {
+		GLMessageBox::Display("Variable 'x' not found", "Error", GLDLG_OK, GLDLG_ICONERROR);
+		return;
+	}
+	*/
+
+	GLDataView* v;
+
+	// Check that view is not already added
+	bool found = false;
+	int i = 0;
+	int nbView = yAxis->GetViewNumber();
+	while (i < nbView && !found) {
+		found = (yAxis->GetDataView(i)->userData1 == -1);
+		if (!found) i++;
+	}
+
+	if (found) {
+		v = yAxis->GetDataView(i);
+		v->SetName(formulaText.c_str());
+		v->Reset();
+	}
+	else {
+
+		if (nbView < 50) {
+			v = new GLDataView();
+			v->SetName(formulaText.c_str());
+			v->userData1 = -1;
+			yAxis->AddDataView(v);
+			views[nbView] = v;
+			nbView++;
+		}
+		else {
+			GLMessageBox::Display("Can't plot more than 50 series", "Error", GLDLG_OK, GLDLG_ICONERROR);
+			return;
+		}
+	}
+
+	// Plot
+	auto xVariable = formula.GetVariableAt(0);
+	for (i = 0; i < PROFILE_SIZE; i++) {
+		double x = (double)i;
+		if (nbVar > 0) {
+			xVariable->value = x;
+		}
+		try {
+			v->Add(x, formula.Evaluate());
+		}
+		catch (...) {
+			continue; //Eval. error, but maybe for other x it is possible to evaluate (ex. div by x=0)
+		}
+	}
+	v->CommitChange();
+
 }
