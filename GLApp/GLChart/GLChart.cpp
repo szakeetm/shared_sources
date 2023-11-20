@@ -10,6 +10,9 @@
 #include "../GLFormula.h" //for plotting user expression
 #include "../Helper/StringHelper.h"
 #include "../Buffer_shared.h" //PROFILE_SIZE
+#include "../GLFormula.h" //for plotting user expression
+#include "../Helper/StringHelper.h"
+#include "../Buffer_shared.h" //PROFILE_SIZE
 
 //#include <malloc.h>
 #include <list>
