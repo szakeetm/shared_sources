@@ -116,8 +116,8 @@ ConvergencePlotter::ConvergencePlotter(Worker *appWorker, std::shared_ptr<Formul
     formulaText->SetEditable(true);
     Add(formulaText);
 
-    formulaBtn = new GLButton(0, "-> Plot expression");
-    Add(formulaBtn);
+    plotExpressionBtn = new GLButton(0, "-> Plot expression");
+    Add(plotExpressionBtn);
 
     // Center dialog
     int wS, hS;
@@ -166,7 +166,7 @@ void ConvergencePlotter::SetBounds(int x, int y, int w, int h) {
 
     int lineHeightDiff = 45;
     formulaText->SetBounds(7, h - lineHeightDiff, 350, 19);
-    formulaBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
+    plotExpressionBtn->SetBounds(360, h - lineHeightDiff, 120, 19);;
     dismissButton->SetBounds(w - 100, h - lineHeightDiff, 90, 19);
 
     lineHeightDiff += 25;
@@ -497,7 +497,7 @@ void ConvergencePlotter::ProcessMessage(GLComponent *src, int message) {
                 }
             } else if (src == removeAllButton) {
                 Reset();
-            } else if (src == formulaBtn) {
+            } else if (src == plotExpressionBtn) {
                 plot();
             } else if (src == fixedLineWidthButton) {
                 int linW;
