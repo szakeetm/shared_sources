@@ -6,6 +6,7 @@
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "Interface.h"
+#include "ImguiExtensions.h"
 
 void ImTextureScailing::Draw()
 {
@@ -75,6 +76,7 @@ void ImTextureScailing::Draw()
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
 	ImGui::TextDisabled("Gradient");
+	DrawGradient();
 	ImGui::EndChild();
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Show"); ImGui::SameLine();
@@ -92,8 +94,10 @@ void ImTextureScailing::Draw()
 
 void ImTextureScailing::Init(Interface* mApp_)
 {
-	__super::Init(mApp_);
+	mApp = mApp_;
+	interfGeom = mApp->worker.GetGeometry();
 	molflowGeom = mApp->worker.GetMolflowGeometry();
+	colorMap = GenerateColorMap();
 }
 
 void ImTextureScailing::UpdateSize()
@@ -201,4 +205,47 @@ bool ImTextureScailing::WorkerUpdate()
 		return false;
 	}
 	Update();
+}
+
+void ImTextureScailing::DrawGradient()
+{
+	ImGui::BeginChild("##ImGradient");
+	ImVec2 availableSpace = ImGui::GetWindowSize();
+	ImVec2 availableTLcorner = ImGui::GetWindowPos();
+
+	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8, 2*txtH);
+
+	ImVec2 midpoint = ImMath::add(availableTLcorner, ImMath::scale(availableSpace,0.5));
+	ImVec2 TLcorner = ImMath::substract(midpoint, ImMath::scale(gradientSize, 0.5));
+	ImVec2 BRcorner = ImMath::add(midpoint, ImMath::scale(gradientSize, 0.5));
+
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	float offset = gradientSize.x / (colorMap.size() - 1);
+	ImVec2 TLtmp = TLcorner, BRtmp = ImVec2(TLcorner.x+offset, BRcorner.y);
+
+	for (int i = 0; i < colorMap.size()-1; ++i) {
+		drawList->AddRectFilledMultiColor(TLtmp, BRtmp, colorMap[i], colorMap[i+1], colorMap[i+1], colorMap[i]);
+		TLtmp.x += offset;
+		BRtmp.x += offset;
+	}
+
+	ImGui::EndChild();
+}
+
+std::vector<ImU32> ImTextureScailing::GenerateColorMap()
+{
+	std::vector<ImU32> out;
+
+	out.push_back(ImGui::GetColorU32(IM_COL32(0, 0, 0, 255))); // black
+	out.push_back(ImGui::GetColorU32(IM_COL32(255, 0, 0, 255))); // red
+	out.push_back(ImGui::GetColorU32(IM_COL32(255, 128, 48, 255))); // orange
+	out.push_back(ImGui::GetColorU32(IM_COL32(248, 248, 0, 255))); // yellow
+	out.push_back(ImGui::GetColorU32(IM_COL32(40, 255, 40, 255))); // green
+	out.push_back(ImGui::GetColorU32(IM_COL32(0, 64, 255, 255))); // light blue
+	out.push_back(ImGui::GetColorU32(IM_COL32(0, 0, 176, 255))); // dark blue 
+	out.push_back(ImGui::GetColorU32(IM_COL32(128, 0, 144, 255))); // purple 1
+	out.push_back(ImGui::GetColorU32(IM_COL32(240, 0, 128, 255))); // purple 2
+
+	return out;
 }

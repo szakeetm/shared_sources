@@ -60,3 +60,9 @@ namespace ImGui {
     void Loader(float& progress, float& time);
     void HelpMarker(const std::string& text);
 }
+
+namespace ImMath {
+    ImVec2 add(ImVec2 a, ImVec2 b);
+    ImVec2 substract(ImVec2 a, ImVec2 b);
+    ImVec2 scale(ImVec2 a, float x);
+}

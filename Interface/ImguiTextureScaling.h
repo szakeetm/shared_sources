@@ -12,6 +12,10 @@ protected:
 	void SetCurrent();
 	void Apply();
 	bool WorkerUpdate();
+	void DrawGradient();
+	std::vector<ImU32> GenerateColorMap();
+
+	std::vector<ImU32> colorMap;
 
 	MolflowGeometry* molflowGeom;
 

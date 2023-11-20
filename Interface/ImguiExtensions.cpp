@@ -344,4 +344,18 @@ namespace ImGui {
         }
     }
 }
+namespace ImMath {
+    ImVec2 add(ImVec2 a, ImVec2 b)
+    {
+        return ImVec2(a.x + b.x, a.y + b.y);
+    }
+    ImVec2 substract(ImVec2 a, ImVec2 b)
+    {
+        return ImVec2(a.x - b.x, a.y - b.y);
+    }
+    ImVec2 scale(ImVec2 a, float x)
+    {
+        return ImVec2(a.x * x, a.y * x);
+    }
+}
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H
