@@ -16,16 +16,16 @@ private:
 	void ShowFacet();
 	void AddCurve();
 	void RemoveCurve();
-	void computeProfiles();
+	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
-	void MenuBar();
+	void DrawMenuBar();
 	bool Export(bool toFile = false);
 
 	// helper / utility functions
 	void UpdateSelection();
 	bool IsPlotted(size_t facetId);
 
-	std::vector<size_t> manualFacetList();
+	std::vector<size_t> ParseManualFacetList();
 
 	int viewIdx = 1;
 	std::vector<ImPlotData> data;

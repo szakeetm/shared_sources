@@ -21,7 +21,7 @@ void ImHistogramPlotter::Draw()
 	ImGui::SetNextWindowPos(ImVec2(settingsWindow.width + (3 * txtW), 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
-	MenuBar();
+	DrawMenuBar();
 	if (ImGui::BeginTabBar("Histogram types")) {
 		
 		if (ImGui::BeginTabItem("Bounces before absorption")) {
@@ -283,7 +283,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	}
 }
 
-void ImHistogramPlotter::MenuBar()
+void ImHistogramPlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Export")) { // TODO

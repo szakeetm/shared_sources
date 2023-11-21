@@ -27,7 +27,7 @@ void ImTexturePlotter::Draw()
 			selFacetId = facets[0];
 			name = "Texture Plotter [Facet #" + std::to_string(facets[0] + 1) + "]###TexturePlotter";
 			selFacet = interfGeom->GetFacet(selFacetId);
-			getData();
+			GetData();
 		}
 	} else {
 		selFacet = nullptr;
@@ -39,7 +39,7 @@ void ImTexturePlotter::Draw()
 	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
-	MenuBar();
+	DrawMenuBar();
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
@@ -69,7 +69,7 @@ void ImTexturePlotter::Init(Interface* mApp_)
 
 void ImTexturePlotter::DrawTextureTable()
 {
-	if( selFacet!=nullptr) getData();
+	if( selFacet!=nullptr) GetData();
 	if (width < 1 || height < 1) return;
 
 	static ImVec2 selectionStart;
@@ -191,7 +191,7 @@ void ImTexturePlotter::DrawTextureTable()
 	}
 }
 
-void ImTexturePlotter::getData()
+void ImTexturePlotter::GetData()
 {
 	{
 		LockWrapper lWrap(mApp->imguiRenderLock);
@@ -507,7 +507,7 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 	return true;
 }
 
-void ImTexturePlotter::MenuBar()
+void ImTexturePlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
 		if (ImGui::BeginMenu("Export")) {

@@ -21,8 +21,8 @@ void ImProfilePlotter::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 93, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
-	MenuBar();
-	computeProfiles();
+	DrawMenuBar();
+	ComputeProfiles();
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
@@ -142,7 +142,7 @@ void ImProfilePlotter::ShowFacet()
 		interfGeom->GetFacet(selectedProfile)->selected = true;
 	}
 	else {
-		std::vector<size_t> facetIds = manualFacetList();
+		std::vector<size_t> facetIds = ParseManualFacetList();
 
 		for (const auto facetId : facetIds) {
 			interfGeom->GetFacet(facetId)->selected = true;
@@ -162,7 +162,7 @@ void ImProfilePlotter::AddCurve()
 		return;
 	}
 
-	std::vector<size_t> facetIds = manualFacetList();
+	std::vector<size_t> facetIds = ParseManualFacetList();
 
 	for (const auto& facetId : facetIds) {
 		if (!IsPlotted(facetId)&&interfGeom->GetFacet(facetId)->sh.isProfile) {
@@ -175,7 +175,7 @@ void ImProfilePlotter::RemoveCurve()
 {
 	if (data.size() == 0) return;
 	if (selectedProfile == -1) {
-		std::vector<size_t> facetIds = manualFacetList();
+		std::vector<size_t> facetIds = ParseManualFacetList();
 		long long i = data.size()-1; // has to be signed
 		for (; i >= 0 && i<data.size(); i--) {
 			for (const auto& facetId : facetIds) {
@@ -194,7 +194,7 @@ void ImProfilePlotter::RemoveCurve()
 		}
 }
 
-void ImProfilePlotter::computeProfiles()
+void ImProfilePlotter::ComputeProfiles()
 {
 	{
 		LockWrapper lW(mApp->imguiRenderLock);
@@ -336,7 +336,7 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 	UpdateSelection();
 }
 
-void ImProfilePlotter::MenuBar()
+void ImProfilePlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
 		if(ImGui::BeginMenu("Export")) {
@@ -409,7 +409,7 @@ bool ImProfilePlotter::IsPlotted(size_t facetId)
 	return false;
 }
 
-std::vector<size_t> ImProfilePlotter::manualFacetList()
+std::vector<size_t> ImProfilePlotter::ParseManualFacetList()
 {
 	std::vector<size_t> facetIds;
 	try {

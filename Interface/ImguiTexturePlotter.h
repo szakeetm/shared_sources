@@ -13,14 +13,14 @@ public:
 protected:
 	// functions
 	void DrawTextureTable();
-	void getData();
+	void GetData();
 	bool IsCellSelected(size_t row, size_t col);
 	void SelectRow(size_t row);
 	void SelectColumn(size_t col);
 	void BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end);
 	ImVec4 SelectionBounds();
 	bool SaveTexturePlotter(bool toFile=true);
-	void MenuBar();
+	void DrawMenuBar();
 	typedef struct SelRect { int startRow, startCol, endRow, endCol; };
 	std::string Serialize(SelRect bounds = { 0,0,0,0 }, std::string lineBreak = "\n", std::string rowBreak = "\t");
 

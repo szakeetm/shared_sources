@@ -9,8 +9,8 @@ protected:
 	void UpdateSize();
 	void Update();
 
-	void SetCurrent();
-	void Apply();
+	void SetCurrentButtonPress();
+	void ApplyButtonPress();
 	bool WorkerUpdate();
 	void DrawGradient();
 	void GetCurrentRange();

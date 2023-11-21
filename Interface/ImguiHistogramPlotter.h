@@ -11,7 +11,7 @@ protected:
 	void DrawPlot();
 	void RemovePlot();
 	void AddPlot();
-	void MenuBar();
+	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
 

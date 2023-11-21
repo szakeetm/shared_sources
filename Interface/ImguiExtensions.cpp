@@ -345,19 +345,19 @@ namespace ImGui {
     }
 }
 namespace ImMath {
-    ImVec2 add(ImVec2 a, ImVec2 b)
+    ImVec2 AddVec2(ImVec2 a, ImVec2 b)
     {
         return ImVec2(a.x + b.x, a.y + b.y);
     }
-    ImVec2 substract(ImVec2 a, ImVec2 b)
+    ImVec2 SubstractVec2(ImVec2 a, ImVec2 b)
     {
         return ImVec2(a.x - b.x, a.y - b.y);
     }
-    ImVec2 scale(ImVec2 a, float x)
+    ImVec2 ScaleVec2(ImVec2 a, float x)
     {
         return ImVec2(a.x * x, a.y * x);
     }
-    bool inside(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point)
+    bool IsInsideVec2(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point)
     {
         return topLeft.x <= point.x && point.x <= bottomRight.x && topLeft.y <= point.y && point.y <= bottomRight.y;
     }

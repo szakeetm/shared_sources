@@ -62,8 +62,8 @@ namespace ImGui {
 }
 
 namespace ImMath {
-    ImVec2 add(ImVec2 a, ImVec2 b);
-    ImVec2 substract(ImVec2 a, ImVec2 b);
-    ImVec2 scale(ImVec2 a, float x);
-    bool inside(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point);
+    ImVec2 AddVec2(ImVec2 a, ImVec2 b);
+    ImVec2 SubstractVec2(ImVec2 a, ImVec2 b);
+    ImVec2 ScaleVec2(ImVec2 a, float x);
+    bool IsInsideVec2(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point);
 }

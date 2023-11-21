@@ -61,9 +61,9 @@ void ImTextureScailing::Draw()
 		}
 		ImGui::EndTable();
 	}
-	if (ImGui::Button("Set to current")) SetCurrent();
+	if (ImGui::Button("Set to current")) SetCurrentButtonPress();
 	ImGui::SameLine();
-	if (ImGui::Button("Apply")) Apply();
+	if (ImGui::Button("Apply")) ApplyButtonPress();
 	ImGui::SameLine();
 	UpdateSize();
 	ImGui::Text("Swap: "+swapText);
@@ -130,7 +130,7 @@ void ImTextureScailing::Update() {
 
 }
 
-void ImTextureScailing::SetCurrent()
+void ImTextureScailing::SetCurrentButtonPress()
 {
 	autoscale = molflowGeom->texAutoScale;
 	GetCurrentRange();
@@ -140,7 +140,7 @@ void ImTextureScailing::SetCurrent()
 	maxInput = std::to_string(maxScale);
 }
 
-void ImTextureScailing::Apply()
+void ImTextureScailing::ApplyButtonPress()
 {
 	if (!Util::getNumber(&minScale, minInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid minimum value");
@@ -180,14 +180,14 @@ bool ImTextureScailing::WorkerUpdate()
 void ImTextureScailing::DrawGradient()
 {
 	ImGui::BeginChild("##ImGradient", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 1 * txtH));
-	ImVec2 availableSpace = ImMath::substract(ImGui::GetWindowSize(), ImVec2(0, 0));
+	ImVec2 availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(0, 0));
 	ImVec2 availableTLcorner = ImGui::GetWindowPos();
 
 	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8, 1.5*txtH);
 
-	ImVec2 midpoint = ImMath::add(availableTLcorner, ImVec2(availableSpace.x*0.5, availableSpace.y*0.4));
-	ImVec2 TLcorner = ImMath::substract(midpoint, ImMath::scale(gradientSize, 0.5));
-	ImVec2 BRcorner = ImMath::add(midpoint, ImMath::scale(gradientSize, 0.5));
+	ImVec2 midpoint = ImMath::AddVec2(availableTLcorner, ImVec2(availableSpace.x*0.5, availableSpace.y*0.4));
+	ImVec2 TLcorner = ImMath::SubstractVec2(midpoint, ImMath::ScaleVec2(gradientSize, 0.5));
+	ImVec2 BRcorner = ImMath::AddVec2(midpoint, ImMath::ScaleVec2(gradientSize, 0.5));
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
@@ -225,11 +225,11 @@ void ImTextureScailing::DrawGradient()
 	}
 	// handle hovering
 	ImVec2 mousePos = ImGui::GetMousePos();
-	static ImVec2 hoverMarkPos = ImMath::substract(mousePos, midpoint);
+	static ImVec2 hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint);
 	if (mousePos.x < TLcorner.x) mousePos.x = TLcorner.x;
 	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
 
-	if (ImGui::IsWindowHovered() && ImMath::inside(TLcorner, BRcorner, mousePos)) {
+	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
 		double linX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, minScale, maxScale);
 		if(!logScale)
 			hoveredVal = fmt::format("{:.4f}", linX);
@@ -237,11 +237,11 @@ void ImTextureScailing::DrawGradient()
 			double val = logScaleInterpolate(linX, minScale, maxScale);
 			hoveredVal = fmt::format("{:.2e}", val);
 		}
-		hoverMarkPos = ImMath::substract(mousePos, midpoint); // get mousePos relative to midpoint
+		hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
 		//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
 	}
 	// draws a vertical line under the mouse cursors position
-	ImVec2 posTmp = ImMath::add(hoverMarkPos, midpoint); // get absolute position of marker
+	ImVec2 posTmp = ImMath::AddVec2(hoverMarkPos, midpoint); // get absolute position of marker
 	drawList->AddRectFilled(ImVec2(posTmp.x,TLcorner.y-5), ImVec2(posTmp.x+1,BRcorner.y+5), colorMap[0]);
 
 	ImGui::EndChild();
