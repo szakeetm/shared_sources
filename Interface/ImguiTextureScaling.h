@@ -14,6 +14,9 @@ protected:
 	bool WorkerUpdate();
 	void DrawGradient();
 	void GetCurrentRange();
+
+	double logScaleInterpolate(double x, double leftTick, double rightTick);
+
 	std::vector<ImU32> GenerateColorMap();
 
 	std::vector<ImU32> colorMap;

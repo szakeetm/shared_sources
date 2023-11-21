@@ -15,7 +15,7 @@ void ImTextureScailing::Draw()
 	ImGui::SetNextWindowPos(ImVec2(3*txtW, 3*txtH), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(72*txtW,15*txtH),ImVec2(1000*txtW,100*txtH));
 	
-	ImGui::Begin("Texture Scailing", &drawn, ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Texture Scailing", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	
 	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 15 * txtW, 6 * txtH), true);
 	ImGui::TextDisabled("Texture Range");
@@ -180,19 +180,20 @@ bool ImTextureScailing::WorkerUpdate()
 void ImTextureScailing::DrawGradient()
 {
 	ImGui::BeginChild("##ImGradient", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 1 * txtH));
-	ImVec2 availableSpace = ImGui::GetWindowSize();
+	ImVec2 availableSpace = ImMath::substract(ImGui::GetWindowSize(), ImVec2(0, 0));
 	ImVec2 availableTLcorner = ImGui::GetWindowPos();
 
-	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8, 2*txtH);
+	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8, 1.5*txtH);
 
-	ImVec2 midpoint = ImMath::add(availableTLcorner, ImMath::scale(availableSpace,0.5));
+	ImVec2 midpoint = ImMath::add(availableTLcorner, ImVec2(availableSpace.x*0.5, availableSpace.y*0.4));
 	ImVec2 TLcorner = ImMath::substract(midpoint, ImMath::scale(gradientSize, 0.5));
 	ImVec2 BRcorner = ImMath::add(midpoint, ImMath::scale(gradientSize, 0.5));
 
 	ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-	std::string hoveredVal = "";
-
+	static std::string hoveredVal = "";
+	
+	// draw gradient
 	if (colors) {
 		float offset = gradientSize.x / (colorMap.size() - 1);
 		ImVec2 TLtmp = TLcorner, BRtmp = ImVec2(TLcorner.x+offset, BRcorner.y);
@@ -205,30 +206,43 @@ void ImTextureScailing::DrawGradient()
 	else {
 		drawList->AddRectFilledMultiColor(TLcorner, BRcorner, colorMap[0], IM_COL32(255, 255, 255, 255), IM_COL32(255,255,255,255), colorMap[0]);
 	}
+
+	// todo: draw minor tick marks
+	ImGuiIO& io = ImGui::GetIO();
+	ImFont* font = io.Fonts->Fonts[0];
+	drawList->PushTextureID(font->ContainerAtlas->TexID);
+
+	std::vector<double> majorTicVals = { TLcorner.x, midpoint.x, BRcorner.x };
+
+	for (const auto& tick : majorTicVals) {
+		double val = Utils::mapRange(tick, TLcorner.x, BRcorner.x, minScale, maxScale);
+		if (logScale) val = logScaleInterpolate(val, minScale, maxScale);
+
+		std::string text = fmt::format("{:.2e}", val);
+		ImVec2 textSize = font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, text.c_str());
+		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), colorMap[0], text.c_str());
+		drawList->AddRectFilled(ImVec2(tick, (midpoint.y + BRcorner.y) / 2), ImVec2(tick + 1, BRcorner.y), colorMap[0]);
+	}
+	// handle hovering
 	ImVec2 mousePos = ImGui::GetMousePos();
+	static ImVec2 hoverMarkPos = ImMath::substract(mousePos, midpoint);
 	if (mousePos.x < TLcorner.x) mousePos.x = TLcorner.x;
 	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
-	
+
 	if (ImGui::IsWindowHovered() && ImMath::inside(TLcorner, BRcorner, mousePos)) {
+		double linX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, minScale, maxScale);
 		if(!logScale)
-			hoveredVal = fmt::format("{:.4f}", Utils::mapRange(mousePos.x,TLcorner.x,BRcorner.x,minScale,maxScale));
+			hoveredVal = fmt::format("{:.4f}", linX);
 		else {
-			// log(x) where x <=0 is undefined, clamp scales above 0
-			if (minScale < 1e-20) minScale = 1e-20;
-			if (maxScale < 1e-20) maxScale = 1e-20;
-			/*	Code based on:
-				Linear and Logarithmic Interpolation
-				Markus Deserno
-				Max-Planck-Institut fur¨ Polymerforschung, Ackermannweg 10, 55128 Mainz, Germany
-				https://www.cmu.edu/biolphys/deserno/pdf/log_interpol.pdf
-			*/
-			long double graphSpaceX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, minScale, maxScale);
-			long double a=graphSpaceX-minScale, b=maxScale-graphSpaceX;
-			long double f = a / (a + b); // ratio of distances to gradient edges
-			long double val = pow(maxScale,f)*pow(minScale,1-f);
-			hoveredVal = fmt::format("{:e}", val);
+			double val = logScaleInterpolate(linX, minScale, maxScale);
+			hoveredVal = fmt::format("{:.2e}", val);
 		}
+		hoverMarkPos = ImMath::substract(mousePos, midpoint); // get mousePos relative to midpoint
+		//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
 	}
+	// draws a vertical line under the mouse cursors position
+	ImVec2 posTmp = ImMath::add(hoverMarkPos, midpoint); // get absolute position of marker
+	drawList->AddRectFilled(ImVec2(posTmp.x,TLcorner.y-5), ImVec2(posTmp.x+1,BRcorner.y+5), colorMap[0]);
 
 	ImGui::EndChild();
 	ImGui::Text(hoveredVal);
@@ -265,6 +279,23 @@ void ImTextureScailing::GetCurrentRange()
 		}
 	}
 
+}
+
+double ImTextureScailing::logScaleInterpolate(double x, double leftTick, double rightTick)
+{
+	// log(x) where x <=0 is undefined, clamp scales above 0
+	if (leftTick < 1e-20) leftTick = 1e-20;
+	if (rightTick < 1e-20) rightTick = 1e-20;
+	/*	Code based on:
+		Linear and Logarithmic Interpolation
+		Markus Deserno
+		Max-Planck-Institut fur¨ Polymerforschung, Ackermannweg 10, 55128 Mainz, Germany
+		https://www.cmu.edu/biolphys/deserno/pdf/log_interpol.pdf (accessed 21-11-2023)
+	*/
+	double a = x - leftTick, b = rightTick - x;
+	double f = a / (a + b); // ratio of distances to gradient edges
+	double val = pow(rightTick, f) * pow(leftTick, 1 - f);
+	return val;
 }
 
 std::vector<ImU32> ImTextureScailing::GenerateColorMap()
