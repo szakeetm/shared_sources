@@ -19,7 +19,7 @@ void ImTextureScailing::Draw()
 	
 	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 15 * txtW, 6 * txtH), true);
 	ImGui::TextDisabled("Texture Range");
-	ImGui::BeginTable("##layoutHelper", 4, ImGuiTableFlags_SizingStretchProp);
+	if(ImGui::BeginTable("##layoutHelper", 4, ImGuiTableFlags_SizingStretchProp))
 	{
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
@@ -59,8 +59,8 @@ void ImTextureScailing::Draw()
 			molflowGeom->texLogScale = logScale;
 			WorkerUpdate();
 		}
+		ImGui::EndTable();
 	}
-	ImGui::EndTable();
 	if (ImGui::Button("Set to current")) SetCurrent();
 	ImGui::SameLine();
 	if (ImGui::Button("Apply")) Apply();
@@ -165,6 +165,7 @@ void ImTextureScailing::Apply()
 
 bool ImTextureScailing::WorkerUpdate()
 {
+	LockWrapper lock(mApp->imguiRenderLock);
 	try {
 		mApp->worker.Update(0.0f);
 		return true;
@@ -205,13 +206,27 @@ void ImTextureScailing::DrawGradient()
 		drawList->AddRectFilledMultiColor(TLcorner, BRcorner, colorMap[0], IM_COL32(255, 255, 255, 255), IM_COL32(255,255,255,255), colorMap[0]);
 	}
 	ImVec2 mousePos = ImGui::GetMousePos();
-	if (ImMath::inside(TLcorner, BRcorner, mousePos)) {
+	if (mousePos.x < TLcorner.x) mousePos.x = TLcorner.x;
+	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
+	
+	if (ImGui::IsWindowHovered() && ImMath::inside(TLcorner, BRcorner, mousePos)) {
 		if(!logScale)
 			hoveredVal = fmt::format("{:.4f}", Utils::mapRange(mousePos.x,TLcorner.x,BRcorner.x,minScale,maxScale));
 		else {
-			// TODO: fix: produces incorrect values
-			long double ln10 = 2.3025850929940456840179914546843642076011014886287729760333279009f;
-			//hoveredVal = fmt::format("{:.4f}", Utils::mapRange(log(mousePos.x)/ln10, log(TLcorner.x)/ln10, log(BRcorner.x)/ln10, minScale, maxScale));
+			// log(x) where x <=0 is undefined, clamp scales above 0
+			if (minScale < 1e-20) minScale = 1e-20;
+			if (maxScale < 1e-20) maxScale = 1e-20;
+			/*	Code based on:
+				Linear and Logarithmic Interpolation
+				Markus Deserno
+				Max-Planck-Institut fur¨ Polymerforschung, Ackermannweg 10, 55128 Mainz, Germany
+				https://www.cmu.edu/biolphys/deserno/pdf/log_interpol.pdf
+			*/
+			long double graphSpaceX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, minScale, maxScale);
+			long double a=graphSpaceX-minScale, b=maxScale-graphSpaceX;
+			long double f = a / (a + b); // ratio of distances to gradient edges
+			long double val = pow(maxScale,f)*pow(minScale,1-f);
+			hoveredVal = fmt::format("{:e}", val);
 		}
 	}
 

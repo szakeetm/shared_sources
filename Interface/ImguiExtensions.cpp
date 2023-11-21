@@ -359,7 +359,7 @@ namespace ImMath {
     }
     bool inside(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point)
     {
-        return topLeft.x < point.x && point.x < bottomRight.x && topLeft.y < point.y && point.y < bottomRight.y;
+        return topLeft.x <= point.x && point.x <= bottomRight.x && topLeft.y <= point.y && point.y <= bottomRight.y;
     }
 }
 #endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H
