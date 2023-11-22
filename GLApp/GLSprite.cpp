@@ -152,17 +152,7 @@ int Sprite2D::RestoreDeviceObjects(const char *diffName, const char *alphaName,i
   // Compute othographic matrix (for Transformed Lit vertex)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
-
-  GLToolkit::CheckGLErrors("GLSprite before screen size use");
-  // the problem is caused by screen size being zero when window is minimized. glOrtho is not equipped to handle that
-  // setting the size to 1 provides a workaround but a better solution would be not drawing at all when window is
-  // minimized
-  if (scrWidth == 0) scrWidth = 1;
-  if (scrHeight == 0) scrHeight = 1;
   glOrtho( 0, scrWidth, scrHeight, 0, -1, 1 );
-
-  GLToolkit::CheckGLErrors("GLSprite after screen size use");
-
   glGetFloatv( GL_PROJECTION_MATRIX , pMatrix );
   return 1;
 

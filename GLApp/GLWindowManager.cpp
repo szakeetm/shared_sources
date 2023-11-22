@@ -405,7 +405,7 @@ void GLWindowManager::Resize() {
 void  GLWindowManager::Repaint() {
   RepaintNoSwap();
   DrawStats();
-  if(theApp->imWnd && !theApp->imguiRenderLock)
+  if (theApp->imWnd && !theApp->imguiRenderLock && !(SDL_GetWindowFlags(theApp->mainScreen) & SDL_WINDOW_MINIMIZED))
   {
       theApp->imWnd->renderSingle();
   }
