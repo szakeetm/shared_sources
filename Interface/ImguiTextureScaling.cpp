@@ -30,8 +30,16 @@ void ImTextureScailing::Draw()
 		ImGui::TableNextColumn();
 		ImGui::SetNextItemWidth(10 * txtW);
 		ImGui::InputText("##minInput", &minInput);
+		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
+			autoscale = false;
+			ApplyButtonPress();
+		}
 		ImGui::SetNextItemWidth(10 * txtW);
 		ImGui::InputText("##maxInput", &maxInput);
+		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
+			autoscale = false;
+			ApplyButtonPress();
+		}
 		ImGui::TableNextColumn();
 		if (ImGui::Checkbox("Autoscale", &autoscale)) {
 			molflowGeom->texAutoScale = autoscale;
@@ -43,8 +51,6 @@ void ImTextureScailing::Draw()
 			for (short i = 0; i < 3; i++) {
 				if (ImGui::Selectable(includeComboLabels[i])) {
 					includeComboVal = i;
-					molflowGeom->texAutoScaleIncludeConstantFlow = includeComboVal;
-					WorkerUpdate();
 				}
 			}
 			ImGui::EndCombo();
@@ -61,7 +67,7 @@ void ImTextureScailing::Draw()
 		}
 		ImGui::EndTable();
 	}
-	if (ImGui::Button("Set to current")) SetCurrentButtonPress();
+	if (ImGui::Button("Set to geometry")) SetCurrentButtonPress();
 	ImGui::SameLine();
 	if (ImGui::Button("Apply")) ApplyButtonPress();
 	ImGui::SameLine();
@@ -69,11 +75,12 @@ void ImTextureScailing::Draw()
 	ImGui::Text("Swap: "+swapText);
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Current", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
-	ImGui::TextDisabled("Current");
+	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
+	ImGui::TextDisabled("Geometry");
 	GetCurrentRange();
-	ImGui::Text(fmt::format("Min: {:.3f}", cMinScale));
-	ImGui::Text(fmt::format("Max: {:.3f}", cMaxScale));
+	ImGui::Text(fmt::format("Min: {:.3e}", cMinScale));
+	ImGui::Text(fmt::format("Max: {:.3e}", cMaxScale));
+	ImGui::HelpMarker("These are the values obtained from geomatry\nthey are used by autoscale");
 	ImGui::EndChild();
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
@@ -138,28 +145,34 @@ void ImTextureScailing::SetCurrentButtonPress()
 	maxScale = cMaxScale;
 	minInput = std::to_string(minScale);
 	maxInput = std::to_string(maxScale);
+	ApplyButtonPress();
 }
 
 void ImTextureScailing::ApplyButtonPress()
 {
-	if (!Util::getNumber(&minScale, minInput)) {
+	molflowGeom->texAutoScaleIncludeConstantFlow = includeComboVal;
+	molflowGeom->texAutoScale = autoscale;
+	if (autoscale) {} // empty if statement, acts like adding !autoscale && to all following else statements
+	else if (!Util::getNumber(&minScale, minInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid minimum value");
 		Update();
 		return;
 	}
-	if (!Util::getNumber(&maxScale, maxInput)) {
+	else if (!Util::getNumber(&maxScale, maxInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid maximum value");
 		Update();
 		return;
 	}
-	if (minScale > maxScale) {
+	else if (minScale > maxScale) {
 		ImIOWrappers::InfoPopup("Error", "min must be lower than max");
 		Update();
 		return;
 	}
-	molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state = minScale;
-	molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state = maxScale;
-	molflowGeom->texAutoScale = false;
+	else {
+		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state = minScale;
+		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state = maxScale;
+	}
+
 	WorkerUpdate();
 }
 
@@ -250,35 +263,18 @@ void ImTextureScailing::DrawGradient()
 
 void ImTextureScailing::GetCurrentRange()
 {
-	if (molflowGeom->texAutoScale) {
-		if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
-			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
-			cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
-		}
-		else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
-			cMinScale =	std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
-			cMaxScale =	std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
-		}
-		else { // == 2
-			cMinScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
-			cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
-		}
+	if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
+		cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
+		cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
 	}
-	else {
-		if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
-			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.moments_only;
-			cMaxScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.moments_only;
-		}
-		else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
-			cMinScale = std::min(molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.moments_only);
-			cMaxScale = std::max(molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.moments_only);
-		}
-		else { // == 2
-			cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state;
-			cMaxScale = molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state;
-		}
+	else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
+		cMinScale =	std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
+		cMaxScale =	std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
 	}
-
+	else { // == 2
+		cMinScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
+		cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
+	}
 }
 
 double ImTextureScailing::logScaleInterpolate(double x, double leftTick, double rightTick)
