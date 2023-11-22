@@ -105,15 +105,26 @@ void ImConvergencePlotter::MenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
-			ImGui::Text("Start X:"); ImGui::SameLine();
-			ImGui::SetNextItemWidth(txtW * 12);
-			ImGui::InputInt("##StartX", &startX);
-			ImGui::Text("End X:"); ImGui::SameLine();
-			ImGui::SetNextItemWidth(txtW * 12);
-			ImGui::InputInt("##EndX", &endX);
-			ImGui::Text("Step size:"); ImGui::SameLine();
-			ImGui::SetNextItemWidth(txtW * 12);
-			ImGui::InputDouble("##Step", &step, 1, 4, "%.2f");
+			ImGui::SetNextItemWidth(txtW * 15);
+			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
+			if (ImGui::Button("-> Plot expression")) {
+				drawManual = ImUtils::ParseExpression(expression, formula);
+				manualxValues.clear();
+				manualyValues.clear();
+				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX, startX, step);
+			}
+			ImGui::InputDoubleRightSide("StartX", &startX, "%.2f");
+			ImGui::InputDoubleRightSide("EndX", &endX, "%.2f");
+			if (ImGui::InputDoubleRightSide("Step", &step, "%.4f")) {
+				if (step < 1e-4) step = 1e-4;
+			}
+			if (endX - startX < 0) ImGui::TextDisabled("Start X cannot be higer than End X");
+			else if (drawManual && ImGui::Button("Apply")) {
+				manualxValues.clear();
+				manualyValues.clear();
+				ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX, startX, step);
+			}
+			if (abs(endX - startX) / step > 1e5) ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("Warning! Number of datapoints\nwill exceed {}!", 1e5).c_str());
 			ImGui::EndMenu();
 		}
 
@@ -158,7 +169,7 @@ void ImConvergencePlotter::Draw()
 	if (nFormulas == 0) ImGui::EndDisabled();
 	
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (33.5);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (33.5+3);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 
 	if (ImGui::Button("Add curve")) {
@@ -184,18 +195,6 @@ void ImConvergencePlotter::Draw()
 		manualxValues.clear();
 		manualyValues.clear();
 	}
-	
-	ImGui::SetNextItemWidth(txtW * 15);
-	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
-	if (ImGui::Button("-> Plot expression")) {
-		drawManual = ImUtils::ParseExpression(expression, formula);
-		manualxValues.clear();
-		manualyValues.clear();
-		if(drawManual) ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX - startX);
-	}
-	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * 3;
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
@@ -208,7 +207,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-6*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (int i = 0; i < data.size(); i++) {
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();

@@ -70,7 +70,7 @@ void ImProfilePlotter::Draw()
 	}
 	
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18);
+	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18+3);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	if (ImGui::Button("Select plotted facets")) {
 		interfGeom->UnselectAll();
@@ -79,22 +79,6 @@ void ImProfilePlotter::Draw()
 		}
 		UpdateSelection();
 	}
-
-	ImGui::SetNextItemWidth(txtW * 20);
-	ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
-	if (ImGui::Button("-> Plot expression")) {
-		drawManual = ImUtils::ParseExpression(expression, formula);
-		if (manualPlot.x.get() == nullptr) manualPlot.x = std::make_shared<std::vector<double>>();
-		if (manualPlot.y.get() == nullptr) manualPlot.y = std::make_shared<std::vector<double>>();
-		manualPlot.x->clear();
-		manualPlot.y->clear();
-
-		if(drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
-	}
-	ImGui::AlignTextToFramePadding();
-	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (3);
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
@@ -113,7 +97,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 7.5 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
@@ -357,6 +341,21 @@ void ImProfilePlotter::DrawMenuBar()
 				FacetHiglighting(identProfilesInGeom);
 			}
 			ImGui::Checkbox("Display hovered value", &showValueOnHover);
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Custom Plot")) {
+			ImGui::SetNextItemWidth(txtW * 20);
+			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
+			if (ImGui::Button("-> Plot expression")) {
+				drawManual = ImUtils::ParseExpression(expression, formula);
+				if (manualPlot.x.get() == nullptr) manualPlot.x = std::make_shared<std::vector<double>>();
+				if (manualPlot.y.get() == nullptr) manualPlot.y = std::make_shared<std::vector<double>>();
+				manualPlot.x->clear();
+				manualPlot.y->clear();
+
+				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
+				// no custom start, end, step bebause profiles have a constant size
+			}
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();

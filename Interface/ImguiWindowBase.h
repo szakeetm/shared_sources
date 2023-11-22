@@ -34,7 +34,7 @@ typedef struct {
 // functions used by some(>1) ImWindows but not common enough (==2) to be member functions
 namespace ImUtils {
 	bool ParseExpression(const std::string& expression, GLFormula& formula);
-	void ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, size_t count);
+	void ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, double maxX, double start=0, double step=1);
 	long long EntryIndexFromXAxisValue(double xAxisValue, const ImPlotData& plot);
 	long long EntryIndexFromXAxisValue(double xAxisValue, const std::vector<double>& vector);
 	ImPlotData MakePlotData(size_t id = 0, std::shared_ptr<std::vector<double>> x=std::make_shared<std::vector<double>>(), std::shared_ptr<std::vector<double>> y = std::make_shared<std::vector<double>>(), ImVec4 color = ImVec4(0,0,0,0));

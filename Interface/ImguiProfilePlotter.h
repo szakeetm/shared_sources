@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include "GLFormula.h"
+#include "Buffer_shared.h"
 
 class ImProfilePlotter : public ImWindow {
 public:
@@ -30,7 +31,7 @@ private:
 	int viewIdx = 1;
 	std::vector<ImPlotData> data;
 	ImPlotData manualPlot;
-	size_t profileSize = 100;
+	size_t profileSize = PROFILE_SIZE;
 
 	bool correctForGas = false;
 

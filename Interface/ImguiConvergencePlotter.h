@@ -22,7 +22,7 @@ protected:
 	void DrawConvergenceGraph();
 	bool drawManual = false;
 	std::vector<double> manualxValues, manualyValues;
-	int startX=0, endX=1000;
+	double startX=0, endX=1000;
 	double step = 1.0;
 	GLFormula formula;
 	bool IsPlotted(size_t idx);

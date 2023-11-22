@@ -48,6 +48,7 @@ namespace ImGui {
 // In your own code you may want to display an actual icon if you are using a
 // merged icon fonts (see docs/FONTS.md)
     void HelpMarker(const char *desc) {
+        ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("(?)");
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();

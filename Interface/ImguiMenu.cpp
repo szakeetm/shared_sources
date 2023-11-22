@@ -723,7 +723,7 @@ void MeasureForcesMenuPress() {
 #endif //MOLFLOW
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem(u8"\u221A Formula editor", "Alt+F")) {
+    if (ImGui::MenuItem(u8"\u221AFormula editor", "Alt+F")) {
         FormulaEditorMenuPress();
     }
     if (ImGui::MenuItem("Convergence Plotter ...", "Alt+C")) {

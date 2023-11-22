@@ -107,6 +107,7 @@ void ImTextureScailing::Init(Interface* mApp_)
 	interfGeom = mApp->worker.GetGeometry();
 	molflowGeom = mApp->worker.GetMolflowGeometry();
 	colorMap = GenerateColorMap();
+	Update(); // will get the toggle and combo states and min/max values from the molflowGeom object
 }
 
 void ImTextureScailing::UpdateSize()

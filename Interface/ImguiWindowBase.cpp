@@ -59,7 +59,7 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 		return false;
 	}
 	int nbVar = formula.GetNbVariable();
-	if (nbVar == 0) {
+	if (nbVar == 0) { // TODO: after merge allow for constant expression (before it would cause crashing)
 		ImIOWrappers::InfoPopup("Error", "Variable x not found");
 		return false;
 	}
@@ -76,12 +76,12 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 	return true;
 }
 
-void ImUtils::ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, size_t count)
+void ImUtils::ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, double maxX, double start, double step)
 {
 	if (!drawManual) return;
 
-	auto xVariable = formula.GetVariableAt(0);
-	for (double i = 0; i < count; i++) {
+	auto xVariable = formula.GetVariableAt(0); // TODO: after merge allow for constant expression (before it would cause crashing)
+	for (double i = start; i < maxX; i+=step) {
 		xVariable->value = static_cast<double>(i);
 		double y;
 		try {
