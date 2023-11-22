@@ -227,9 +227,19 @@ void ImTextureScailing::DrawGradient()
 
 	std::vector<double> majorTicVals = { TLcorner.x, midpoint.x, BRcorner.x };
 
+	double gradientMinScale = 0, gradientMaxScale = 1;
+	if (autoscale) {
+		gradientMinScale = cMinScale;
+		gradientMaxScale = cMaxScale;
+	}
+	else {
+		gradientMinScale = minScale;
+		gradientMaxScale = maxScale;
+	}
+
 	for (const auto& tick : majorTicVals) {
-		double val = Utils::mapRange(tick, TLcorner.x, BRcorner.x, minScale, maxScale);
-		if (logScale) val = logScaleInterpolate(val, minScale, maxScale);
+		double val = Utils::mapRange(tick, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
+		if (logScale) val = logScaleInterpolate(val, gradientMinScale, gradientMaxScale);
 
 		std::string text = fmt::format("{:.2e}", val);
 		ImVec2 textSize = font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, text.c_str());
@@ -243,11 +253,11 @@ void ImTextureScailing::DrawGradient()
 	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
 
 	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
-		double linX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, minScale, maxScale);
+		double linX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
 		if(!logScale)
 			hoveredVal = fmt::format("{:.4f}", linX);
 		else {
-			double val = logScaleInterpolate(linX, minScale, maxScale);
+			double val = logScaleInterpolate(linX, gradientMinScale, gradientMaxScale);
 			hoveredVal = fmt::format("{:.2e}", val);
 		}
 		hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
