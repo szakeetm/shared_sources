@@ -227,10 +227,12 @@ void ImTextureScailing::DrawGradient()
 
 	std::vector<double> majorTicVals = { TLcorner.x, midpoint.x, BRcorner.x };
 
-	double gradientMinScale = 0, gradientMaxScale = 1;
+	static double gradientMinScale = 0, gradientMaxScale = 1;
 	if (autoscale) {
-		gradientMinScale = cMinScale;
-		gradientMaxScale = cMaxScale;
+		if (cMinScale < cMaxScale) {
+			gradientMinScale = cMinScale;
+			gradientMaxScale = cMaxScale;
+		}
 	}
 	else {
 		gradientMinScale = minScale;
