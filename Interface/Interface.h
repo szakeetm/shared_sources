@@ -376,7 +376,7 @@ public:
 	GLToggle* showIndex;
 	GLToggle* showVertexId;
 	GLButton* viewerMoreButton;
-	GLCombo* modeCombo;
+	GLCombo* physicsModeCombo;
 
 	GLButton* globalSettingsBtn;
 	GLButton* startSimu;
