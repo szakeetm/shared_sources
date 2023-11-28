@@ -60,11 +60,10 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 	}
 	int nbVar = formula.GetNbVariable();
 	if (nbVar == 0) { // TODO: after merge allow for constant expression (before it would cause crashing)
-		ImIOWrappers::InfoPopup("Error", "Variable x not found");
-		return false;
+		return true;
 	}
-	if (nbVar > 1) {
-		ImIOWrappers::InfoPopup("Error", "Too many varuables or an unknown constant"); // Legacy had grammar issiues
+	else if (nbVar > 1) {
+		ImIOWrappers::InfoPopup("Error", "Too many variables or an unknown constant"); // Legacy had grammar issiues
 		return false;
 	}
 	auto xVariable = formula.GetVariableAt(0);
@@ -80,9 +79,10 @@ void ImUtils::ComputeManualExpression(bool& drawManual, GLFormula& formula, std:
 {
 	if (!drawManual) return;
 
-	auto xVariable = formula.GetVariableAt(0); // TODO: after merge allow for constant expression (before it would cause crashing)
+	std::list<Variable>::iterator xVariable;
+	if (formula.GetNbVariable() != 0) xVariable = formula.GetVariableAt(0);
 	for (double i = start; i < maxX; i+=step) {
-		xVariable->value = static_cast<double>(i);
+		if (formula.GetNbVariable() != 0) xVariable->value = static_cast<double>(i);
 		double y;
 		try {
 			y = formula.Evaluate();
