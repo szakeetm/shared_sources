@@ -137,6 +137,15 @@ void ImConvergencePlotter::MenuBar()
 	}
 }
 
+void ImConvergencePlotter::RemovePlot(int idx) {
+	if (selectedFormula == idx) selectedFormula = -1;
+	for (int i = 0; i < data.size(); i++) if (data[i].id == idx)
+	{
+		data.erase(data.begin() + i);
+		break;
+	}
+}
+
 void ImConvergencePlotter::Draw()
 {
 	if (!drawn) return;
@@ -149,7 +158,6 @@ void ImConvergencePlotter::Draw()
 	DrawConvergenceGraph();
 
 	ImGui::SetNextItemWidth(txtW*30);
-	static int selectedFormula = -1;
 	
 	int nFormulas = mApp->appFormulas->formulas.size();
 
@@ -176,7 +184,12 @@ void ImConvergencePlotter::Draw()
 		if (IsPlotted(selectedFormula)) {
 			ImIOWrappers::InfoPopup("Info", "Profile already plotted");
 		}
-		else if (selectedFormula != -1)	data.push_back(ImUtils::MakePlotData(selectedFormula));
+		else if (selectedFormula != -1) {
+			if (mApp->appFormulas->formulas[selectedFormula].hasEvalError) {
+				ImIOWrappers::InfoPopup("Error", fmt::format("Formula can't be evaluated:\n{}", mApp->appFormulas->formulas[selectedFormula].GetEvalErrorMsg()));
+			}
+			else data.push_back(ImUtils::MakePlotData(selectedFormula));
+		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove curve")) {
 		if (IsPlotted(selectedFormula)) {

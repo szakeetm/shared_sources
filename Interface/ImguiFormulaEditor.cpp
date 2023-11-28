@@ -6,6 +6,7 @@
 #include "Interface.h"
 #include "ImguiMenu.h"
 #include "ImguiExtensions.h"
+#include "ImguiConvergencePlotter.h"
 #include <sstream>
 
 
@@ -146,6 +147,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			if (changeName == "" && changeExpression == "") {
 				//delete formula
 				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
+				mApp->imWnd->convPlot.RemovePlot(selRow); // prevent convergence plotter crash when removing plotted formula
 			}
 			else {
 				//modify formula

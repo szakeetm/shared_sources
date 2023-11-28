@@ -8,10 +8,11 @@ class ImConvergencePlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp);
+	void RemovePlot(int idx);
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);
-
+	int selectedFormula = -1;
 	bool showDatapoints = false;
 	std::vector<ImPlotData> data;
 	Interface* mApp;
