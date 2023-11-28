@@ -24,6 +24,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <vector>
 #include "Buffer_shared.h"
 #include "FormulaEvaluator.h"
+class Worker;
 
 //App storage of GLFormula with helper methods and convergence stuff
 struct Formulas {
@@ -39,6 +40,9 @@ struct Formulas {
     void EvaluateFormulaVariables(size_t formulaIndex, const std::vector <std::pair<std::string, std::optional<double>>>& aboveFormulaValues);
     void EvaluateFormulas(size_t nbDesorbed);
     bool RecordNewConvergenceDataPoint();
+    std::string GetFormulaValue(int index);
+    std::string ExportCurrentFormulas();
+    std::string ExportFormulasAtAllMoments(Worker* worker);
 
     void removeEveryNth(size_t everyN, int formulaId, size_t skipLastN);
     void removeFirstN(size_t n, int formulaId);

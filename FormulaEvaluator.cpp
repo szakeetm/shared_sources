@@ -20,6 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "FormulaEvaluator.h"
 #include <Helper/StringHelper.h>
+#include <charconv>
 
 /**
 * \brief Returns the index for a facet of a variable
@@ -33,12 +34,17 @@ int FormulaEvaluator::GetFacetIndex(const std::string &varName, const std::strin
     if (prefix.length() >= varName.length()) return -1;
     
     if (iBeginsWith(varName, lowercase(prefix))) {
-        std::string remainder=varName.substr(prefix.length());
-        try {
-            return std::stoi(remainder);
+        std::string remainder = varName.substr(prefix.length());
+        int facetId;
+        auto result = std::from_chars(remainder.data(), remainder.data() + remainder.size(), facetId);
+        // Check if the conversion was successful
+        if (result.ec == std::errc()) {
+            // Conversion successful
+            return facetId;
         }
-        catch (...) {
-            return -1; //can't convert to int
+        else {
+            // Conversion failed: prefix doesn't match
+            return -1;
         }
-    } else return -1; //prefix doesn't match
+    }
 }

@@ -112,9 +112,6 @@ if (appUpdater && appUpdater->IsUpdateAvailable()) {
 		}
 	}
 }
-
-
-
 */
 
 #pragma once
@@ -145,6 +142,7 @@ public:
 	std::string folderName; //Folder name expected in ZIP file, also the unzipped program is moved to this sister folder
 	std::vector<std::string> filesToCopy; //Config files to copy to new dir
 	std::vector<std::pair<std::string, std::vector<std::string>>> postInstallScripts; //first component: comment, second component: vector of OS system commands
+	std::vector<std::string> executableBinaries;
 };
 
 class GLButton;
@@ -251,6 +249,7 @@ public:
 	void IncreaseSessionCount();
 	FetchStatus GetStatus(){return lastFetchStatus;};
 	std::string GetPublicWebsiteAddress() { return publicWebsite; };
+	int GetNbCheckFailsInRow() { return nbUpdateFailsInRow; };
 private:
 
 	//Initialized by constructor:
@@ -261,7 +260,8 @@ private:
 
 	//Initialized by shipped config file:
 	std::string branchName,os;
-	std::string feedUrl,publicWebsite,publicDownloadsPage;
+	//std::string feedUrl; //Hard-code to avoid tampering
+	std::string publicWebsite,publicDownloadsPage;
 	MatomoTracker tracker;
 	
 	//Values that are generated during run
@@ -281,7 +281,8 @@ private:
     std::vector<UpdateManifest> DetermineAvailableUpdates(const pugi::xml_node& updateFeed, const int currentVersionId);
     std::vector<UpdateManifest> DetermineAvailableUpdatesOldScheme(const pugi::xml_node& updateFeed, const int currentVersionId, const std::string& branchName);
 	void DownloadInstallUpdate(const UpdateManifest& update, UpdateLogWindow *logWindow=NULL); //Download, unzip, move new version and copy config files. Return operation result as a user-readable message
-	void ExecutePostInstallScripts(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir); //Async sys calls
+	//void ExecutePostInstallScripts(const std::vector<std::pair<std::string, std::vector<std::string>>>& postInstallScripts, std::filesystem::path workingDir); //Async sys calls
+	void GiveExecPermission(const std::string& binaryName); //throws error
 
 	static UpdateManifest GetLatest(const std::vector<UpdateManifest>& updatesstatic );
     std::string GetCumulativeChangeLog(const std::vector<UpdateManifest>& updates);
@@ -303,16 +304,6 @@ private:
 	GLButton *allowButton, *declineButton, *laterButton, *privacyButton;
 	AppUpdater* updater;
 };
-
-#if defined(MOLFLOW)
-#define APPLICATION_NAME "molflow"
-#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_molflow.xml"
-#define BRANCH_NAME "molflow_public"
-#elif defined(SYNRAD)
-#define APPLICATION_NAME "synrad"
-#define REMOTE_FEED "https://gitlab.cern.ch/molflow_synrad/molflow-updater/-/raw/master/autoupdate_synrad.xml"
-#define BRANCH_NAME "synrad_public"
-#endif //BRANCH_NAME
 
 #if defined(__LINUX_FEDORA) // set by cmake
 #define BRANCH_OS_SUFFIX "_linux_fedora" //for old XML scheme

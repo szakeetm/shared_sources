@@ -1230,10 +1230,12 @@ GLuint GLAxis::initMarker(const char *name) {
       // Avoid unlabeled axis when log scale
       if( scale==LOG_SCALE && prec<1.0 )
         prec=1.0;
-
+      
       double relDiff = 0.005;
       if(max>0)
-          relDiff = (max + min) != 0.0 ? (0.5 * (max - min) / (max + min)) : ((max - min) / (max));
+          relDiff = (max + min) != 0.0 
+          ? (0.5 * (max - min) / (max + min)) 
+          : ((max - min) / (max));
       if (min < 0)
         min = ((int) (min / prec) - 1) * prec;
       else
@@ -1245,7 +1247,7 @@ GLuint GLAxis::initMarker(const char *name) {
       else
         if ( scale==LOG_SCALE) max = ((int) (max / prec) + 1) * prec;
 		else max*=std::min(1.0 + relDiff, 1.05);
-
+        
     } // end ( if autoScale )
 
   }

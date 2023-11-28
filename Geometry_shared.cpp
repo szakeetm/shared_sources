@@ -4554,8 +4554,10 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 		file.clear();
 		file.seekg(0, std::ios::beg);
 
+		int lineNum = 0;
 		// Read each triangle
 		while (std::getline(file, line)) {
+			lineNum++;
 			if (line.find("endsolid") != std::string::npos) {
 				bodyIndex++;
 			} else if (line.find("solid") != std::string::npos) {
@@ -4576,11 +4578,11 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 				iss >> normalPrefix >> triangle.normal.x >> triangle.normal.y >> triangle.normal.z;
 
 				// Skip "outer loop" line
-				std::getline(file, line);
+				std::getline(file, line); lineNum++;
 
 				// Read vertex coordinates
 				for (int i = 0; i < 3; ++i) {
-					std::getline(file, line);
+					std::getline(file, line); lineNum++;
 					iss.str(line);
 					iss.clear();
 
@@ -4592,13 +4594,18 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 					if (iss.fail()) {
 						std::string scientificNotation;
 						iss.clear();
-						iss >> vertexPrefix >> scientificNotation;
-
-						x = std::stof(scientificNotation);
-						iss >> scientificNotation;
-						y = std::stof(scientificNotation);
-						iss >> scientificNotation;
-						z = std::stof(scientificNotation);
+						iss.str(line);
+						try {
+							iss >> vertexPrefix >> scientificNotation;
+							x = std::stod(scientificNotation);
+							iss >> scientificNotation;
+							y = std::stod(scientificNotation);
+							iss >> scientificNotation;
+							z = std::stod(scientificNotation);
+						}
+						catch (...) {
+							throw Error("Failed to parse line {}:\n\"{}\"\n\"{}\" can't be converted to a number.", lineNum,line,scientificNotation);
+						}
 					}
 
 					if (i == 0) {

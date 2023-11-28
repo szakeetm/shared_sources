@@ -66,7 +66,6 @@ public:
 private:  
   int remView(int formulaHash);
   void refreshViews();
-  void plot();
 
   Worker      *worker;
   GLButton    *dismissButton;
@@ -80,7 +79,7 @@ private:
   GLButton    *removeButton;
   GLButton    *removeAllButton;
   GLTextField *formulaText;
-  GLButton    *formulaBtn;
+  GLButton    *plotExpressionBtn;
   GLToggle    *logYToggle;
 
     GLToggle    *colorToggle;

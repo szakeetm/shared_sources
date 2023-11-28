@@ -21,7 +21,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Formulas.h"
 #include "FormulaEvaluator.h"
 #include "Helper/ConsoleLogger.h"
+#include "Worker.h"
 #include <cmath>
+#include <sstream>
 
 // convergence constants
 constexpr size_t max_vector_size = 65536;
@@ -64,7 +66,7 @@ void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <
         formula.evalErrorMsg = "";
         try {
             ok = evaluator->EvaluateVariable(varIterator, aboveFormulaValues);
-            if (!ok) formula.SetEvalError(("Unknown variable \"{}\"", varIterator->varName));
+            if (!ok) formula.SetEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
         }
         catch (std::exception err) {//Specific evaluation error message to display to user, currently used for "formula not found" and "formula not yet evaluated"
             formula.SetEvalError(err.what());
@@ -159,7 +161,95 @@ bool Formulas::RecordNewConvergenceDataPoint() {
 	}
 
 	return hasChanged;
-};
+}
+
+std::string Formulas::GetFormulaValue(int index)
+{
+    std::string out;
+    if (formulas[index].hasParseError) {
+        out = (formulas[index].GetParseErrorMsg());
+    }
+    else if (formulas[index].hasEvalError) {
+        out = (formulas[index].GetEvalErrorMsg());
+    }
+    else {
+        std::stringstream tmp; // ugly solution copied from legacy gui
+        tmp << formulaValueCache[index].value; //not elegant but converts 12.100000000001 to 12.1 etc., fmt::format doesn't
+        out.append(tmp.str());
+    }
+    return out;
+}
+
+std::string Formulas::ExportCurrentFormulas()
+{
+    std::string out;
+    size_t formulasSize = formulas.size();
+    out.append("Expression\tName\tValue\n"); // Headers
+    for (int i = 0; i < formulasSize; i++) {
+        out.append(formulas[i].GetExpression() + '\t');
+        out.append(formulas[i].GetName() + '\t');
+        out.append(GetFormulaValue(i) + '\n');
+    }
+    return out;
+}
+std::string Formulas::ExportFormulasAtAllMoments(Worker* worker)
+{
+    size_t nMoments = worker->interfaceMomentCache.size();
+    if (nMoments == 0) return ExportCurrentFormulas();
+    std::string out;
+    size_t formulasSize = formulas.size();
+    size_t selectedMomentSave = worker->displayedMoment;
+
+    //need to store results to only run calculation m times instead of e*m times 
+    std::vector<std::vector<std::string>> expressionMomentTable;
+    expressionMomentTable.resize(formulasSize);
+    for (int m = 0; m <= nMoments; m++) {
+        /*
+        Calculation results for moments are not stored anywhere, only the 'current' value
+        of an expression is available so in order to export values at all moments, all those
+        values need to be calculated now
+        */
+        worker->displayedMoment = m;
+        {
+            worker->Update(0.0f);
+        }
+        EvaluateFormulas(worker->globalStatCache.globalHits.nbDesorbed);
+        for (int e = 0; e < formulasSize; e++) {
+            expressionMomentTable[e].push_back(GetFormulaValue(e));
+        }
+    }
+    // restore moment from before starting
+    worker->displayedMoment = selectedMomentSave;
+    {
+        worker->Update(0.0f);
+    }
+    EvaluateFormulas(worker->globalStatCache.globalHits.nbDesorbed);
+    // headers
+    out.append("Expression\tName\tConst.flow\t");
+    for (int i = 0; i < nMoments; ++i) {
+        out.append("Moment " + std::to_string(i + 1) + "\t");
+    }
+    out.erase(out.length() - 1);
+    out.append("\n\t\t\t");
+    for (int i = 0; i < nMoments; ++i) {
+        out.append(std::to_string(worker->interfaceMomentCache[i].time));
+        out.append("\t");
+    }
+    out.erase(out.length() - 1);
+    out.append("\n");
+
+    for (int e = 0; e < formulasSize; e++) {
+        out.append(formulas[e].GetExpression() + '\t');
+        out.append(formulas[e].GetName() + '\t');
+        for (int m = 0; m < expressionMomentTable[e].size(); m++) {
+            out.append(expressionMomentTable[e][m] + '\t');
+        }
+        out.erase(out.length() - 1);
+        out.append("\n");
+    }
+    return out;
+}
+;
 
 /**
 * \brief Removes every everyN-th element from the convergence vector in case the max size has been reached

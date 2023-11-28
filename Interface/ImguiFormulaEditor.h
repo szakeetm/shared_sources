@@ -27,6 +27,5 @@ protected:
 	bool blue = false;
 	int lastMoment = 0;
 	std::string ExportCurrentFormulas();
-	std::string ExportFormulasAtAllMoments();
-	std::string GetFormulaValue(int index);
+	std::string ExportFormulasAtAllMoments();	
 };

@@ -115,7 +115,7 @@ public:
 	// Evaluation
 	double EvaluateNode(const std::unique_ptr<EvalTreeNode>& node); // Evaluate the expression (after it was parsed). Throws error if math invalid (div by 0 etc)
 	double Evaluate();
-	bool   hasEvalError;
+	bool   hasEvalError = false;
 	std::string evalErrorMsg;
 
 	static const std::map<std::string, OperandType> mathExpressionsMap;

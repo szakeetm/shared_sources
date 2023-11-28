@@ -72,6 +72,8 @@ public:
   void AddData(GLDataView *v, double x, double y);
   void RemoveDataView(GLDataView *view);
 
+  void PlotUserExpression(const std::string& formulaText, GLDataView** views, int& nbView);
+
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
   void Paint();
