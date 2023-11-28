@@ -12,9 +12,22 @@
 void ImTextureScailing::Draw()
 {
 	if (!drawn) return;
+	
+	if (photoMode) {
+		ImGui::SetNextWindowSize(ImVec2(50 * txtW, 5 * txtH));
+		ImGui::Begin("Legend", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+		DrawGradient();
+		ImGui::SameLine();
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth()-3*txtW,txtH));
+		ImGui::SameLine();
+		ImGui::HelpMarker("Hover me and press ESC to exit photo mode");
+		if (ImGui::IsWindowHovered() && ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) photoMode = false;
+		ImGui::End();
+		return;
+	}
 	ImGui::SetNextWindowPos(ImVec2(3*txtW, 3*txtH), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(72*txtW,15*txtH),ImVec2(1000*txtW,100*txtH));
-	
+
 	ImGui::Begin("Texture Scailing", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	
 	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 15 * txtW, 6 * txtH), true);
@@ -97,7 +110,8 @@ void ImTextureScailing::Draw()
 		}
 		ImGui::EndCombo();
 	}
-	
+	ImGui::SameLine();
+	if (ImGui::Button("Photo Mode")) photoMode = true;
 	ImGui::End();
 }
 
