@@ -59,7 +59,7 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 		return false;
 	}
 	int nbVar = formula.GetNbVariable();
-	if (nbVar == 0) { // TODO: after merge allow for constant expression (before it would cause crashing)
+	if (nbVar == 0) {
 		return true;
 	}
 	else if (nbVar > 1) {

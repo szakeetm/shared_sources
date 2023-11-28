@@ -286,7 +286,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 void ImHistogramPlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
-		if (ImGui::BeginMenu("Export")) { // TODO
+		if (ImGui::BeginMenu("Export")) {
 			if (ImGui::MenuItem("All to clipboard")) Export(false, false);
 			if (ImGui::MenuItem("All to file")) Export(true, false);
 			ImGui::Separator();
