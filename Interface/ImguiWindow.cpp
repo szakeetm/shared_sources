@@ -216,6 +216,8 @@ void ImguiWindow::init() {
     histPlot.Init(mApp);
     textScale = ImTextureScailing();
     textScale.Init(mApp);
+    partLog = ImParticleLogger();
+    partLog.Init(mApp);
 
     RegisterShortcuts();
 
@@ -406,6 +408,7 @@ void ImguiWindow::renderSingle() {
         profPlot.Draw();
         histPlot.Draw();
         textScale.Draw();
+        partLog.Draw();
 
         shortcutMan.DoShortcuts();
 

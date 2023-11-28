@@ -657,14 +657,15 @@ void TextureScalingMenuPress() {
     }*/
 }
 void ParticleLoggerMenuPress() {
-    if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {
+    mApp->imWnd->partLog.Show();
+    /*if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {
         SAFE_DELETE(mApp->particleLogger);
         
         mApp->particleLogger = new ParticleLogger(interfGeom, &mApp->worker);
     }
     LockWrapper lockWrapper(mApp->imguiRenderLock);
     mApp->particleLogger->UpdateStatus();
-    mApp->particleLogger->SetVisible(true);
+    mApp->particleLogger->SetVisible(true);*/
 }
 
 void TakeScreenshotMenuPress() {

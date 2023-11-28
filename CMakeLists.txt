@@ -133,6 +133,7 @@ set(INTERFACE_FILES
         Interface/ImguiProfilePlotter.cpp
         Interface/ImguiHistogramPlotter.cpp
         Interface/ImguiTextureScaling.cpp
+        Interface/ImguiParticleLogger.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
