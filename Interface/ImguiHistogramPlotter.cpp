@@ -86,7 +86,7 @@ void ImHistogramPlotter::Init(Interface* mApp_)
 {
 	ImWindow::Init(mApp_);
 	interfGeom = mApp->worker.GetGeometry();
-	settingsWindow = ImHistagramSettings();
+	settingsWindow = ImHistogramSettings();
 	settingsWindow.Init(mApp_);
 	settingsWindow.parent = this;
 }
@@ -318,7 +318,7 @@ void ImHistogramPlotter::DrawMenuBar()
 	}
 }
 
-void ImHistogramPlotter::ImHistagramSettings::Draw()
+void ImHistogramPlotter::ImHistogramSettings::Draw()
 {
 	if (!drawn) return;
 	width = 40 * txtW;
@@ -351,7 +351,7 @@ void ImHistogramPlotter::ImHistagramSettings::Draw()
 	ImGui::End();
 }
 
-bool ImHistogramPlotter::ImHistagramSettings::Apply()
+bool ImHistogramPlotter::ImHistogramSettings::Apply()
 {
 	// wipe all data
 	for (int i = 0; i < 3;i++) {
@@ -363,23 +363,25 @@ bool ImHistogramPlotter::ImHistagramSettings::Apply()
 
 	// global
 	if (globalHistSet.globalRecBounce) {
-		if (globalHistSet.maxRecNbBouncesInput == "...") {} // empty if just to pass this check when "..." is input, todo this is an ugly solution, restructure the if
-		else if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce limit");
-			return false;
+		if (globalHistSet.maxRecNbBouncesInput != "...") {
+			if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce limit");
+				return false;
+			}
+			else if (globalHistSet.nbBouncesMax <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce limit must be a non-negative integer");
+				return false;
+			}
 		}
-		else if (globalHistSet.nbBouncesMax <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce limit must be a non-negative integer");
-			return false;
-		}
-		if (globalHistSet.bouncesBinSizeInput == "...") {}
-		else if (!Util::getNumber(&globalHistSet.bouncesBinSize, globalHistSet.bouncesBinSizeInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce bin size");
-			return false;
-		}
-		else if (globalHistSet.bouncesBinSize <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce bin size must be a positive integer");
-			return false;
+		if (globalHistSet.bouncesBinSizeInput != "...") {
+			if (!Util::getNumber(&globalHistSet.bouncesBinSize, globalHistSet.bouncesBinSizeInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce bin size");
+				return false;
+			}
+			else if (globalHistSet.bouncesBinSize <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce bin size must be a positive integer");
+				return false;
+			}
 		}
 	}
 	if (globalHistSet.recFlightDist) {
@@ -533,7 +535,7 @@ bool ImHistogramPlotter::ImHistagramSettings::Apply()
 	return true;
 }
 
-void ImHistogramPlotter::ImHistagramSettings::DrawSettingsGroup(histSet& set)
+void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set)
 {
 	ImGui::Checkbox("Record bounces until absorbtion", &set.globalRecBounce);
 	if (!set.amIDisabled && !set.globalRecBounce) ImGui::BeginDisabled();

@@ -18,7 +18,7 @@ protected:
 	//types
 	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
 	
-	class ImHistagramSettings : public ImWindow {
+	class ImHistogramSettings : public ImWindow {
 	public:
 		void Draw();
 		float width;
@@ -54,7 +54,7 @@ protected:
 
 	//variables
 	InterfaceGeometry* interfGeom;
-	ImHistagramSettings settingsWindow;
+	ImHistogramSettings settingsWindow;
 	plotTabs plotTab = bounces;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
