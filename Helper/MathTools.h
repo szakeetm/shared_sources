@@ -254,7 +254,7 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 
 	return lhs;
 }
-namespace Utils {
+namespace MathHelper {
 	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
 }
 

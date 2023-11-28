@@ -241,7 +241,7 @@ void ImTextureScailing::DrawGradient()
 	}
 
 	for (const auto& tick : majorTicVals) {
-		double val = Utils::mapRange(tick, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
+		double val = MathHelper::mapRange(tick, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
 		if (logScale) val = logScaleInterpolate(val, gradientMinScale, gradientMaxScale);
 
 		std::string text = fmt::format("{:.2e}", val);
@@ -256,7 +256,7 @@ void ImTextureScailing::DrawGradient()
 	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
 
 	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
-		double linX = Utils::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
+		double linX = MathHelper::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
 		if(!logScale)
 			hoveredVal = fmt::format("{:.4f}", linX);
 		else {
