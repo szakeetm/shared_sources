@@ -455,6 +455,7 @@ public:
 	bool AutoSave(bool crashSave = false);
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
+	void SetDefaultViews();
 
 	std::vector<CameraView>   views;
 	int     curViewer;

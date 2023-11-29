@@ -2751,3 +2751,15 @@ void Interface::CheckForRecovery() {
         }
     }
 }
+
+void Interface::SetDefaultViews() {
+    viewers[0]->SetProjection(ProjectionMode::Orthographic);
+    viewers[0]->ToFrontView();
+    viewers[1]->SetProjection(ProjectionMode::Orthographic);
+    viewers[1]->ToTopView();
+    viewers[2]->SetProjection(ProjectionMode::Orthographic);
+    viewers[2]->ToSideView();
+    viewers[3]->SetProjection(ProjectionMode::Perspective);
+    viewers[3]->ToFrontView();
+    SelectViewer(0);
+}
