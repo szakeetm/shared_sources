@@ -119,4 +119,8 @@ struct InterfaceSettings { //extra information (not part of SimulationModel) in 
     std::vector<FacetInterfaceSetting> facetSettings;
     PlotterSetting profilePlotterSettings;
     PlotterSetting convergencePlotterSettings;
+    bool  texAutoScale = true;  // Autoscale flag
+    bool  texColormap = true;   // Colormap flag
+    bool  texLogScale = true;   // Texture im log scale
+    int textureMode = 0; //Physics mode
 };
