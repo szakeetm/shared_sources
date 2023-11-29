@@ -137,12 +137,12 @@ void ImHistogramPlotter::DrawPlot()
 			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), plot.x->size());
 			plot.color = ImPlot::GetLastItemColor();
 		}
-		if (globals[plotTab].x != nullptr && globals[plotTab].x->size() != 0) {
+		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
+		if (isGlobal) {
 			ImPlot::PlotScatter("Global", globals[plotTab].x->data(), globals[plotTab].y->data(), globals[plotTab].x->size());
 			globals[plotTab].color = ImPlot::GetLastItemColor();
 		}
-		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
-		if (showValueOnHover) ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
+		if (showValueOnHover && data[plotTab].size()!=0) ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
@@ -171,6 +171,7 @@ void ImHistogramPlotter::AddPlot()
 
 	if (comboSelection != -1) {
 		data[plotTab].push_back(newPlot);
+		RefreshPlots();
 		return;
 	}
 	globals[plotTab] = newPlot;
@@ -321,6 +322,13 @@ void ImHistogramPlotter::LoadFacetHistograms()
 	comboOpts[bounces].clear();
 	comboOpts[distance].clear();
 	comboOpts[time].clear();
+	globals[bounces] = ImPlotData();
+	globals[distance] = ImPlotData();
+	globals[time] = ImPlotData();
+	data[bounces].clear();
+	data[distance].clear();
+	data[time].clear();
+	comboSelection = -2;
 	size_t n = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < n; i++) {
 		const auto& facet = interfGeom->GetFacet(i);
@@ -355,7 +363,7 @@ void ImHistogramPlotter::DrawMenuBar()
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
 		bool isFacet =  data[plotTab].size() != 0;
-		long long bins = isGlobal ? globals[plotTab].y->size() : isFacet ? data[plotTab].at(0).y->size() : 0;
+		long long bins = isGlobal ? globals[plotTab].y->size()!=0 : (isFacet ? data[plotTab].at(0).y->size() : 0);
 		if ((isGlobal || isFacet) && bins>maxDisplayed && limitPoints) {
 			ImGui::SameLine();
 			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the first {} of {} values", maxDisplayed, bins).c_str());
