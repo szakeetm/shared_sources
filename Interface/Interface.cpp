@@ -2689,6 +2689,12 @@ int Interface::FrameMove() {
     return GL_OK;
 }
 
+void Interface::ImRefresh()
+{
+    if (!imWnd) return;
+    imWnd->Refresh();
+}
+
 void Interface::ResetAutoSaveTimer() {
     UpdateStats(); //updates m_fTime
     if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTimer.Elapsed();

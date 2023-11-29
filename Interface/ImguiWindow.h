@@ -54,6 +54,8 @@ public:
     //void render();
     void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
+    void Refresh();
+
     GLApplication* app;
 
     bool ToggleMainHub();

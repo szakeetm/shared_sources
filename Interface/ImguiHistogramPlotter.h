@@ -6,6 +6,7 @@ class ImHistogramPlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
+	void LoadFacetHistograms();
 protected:
 	//functions
 	void DrawPlot();
@@ -23,10 +24,9 @@ protected:
 		void Draw();
 		float width;
 		ImHistogramPlotter* parent;
-	protected:
 		typedef struct {
 			bool amIDisabled = true;
-			bool globalRecBounce = false;
+			bool recBounce = false;
 			std::string maxRecNbBouncesInput = "10000";
 			size_t nbBouncesMax = 10000;
 			std::string bouncesBinSizeInput = "1";
@@ -58,7 +58,7 @@ protected:
 	plotTabs plotTab = bounces;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
-	std::vector<size_t> comboOpts;
+	std::vector<size_t> comboOpts[3];
 	std::vector<ImPlotData> data[3];
 	ImPlotData globals[3];
 	long comboSelection=-2;
