@@ -104,6 +104,8 @@ public:
   Plane GetCameraPlane();
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
+  void AutoScale(bool reUpdateMouseCursor = true);
+
   // Flag view
   bool showIndex = false;
   bool showNormal = false;
@@ -159,7 +161,6 @@ private:
   void TranslateScale(double diff);
   void PaintCompAndBorder();
   void PaintSelectedVertices(bool hiddenVertex);
-  void AutoScale(bool reUpdateMouseCursor=true);
   void ComputeBB(/*bool getAll*/);
   void UpdateLight();
   void Screenshot();
