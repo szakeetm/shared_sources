@@ -6,7 +6,8 @@ class ImHistogramPlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
-	void LoadFacetHistograms();
+	void LoadHistogramSettings();
+	bool anchor = true;
 protected:
 	//functions
 	void DrawPlot();
@@ -65,4 +66,5 @@ protected:
 	int maxDisplayed = 1000;
 	bool limitPoints = true;
 	bool showValueOnHover = true;
+	bool overrange = true;
 };

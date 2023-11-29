@@ -431,5 +431,5 @@ void ImguiWindow::renderSingle() {
 
 void ImguiWindow::Refresh()
 {
-    histPlot.LoadFacetHistograms();
+    histPlot.LoadHistogramSettings();
 }
