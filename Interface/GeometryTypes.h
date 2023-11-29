@@ -84,12 +84,12 @@ struct CameraView{
     double   lightAngleOy=0.0; //Light direction
 
     Vector3d camOffset;  // Camera target offset
-    CameraPlaneMode      performXY= CameraPlaneMode::CamNone;  // Draw x,y,z coordinates when aligned with axis and orthographic
+    CameraPlaneMode      performXY= CameraPlaneMode::CamFront;  // Draw x,y,z coordinates when aligned with axis and orthographic
 
-    double   vLeft=0.0;      // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vRight = 0.0;     // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vTop = 0.0;       // Viewport in 2D proj space (used for orthographic autoscaling)
-    double   vBottom = 0.0;    // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vLeft=-1.0;      // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vRight = 1.0;     // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vTop = -1.0;       // Viewport in 2D proj space (used for orthographic autoscaling)
+    double   vBottom = 1.0;    // Viewport in 2D proj space (used for orthographic autoscaling)
 
     double cutFactor = 0.0;
 
@@ -114,7 +114,8 @@ struct FacetInterfaceSetting { //Extra information that can't be stored in a Sim
 
 struct InterfaceSettings { //extra information (not part of SimulationModel) in XML file used by XmlLoader and XmlWriter, then passed to/from GUI
     std::vector<SelectionGroup> selections;
-    std::vector<CameraView> views;
+    std::vector<CameraView> userViews;
+    std::vector<CameraView> viewerCurrentViews;
     std::vector<UserFormula> userFormulas;
     std::vector<FacetInterfaceSetting> facetSettings;
     PlotterSetting profilePlotterSettings;

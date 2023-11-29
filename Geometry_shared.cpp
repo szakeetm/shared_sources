@@ -318,7 +318,7 @@ size_t InterfaceGeometry::GetNbVertex() const {
 	return sh.nbVertex;
 }
 
-Vector3d InterfaceGeometry::GetFacetCenter(int facet) {
+Vector3d InterfaceGeometry::GetFacetCenter(size_t facet) {
 
 	return facets[facet]->sh.center;
 
