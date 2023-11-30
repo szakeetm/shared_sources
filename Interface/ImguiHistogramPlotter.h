@@ -10,10 +10,16 @@
 
 class ImHistogramPlotter : public ImWindow {
 public:
+#ifdef MOLFLOW
+	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
+#else
+	enum plotTabs : BYTE { bounces = 0, distance = 1}; // using BYTE as it is the smalest type capable of holding 3 values
+#endif
 	void Draw();
 	void Init(Interface* mApp_);
 	void LoadHistogramSettings();
 	bool anchor = true;
+	bool IsPlotted(plotTabs tab, size_t facetId);
 protected:
 	//functions
 	void DrawPlot();
@@ -24,11 +30,6 @@ protected:
 	void Export(bool toFile, bool plottedOnly);
 
 	//types
-#ifdef MOLFLOW
-	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
-#else
-	enum plotTabs : BYTE { bounces = 0, distance = 1}; // using BYTE as it is the smalest type capable of holding 3 values
-#endif
 	class ImHistogramSettings : public ImWindow {
 	public:
 		void Draw();

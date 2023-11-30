@@ -198,14 +198,14 @@ void ImHistogramPlotter::RefreshPlots()
 		size_t facetId = plot.id;
 		switch (plotTab) {
 		case bounces:
-			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram; // yaxis
+			plot.y = std::make_shared<std::vector<double>>(interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram); // yaxis
 			if (plot.y.get() == nullptr) break;
 			xMax = (double)interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize;
 			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 			break;
 		case distance:
-			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.distanceHistogram; // yaxis
+			plot.y = std::make_shared<std::vector<double>>(interfGeom->GetFacet(facetId)->facetHistogramCache.distanceHistogram); // yaxis
 			if (plot.y.get() == nullptr) break;
 			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceMax;
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
@@ -213,7 +213,7 @@ void ImHistogramPlotter::RefreshPlots()
 			break;
 #ifdef MOLFLOW
 		case time:
-			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram; // yaxis
+			plot.y = std::make_shared<std::vector<double>>(interfGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram); // yaxis
 			if (plot.y.get() == nullptr) break;
 			xMax = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeMax;
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
@@ -378,6 +378,14 @@ void ImHistogramPlotter::LoadHistogramSettings()
 		if (facet->facetHistogramCache.timeHistogram.size() != 0) comboOpts[time].push_back(i);
 #endif
 	}
+}
+
+bool ImHistogramPlotter::IsPlotted(plotTabs tab, size_t facetId)
+{
+	for (const auto& plot : data[tab]) {
+		if (plot.id == facetId) return true;
+	}
+	return false;
 }
 
 void ImHistogramPlotter::DrawMenuBar()
@@ -614,14 +622,14 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				if (parent->data[i][j].id == facetId)
 					parent->data[i][j] = ImPlotData();
 		}
-		if(facetHistSet.recBounce) parent->comboOpts[bounces].push_back(facetId);
+		if(facetHistSet.recBounce && !parent->IsPlotted(bounces,facetId)) parent->comboOpts[bounces].push_back(facetId);
 		else {
 			for (int i = 0; i < parent->comboOpts[bounces].size(); i++) if (parent->comboOpts[bounces][i] == facetId) {
 				parent->comboOpts[bounces].erase(parent->comboOpts[bounces].begin() + i);
 				break;
 			}
 		}
-		if(facetHistSet.recFlightDist) parent->comboOpts[distance].push_back(facetId);
+		if(facetHistSet.recFlightDist && !parent->IsPlotted(distance, facetId)) parent->comboOpts[distance].push_back(facetId);
 		else {
 			for (int i = 0; i < parent->comboOpts[distance].size(); i++) if (parent->comboOpts[distance][i] == facetId) {
 				parent->comboOpts[distance].erase(parent->comboOpts[distance].begin() + i);
@@ -629,7 +637,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			}
 		}
 #ifdef MOLFLOW
-		if(facetHistSet.recTime) parent->comboOpts[time].push_back(facetId);
+		if(facetHistSet.recTime && !parent->IsPlotted(time, facetId)) parent->comboOpts[time].push_back(facetId);
 		else {
 			for (int i = 0; i < parent->comboOpts[time].size(); i++) if (parent->comboOpts[time][i] == facetId) {
 				parent->comboOpts[time].erase(parent->comboOpts[time].begin() + i);
