@@ -344,7 +344,7 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
-			ImGui::SetNextItemWidth(txtW * 20);
+			ImGui::SetNextItemWidth(txtW * 15);
 			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 			if (ImGui::Button("-> Plot expression")) {
 				drawManual = ImUtils::ParseExpression(expression, formula);
@@ -353,9 +353,12 @@ void ImProfilePlotter::DrawMenuBar()
 				manualPlot.x->clear();
 				manualPlot.y->clear();
 
-				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
+				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), manualEnd, manualStart, manualStep);
 				// no custom start, end, step bebause profiles have a constant size
 			}
+			ImGui::InputDoubleRightSide("Start X", &manualStart);
+			ImGui::InputDoubleRightSide("End X", &manualEnd);
+			ImGui::InputDoubleRightSide("Step:", &manualStep);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
