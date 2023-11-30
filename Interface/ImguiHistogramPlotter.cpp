@@ -38,9 +38,9 @@ void ImHistogramPlotter::Draw()
 			plotTab = time;
 			ImGui::EndTabItem();
 		}
+#endif
 		ImGui::EndTabBar();
 	}
-#endif
 	DrawPlot();
 	if(ImGui::Button("<< Hist settings")) {
 		settingsWindow.Toggle();
@@ -49,10 +49,9 @@ void ImHistogramPlotter::Draw()
 	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
 		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
 #ifdef MOLFLOW
-		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime));
-#else
-		);
+		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
 #endif
+		);
 	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
 	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
@@ -60,13 +59,12 @@ void ImHistogramPlotter::Draw()
 
 		for (const auto facetId : comboOpts[plotTab]) {
 			InterfaceFacet* f = interfGeom->GetFacet(facetId);
-			bool showFacet = (plotTab == bounces && f->sh.facetHistogramParams.recordBounce)
+			bool showFacet = ((plotTab == bounces && f->sh.facetHistogramParams.recordBounce)
 				|| (plotTab == distance && f->sh.facetHistogramParams.recordDistance)
 #ifdef MOLFLOW
-				|| (plotTab == time && f->sh.facetHistogramParams.recordTime);
-#else
-				);
+				|| (plotTab == time && f->sh.facetHistogramParams.recordTime)
 #endif
+				);
 			if (showFacet && ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
 		}
 
@@ -610,11 +608,11 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	if (globalHistSet.timeBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeBinsize = globalHistSet.timeBinSize;
 #endif
 	auto selectedFacets = interfGeom->GetSelectedFacets();
-	for (const auto facetId : selectedFacets) {
-		for (int i = 0; i < IM_HISTOGRAM_TABS; i++) { // wipe data from selected facets
-			for (int j = 0; j < parent->data->size(); j++)
+	for (const auto facetId : selectedFacets) { // for every facet
+		for (int i = 0; i < IM_HISTOGRAM_TABS; i++) { // for every tab
+			for (int j = 0; j < parent->data[i].size(); j++) // for every plotted graph 
 				if (parent->data[i][j].id == facetId)
-					parent->data[i][facetId] = ImPlotData();
+					parent->data[i][j] = ImPlotData();
 		}
 		if(facetHistSet.recBounce) parent->comboOpts[bounces].push_back(facetId);
 		else {
