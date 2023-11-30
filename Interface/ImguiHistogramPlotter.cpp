@@ -182,6 +182,7 @@ void ImHistogramPlotter::RemovePlot()
 
 void ImHistogramPlotter::AddPlot()
 {
+	if (IsPlotted(plotTab, comboSelection)) return;
 	ImPlotData newPlot;
 	if (comboSelection != -1) newPlot.id = comboSelection;
 	else newPlot.id = plotTab;
@@ -296,13 +297,22 @@ void ImHistogramPlotter::RefreshPlots()
 
 void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 {
-	if (!plottedOnly && limitPoints) { // get all available histogram data
+	std::vector<ImPlotData> preExportData = data[plotTab];
+	ImPlotData preExportGlobal = globals[plotTab];
+	long preExportSel = comboSelection;
+	bool preExportLimitPoints = limitPoints;
+	if (!plottedOnly) {
 		limitPoints = false;
-		RefreshPlots();
-		limitPoints = true;
+		comboSelection = -1;
+		AddPlot();
+		for (const auto& id: comboOpts[plotTab]) {
+			comboSelection = id;
+			AddPlot();
+		}
 	}
+	RefreshPlots();
 	bool exportGlobal = globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr;
-	if (!exportGlobal && data[plotTab].size() == 0) {
+	if (plottedOnly && !exportGlobal && data[plotTab].size() == 0) {
 		ImIOWrappers::InfoPopup("Error", "Nothing to export");
 		return;
 	}
@@ -315,23 +325,28 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	for (const auto& plot : data[plotTab]) {
 		out.append(fmt::format("Facet #{}\t", plot.id + 1));
 	}
-	out.append("\n");
-	int n = exportGlobal ? globals[plotTab].x->size() : data[plotTab][0].x->size();
+	out[out.size() - 1] = '\n';
+	int n = std::max(exportGlobal ? globals[plotTab].x->size() : 0, data[plotTab].size() == 0 ? 0 : data[plotTab][0].x->size());
 	for (int i = 0; i < n; ++i) {
 		out.append(fmt::format("{}\t", exportGlobal ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
 		
 		if (exportGlobal) {
-			out.append(fmt::format("{}\t", globals[plotTab].y->at(i)));
+			if (i < globals[plotTab].x->size()) {
+				out.append(fmt::format("{}\t", globals[plotTab].y->at(i)));
+			}
 		}
 		for (const auto& plot : data[plotTab]) {
-			out.append(fmt::format("{}\t", plot.y->at(i)));
+			if (i < plot.y->size()) {
+				out.append(fmt::format("{}\t", plot.y->at(i)));
+			}
 		}
-		out.append("\n");
+		out[out.size() - 1] = '\n';
 	}
+	out.erase(out.end()-1);
 
 	if (!toFile) SDL_SetClipboardText(out.c_str());
 	else {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
@@ -343,6 +358,10 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 			fclose(f);
 		}
 	}
+	data[plotTab] = preExportData;
+	globals[plotTab] = preExportGlobal;
+	comboSelection = preExportSel;
+	limitPoints = preExportLimitPoints;
 }
 
 void ImHistogramPlotter::LoadHistogramSettings()
