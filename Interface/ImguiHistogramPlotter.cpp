@@ -71,8 +71,19 @@ void ImHistogramPlotter::Draw()
 		ImGui::EndCombo();
 	} ImGui::SameLine();
 	if (ImGui::Button("<- Show Facet")) {
-		interfGeom->UnselectAll();
-		interfGeom->GetFacet(comboSelection)->selected = true;
+		if (comboSelection >= 0) {
+			interfGeom->UnselectAll();
+			try {
+				interfGeom->GetFacet(comboSelection)->selected = true;
+			}
+			catch (const std::exception& e) {
+				ImIOWrappers::InfoPopup("Error", e.what());
+			}
+			LockWrapper lWrap(mApp->imguiRenderLock);
+			interfGeom->UpdateSelection();
+			mApp->UpdateFacetParams(true);
+			mApp->UpdateFacetlistSelected();
+		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Add")) {
 		AddPlot();
