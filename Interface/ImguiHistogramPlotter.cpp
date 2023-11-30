@@ -33,12 +33,14 @@ void ImHistogramPlotter::Draw()
 			plotTab = distance;
 			ImGui::EndTabItem();
 		}
+#ifdef MOLFLOW
 		if (ImGui::BeginTabItem("Flight time before absorption")) {
 			plotTab = time;
 			ImGui::EndTabItem();
 		}
 		ImGui::EndTabBar();
 	}
+#endif
 	DrawPlot();
 	if(ImGui::Button("<< Hist settings")) {
 		settingsWindow.Toggle();
@@ -46,8 +48,11 @@ void ImHistogramPlotter::Draw()
 	
 	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
 		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
+#ifdef MOLFLOW
 		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime));
-
+#else
+		);
+#endif
 	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
 	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
@@ -57,7 +62,11 @@ void ImHistogramPlotter::Draw()
 			InterfaceFacet* f = interfGeom->GetFacet(facetId);
 			bool showFacet = (plotTab == bounces && f->sh.facetHistogramParams.recordBounce)
 				|| (plotTab == distance && f->sh.facetHistogramParams.recordDistance)
+#ifdef MOLFLOW
 				|| (plotTab == time && f->sh.facetHistogramParams.recordTime);
+#else
+				);
+#endif
 			if (showFacet && ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
 		}
 
@@ -101,12 +110,13 @@ void ImHistogramPlotter::Draw()
 			settingsWindow.facetHistSet.maxFlightDistInput= fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
 			settingsWindow.facetHistSet.distBinSize = f->sh.facetHistogramParams.distanceBinsize;
 			settingsWindow.facetHistSet.distBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
-
+#ifdef MOLFLOW
 			settingsWindow.facetHistSet.recTime = f->sh.facetHistogramParams.recordTime;
 			settingsWindow.facetHistSet.maxFlightTime = f->sh.facetHistogramParams.timeMax;
 			settingsWindow.facetHistSet.maxFlightTimeInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
 			settingsWindow.facetHistSet.timeBinSize = f->sh.facetHistogramParams.timeBinsize;
 			settingsWindow.facetHistSet.timeBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
+#endif
 		}
 	}
 }
@@ -127,7 +137,9 @@ void ImHistogramPlotter::DrawPlot()
 {
 	if(plotTab==bounces) xAxisName = "Number of bounces";
 	if(plotTab==distance) xAxisName = "Distance [cm]";
+#ifdef MOLFLOW
 	if(plotTab==time) xAxisName = "Time [s]";
+#endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
 	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (auto& plot : data[plotTab]) {
@@ -201,6 +213,7 @@ void ImHistogramPlotter::RefreshPlots()
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.distanceBinsize;
 			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetDistanceHistogramSize();
 			break;
+#ifdef MOLFLOW
 		case time:
 			*plot.y.get() = interfGeom->GetFacet(facetId)->facetHistogramCache.timeHistogram; // yaxis
 			if (plot.y.get() == nullptr) break;
@@ -208,6 +221,7 @@ void ImHistogramPlotter::RefreshPlots()
 			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.timeBinsize;
 			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetTimeHistogramSize();
 			break;
+#endif
 		}
 		
 		// x axis
@@ -243,12 +257,14 @@ void ImHistogramPlotter::RefreshPlots()
 		xSpacing = (double)mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
 		nBins = mApp->worker.model->sp.globalHistogramParams.GetDistanceHistogramSize();
 		break;
+#ifdef MOLFLOW
 	case time:
 		*globals[plotTab].y.get() = mApp->worker.globalHistogramCache.timeHistogram;
 		xMax = mApp->worker.model->sp.globalHistogramParams.timeMax;
 		xSpacing = (double)mApp->worker.model->sp.globalHistogramParams.timeBinsize;
 		nBins = mApp->worker.model->sp.globalHistogramParams.GetTimeHistogramSize();
 		break;
+#endif
 	}
 	// x axis
 	globals[plotTab].x = std::make_shared<std::vector<double>>();
@@ -323,14 +339,16 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 void ImHistogramPlotter::LoadHistogramSettings()
 {
 	comboOpts[bounces].clear();
-	comboOpts[distance].clear();
-	comboOpts[time].clear();
 	globals[bounces] = ImPlotData();
-	globals[distance] = ImPlotData();
-	globals[time] = ImPlotData();
 	data[bounces].clear();
+	comboOpts[distance].clear();
+	globals[distance] = ImPlotData();
 	data[distance].clear();
+#ifdef MOLFLOW
+	comboOpts[time].clear();
+	globals[time] = ImPlotData();
 	data[time].clear();
+#endif
 	comboSelection = -2;
 
 	// global settings
@@ -345,20 +363,22 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	settingsWindow.globalHistSet.maxFlightDistInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
 	settingsWindow.globalHistSet.distBinSize = mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
 	settingsWindow.globalHistSet.distBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
-
+#ifdef MOLFLOW
 	settingsWindow.globalHistSet.recTime = mApp->worker.model->sp.globalHistogramParams.recordTime;
 	settingsWindow.globalHistSet.maxFlightTime = mApp->worker.model->sp.globalHistogramParams.timeMax;
 	settingsWindow.globalHistSet.maxFlightTimeInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
 	settingsWindow.globalHistSet.timeBinSize = mApp->worker.model->sp.globalHistogramParams.timeBinsize;
 	settingsWindow.globalHistSet.timeBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
-
+#endif
 	// combo lists
 	size_t n = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < n; i++) {
 		const auto& facet = interfGeom->GetFacet(i);
 		if (facet->facetHistogramCache.nbHitsHistogram.size() != 0) comboOpts[bounces].push_back(i);
 		if (facet->facetHistogramCache.distanceHistogram.size() != 0) comboOpts[distance].push_back(i);
+#ifdef MOLFLOW
 		if (facet->facetHistogramCache.timeHistogram.size() != 0) comboOpts[time].push_back(i);
+#endif
 	}
 }
 
@@ -591,7 +611,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 #endif
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	for (const auto facetId : selectedFacets) {
-		for (int i = 0; i < 3; i++) { // wipe data from selected facets
+		for (int i = 0; i < IM_HISTOGRAM_TABS; i++) { // wipe data from selected facets
 			for (int j = 0; j < parent->data->size(); j++)
 				if (parent->data[i][j].id == facetId)
 					parent->data[i][facetId] = ImPlotData();
@@ -610,6 +630,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				break;
 			}
 		}
+#ifdef MOLFLOW
 		if(facetHistSet.recTime) parent->comboOpts[time].push_back(facetId);
 		else {
 			for (int i = 0; i < parent->comboOpts[time].size(); i++) if (parent->comboOpts[time][i] == facetId) {
@@ -617,6 +638,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				break;
 			}
 		}
+#endif
 		InterfaceFacet* f = interfGeom->GetFacet(facetId);
 		f->sh.facetHistogramParams.recordBounce = facetHistSet.recBounce;
 		if (facetHistSet.maxRecNbBouncesInput != "...") f->sh.facetHistogramParams.nbBounceMax = facetHistSet.nbBouncesMax;
@@ -655,13 +677,13 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set)
 	ImGui::InputTextRightSide("Max recorded flight distance (cm):", &set.maxFlightDistInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Distance bin size (cm):", &set.distBinSizeInput, 0, txtW * 6);
 	if (!set.amIDisabled && !set.recFlightDist) ImGui::EndDisabled();
-	
+#ifdef MOLFLOW
 	ImGui::Checkbox("Record flight time until absorption", &set.recTime);
 	if (!set.amIDisabled && !set.recTime) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded flight time (s):", &set.maxFlightTimeInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Time bin size (s):", &set.timeBinSizeInput, 0, txtW * 6);
 	if (!set.amIDisabled && !set.recTime) ImGui::EndDisabled();
-
+#endif
 	// to the best of my understanding, this does not do anything in the Legacy code
 	// if that is the case it can be removed
 	ImGui::Text("Memory estimate of histogram: " + (set.showMemEst ? std::to_string(set.memEst) : ""));
