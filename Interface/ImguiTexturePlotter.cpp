@@ -52,7 +52,14 @@ void ImTexturePlotter::Draw()
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
-	ImGui::Combo("##View", &viewIdx, u8"Cell Area (cm\u00B2)\0# of MC hits\0Impingement rate [1/m\u00B2/sec]]\0Gas density [kg/m3]\0Particle density [1/m3]\0Pressure [mBar]\0Avg.speed estimate [m/s]\0Incident velocity vector[m/s]\0# of velocity vectors");
+	if (ImGui::BeginCombo("##View", comboOpts[viewIdx])) {
+		for (short i = 0; i < comboOpts.size(); i++) {
+			if (ImGui::Selectable(comboOpts[i])) {
+				viewIdx = i;
+			}
+		}
+		ImGui::EndCombo();
+	}
 	ImGui::SameLine();
 	ImGui::HelpMarker("Click, hold and drag to select multiple\nSelect one and shift+click another to select all inbetween\nClick selected to deselect");
 	ImGui::SameLine();
@@ -221,7 +228,7 @@ void ImTexturePlotter::GetData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(fmt::format("{:.4f}", val));
+				data[j].push_back(fmt::format("{:.4e}", val));
 			}
 		}
 		break; }
@@ -239,7 +246,7 @@ void ImTexturePlotter::GetData()
 					maxValue = realVal;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4f}", realVal));
+				data[j].push_back(fmt::format("{}", (int)realVal));
 			}
 		}
 		break; }
@@ -256,7 +263,7 @@ void ImTexturePlotter::GetData()
 						maxValue = realVal;
 						maxX = i; maxY = j;
 					}
-					data[j].push_back(fmt::format("{:.4f}", realVal));
+					data[j].push_back(fmt::format("{:.4e}", realVal));
 				} catch (...) {
 					data[j].push_back("Error");
 
@@ -282,7 +289,7 @@ void ImTexturePlotter::GetData()
 					maxValue = rho;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4f}", rho));
+				data[j].push_back(fmt::format("{:.4e}", rho));
 			}
 		}
 
@@ -303,7 +310,7 @@ void ImTexturePlotter::GetData()
 					maxValue = rho_mass;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4f}", rho_mass));
+				data[j].push_back(fmt::format("{:.4e}", rho_mass));
 			}
 		}
 
@@ -324,7 +331,7 @@ void ImTexturePlotter::GetData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(fmt::format("{:.4f}", p));
+				data[j].push_back(fmt::format("{:.4e}", p));
 			}
 		}
 		break; }
@@ -342,7 +349,7 @@ void ImTexturePlotter::GetData()
 					maxValue = realVal;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4f}", realVal));
+				data[j].push_back(fmt::format("{:.4e}", realVal));
 			}
 		}
 		break; }
@@ -360,11 +367,11 @@ void ImTexturePlotter::GetData()
 					Vector3d v_vect = val.vect;
 
 					std::string out;
-					out.append(fmt::format("{:.4f}", v_vect.x));
+					out.append(fmt::format("{:.4e}", v_vect.x));
 					out.append(",");
-					out.append(fmt::format("{:.4f}", v_vect.y));
+					out.append(fmt::format("{:.4e}", v_vect.y));
 					out.append(",");
-					out.append(fmt::format("{:.4f}", v_vect.z));
+					out.append(fmt::format("{:.4e}", v_vect.z));
 					data[j].push_back(out);
 
 					double length = v_vect.Norme();
@@ -393,7 +400,7 @@ void ImTexturePlotter::GetData()
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::NbVelocityVectors, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
 					size_t count = val.count;
 
-					data[j].push_back(fmt::format("{:.4f}", count));
+					data[j].push_back(fmt::format("{}", (int)count));
 					double countEq = (double)count;
 					if (countEq > maxValue) {
 						maxValue = countEq;
@@ -533,7 +540,7 @@ void ImTexturePlotter::DrawMenuBar()
 }
 
 // pass bounds as {startRow, startCol, endRow, endCol}
-std::string ImTexturePlotter::Serialize(SelRect bounds, std::string lineBreak, std::string rowBreak)
+std::string ImTexturePlotter::Serialize(SelRect bounds, char lineBreak, std::string rowBreak)
 {
 	std::string out;
 	for (size_t row = bounds.startRow; row <= bounds.endRow; row++) {
@@ -541,7 +548,8 @@ std::string ImTexturePlotter::Serialize(SelRect bounds, std::string lineBreak, s
 			out.append(data[row][col]);
 			out.append(rowBreak);
 		}
-		out.append(lineBreak);
+		out[out.size() - 1] = lineBreak;
 	}
+	out.erase(out.end() - 1);
 	return out;
 }
