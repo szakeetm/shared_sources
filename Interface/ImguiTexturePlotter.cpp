@@ -228,7 +228,7 @@ void ImTexturePlotter::GetData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(fmt::format("{:.4e}", val));
+				data[j].push_back(fmt::format("{:.6g}", val));
 			}
 		}
 		break; }
@@ -263,7 +263,7 @@ void ImTexturePlotter::GetData()
 						maxValue = realVal;
 						maxX = i; maxY = j;
 					}
-					data[j].push_back(fmt::format("{:.4e}", realVal));
+					data[j].push_back(fmt::format("{:.4g}", realVal));
 				} catch (...) {
 					data[j].push_back("Error");
 
@@ -289,7 +289,7 @@ void ImTexturePlotter::GetData()
 					maxValue = rho;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4e}", rho));
+				data[j].push_back(fmt::format("{:.6g}", rho));
 			}
 		}
 
@@ -310,7 +310,7 @@ void ImTexturePlotter::GetData()
 					maxValue = rho_mass;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4e}", rho_mass));
+				data[j].push_back(fmt::format("{:.6g}", rho_mass));
 			}
 		}
 
@@ -331,7 +331,7 @@ void ImTexturePlotter::GetData()
 					maxX = i; maxY = j;
 				}
 
-				data[j].push_back(fmt::format("{:.4e}", p));
+				data[j].push_back(fmt::format("{:.6g}", p));
 			}
 		}
 		break; }
@@ -349,7 +349,7 @@ void ImTexturePlotter::GetData()
 					maxValue = realVal;
 					maxX = i; maxY = j;
 				}
-				data[j].push_back(fmt::format("{:.4e}", realVal));
+				data[j].push_back(fmt::format("{:.6g}", realVal));
 			}
 		}
 		break; }
@@ -367,11 +367,11 @@ void ImTexturePlotter::GetData()
 					Vector3d v_vect = val.vect;
 
 					std::string out;
-					out.append(fmt::format("{:.4e}", v_vect.x));
+					out.append(fmt::format("{:.2g}", v_vect.x));
 					out.append(",");
-					out.append(fmt::format("{:.4e}", v_vect.y));
+					out.append(fmt::format("{:.2g}", v_vect.y));
 					out.append(",");
-					out.append(fmt::format("{:.4e}", v_vect.z));
+					out.append(fmt::format("{:.2g}", v_vect.z));
 					data[j].push_back(out);
 
 					double length = v_vect.Norme();
