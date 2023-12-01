@@ -432,4 +432,5 @@ void ImguiWindow::renderSingle() {
 void ImguiWindow::Refresh()
 {
     histPlot.LoadHistogramSettings();
+    convPlot.Reload();
 }

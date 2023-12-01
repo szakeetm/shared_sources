@@ -156,6 +156,12 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 	}
 }
 
+void ImConvergencePlotter::Reload()
+{
+	data.clear();
+	selectedFormula = -1;
+}
+
 void ImConvergencePlotter::Draw()
 {
 	if (!drawn) return;
@@ -232,6 +238,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (int i = 0; i < data.size(); i++) {
+			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();
 			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();
