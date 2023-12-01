@@ -16,7 +16,13 @@ void ImTextureScailing::Draw()
 	if (photoMode) {
 		ImGui::SetNextWindowSize(ImVec2(50 * txtW, 5 * txtH));
 		ImGui::Begin("Legend###TextureScailing", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+		if (!mApp->whiteBg) {
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+		}
 		DrawGradient();
+		if (!mApp->whiteBg) {
+			ImGui::PopStyleColor();
+		}
 		ImGui::SameLine();
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth()-3*txtW,txtH));
 		ImGui::SameLine();
@@ -91,8 +97,8 @@ void ImTextureScailing::Draw()
 	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
 	ImGui::TextDisabled("Geometry");
 	GetCurrentRange();
-	ImGui::Text(fmt::format("Min: {:.3e}", cMinScale));
-	ImGui::Text(fmt::format("Max: {:.3e}", cMaxScale));
+	ImGui::Text(fmt::format("Min: {:.3g}", cMinScale));
+	ImGui::Text(fmt::format("Max: {:.3g}", cMaxScale));
 	ImGui::HelpMarker("These are the values obtained from geomatry\nthey are used by autoscale");
 	ImGui::EndChild();
 
@@ -154,12 +160,9 @@ void ImTextureScailing::Update() {
 
 void ImTextureScailing::SetCurrentButtonPress()
 {
-	autoscale = molflowGeom->texAutoScale;
 	GetCurrentRange();
-	minScale = cMinScale;
-	maxScale = cMaxScale;
-	minInput = std::to_string(minScale);
-	maxInput = std::to_string(maxScale);
+	minInput = fmt::format("{:.3g}", cMinScale);
+	maxInput = fmt::format("{:.3g}", cMaxScale);
 	ApplyButtonPress();
 }
 
@@ -260,7 +263,7 @@ void ImTextureScailing::DrawGradient()
 
 		std::string text = fmt::format("{:.2e}", val);
 		ImVec2 textSize = font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, text.c_str());
-		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), colorMap[0], text.c_str());
+		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), mApp->whiteBg ? colorMap[0] : ImGui::GetColorU32(IM_COL32(255, 255, 255, 255)), text.c_str());
 		drawList->AddRectFilled(ImVec2(tick, (midpoint.y + BRcorner.y) / 2), ImVec2(tick + 1, BRcorner.y), colorMap[0]);
 	}
 	// handle hovering

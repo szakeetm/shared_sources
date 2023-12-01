@@ -215,6 +215,7 @@ void ImTexturePlotter::GetData()
 	height = selFacet->sh.texHeight;
 	while (data.size() < height) data.push_back(std::vector<std::string>());
 
+	if (width == 0 || height == 0) return;
 
 	switch (viewIdx) { // whole switch copied from legacy and slightly adjusted, a lot of repeted code, perhaps could be rewritten?
 	case 0: {// Cell area
@@ -233,13 +234,12 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	case 1: {// MC Hits
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		//TextureCell *texture = (TextureCell *)((BYTE *)buffer + (selFacet->sh.hitOffset + facetHitsSize + profSize + mApp->worker.displayedMoment*w*h * sizeof(TextureCell)));
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
 				//int tSize = selFacet->sp.texWidth*selFacet->sp.texHeight;
-
 				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::MCHits, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
 				double realVal = val.value;
 				if (realVal > maxValue) {
@@ -251,12 +251,13 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	case 2: {// Impingement rate
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
 				try {
+					if (facetSnapshot.texture.size() == 0) throw std::exception();
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::ImpingementRate, moleculesPerTP, 1.0, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
 					double realVal = val.value;
 					if (realVal > maxValue) {
@@ -274,8 +275,8 @@ void ImTexturePlotter::GetData()
 		break; }
 	case 3: {// Particle density [1/m3]
 
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		double densityCorrection = selFacet->DensityCorrection();
@@ -296,8 +297,8 @@ void ImTexturePlotter::GetData()
 		break; }
 	case 4: {// Gas density [kg/m3]
 
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		double densityCorrection = selFacet->DensityCorrection();
@@ -316,29 +317,33 @@ void ImTexturePlotter::GetData()
 
 		break; }
 	case 5: {// Pressure
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-
-				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::Pressure, moleculesPerTP, 1.0, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
-				double p = val.value;
-
-				if (p > maxValue) {
-					maxValue = p;
-					maxX = i; maxY = j;
+				if (facetSnapshot.texture.size() == 0) {
+					data[j].push_back("Error");
 				}
+				else {
+					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::Pressure, moleculesPerTP, 1.0, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
+					double p = val.value;
 
-				data[j].push_back(fmt::format("{:.6g}", p));
+					if (p > maxValue) {
+						maxValue = p;
+						maxX = i; maxY = j;
+					}
+
+					data[j].push_back(fmt::format("{:.6g}", p));
+				}
 			}
 		}
 		break; }
 	case 6: {// Average gas velocity [m/s]
 
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
@@ -355,11 +360,11 @@ void ImTexturePlotter::GetData()
 		break; }
 	case 7: {// Gas velocity vector
 
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
 		size_t nbElem = selFacet->sh.texWidth * selFacet->sh.texHeight;
 		size_t tSize = nbElem * sizeof(TextureCell);
 		size_t dSize = nbElem * sizeof(DirectionCell);
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
 				if (selFacet->sh.countDirection && facetSnapshot.direction.size()!=0) {
@@ -367,11 +372,9 @@ void ImTexturePlotter::GetData()
 					Vector3d v_vect = val.vect;
 
 					std::string out;
-					out.append(fmt::format("{:.2g}", v_vect.x));
-					out.append(",");
-					out.append(fmt::format("{:.2g}", v_vect.y));
-					out.append(",");
-					out.append(fmt::format("{:.2g}", v_vect.z));
+					out.append(fmt::format("{:.4g}, ", v_vect.x));
+					out.append(fmt::format("{:.4g}, ", v_vect.y));
+					out.append(fmt::format("{:.4g}", v_vect.z));
 					data[j].push_back(out);
 
 					double length = v_vect.Norme();
@@ -388,11 +391,11 @@ void ImTexturePlotter::GetData()
 		break; }
 	case 8: {// Nb of velocity vectors
 
-		size_t profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
+		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
 		size_t nbElem = selFacet->sh.texWidth * selFacet->sh.texHeight;
 		size_t tSize = nbElem * sizeof(TextureCell);
 		size_t dSize = nbElem * sizeof(DirectionCell);
-		const auto& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {

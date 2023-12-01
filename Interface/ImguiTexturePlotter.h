@@ -46,4 +46,5 @@ protected:
 	int tableFlags = 0;
 	int columnWidth; // column width (is multiplied by character width)
 	bool scrollToSelected = false;
+	size_t profSize = 0;
 };
