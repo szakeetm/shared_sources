@@ -11,7 +11,6 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
-extern MolFlow* mApp;
 #endif
 
 void ImHistogramPlotter::Draw()
