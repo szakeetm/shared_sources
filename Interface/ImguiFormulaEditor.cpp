@@ -151,6 +151,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			}
 			else {
 				//modify formula
+				mApp->imWnd->convPlot.RemovePlot(changeIndex); // undraw formula from conv plot on edit
 				appFormulas->formulas[changeIndex].SetName(changeName);
 				appFormulas->formulas[changeIndex].SetExpression(changeExpression);
 				appFormulas->formulas[changeIndex].Parse();

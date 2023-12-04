@@ -45,6 +45,7 @@ private:
 	std::string expression;
 	GLFormula formula;
 	bool drawManual = false;
+	double manualStart = 0, manualEnd = PROFILE_SIZE, manualStep = 0.1;
 	bool lockYtoZero = false;
 	bool showDatapoints = false;
 	bool showValueOnHover = true;

@@ -140,7 +140,7 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 		if (data.size() != 0 || drawManual) {
 			int plotIdx = -2;
 			int idxX = -1;
-			double minDiff = ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y * 10;
+			double minDiff = abs(ImPlot::PlotToPixels(ImPlotPoint(0, ImPlot::GetPlotLimits().Y.Size())).y * 10);
 			for (size_t p = 0; p < data.size(); p++) { // for every plot
 				for (size_t i = 0; i < data[p].x->size(); i++) { // for every datapoint
 					ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(data[p].x->at(i), data[p].y->at(i)));

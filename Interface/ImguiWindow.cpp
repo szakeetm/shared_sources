@@ -214,7 +214,7 @@ void ImguiWindow::init() {
     profPlot.Init(mApp);
     histPlot = ImHistogramPlotter();
     histPlot.Init(mApp);
-    textScale = ImTextureScailing();
+    textScale = ImTextureScaling();
     textScale.Init(mApp);
     partLog = ImParticleLogger();
     partLog.Init(mApp);
@@ -430,4 +430,10 @@ void ImguiWindow::renderSingle() {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         }*/
     }
+}
+
+void ImguiWindow::Refresh()
+{
+    histPlot.LoadHistogramSettings();
+    convPlot.Reload();
 }

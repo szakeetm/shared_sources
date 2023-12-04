@@ -9,6 +9,7 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 	void RemovePlot(int idx);
+	void Reload();
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);

@@ -9,14 +9,20 @@
 #include "ImguiExtensions.h"
 #include <math.h>
 
-void ImTextureScailing::Draw()
+void ImTextureScaling::Draw()
 {
 	if (!drawn) return;
 	
 	if (photoMode) {
 		ImGui::SetNextWindowSize(ImVec2(50 * txtW, 5 * txtH));
-		ImGui::Begin("Legend", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+		ImGui::Begin("Legend###TextureScaling", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+		if (!mApp->whiteBg) {
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
+		}
 		DrawGradient();
+		if (!mApp->whiteBg) {
+			ImGui::PopStyleColor();
+		}
 		ImGui::SameLine();
 		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth()-3*txtW,txtH));
 		ImGui::SameLine();
@@ -28,7 +34,7 @@ void ImTextureScailing::Draw()
 	ImGui::SetNextWindowPos(ImVec2(3*txtW, 3*txtH), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(72*txtW,15*txtH),ImVec2(1000*txtW,100*txtH));
 
-	ImGui::Begin("Texture Scailing", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
+	ImGui::Begin("Texture Scaling###TextureScaling", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	
 	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 15 * txtW, 6 * txtH), true);
 	ImGui::TextDisabled("Texture Range");
@@ -91,8 +97,8 @@ void ImTextureScailing::Draw()
 	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
 	ImGui::TextDisabled("Geometry");
 	GetCurrentRange();
-	ImGui::Text(fmt::format("Min: {:.3e}", cMinScale));
-	ImGui::Text(fmt::format("Max: {:.3e}", cMaxScale));
+	ImGui::Text(fmt::format("Min: {:.3g}", cMinScale));
+	ImGui::Text(fmt::format("Max: {:.3g}", cMaxScale));
 	ImGui::HelpMarker("These are the values obtained from geomatry\nthey are used by autoscale");
 	ImGui::EndChild();
 
@@ -115,7 +121,7 @@ void ImTextureScailing::Draw()
 	ImGui::End();
 }
 
-void ImTextureScailing::Init(Interface* mApp_)
+void ImTextureScaling::Init(Interface* mApp_)
 {
 	mApp = mApp_;
 	interfGeom = mApp->worker.GetGeometry();
@@ -124,7 +130,7 @@ void ImTextureScailing::Init(Interface* mApp_)
 	Update(); // will get the toggle and combo states and min/max values from the molflowGeom object
 }
 
-void ImTextureScailing::UpdateSize()
+void ImTextureScaling::UpdateSize()
 {
 	size_t swap = 0;
 	size_t nbFacet = molflowGeom->GetNbFacet();
@@ -138,7 +144,7 @@ void ImTextureScailing::UpdateSize()
 }
 
 // get toggle states and values from molflow
-void ImTextureScailing::Update() {
+void ImTextureScaling::Update() {
 	GetCurrentRange();
 	autoscale = molflowGeom->texAutoScale;
 	includeComboVal = molflowGeom->texAutoScaleIncludeConstantFlow;
@@ -152,18 +158,15 @@ void ImTextureScailing::Update() {
 
 }
 
-void ImTextureScailing::SetCurrentButtonPress()
+void ImTextureScaling::SetCurrentButtonPress()
 {
-	autoscale = molflowGeom->texAutoScale;
 	GetCurrentRange();
-	minScale = cMinScale;
-	maxScale = cMaxScale;
-	minInput = std::to_string(minScale);
-	maxInput = std::to_string(maxScale);
+	minInput = fmt::format("{:.3g}", cMinScale);
+	maxInput = fmt::format("{:.3g}", cMaxScale);
 	ApplyButtonPress();
 }
 
-void ImTextureScailing::ApplyButtonPress()
+void ImTextureScaling::ApplyButtonPress()
 {
 	molflowGeom->texAutoScaleIncludeConstantFlow = includeComboVal;
 	molflowGeom->texAutoScale = autoscale;
@@ -191,7 +194,7 @@ void ImTextureScailing::ApplyButtonPress()
 	WorkerUpdate();
 }
 
-bool ImTextureScailing::WorkerUpdate()
+bool ImTextureScaling::WorkerUpdate()
 {
 	LockWrapper lock(mApp->imguiRenderLock);
 	try {
@@ -205,7 +208,7 @@ bool ImTextureScailing::WorkerUpdate()
 	Update();
 }
 
-void ImTextureScailing::DrawGradient()
+void ImTextureScaling::DrawGradient()
 {
 	ImGui::BeginChild("##ImGradient", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y - 1 * txtH));
 	ImVec2 availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(0, 0));
@@ -260,7 +263,7 @@ void ImTextureScailing::DrawGradient()
 
 		std::string text = fmt::format("{:.2e}", val);
 		ImVec2 textSize = font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, text.c_str());
-		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), colorMap[0], text.c_str());
+		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), mApp->whiteBg || !photoMode ? colorMap[0] : ImGui::GetColorU32(IM_COL32(255, 255, 255, 255)), text.c_str());
 		drawList->AddRectFilled(ImVec2(tick, (midpoint.y + BRcorner.y) / 2), ImVec2(tick + 1, BRcorner.y), colorMap[0]);
 	}
 	// handle hovering
@@ -288,7 +291,7 @@ void ImTextureScailing::DrawGradient()
 	ImGui::Text(hoveredVal);
 }
 
-void ImTextureScailing::GetCurrentRange()
+void ImTextureScaling::GetCurrentRange()
 {
 	if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
 		cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
@@ -304,7 +307,7 @@ void ImTextureScailing::GetCurrentRange()
 	}
 }
 
-double ImTextureScailing::logScaleInterpolate(double x, double leftTick, double rightTick)
+double ImTextureScaling::logScaleInterpolate(double x, double leftTick, double rightTick)
 {
 	// log(x) where x <=0 is undefined, clamp scales above 0
 	if (leftTick < 1e-20) leftTick = 1e-20;
@@ -321,7 +324,7 @@ double ImTextureScailing::logScaleInterpolate(double x, double leftTick, double 
 	return val;
 }
 
-std::vector<ImU32> ImTextureScailing::GenerateColorMap()
+std::vector<ImU32> ImTextureScaling::GenerateColorMap()
 {
 	std::vector<ImU32> out;
 

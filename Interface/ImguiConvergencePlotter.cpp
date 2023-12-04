@@ -25,17 +25,27 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	std::string out;
 	// first row (headers)
 	out.append("X axis\t");
+	if (drawManual) out.append("manual\t");
+	for (const auto& profile : data) {
+		out.append("F#" + std::to_string(profile.id) + "\t");
+	}
 	for (const auto& formula : data) {
 		out.append("F#" + std::to_string(formula.id) + "\t");
 	}
-	out.append("\n");
+	out[out.size() - 1] = '\n';
 	// rows
 	for (int i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
+		if (drawManual) {
+			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+			xvar->value = data[0].x->at(i);
+			double yvar = formula.Evaluate();
+			out.append(fmt::format("{}\t", yvar));
+		}
 		for (const auto& formula : data) {
 			out.append(fmt::format("{}", formula.y->at(i)) + "\t");
 		}
-		out.append("\n");
+		out[out.size() - 1] = '\n';
 	}
 	if (!toFile) SDL_SetClipboardText(out.c_str());
 	else {
@@ -146,6 +156,12 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 	}
 }
 
+void ImConvergencePlotter::Reload()
+{
+	data.clear();
+	selectedFormula = -1;
+}
+
 void ImConvergencePlotter::Draw()
 {
 	if (!drawn) return;
@@ -209,7 +225,7 @@ void ImConvergencePlotter::Draw()
 		manualyValues.clear();
 	}
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
+	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
 	ImGui::End();
 }
@@ -222,6 +238,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		for (int i = 0; i < data.size(); i++) {
+			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();
 			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();

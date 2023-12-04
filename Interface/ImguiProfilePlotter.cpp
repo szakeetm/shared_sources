@@ -80,7 +80,7 @@ void ImProfilePlotter::Draw()
 		UpdateSelection();
 	}
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
+	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
 	ImGui::End();
 }
@@ -344,7 +344,7 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
-			ImGui::SetNextItemWidth(txtW * 20);
+			ImGui::SetNextItemWidth(txtW * 15);
 			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
 			if (ImGui::Button("-> Plot expression")) {
 				drawManual = ImUtils::ParseExpression(expression, formula);
@@ -353,9 +353,12 @@ void ImProfilePlotter::DrawMenuBar()
 				manualPlot.x->clear();
 				manualPlot.y->clear();
 
-				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), profileSize);
+				if (drawManual) ImUtils::ComputeManualExpression(drawManual, formula, *manualPlot.x.get(), *manualPlot.y.get(), manualEnd, manualStart, manualStep);
 				// no custom start, end, step bebause profiles have a constant size
 			}
+			ImGui::InputDoubleRightSide("Start X", &manualStart);
+			ImGui::InputDoubleRightSide("End X", &manualEnd);
+			ImGui::InputDoubleRightSide("Step:", &manualStep);
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
@@ -371,17 +374,26 @@ bool ImProfilePlotter::Export(bool toFile)
 	std::string out;
 	// first row (headers)
 	out.append("X axis\t");
+	if (drawManual) out.append("manual\t");
 	for (const auto& profile : data) {
 		out.append("F#"+std::to_string(profile.id)+"\t");
 	}
-	out.append("\n");
+	out[out.size()-1]='\n';
 	// rows
 	for (int i = 0; i < data[0].x->size(); i++) {
-		out.append(fmt::format("{}",data[0].x->at(i))+"\t");
+		out.append(fmt::format("{}\t",data[0].x->at(i)));
+
+		if (drawManual) {
+			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+			xvar->value = data[0].x->at(i);
+			double yvar = formula.Evaluate();
+			out.append(fmt::format("{}\t", yvar));
+		}
+
 		for (const auto& profile : data) {
 			out.append(fmt::format("{}", profile.y->at(i))+"\t");
 		}
-		out.append("\n");
+		out[out.size() - 1] = '\n';
 	}
 	if(!toFile) SDL_SetClipboardText(out.c_str());
 	else {

@@ -260,6 +260,8 @@ public:
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
 
+	void ImRefresh();
+
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
 	template <typename T, bool useDiff = false>

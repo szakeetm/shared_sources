@@ -55,6 +55,8 @@ public:
     //void render();
     void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
+    void Refresh();
+
     GLApplication* app;
 
     bool ToggleMainHub();
@@ -86,7 +88,7 @@ public:
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
-    ImTextureScailing textScale;
+    ImTextureScaling textScale;
     ImParticleLogger partLog;
 protected:
     bool didIinit = false;
