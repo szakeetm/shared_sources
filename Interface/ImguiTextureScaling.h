@@ -1,7 +1,7 @@
 #include "ImguiWindowBase.h"
 #include "../../src/MolflowGeometry.h"
 
-class ImTextureScailing : public ImWindow {
+class ImTextureScaling : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);

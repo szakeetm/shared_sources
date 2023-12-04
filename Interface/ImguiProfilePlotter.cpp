@@ -80,7 +80,7 @@ void ImProfilePlotter::Draw()
 		UpdateSelection();
 	}
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, scailing etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
+	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 
 	ImGui::End();
 }

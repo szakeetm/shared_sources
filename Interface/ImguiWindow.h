@@ -87,7 +87,7 @@ public:
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
-    ImTextureScailing textScale;
+    ImTextureScaling textScale;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
