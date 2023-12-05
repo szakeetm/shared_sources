@@ -329,7 +329,6 @@ void Worker::Update(float appTime) {
     //Facet hits, facet histograms, facet angle maps
     //No cache for profiles, textures, directions (plotted directly from shared memory hit buffer)
 
-
     if (needsReload) RealReload();
 
     // End of simulation reached (Stop GUI)
@@ -355,13 +354,23 @@ void Worker::Update(float appTime) {
 #endif
 
 #if defined(SYNRAD)
-
     if (globalHitCache.globalHits.hit.nbDesorbed && wp.nbTrajPoints) {
         no_scans = (double)globalHitCache.globalHits.hit.nbDesorbed / (double)wp.nbTrajPoints;
     }
     else {
         no_scans = 1.0;
     }
+    if (ontheflyParams.enableLogging) {
+        auto [nbRec, logBuff] = GetLogBuff();
+        ReleaseLogBuff();
+        if (!logLimitReached) {
+            particleLog_last_no_scans = no_scans;
+            if (nbRec >= ontheflyParams.logLimit) {
+                logLimitReached = true;
+            }
+        }
+    }
+       
 #endif
 
     RetrieveHistogramCache(bufferStart);
@@ -493,6 +502,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
             logDpSize = sizeof(size_t) + ontheflyParams.logLimit * sizeof(ParticleLoggerItem);
         }
         simManager.ReloadLogBuffer(logDpSize, false);
+        logLimitReached = false;
+        particleLog_last_no_scans = 0.0;
     }
     catch (std::exception& e) {
         GLMessageBox::Display(e.what(), "Warning (ReloadLogBuffer)", GLDLG_OK, GLDLG_ICONWARNING);

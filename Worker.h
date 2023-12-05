@@ -202,6 +202,9 @@ public:
 
 	double no_scans;           // = nbDesorption/nbTrajPoints. Stored separately for saving/loading
 
+	double particleLog_last_no_scans=0.0; //no_scans at last Worker::Update when log is not full
+	bool logLimitReached = false;
+
 	std::vector<Region_full> regions;
 	std::vector<Material> materials;
 	std::vector<std::vector<double>> psi_distro; //psi-energy map for full (par+ort) polarization

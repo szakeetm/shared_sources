@@ -49,7 +49,7 @@ protected:
     Dataport *dpHit;
     Dataport *dpLog;
 
-    SimulationUnit* simulation; //
+    SimulationUnit* simulation;
 protected:
 
     int prIdx;
