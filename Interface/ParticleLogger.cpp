@@ -67,32 +67,41 @@ ParticleLogger::ParticleLogger(Geometry *g, Worker *w) :GLWindow() {
 	descriptionLabel->SetBounds(13, 18, 805, 13);
 	Add(descriptionLabel);
 
+	enableCheckbox = new GLToggle(0, "Enable logging");
+	logParamPanel->SetCompBounds(enableCheckbox, 11, 17, 96, 17);
+	logParamPanel->Add(enableCheckbox);
+
+	absorbedOnlyCheckbox = new GLToggle(0, "Log only absorbing particles");
+	logParamPanel->SetCompBounds(absorbedOnlyCheckbox, 11, 40, 96, 17);
+	absorbedOnlyCheckbox->SetEnabled(false);
+	logParamPanel->Add(absorbedOnlyCheckbox);
+
 	label2 = new GLLabel("Facet number:");
-	logParamPanel->SetCompBounds(label2, 9, 52, 75, 13);
+	logParamPanel->SetCompBounds(label2, 9, 67, 75, 13);
 	logParamPanel->Add(label2);
 
 	getSelectedFacetButton = new GLButton(0, "<- Get selected");
-	logParamPanel->SetCompBounds(getSelectedFacetButton, 201, 51, 109, 23);
+	logParamPanel->SetCompBounds(getSelectedFacetButton, 201, 66, 109, 21);
 	logParamPanel->Add(getSelectedFacetButton);
 
 	facetNumberTextbox = new GLTextField(0, "");
-	logParamPanel->SetCompBounds(facetNumberTextbox, 89, 51, 106, 20);
+	logParamPanel->SetCompBounds(facetNumberTextbox, 89, 66, 106, 20);
 	logParamPanel->Add(facetNumberTextbox);
 
 	label3 = new GLLabel("Max recorded:");
-	logParamPanel->SetCompBounds(label3, 9, 78, 75, 13);
+	logParamPanel->SetCompBounds(label3, 9, 93, 75, 13);
 	logParamPanel->Add(label3);
 
 	maxRecordedTextbox = new GLTextField(0, "100000");
-	logParamPanel->SetCompBounds(maxRecordedTextbox, 89, 75, 106, 20);
+	logParamPanel->SetCompBounds(maxRecordedTextbox, 89, 90, 106, 20);
 	logParamPanel->Add(maxRecordedTextbox);
 
 	memoryLabel = new GLLabel("memory");
-	logParamPanel->SetCompBounds(memoryLabel, 202, 78, 43, 13);
+	logParamPanel->SetCompBounds(memoryLabel, 202, 93, 43, 13);
 	logParamPanel->Add(memoryLabel);
 
-	applyButton = new GLButton(0, "Apply");
-	logParamPanel->SetCompBounds(applyButton, 120, 110, 75, 23);
+	applyButton = new GLButton(0, "Apply & Reset log");
+	logParamPanel->SetCompBounds(applyButton, 100, 117, 115, 21);
 	logParamPanel->Add(applyButton);
 
 	statusLabel = new GLLabel("No recording.");
@@ -100,16 +109,12 @@ ParticleLogger::ParticleLogger(Geometry *g, Worker *w) :GLWindow() {
 	resultPanel->Add(statusLabel);
 
 	copyButton = new GLButton(0, "Copy to clipboard");
-	resultPanel->SetCompBounds(copyButton, 12, 45, 139, 23);
+	resultPanel->SetCompBounds(copyButton, 12, 45, 139, 21);
 	resultPanel->Add(copyButton);
 
 	exportButton = new GLButton(0, "Export to CSV");
-	resultPanel->SetCompBounds(exportButton, 157, 45, 153, 23);
+	resultPanel->SetCompBounds(exportButton, 157, 45, 153, 21);
 	resultPanel->Add(exportButton);
-
-	enableCheckbox = new GLToggle(0, "Enable logging");
-	logParamPanel->SetCompBounds(enableCheckbox, 11, 19, 96, 17);
-	logParamPanel->Add(enableCheckbox);
 
 	SetTitle("ParticleLogger");
 	// Center dialog
@@ -145,7 +150,7 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 					return;
 				}
 				work->model->otfParams.enableLogging = (enableCheckbox->GetState() == 1);
-				work->model->otfParams.logFacetId = facetId;
+				work->model->otfParams.logAbsorbedOnly = (absorbedOnlyCheckbox->GetState() == 1); work->model->otfParams.logFacetId = facetId;
 				work->model->otfParams.logLimit = nbRec;
 				work->ChangeSimuParams();
 				UpdateStatus();
@@ -222,6 +227,9 @@ void ParticleLogger::ProcessMessage(GLComponent *src, int message) {
 	case MSG_TEXT_UPD:
 		UpdateMemoryEstimate();
 		break;
+	case MSG_TOGGLE:
+		absorbedOnlyCheckbox->SetEnabled(enableCheckbox->GetState() == 1);
+		break;
 	}
 
 	GLWindow::ProcessMessage(src, message);
@@ -236,16 +244,25 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
+	enableCheckbox->SetState(work->model->otfParams.enableLogging);
+	absorbedOnlyCheckbox->SetEnabled(enableCheckbox->GetState() == 1);
+	absorbedOnlyCheckbox->SetState(work->model->otfParams.logAbsorbedOnly);
+	if (work->model->otfParams.enableLogging) {
+		facetNumberTextbox->SetText(work->model->otfParams.logFacetId + 1);
+		maxRecordedTextbox->SetText(work->model->otfParams.logLimit);
+	}
+
 	auto& log = work->GetLog();
-    work->UnlockLog(); // don't need write access
-    if (log.pLog.empty()) {
-        statusLabel->SetText("No recording.");
-    }
-    else {
-        std::ostringstream tmp;
-        tmp << log.pLog.size() << " particles logged";
-        statusLabel->SetText(tmp.str());
-    }
+
+	if (log.pLog.empty()) {
+		statusLabel->SetText("No recording.");
+	}
+	else {
+		std::ostringstream tmp;
+		tmp << log.pLog.size() << " particles logged";
+		statusLabel->SetText(tmp.str());
+	}
+	work->UnlockLog();
 }
 
 std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerItem> &log, const std::string &separator,
@@ -321,7 +338,7 @@ std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerIte
 			<< log[i].particleDecayMoment << separator;
 #endif // MOLFLOW
 #if defined(SYNRAD)
-        double numScans = work->no_scans>0.0 ? work->no_scans : 1.0; //Normalize dF and dP contribution by no_scans at time of export
+		double numScans = work->particleLog_last_no_scans > 0.0 ? work->particleLog_last_no_scans : 1.0; //Normalize dF and dP contribution by no_scans at time of export
 		tmp << log[i].energy << separator
 			<< log[i].dF/numScans << separator
 			<< log[i].dP/numScans << separator;

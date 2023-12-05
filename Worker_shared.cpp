@@ -585,6 +585,16 @@ void Worker::Update(float appTime) {
         else {
             no_scans = 1.0;
         }
+        if (model->otfParams.enableLogging) {
+            auto& log = GetLog();
+            if (!logLimitReached) {
+                particleLog_last_no_scans = no_scans;
+                if (log.pLog.size() >= model->otfParams.logLimit) {
+                    logLimitReached = true;
+                }
+            }
+            UnlockLog();
+        }
 #endif
 
 
@@ -679,7 +689,8 @@ void Worker::ChangeSimuParams() { //Send simulation mode changes to subprocesses
     //progressDlg->SetMessage("Waiting for subprocesses to release log dataport...");
 
     particleLog.clear();
-
+    particleLog_last_no_scans = 0.0;
+    logLimitReached = false;
     //progressDlg->SetProgress(0.5);
     //progressDlg->SetMessage("Assembling parameters to pass...");
 

@@ -62,6 +62,7 @@ private:
 	GLButton	*copyButton;
 	GLButton	*exportButton;
 	GLToggle	*enableCheckbox;
+	GLToggle* absorbedOnlyCheckbox;
 	GLTitledPanel	*logParamPanel;
 	GLTitledPanel	*resultPanel;
 

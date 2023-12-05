@@ -415,6 +415,7 @@ public:
 	double	 lowFluxCutoff;
 
 	bool enableLogging;
+	bool logAbsorbedOnly;
 	size_t logFacetId, logLimit;
 
 	size_t desorptionLimit;
