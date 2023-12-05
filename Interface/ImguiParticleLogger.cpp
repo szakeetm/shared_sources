@@ -13,6 +13,7 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
+#include "../../src/Simulation/MolflowSimGeom.h"
 #endif
 
 void ImParticleLogger::Draw()
@@ -59,7 +60,13 @@ void ImParticleLogger::Draw()
 	ImGui::BeginChild("##Result", ImVec2(0, 4 * txtH), true);
 	{
 		ImGui::TextDisabled("Result");
-		ImGui::Text("No rec");
+		if (log.get() != nullptr && !log->pLog.empty()) {
+			statusLabel = fmt::format("{} particles logged", log->pLog.size());
+		}
+		else {
+			statusLabel = "No recording.";
+		}
+		ImGui::Text(statusLabel);
 		if (ImGui::Button("Copy to clipboard")) {
 			SDL_SetClipboardText(LogToText().c_str());
 		}
@@ -119,7 +126,7 @@ void ImParticleLogger::UpdateMemoryEstimate()
 
 void ImParticleLogger::UpdateStatus()
 {
-	auto log = mApp->worker.GetLog();
+	log = mApp->worker.GetLog();
 	mApp->worker.UnlockLog();
 	if (log->pLog.empty()) {
 		statusLabel = "No recording.";
@@ -171,35 +178,35 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 	mApp->imWnd->progress.SetTitle("Particle logger");
 	mApp->imWnd->progress.Show();
 	mApp->imWnd->progress.SetProgress(0.0);
-	auto log = mApp->worker.GetLog()->pLog;
+	auto pLog = mApp->worker.GetLog()->pLog;
 	InterfaceFacet* f = mApp->worker.GetGeometry()->GetFacet(mApp->worker.model->otfParams.logFacetId);
-	for (size_t i = 0; i < log.size(); i++) {
-		Vector3d hitPos = f->sh.O + log[i].facetHitPosition.u * f->sh.U + log[i].facetHitPosition.v * f->sh.V;
-		double u = sin(log[i].hitTheta) * cos(log[i].hitPhi);
-		double v = sin(log[i].hitTheta) * sin(log[i].hitPhi);
-		double n = cos(log[i].hitTheta);
+	for (size_t i = 0; i < pLog.size(); i++) {
+		Vector3d hitPos = f->sh.O + pLog[i].facetHitPosition.u * f->sh.U + pLog[i].facetHitPosition.v * f->sh.V;
+		double u = sin(pLog[i].hitTheta) * cos(pLog[i].hitPhi);
+		double v = sin(pLog[i].hitTheta) * sin(pLog[i].hitPhi);
+		double n = cos(pLog[i].hitTheta);
 		Vector3d hitDir = u * f->sh.nU + v * f->sh.nV + n * f->sh.N;
 
 		tmp.append(fmt::format("{}", hitPos.x) + separator);
 		tmp.append(fmt::format("{}", hitPos.y) + separator);
 		tmp.append(fmt::format("{}", hitPos.z) + separator);
-		tmp.append(fmt::format("{}", log[i].facetHitPosition.u) + separator);
-		tmp.append(fmt::format("{}", log[i].facetHitPosition.v) + separator);
+		tmp.append(fmt::format("{}", pLog[i].facetHitPosition.u) + separator);
+		tmp.append(fmt::format("{}", pLog[i].facetHitPosition.v) + separator);
 		tmp.append(fmt::format("{}", hitDir.x) + separator);
 		tmp.append(fmt::format("{}", hitDir.y) + separator);
 		tmp.append(fmt::format("{}", hitDir.z) + separator);
-		tmp.append(fmt::format("{}", log[i].hitTheta) + separator);
-		tmp.append(fmt::format("{}", log[i].hitPhi) + separator);
-		tmp.append(fmt::format("{}", log[i].oriRatio) + separator);
+		tmp.append(fmt::format("{}", pLog[i].hitTheta) + separator);
+		tmp.append(fmt::format("{}", pLog[i].hitPhi) + separator);
+		tmp.append(fmt::format("{}", pLog[i].oriRatio) + separator);
 #ifdef MOLFLOW
-		tmp.append(fmt::format("{}", log[i].velocity) + separator);
-		tmp.append(fmt::format("{}", log[i].time) + separator);
-		tmp.append(fmt::format("{}", log[i].particleDecayMoment) + separator);
+		tmp.append(fmt::format("{}", pLog[i].velocity) + separator);
+		tmp.append(fmt::format("{}", pLog[i].time) + separator);
+		tmp.append(fmt::format("{}", pLog[i].particleDecayMoment) + separator);
 #endif
 #ifdef SYNRAD
-		tmp.append(fmt::format("{}", log[i].energy) + separator);
-		tmp.append(fmt::format("{}", log[i].dF/numScans) + separator);
-		tmp.append(fmt::format("{}", log[i].dP/numScans) + separator);
+		tmp.append(fmt::format("{}", pLog[i].energy) + separator);
+		tmp.append(fmt::format("{}", pLog[i].dF/numScans) + separator);
+		tmp.append(fmt::format("{}", pLog[i].dP/numScans) + separator);
 #endif
 		tmp.append("\n");
 		if (directToFile) {
@@ -210,8 +217,9 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 		}
 		tmp.clear();
 
-		mApp->imWnd->progress.SetProgress((double)i/(double)log.size());
+		mApp->imWnd->progress.SetProgress((double)i/(double)pLog.size());
 	}
 	mApp->imWnd->progress.Hide();
+	mApp->worker.UnlockLog();
 	return out;
 }

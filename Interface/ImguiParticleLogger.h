@@ -1,5 +1,8 @@
 #pragma once
 #include "ImguiWindowBase.h"
+#if defined(MOLFLOW)
+#include "../../src/Simulation/MolflowSimGeom.h"
+#endif
 
 class ImParticleLogger : public ImWindow {
 public:
@@ -18,4 +21,5 @@ private:
 	bool isRunning = false;
 	std::string memUse = "No estimate";
 	std::string statusLabel = "No recording.";
+	std::shared_ptr<ParticleLog> log;
 };
