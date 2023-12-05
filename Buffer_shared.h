@@ -402,6 +402,7 @@ public:
 	double	 lowFluxCutoff;
 
 	bool enableLogging;
+	bool logAbsorbedOnly;
 	size_t logFacetId, logLimit;
 
 	size_t desorptionLimit;
@@ -415,6 +416,7 @@ public:
 			CEREAL_NVP(lowFluxMode),
 			CEREAL_NVP(lowFluxCutoff),
 			CEREAL_NVP(enableLogging),
+			CEREAL_NVP(logAbsorbedOnly),
 			CEREAL_NVP(logFacetId),
 			CEREAL_NVP(logLimit),
 			CEREAL_NVP(desorptionLimit),
