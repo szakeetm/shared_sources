@@ -549,7 +549,7 @@ static void ShowMenuSelection() {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 auto Y = [](int i) -> void { mApp->selections.erase(mApp->selections.begin() + (i)); UpdateSelectionShortcuts(); };
                 mApp->imWnd->popup.Open("Clear memorized selection?", ("Are you sure you wish to forget selection " + mApp->selections[i].name), {
-                    std::make_shared<ImIOWrappers::ImButtonFuncInt>("Yes", Y, i, SDL_SCANCODE_RETURN),
+                    std::make_shared<ImIOWrappers::ImButtonFuncInt>("Yes", Y, (int)i, SDL_SCANCODE_RETURN),
                     std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE) 
                     });
             }
