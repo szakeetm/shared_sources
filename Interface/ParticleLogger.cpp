@@ -236,8 +236,8 @@ void ParticleLogger::UpdateMemoryEstimate() {
 
 void ParticleLogger::UpdateStatus() {
 
+	enableCheckbox->SetState(work->model->otfParams.enableLogging);
 	auto log = work->GetLog();
-    work->UnlockLog(); // don't need write access
     if (log->pLog.empty()) {
         statusLabel->SetText("No recording.");
     }
@@ -246,6 +246,7 @@ void ParticleLogger::UpdateStatus() {
         tmp << log->pLog.size() << " particles logged";
         statusLabel->SetText(tmp.str());
     }
+	work->UnlockLog();
 }
 
 std::string ParticleLogger::ConvertLogToText(const std::vector<ParticleLoggerItem> &log, const std::string &separator,
