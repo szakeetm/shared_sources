@@ -89,7 +89,7 @@ unsigned long GenerateSeed(size_t offsetIndex) {
 #else
     processId = ::getpid();
 #endif //  WIN
-    return (unsigned long)(std::hash<unsigned long>()(ms*(std::hash<unsigned long>()(processId+offsetIndex))));
+    return static_cast<unsigned long>(std::hash<size_t>()(ms*(std::hash<size_t>()(processId+offsetIndex))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
