@@ -318,7 +318,7 @@ size_t InterfaceGeometry::GetNbVertex() const {
 	return sh.nbVertex;
 }
 
-Vector3d InterfaceGeometry::GetFacetCenter(int facet) {
+Vector3d InterfaceGeometry::GetFacetCenter(size_t facet) {
 
 	return facets[facet]->sh.center;
 
@@ -3457,13 +3457,13 @@ void InterfaceGeometry::ResetTextureLimits() {
     texture_limits[2].autoscale.min.steady_state = texture_limits[2].autoscale.min.moments_only =
     texture_limits[0].manual.min.steady_state = texture_limits[0].manual.min.moments_only =
     texture_limits[1].manual.min.steady_state = texture_limits[1].manual.min.moments_only =
-    texture_limits[2].manual.min.steady_state = texture_limits[2].manual.min.moments_only = 0.0;
+    texture_limits[2].manual.min.steady_state = texture_limits[2].manual.min.moments_only = std::numeric_limits<double>::infinity();
     texture_limits[0].autoscale.max.steady_state = texture_limits[0].autoscale.max.moments_only =
     texture_limits[1].autoscale.max.steady_state = texture_limits[1].autoscale.max.moments_only =
     texture_limits[2].autoscale.max.steady_state = texture_limits[2].autoscale.max.moments_only =
     texture_limits[0].manual.max.steady_state = texture_limits[0].manual.max.moments_only =
     texture_limits[1].manual.max.steady_state = texture_limits[1].manual.max.moments_only =
-    texture_limits[2].manual.max.steady_state = texture_limits[2].manual.max.moments_only = 1.0;
+    texture_limits[2].manual.max.steady_state = texture_limits[2].manual.max.moments_only = -std::numeric_limits<double>::infinity();
 #endif
 #if defined(SYNRAD)
 	textureMin_auto.count = 0;

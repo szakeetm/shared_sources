@@ -9,66 +9,66 @@
 
 GLDataView::GLDataView() {
 
-  labelColor.r = 0;
-  labelColor.g = 0;
-  labelColor.b = 0;
-  theData = NULL;
-  theFilteredData = NULL;
-  theDataEnd = NULL;
-  dataLength = 0;
-  strcpy(name,"");
-  strcpy(unit,"");
-  lineColor.r = 255;
-  lineColor.g = 0;
-  lineColor.b = 0;
-  fillColor.r = 180;
-  fillColor.g = 180;
-  fillColor.b = 180;
-  markerColor = lineColor;
-  min = MAX_VALUE;
-  max = -MAX_VALUE;
-  minXValue = MAX_VALUE;
-  maxXValue = -MAX_VALUE;
-  markerType = MARKER_NONE;
-  lineStyle = STYLE_SOLID;
-  type = TYPE_LINE;
-  fillStyle = FILL_STYLE_NONE;
-  fillMethod = METHOD_FILL_FROM_BOTTOM;
-  lineWidth = 1;
-  barWidth = 10;
-  markerSize = 6;
-  A0 = 0;
-  A1 = 1;
-  A2 = 0;
-  parentAxis = NULL;
-  clickable=true;
-  labelVisible=true;
-  userFormat = NULL;
-  interpMethod = INTERPOLATE_NONE;
-  interpStep = 10;
-  interpTension = 0.0;
-  interpBias = 0.0;
-  smoothMethod = SMOOTH_NONE;
-  smoothCoefs = NULL;
-  smoothNeighbor = 3;
-  smoothSigma = 0.5;
-  smoothExtrapolation = SMOOTH_EXT_LINEAR;
-  mathFunction = MATH_NONE;
+	labelColor.r = 0;
+	labelColor.g = 0;
+	labelColor.b = 0;
+	theData = NULL;
+	theFilteredData = NULL;
+	theDataEnd = NULL;
+	dataLength = 0;
+	strcpy(name, "");
+	strcpy(unit, "");
+	lineColor.r = 255;
+	lineColor.g = 0;
+	lineColor.b = 0;
+	fillColor.r = 180;
+	fillColor.g = 180;
+	fillColor.b = 180;
+	markerColor = lineColor;
+	min = MAX_VALUE;
+	max = -MAX_VALUE;
+	minXValue = MAX_VALUE;
+	maxXValue = -MAX_VALUE;
+	markerType = MARKER_NONE;
+	lineStyle = STYLE_SOLID;
+	type = TYPE_LINE;
+	fillStyle = FILL_STYLE_NONE;
+	fillMethod = METHOD_FILL_FROM_BOTTOM;
+	lineWidth = 1;
+	barWidth = 10;
+	markerSize = 6;
+	A0 = 0;
+	A1 = 1;
+	A2 = 0;
+	parentAxis = NULL;
+	clickable = true;
+	labelVisible = true;
+	userFormat = NULL;
+	interpMethod = INTERPOLATE_NONE;
+	interpStep = 10;
+	interpTension = 0.0;
+	interpBias = 0.0;
+	smoothMethod = SMOOTH_NONE;
+	smoothCoefs = NULL;
+	smoothNeighbor = 3;
+	smoothSigma = 0.5;
+	smoothExtrapolation = SMOOTH_EXT_LINEAR;
+	mathFunction = MATH_NONE;
 
 }
 
-void GLDataView::FreeList(DataList *l) {
-	if(l) {
+void GLDataView::FreeList(DataList* l) {
+	if (l) {
 		FreeList(l->next);
 		free(l);
-  } 
+	}
 }
 
 GLDataView::~GLDataView() {
 
-  FreeList(theFilteredData);
-  FreeList(theData);
-  SAFE_FREE(smoothCoefs);
+	FreeList(theFilteredData);
+	FreeList(theData);
+	SAFE_FREE(smoothCoefs);
 
 }
 
@@ -81,7 +81,7 @@ GLDataView::~GLDataView() {
  * @see TYPE_BAR
  */
 void GLDataView::SetViewType(int s) {
-  type = s;
+	type = s;
 }
 
 /**
@@ -90,7 +90,7 @@ void GLDataView::SetViewType(int s) {
  * @see setViewType
  */
 int GLDataView::GetViewType() {
-  return type;
+	return type;
 }
 
 /**
@@ -110,7 +110,7 @@ int GLDataView::GetViewType() {
  */
 
 void GLDataView::SetFillStyle(int b) {
-  fillStyle = b;
+	fillStyle = b;
 }
 
 /**
@@ -119,7 +119,7 @@ void GLDataView::SetFillStyle(int b) {
  * @see setFillStyle
  */
 int GLDataView::GetFillStyle() {
-  return fillStyle;
+	return fillStyle;
 }
 
 /**
@@ -131,7 +131,7 @@ int GLDataView::GetFillStyle() {
  */
 
 void GLDataView::SetFillMethod(int m) {
-  fillMethod = m;
+	fillMethod = m;
 }
 
 /**
@@ -140,7 +140,7 @@ void GLDataView::SetFillMethod(int m) {
  * @see setFillMethod
  */
 int GLDataView::GetFillMethod() {
-  return fillMethod;
+	return fillMethod;
 }
 
 /**
@@ -149,7 +149,7 @@ int GLDataView::GetFillMethod() {
  * @see getFillColor
  */
 void GLDataView::SetFillColor(GLColor c) {
-  fillColor = c;
+	fillColor = c;
 }
 
 /**
@@ -158,7 +158,7 @@ void GLDataView::SetFillColor(GLColor c) {
  * @see setFillColor
  */
 GLColor GLDataView::GetFillColor() {
-  return fillColor;
+	return fillColor;
 }
 
 /* ----------------------------- Line config --------------------------------- */
@@ -169,7 +169,7 @@ GLColor GLDataView::GetFillColor() {
  * @see getColor
  */
 void GLDataView::SetColor(GLColor c) {
-  lineColor = c;
+	lineColor = c;
 }
 
 /**
@@ -178,7 +178,7 @@ void GLDataView::SetColor(GLColor c) {
  * @see setColor
  */
 GLColor GLDataView::GetColor() {
-  return lineColor;
+	return lineColor;
 }
 
 /**
@@ -187,7 +187,7 @@ GLColor GLDataView::GetColor() {
  * @return true if the view is filled, false otherwise
  */
 bool GLDataView::IsFill() {
-  return fillStyle!=FILL_STYLE_NONE;
+	return fillStyle != FILL_STYLE_NONE;
 }
 
 /**
@@ -196,11 +196,12 @@ bool GLDataView::IsFill() {
  * @see setFillStyle
  */
 void GLDataView::SetFill(bool b) {
-  if( !b ) {
-    SetFillStyle(FILL_STYLE_NONE);
-  } else {
-    SetFillStyle(FILL_STYLE_SOLID);
-  }
+	if (!b) {
+		SetFillStyle(FILL_STYLE_NONE);
+	}
+	else {
+		SetFillStyle(FILL_STYLE_SOLID);
+	}
 }
 
 /**
@@ -210,7 +211,7 @@ void GLDataView::SetFill(bool b) {
  * @param b Clickable state
  */
 void GLDataView::SetClickable(bool b) {
-  clickable=b;
+	clickable = b;
 }
 
 /**
@@ -218,7 +219,7 @@ void GLDataView::SetClickable(bool b) {
  * @see setClickable
  */
 bool GLDataView::IsClickable() {
-  return clickable;
+	return clickable;
 }
 
 /**
@@ -228,22 +229,22 @@ bool GLDataView::IsClickable() {
  * @see JLChart#setLabelVisible
  */
 void GLDataView::SetLabelVisible(bool b) {
-  labelVisible=b;
+	labelVisible = b;
 }
 
 /** Returns true when the label is visible.
  * @see setLabelVisible
  */
 bool GLDataView::IsLabelVisible() {
-  return labelVisible;
+	return labelVisible;
 }
 
-GLColor GLDataView::GetLabelColor () {
-  return labelColor;
+GLColor GLDataView::GetLabelColor() {
+	return labelColor;
 }
 
-void GLDataView::SetLabelColor (GLColor labelColor) {
-  this->labelColor = labelColor;
+void GLDataView::SetLabelColor(GLColor labelColor) {
+	this->labelColor = labelColor;
 }
 
 /* ----------------------------- Interpolation config --------------------------------- */
@@ -259,8 +260,8 @@ void GLDataView::SetLabelColor (GLColor labelColor) {
  * @see #INTERPOLATE_HERMITE
  */
 void GLDataView::SetInterpolationMethod(int method) {
-  interpMethod = method;
-  CommitChange();
+	interpMethod = method;
+	CommitChange();
 }
 
 /**
@@ -268,7 +269,7 @@ void GLDataView::SetInterpolationMethod(int method) {
  * @see #setInterpolationMethod
  */
 int GLDataView::GetInterpolationMethod() {
-  return interpMethod;
+	return interpMethod;
 }
 
 /**
@@ -277,9 +278,9 @@ int GLDataView::GetInterpolationMethod() {
  * @see #setInterpolationMethod
  */
 void GLDataView::SetInterpolationStep(int step) {
-  if(step<2) step=2;
-  interpStep = step;
-  updateFilters();
+	if (step < 2) step = 2;
+	interpStep = step;
+	updateFilters();
 }
 
 /**
@@ -287,7 +288,7 @@ void GLDataView::SetInterpolationStep(int step) {
  * @see #setInterpolationStep
  */
 int GLDataView::GetInterpolationStep() {
-  return interpStep;
+	return interpStep;
 }
 
 /**
@@ -295,10 +296,10 @@ int GLDataView::GetInterpolationStep() {
  * @param tension Hermite interpolation tension coefficient (1=>high, 0=>normal, -1=>low)
  */
 void GLDataView::SetHermiteTension(double tension) {
-  if(tension<-1.0) tension=-1.0;
-  if(tension>1.0) tension=1.0;
-  interpTension = tension;
-  updateFilters();
+	if (tension < -1.0) tension = -1.0;
+	if (tension > 1.0) tension = 1.0;
+	interpTension = tension;
+	updateFilters();
 }
 
 /**
@@ -306,7 +307,7 @@ void GLDataView::SetHermiteTension(double tension) {
  * @see #setHermiteTension
  */
 double GLDataView::GetHermiteTension() {
-  return interpTension;
+	return interpTension;
 }
 
 /**
@@ -315,15 +316,15 @@ double GLDataView::GetHermiteTension() {
  * @param bias Hermite interpolation bias coefficient
  */
 void GLDataView::SetHermiteBias(double bias) {
-  interpBias = bias;
-  updateFilters();
+	interpBias = bias;
+	updateFilters();
 }
 
 /**
  * Set the Hermite interpolation bias coefficient.
  */
 double GLDataView::GetHermiteBias() {
-  return interpBias;
+	return interpBias;
 }
 
 /* ----------------------------- Smoothing config --------------------------- */
@@ -337,9 +338,9 @@ double GLDataView::GetHermiteBias() {
  * @see #SMOOTH_GAUSSIAN
  */
 void GLDataView::SetSmoothingMethod(int method) {
-  smoothMethod = method;
-  updateSmoothCoefs();
-  CommitChange();
+	smoothMethod = method;
+	updateSmoothCoefs();
+	CommitChange();
 }
 
 /**
@@ -347,7 +348,7 @@ void GLDataView::SetSmoothingMethod(int method) {
  * @see #setSmoothingMethod
  */
 int GLDataView::GetSmoothingMethod() {
-  return smoothMethod;
+	return smoothMethod;
 }
 
 /**
@@ -355,10 +356,10 @@ int GLDataView::GetSmoothingMethod() {
  * @param n Number of neighbors (Must be >=2)
  */
 void GLDataView::SetSmoothingNeighbors(int n) {
-  smoothNeighbor = (n/2)*2+1;
-  if(smoothNeighbor<3) smoothNeighbor=3;
-  updateSmoothCoefs();
-  updateFilters();
+	smoothNeighbor = (n / 2) * 2 + 1;
+	if (smoothNeighbor < 3) smoothNeighbor = 3;
+	updateSmoothCoefs();
+	updateFilters();
 }
 
 /**
@@ -366,7 +367,7 @@ void GLDataView::SetSmoothingNeighbors(int n) {
  * @see #setSmoothingNeighbors
  */
 int GLDataView::GetSmoothingNeighbors() {
-  return smoothNeighbor-1;
+	return smoothNeighbor - 1;
 }
 
 /**
@@ -375,9 +376,9 @@ int GLDataView::GetSmoothingNeighbors() {
  * @see #setSmoothingMethod
  */
 void GLDataView::SetSmoothingGaussSigma(double sigma) {
-  smoothSigma = sigma;
-  updateSmoothCoefs();
-  CommitChange();
+	smoothSigma = sigma;
+	updateSmoothCoefs();
+	CommitChange();
 }
 
 /**
@@ -385,7 +386,7 @@ void GLDataView::SetSmoothingGaussSigma(double sigma) {
  * @see #setSmoothingMethod
  */
 double GLDataView::GetSmoothingGaussSigma() {
-  return smoothSigma;
+	return smoothSigma;
 }
 
 /**
@@ -396,8 +397,8 @@ double GLDataView::GetSmoothingGaussSigma() {
  * @see #SMOOTH_EXT_LINEAR
  */
 void GLDataView::SetSmoothingExtrapolation(int extMode) {
-  smoothExtrapolation = extMode;
-  updateFilters();
+	smoothExtrapolation = extMode;
+	updateFilters();
 }
 
 /**
@@ -405,7 +406,7 @@ void GLDataView::SetSmoothingExtrapolation(int extMode) {
  * @see #setSmoothingExtrapolation
  */
 int GLDataView::GetSmoothingExtrapolation() {
-  return smoothExtrapolation;
+	return smoothExtrapolation;
 }
 
 /* ----------------------------- Math config -------------------------------- */
@@ -420,10 +421,10 @@ int GLDataView::GetSmoothingExtrapolation() {
  * @see #MATH_FFT_PHASE
  */
 void GLDataView::SetMathFunction(int function) {
-  mathFunction = function;
-  updateFilters();
-  if(function==MATH_NONE)
-    computeDataBounds();
+	mathFunction = function;
+	updateFilters();
+	if (function == MATH_NONE)
+		computeDataBounds();
 }
 
 /**
@@ -431,7 +432,7 @@ void GLDataView::SetMathFunction(int function) {
  * @see #setMathFunction
  */
 int GLDataView::GetMathFunction() {
-  return mathFunction;
+	return mathFunction;
 }
 
 /* ----------------------------- BAR config --------------------------------- */
@@ -443,7 +444,7 @@ int GLDataView::GetMathFunction() {
  * @see getBarWidth
  */
 void GLDataView::SetBarWidth(int w) {
-  barWidth = w;
+	barWidth = w;
 }
 
 /**
@@ -452,7 +453,7 @@ void GLDataView::SetBarWidth(int w) {
  * @see setBarWidth
  */
 int GLDataView::GetBarWidth() {
-  return barWidth;
+	return barWidth;
 }
 
 /**
@@ -461,7 +462,7 @@ int GLDataView::GetBarWidth() {
  * @see getMarkerColor
  */
 void GLDataView::SetMarkerColor(GLColor c) {
-  markerColor = c;
+	markerColor = c;
 }
 
 /**
@@ -470,7 +471,7 @@ void GLDataView::SetMarkerColor(GLColor c) {
  * @see setMarkerColor
  */
 GLColor GLDataView::GetMarkerColor() {
-  return markerColor;
+	return markerColor;
 }
 
 /**
@@ -484,7 +485,7 @@ GLColor GLDataView::GetMarkerColor() {
  * @see getStyle
  */
 void GLDataView::SetStyle(int c) {
-  lineStyle = c;
+	lineStyle = c;
 }
 
 /**
@@ -493,7 +494,7 @@ void GLDataView::SetStyle(int c) {
  * @see setMarkerSize
  */
 int GLDataView::GetMarkerSize() {
-  return markerSize;
+	return markerSize;
 }
 
 /**
@@ -502,7 +503,7 @@ int GLDataView::GetMarkerSize() {
  * @see getMarkerSize
  */
 void GLDataView::SetMarkerSize(int c) {
-  markerSize = c;
+	markerSize = c;
 }
 
 /**
@@ -511,7 +512,7 @@ void GLDataView::SetMarkerSize(int c) {
  * @see setStyle
  */
 int GLDataView::GetStyle() {
-  return lineStyle;
+	return lineStyle;
 }
 
 /**
@@ -520,7 +521,7 @@ int GLDataView::GetStyle() {
  * @see setLineWidth
  */
 int GLDataView::GetLineWidth() {
-  return lineWidth;
+	return lineWidth;
 }
 
 /**
@@ -529,7 +530,7 @@ int GLDataView::GetLineWidth() {
  * @see getLineWidth
  */
 void GLDataView::SetLineWidth(int c) {
-  lineWidth = c;
+	lineWidth = c;
 }
 
 /**
@@ -537,8 +538,8 @@ void GLDataView::SetLineWidth(int c) {
  * @param s Name of this view
  * @see getName
  */
-void GLDataView::SetName(const char *s) {
-  strcpy(name,s);
+void GLDataView::SetName(const char* s) {
+	strcpy(name, s);
 }
 
 /**
@@ -546,8 +547,8 @@ void GLDataView::SetName(const char *s) {
  * @return Dataview name
  * @see setName
  */
-char *GLDataView::GetName() {
-  return name;
+char* GLDataView::GetName() {
+	return name;
 }
 
 /**
@@ -555,8 +556,8 @@ char *GLDataView::GetName() {
  * @param s Dataview unit.
  * @see getUnit
  */
-void GLDataView::SetUnit(const char *s) {
-  strcpy(unit,s);
+void GLDataView::SetUnit(const char* s) {
+	strcpy(unit, s);
 }
 
 /**
@@ -564,48 +565,49 @@ void GLDataView::SetUnit(const char *s) {
  * @return Dataview unit
  * @see setUnit
  */
-char *GLDataView::GetUnit() {
-  return unit;
+char* GLDataView::GetUnit() {
+	return unit;
 }
 
 /**
  * Gets the extended name. (including transform description when used)
  * @return Extended name of this view.
  */
-char *GLDataView::GetExtendedName() {
+char* GLDataView::GetExtendedName() {
 
-  static char ret[256];
-  std::string t;
-  char tmp[128];
+	static char ret[256];
+	std::string t;
+	char tmp[128];
 
-  if (HasTransform()) {
+	if (HasTransform()) {
 
-    sprintf(ret,"%s [",name);
+		sprintf(ret, "%s [", name);
 
-    if (A0 != 0.0) {
-      sprintf(tmp,"%g",A0);
-      strcat(ret,tmp);
-      t = " + ";
-    }
-    if (A1 != 0.0) {
-      sprintf(tmp,"%g",A1);
-      strcat(ret,t.c_str());
-      strcat(ret,tmp);
-      strcat(ret,"*y");
-      t = " + ";
-    }
-    if (A2 != 0.0) {
-      sprintf(tmp,"%g",A1);
-      strcat(ret,t.c_str());
-      strcat(ret,tmp);
-      strcat(ret,"*y^2");
-    }
-    strcat(ret,"]");
-    return ret;
+		if (A0 != 0.0) {
+			sprintf(tmp, "%g", A0);
+			strcat(ret, tmp);
+			t = " + ";
+		}
+		if (A1 != 0.0) {
+			sprintf(tmp, "%g", A1);
+			strcat(ret, t.c_str());
+			strcat(ret, tmp);
+			strcat(ret, "*y");
+			t = " + ";
+		}
+		if (A2 != 0.0) {
+			sprintf(tmp, "%g", A1);
+			strcat(ret, t.c_str());
+			strcat(ret, tmp);
+			strcat(ret, "*y^2");
+		}
+		strcat(ret, "]");
+		return ret;
 
-  } else {
-    return name;
-  }
+	}
+	else {
+		return name;
+	}
 
 }
 
@@ -615,7 +617,7 @@ char *GLDataView::GetExtendedName() {
  * @see setMarker
  */
 int GLDataView::GetMarker() {
-  return markerType;
+	return markerType;
 }
 
 /**
@@ -634,7 +636,7 @@ int GLDataView::GetMarker() {
  * @see MARKER_SQUARE
  */
 void GLDataView::SetMarker(int m) {
-  markerType = m;
+	markerType = m;
 }
 
 /**
@@ -643,7 +645,7 @@ void GLDataView::SetMarker(int m) {
  * @see setA0
  */
 double GLDataView::GetA0() {
-  return A0;
+	return A0;
 }
 
 /**
@@ -652,7 +654,7 @@ double GLDataView::GetA0() {
  * @see setA1
  */
 double GLDataView::GetA1() {
-  return A1;
+	return A1;
 }
 
 /**
@@ -661,7 +663,7 @@ double GLDataView::GetA1() {
  * @see setA2
  */
 double GLDataView::GetA2() {
-  return A2;
+	return A2;
 }
 
 /**
@@ -671,7 +673,7 @@ double GLDataView::GetA2() {
  * @param d A0 value
  */
 void GLDataView::SetA0(double d) {
-  A0 = d;
+	A0 = d;
 }
 
 /**
@@ -681,7 +683,7 @@ void GLDataView::SetA0(double d) {
  * @param d A1 value
  */
 void GLDataView::SetA1(double d) {
-  A1 = d;
+	A1 = d;
 }
 
 /**
@@ -691,7 +693,7 @@ void GLDataView::SetA1(double d) {
  * @param d A2 value
  */
 void GLDataView::SetA2(double d) {
-  A2 = d;
+	A2 = d;
 }
 
 /**
@@ -699,7 +701,7 @@ void GLDataView::SetA2(double d) {
  * @return false when A0=A2=0 and A1=1, true otherwise
  */
 bool GLDataView::HasTransform() {
-  return !(A0 == 0 && A1 == 1 && A2 == 0);
+	return !(A0 == 0 && A1 == 1 && A2 == 0);
 }
 
 /**
@@ -710,7 +712,7 @@ bool GLDataView::HasTransform() {
  * @see #setMathFunction
  */
 bool GLDataView::HasFilter() {
-  return (interpMethod!=INTERPOLATE_NONE) || (smoothMethod!=SMOOTH_NONE) || (mathFunction!=MATH_NONE);
+	return (interpMethod != INTERPOLATE_NONE) || (smoothMethod != SMOOTH_NONE) || (mathFunction != MATH_NONE);
 }
 
 /** Expert usage.
@@ -718,16 +720,16 @@ bool GLDataView::HasFilter() {
  * ( Used by JLAxis.addDataView() )
  * @param a Parent axis
  */
-void GLDataView::SetAxis(GLAxis *a) {
-  parentAxis = a;
+void GLDataView::SetAxis(GLAxis* a) {
+	parentAxis = a;
 }
 
 /** Expert usage.
  * Gets the parent axis.
  * @return Parent axis
  */
-GLAxis *GLDataView::GetAxis() {
-  return parentAxis;
+GLAxis* GLDataView::GetAxis() {
+	return parentAxis;
 }
 
 /** Expert usage.
@@ -735,7 +737,7 @@ GLAxis *GLDataView::GetAxis() {
  * @return Minimum value
  */
 double GLDataView::GetMinimum() {
-  return min;
+	return min;
 }
 
 /** Expert usage.
@@ -743,7 +745,7 @@ double GLDataView::GetMinimum() {
  * @return Maximun value
  */
 double GLDataView::GetMaximum() {
-  return max;
+	return max;
 }
 
 /** Expert usage.
@@ -751,14 +753,15 @@ double GLDataView::GetMaximum() {
  * @return Minimum time
  */
 double GLDataView::GetMinTime() {
-  if (HasFilter()) {
-    return minXValue;
-  } else {
-    if (theData != NULL)
-      return theData->x;
-    else
-      return MAX_VALUE;
-  }
+	if (HasFilter()) {
+		return minXValue;
+	}
+	else {
+		if (theData != NULL)
+			return theData->x;
+		else
+			return MAX_VALUE;
+	}
 }
 
 /** Expert usage.
@@ -766,10 +769,10 @@ double GLDataView::GetMinTime() {
  * @return Minimum x value
  */
 double GLDataView::GetMinXValue() {
-  if (IsXDataSorted()) {
-    return GetMinTime();
-  }
-  return minXValue;
+	if (IsXDataSorted()) {
+		return GetMinTime();
+	}
+	return minXValue;
 }
 
 /** Expert usage.
@@ -777,14 +780,14 @@ double GLDataView::GetMinXValue() {
  * @return Minimum value strictly positive
  */
 double GLDataView::GetPositiveMinXValue() {
-  double mi = MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->x > 0 && e->x < mi) mi = e->x;
-    e = e->next;
-  }
-  return mi;
+	double mi = MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->x > 0 && e->x < mi) mi = e->x;
+		e = e->next;
+	}
+	return mi;
 }
 
 /** Expert usage.
@@ -792,18 +795,18 @@ double GLDataView::GetPositiveMinXValue() {
  * @return Minimum value strictly positive
  */
 double GLDataView::GetPositiveMinTime() {
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  bool found = false;
-  while (e != NULL && !found) {
-    found = (e->x > 0);
-    if (!found) e = e->next;
-  }
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	bool found = false;
+	while (e != NULL && !found) {
+		found = (e->x > 0);
+		if (!found) e = e->next;
+	}
 
-  if (e != NULL)
-    return e->x;
-  else
-    return MAX_VALUE;
+	if (e != NULL)
+		return e->x;
+	else
+		return MAX_VALUE;
 }
 
 /** Expert usage.
@@ -811,10 +814,10 @@ double GLDataView::GetPositiveMinTime() {
  * @return Maximum x value
  */
 double GLDataView::GetMaxXValue() {
-  if (IsXDataSorted()) {
-    return GetMaxTime();
-  }
-  return maxXValue;
+	if (IsXDataSorted()) {
+		return GetMaxTime();
+	}
+	return maxXValue;
 }
 
 /** Expert usage.
@@ -822,14 +825,15 @@ double GLDataView::GetMaxXValue() {
  * @return Maximum value
  */
 double GLDataView::GetMaxTime() {
-  if (HasFilter()) {
-    return maxXValue;
-  } else {
-    if (theDataEnd != NULL)
-      return theDataEnd->x;
-    else
-      return -MAX_VALUE;
-  }
+	if (HasFilter()) {
+		return maxXValue;
+	}
+	else {
+		if (theDataEnd != NULL)
+			return theDataEnd->x;
+		else
+			return -MAX_VALUE;
+	}
 }
 
 /**
@@ -837,10 +841,10 @@ double GLDataView::GetMaxTime() {
  * @return Data length
  */
 int GLDataView::GetDataLength() {
-  if(HasFilter())
-    return filteredDataLength;
-  else
-    return dataLength;
+	if (HasFilter())
+		return filteredDataLength;
+	else
+		return dataLength;
 }
 
 /** Return a handle on the data.
@@ -849,11 +853,11 @@ int GLDataView::GetDataLength() {
  * @return A handle to the data.
  * @see commitChange()
  */
-DataList *GLDataView::GetData() {
-  if(HasFilter())
-    return theFilteredData;
-  else
-    return theData;
+DataList* GLDataView::GetData() {
+	if (HasFilter())
+		return theFilteredData;
+	else
+		return theData;
 }
 
 /**
@@ -861,8 +865,8 @@ DataList *GLDataView::GetData() {
  * @see getData()
  */
 void GLDataView::CommitChange() {
-  if(HasFilter()) updateFilters();
-  else            computeDataBounds();
+	if (HasFilter()) updateFilters();
+	else            computeDataBounds();
 }
 
 /**
@@ -874,7 +878,7 @@ void GLDataView::CommitChange() {
  * @see JLChart#setDisplayDuration
  */
 void GLDataView::Add(double x, double y) {
-  Add(x,y,true);
+	Add(x, y, true);
 }
 
 /**
@@ -886,9 +890,9 @@ void GLDataView::Add(double x, double y) {
  * @see JLChart#addData
  * @see JLChart#setDisplayDuration
  */
-void GLDataView::Add(double x, double y,bool updateFilter) {
+void GLDataView::Add(double x, double y, bool updateFilter) {
 
-	DataList *newData = (DataList *)malloc(sizeof(DataList));
+	DataList* newData = (DataList*)malloc(sizeof(DataList));
 	assert(newData);
 	newData->x = x;
 	newData->y = y;
@@ -897,7 +901,8 @@ void GLDataView::Add(double x, double y,bool updateFilter) {
 	if (theData == NULL) {
 		theData = newData;
 		theDataEnd = theData;
-	} else {
+	}
+	else {
 		theDataEnd->next = newData;
 		theDataEnd = theDataEnd->next;
 	}
@@ -909,7 +914,7 @@ void GLDataView::Add(double x, double y,bool updateFilter) {
 	if (x > maxXValue) maxXValue = x;
 
 	dataLength++;
-	if(updateFilter) updateFilters();
+	if (updateFilter) updateFilters();
 
 }
 
@@ -919,12 +924,12 @@ void GLDataView::Add(double x, double y,bool updateFilter) {
  * @param y y values
  * @see add
  */
-void GLDataView::SetData(double *x,double *y,int nbData) {
+void GLDataView::SetData(double* x, double* y, int nbData) {
 
-  Reset();
-  for(int i=0;i<nbData;i++)
-    Add(x[i],y[i],false);
-  updateFilters();
+	Reset();
+	for (int i = 0; i < nbData; i++)
+		Add(x[i], y[i], false);
+	updateFilters();
 
 }
 
@@ -935,43 +940,45 @@ void GLDataView::SetData(double *x,double *y,int nbData) {
  */
 int GLDataView::GarbagePointTime(double garbageLimit) {
 
-  bool found = false;
-  int nbr = 0;
-  DataList *old;
+	bool found = false;
+	int nbr = 0;
+	DataList* old;
 
-  // Garbage old data
+	// Garbage old data
 
-  if (theData != NULL) {
+	if (theData != NULL) {
 
-    while (theData != NULL && !found) {
+		while (theData != NULL && !found) {
 
-      // Keep 3 seconds more to avoid complete curve
-      found = (theData->x > (maxXValue - garbageLimit - 3000.0));
+			// Keep 3 seconds more to avoid complete curve
+			found = (theData->x > (maxXValue - garbageLimit - 3000.0));
 
-      if (!found) {
-        // Remove first element
-        old = theData;
-        theData = theData->next;
-        free(old);
-        dataLength--;
-        nbr++;
-      }
+			if (!found) {
+				// Remove first element
+				old = theData;
+				theData = theData->next;
+				free(old);
+				dataLength--;
+				nbr++;
+			}
 
-    }
+		}
 
-  }
+	}
 
-  if ( theData==NULL ) {
-    // All points has been removed
-    Reset();
-  } else {
-    if( HasFilter() ) {
-      updateFilters();
-    } else {
-      computeDataBounds();
-    }
-  }
-  return nbr;
+	if (theData == NULL) {
+		// All points has been removed
+		Reset();
+	}
+	else {
+		if (HasFilter()) {
+			updateFilters();
+		}
+		else {
+			computeDataBounds();
+		}
+	}
+	return nbr;
 
 }
 
@@ -982,67 +989,68 @@ int GLDataView::GarbagePointTime(double garbageLimit) {
  */
 void GLDataView::GarbagePointLimit(int garbageLimit) {
 
-  DataList *old;
+	DataList* old;
 
-  // Garbage old data
-  int nb = dataLength - garbageLimit;
-  for (int i = 0; i < nb; i++) {
-    old = theData;
-    theData = theData->next;
-    free(old);
-    dataLength--;
-  }
+	// Garbage old data
+	int nb = dataLength - garbageLimit;
+	for (int i = 0; i < nb; i++) {
+		old = theData;
+		theData = theData->next;
+		free(old);
+		dataLength--;
+	}
 
-  if (HasFilter()) {
-    updateFilters();
-  } else {
-    computeDataBounds();
-  }
+	if (HasFilter()) {
+		updateFilters();
+	}
+	else {
+		computeDataBounds();
+	}
 
 }
 
 //Compute min
 void GLDataView::computeMin() {
-  min = MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->y < min) min = e->y;
-    e = e->next;
-  }
+	min = MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->y < min) min = e->y;
+		e = e->next;
+	}
 }
 
 //Compute max
 void GLDataView::computeMax() {
-  max = -MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->y > max) max = e->y;
-    e = e->next;
-  }
+	max = -MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->y > max) max = e->y;
+		e = e->next;
+	}
 }
 
 //Compute minXValue
 void GLDataView::computeMinXValue() {
-  minXValue = MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->x < minXValue) minXValue = e->x;
-    e = e->next;
-  }
+	minXValue = MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->x < minXValue) minXValue = e->x;
+		e = e->next;
+	}
 }
 
 //Compute maxXValue
 void GLDataView::computeMaxXValue() {
-  maxXValue = -MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->x > maxXValue) maxXValue = e->x;
-    e = e->next;
-  }
+	maxXValue = -MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->x > maxXValue) maxXValue = e->x;
+		e = e->next;
+	}
 }
 
 /**
@@ -1050,19 +1058,19 @@ void GLDataView::computeMaxXValue() {
  */
 void GLDataView::computeDataBounds() {
 
-  minXValue = MAX_VALUE;
-  maxXValue = -MAX_VALUE;
-  min = MAX_VALUE;
-  max = -MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->x < minXValue) minXValue = e->x;
-    if (e->x > maxXValue) maxXValue = e->x;
-    if (e->y < min) min = e->y;
-    if (e->y > max) max = e->y;
-    e = e->next;
-  }
+	minXValue = MAX_VALUE;
+	maxXValue = -MAX_VALUE;
+	min = MAX_VALUE;
+	max = -MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->x < minXValue) minXValue = e->x;
+		if (e->x > maxXValue) maxXValue = e->x;
+		if (e->y < min) min = e->y;
+		if (e->y > max) max = e->y;
+		e = e->next;
+	}
 
 }
 
@@ -1070,26 +1078,26 @@ void GLDataView::computeDataBounds() {
  * Compute transformed min and max.
  * @return Transformed min and max
  */
-void GLDataView::ComputeTransformedMinMax(double *tmin,double *tmax) {
+void GLDataView::ComputeTransformedMinMax(double* tmin, double* tmax) {
 
-  double mi = MAX_VALUE;
-  double ma = -MAX_VALUE;
+	double mi = MAX_VALUE;
+	double ma = -MAX_VALUE;
 
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
 
-  while (e != NULL) {
-    double v = A0 + A1 * e->y + A2 * e->y * e->y;
-    if (v < mi) mi = v;
-    if (v > ma) ma = v;
-    e = e->next;
-  }
+	while (e != NULL) {
+		double v = A0 + A1 * e->y + A2 * e->y * e->y;
+		if (v < mi) mi = v;
+		if (v > ma) ma = v;
+		e = e->next;
+	}
 
-  if (mi == MAX_VALUE) mi = 0;
-  if (ma == -MAX_VALUE) ma = 99;
+	if (mi == MAX_VALUE) mi = 0;
+	if (ma == -MAX_VALUE) ma = 99;
 
-  *tmin = mi;
-  *tmax = ma;
+	*tmin = mi;
+	*tmax = ma;
 
 }
 
@@ -1099,14 +1107,14 @@ void GLDataView::ComputeTransformedMinMax(double *tmin,double *tmax) {
  */
 double GLDataView::ComputePositiveMin() {
 
-  double mi = MAX_VALUE;
-  DataList *e = theData;
-  if(HasFilter()) e = theFilteredData;
-  while (e != NULL) {
-    if (e->y > 0 && e->y < mi) mi = e->y;
-    e = e->next;
-  }
-  return mi;
+	double mi = MAX_VALUE;
+	DataList* e = theData;
+	if (HasFilter()) e = theFilteredData;
+	while (e != NULL) {
+		if (e->y > 0 && e->y < mi) mi = e->y;
+		e = e->next;
+	}
+	return mi;
 
 }
 
@@ -1116,30 +1124,30 @@ double GLDataView::ComputePositiveMin() {
  * @return transformed value (through A0,A1,A2 transformation)
  */
 double GLDataView::GetTransformedValue(double x) {
-  return A0 + A1 * x + A2 * x * x;
+	return A0 + A1 * x + A2 * x * x;
 }
 
 /**
  * Get last value.
  * @return Last value
  */
-DataList *GLDataView::GetLastValue() {
-  if(HasFilter())
-    return theDataEnd;
-  else
-    return theFilteredDataEnd;
+DataList* GLDataView::GetLastValue() {
+	if (HasFilter())
+		return theDataEnd;
+	else
+		return theFilteredDataEnd;
 }
 
 /**
  * Clear all data in this view.
  */
 void GLDataView::Reset() {
-  FreeList(theData);
-  theData = NULL;
-  theDataEnd = NULL;
-  dataLength = 0;
-  updateFilters();
-  computeDataBounds();
+	FreeList(theData);
+	theData = NULL;
+	theDataEnd = NULL;
+	dataLength = 0;
+	updateFilters();
+	computeDataBounds();
 }
 
 /**
@@ -1149,28 +1157,28 @@ void GLDataView::Reset() {
  */
 double GLDataView::GetYValueByIndex(int idx)
 {
-   if (idx<0 || idx>=GetDataLength() )
-   {
-     return NaN;
-   }
+	if (idx < 0 || idx >= GetDataLength())
+	{
+		return NaN;
+	}
 
-   int i=0;
-   DataList *e = theData;
+	int i = 0;
+	DataList* e = theData;
 
-   while (e != NULL && i<idx)
-   {
-     e=e->next;
-     i++;
-   }
+	while (e != NULL && i < idx)
+	{
+		e = e->next;
+		i++;
+	}
 
-   if( e!=NULL )
-   {
-     return e->y;
-   }
-   else
-   {
-     return NaN;
-   }
+	if (e != NULL)
+	{
+		return e->y;
+	}
+	else
+	{
+		return NaN;
+	}
 
 }
 
@@ -1181,28 +1189,28 @@ double GLDataView::GetYValueByIndex(int idx)
  */
 double GLDataView::GetXValueByIndex(int idx) {
 
-  if (idx<0 || idx>=GetDataLength() )
-  {
-    return NaN;
-  }
+	if (idx < 0 || idx >= GetDataLength())
+	{
+		return NaN;
+	}
 
-  int i=0;
-  DataList *e = theData;
+	int i = 0;
+	DataList* e = theData;
 
-  while (e != NULL && i<idx)
-  {
-    e=e->next;
-    i++;
-  }
+	while (e != NULL && i < idx)
+	{
+		e = e->next;
+		i++;
+	}
 
-  if( e!=NULL )
-  {
-    return e->x;
-  }
-  else
-  {
-    return NaN;
-  }
+	if (e != NULL)
+	{
+		return e->x;
+	}
+	else
+	{
+		return NaN;
+	}
 
 }
 
@@ -1211,16 +1219,16 @@ double GLDataView::GetXValueByIndex(int idx) {
  * By default, it uses the Axis format.
  * @param format Format (C style)
  */
-void GLDataView::SetUserFormat(const char *format) {
-  // TODO
+void GLDataView::SetUserFormat(const char* format) {
+	// TODO
 	strcpy(userFormat, format);
 }
 
 /**
  * Returns the current user format (null when none).
  */
-char *GLDataView::GetUserFormat() {
-  return userFormat;
+char* GLDataView::GetUserFormat() {
+	return userFormat;
 }
 
 /**
@@ -1230,27 +1238,29 @@ char *GLDataView::GetUserFormat() {
  */
 std::string GLDataView::FormatValue(double v) {
 
-  static char ret[64];
+	static char ret[64];
 
-  if(isnan(v)) {
-    return "NaN";
-  }
+	if (isnan(v)) {
+		return "NaN";
+	}
 
-  if(userFormat != NULL) {
+	if (userFormat != NULL) {
 
-    sprintf(ret,userFormat,v);
-    return ret;
+		sprintf(ret, userFormat, v);
+		return ret;
 
-  } else if (parentAxis==NULL) {
+	}
+	else if (parentAxis == NULL) {
 
-    sprintf(ret,"%f",v);
-    return ret;
+		sprintf(ret, "%f", v);
+		return ret;
 
-  } else {
+	}
+	else {
 
-    return parentAxis->FormatValue(v,0);
+		return parentAxis->FormatValue(v, 0);
 
-  }
+	}
 
 }
 
@@ -1258,9 +1268,9 @@ std::string GLDataView::FormatValue(double v) {
  * Returns whether data is supposed to be sorted on x or not
  * @return a boolean value
  */
-bool GLDataView::IsXDataSorted () {
-  // return xDataSorted;
-  return true; // TODO
+bool GLDataView::IsXDataSorted() {
+	// return xDataSorted;
+	return true; // TODO
 }
 
 /**
@@ -1268,30 +1278,30 @@ bool GLDataView::IsXDataSorted () {
  * <code>false</code> by default
  * @param dataSorted a boolean value
  */
-void GLDataView::SetXDataSorted (bool dataSorted) {
-  //if (xDataSorted && !dataSorted) computeDataBounds();
-  //xDataSorted = dataSorted;
-  //TODO
+void GLDataView::SetXDataSorted(bool dataSorted) {
+	//if (xDataSorted && !dataSorted) computeDataBounds();
+	//xDataSorted = dataSorted;
+	//TODO
 }
 
 // Interpolation/Filtering stuff
 
-void GLDataView::addPts(Point2D *p,double x,double y) {
+void GLDataView::addPts(Point2D* p, double x, double y) {
 
-  if( (p->length % 50)==0 ) {
-    APoint2D *newPts = (APoint2D *)malloc((p->length+50) * sizeof(APoint2D));
-    if(p->length) memcpy(newPts,p->pts,p->length*sizeof(APoint2D));
-    free(p->pts);
-    p->pts = newPts;
-  }
-  p->pts[ p->length ].x = x;
-  p->pts[ p->length ].y = y;
-  p->length++;
+	if ((p->length % 50) == 0) {
+		APoint2D* newPts = (APoint2D*)malloc((p->length + 50) * sizeof(APoint2D));
+		if (p->length) memcpy(newPts, p->pts, p->length * sizeof(APoint2D));
+		free(p->pts);
+		p->pts = newPts;
+	}
+	p->pts[p->length].x = x;
+	p->pts[p->length].y = y;
+	p->length++;
 
 }
 
-void GLDataView::addPts(Point2D *p,APoint2D pt) {
-  addPts(p,pt.x,pt.y);
+void GLDataView::addPts(Point2D* p, APoint2D pt) {
+	addPts(p, pt.x, pt.y);
 }
 
 /**
@@ -1299,105 +1309,107 @@ void GLDataView::addPts(Point2D *p,APoint2D pt) {
  * @param nbExtra Number of extrapolated point
  * @param interpNan Interpolate NaN values when true, remove them otherwise
  */
-Point2D GLDataView::getSource(DataList *src,int nbExtra,bool interpNan) {
+Point2D GLDataView::getSource(DataList* src, int nbExtra, bool interpNan) {
 
-  DataList *f = src;
+	DataList* f = src;
 
-  // Interpolate NaN (When possible)
-  Point2D p;
-  p.length = 0;
-  p.pts = NULL;
-  for(int i=0;i<nbExtra;i++) addPts(&p,0.0,0.0);
-  APoint2D lastValue;
-  APoint2D nextValue;
-  lastValue.x = NaN;
-  lastValue.y = NaN;
-  nextValue.x = NaN;
-  nextValue.y = NaN;
+	// Interpolate NaN (When possible)
+	Point2D p;
+	p.length = 0;
+	p.pts = NULL;
+	for (int i = 0; i < nbExtra; i++) addPts(&p, 0.0, 0.0);
+	APoint2D lastValue;
+	APoint2D nextValue;
+	lastValue.x = NaN;
+	lastValue.y = NaN;
+	nextValue.x = NaN;
+	nextValue.y = NaN;
 
-  while (f != NULL) {
-    if (!isnan(f->y)) {
-      addPts(&p,f->x, f->y);
-    } else {
-      if (interpNan) {
-        if (!isnan(lastValue.y)) {
-          if (f->next != NULL && !isnan(f->next->y)) {
-            // Linear interpolation possible
-            nextValue.x = f->next->x;
-            nextValue.y = f->next->y;
-            // Interpolate also x value, work around client side timestamps error.
-            addPts(&p,LinearInterpolate(lastValue, nextValue, 0.5));
-          } else {
-            // Duplicate last value
-            addPts(&p,f->x, lastValue.y);
-          }
-        }
-      }
-    }
-    lastValue.x = f->x;
-    lastValue.y = f->y;
-    f = f->next;
-  }
+	while (f != NULL) {
+		if (!isnan(f->y)) {
+			addPts(&p, f->x, f->y);
+		}
+		else {
+			if (interpNan) {
+				if (!isnan(lastValue.y)) {
+					if (f->next != NULL && !isnan(f->next->y)) {
+						// Linear interpolation possible
+						nextValue.x = f->next->x;
+						nextValue.y = f->next->y;
+						// Interpolate also x value, work around client side timestamps error.
+						addPts(&p, LinearInterpolate(lastValue, nextValue, 0.5));
+					}
+					else {
+						// Duplicate last value
+						addPts(&p, f->x, lastValue.y);
+					}
+				}
+			}
+		}
+		lastValue.x = f->x;
+		lastValue.y = f->y;
+		f = f->next;
+	}
 
-  for(int i=0;i<nbExtra;i++) addPts(&p,0.0,0.0);
-  return p;
+	for (int i = 0; i < nbExtra; i++) addPts(&p, 0.0, 0.0);
+	return p;
 
 }
 
 /* Mathematical operation (integral,derivative,fft) */
 void GLDataView::mathop() {
 
-  if(mathFunction==MATH_NONE)
-    return;
+	if (mathFunction == MATH_NONE)
+		return;
 
-  // Get source data
-  Point2D source;
-  if(interpMethod==INTERPOLATE_NONE && smoothMethod==SMOOTH_NONE)
-    source = getSource(theData,0,false);
-  else
-    source = getSource(theFilteredData,0,false);
-  // Reset filteredData
-  FreeList(theFilteredData);
-  theFilteredData = NULL;
-  theFilteredDataEnd = NULL;
-  filteredDataLength = 0;
-  if( source.length==0 ) return;
+	// Get source data
+	Point2D source;
+	if (interpMethod == INTERPOLATE_NONE && smoothMethod == SMOOTH_NONE)
+		source = getSource(theData, 0, false);
+	else
+		source = getSource(theFilteredData, 0, false);
+	// Reset filteredData
+	FreeList(theFilteredData);
+	theFilteredData = NULL;
+	theFilteredDataEnd = NULL;
+	filteredDataLength = 0;
+	if (source.length == 0) return;
 
-  double sum = 0.0;
-  switch(mathFunction) {
-    case MATH_DERIVATIVE:
-      for(int i=0;i<source.length-1;i++) {
-        double d = (source.pts[i+1].y - source.pts[i].y) / (source.pts[i+1].x - source.pts[i].x);
-        addInt(source.pts[i].x, d);
-      }
-      break;
-    case MATH_INTEGRAL:
-      addInt(source.pts[0].x, sum);
-      for(int i=0;i<source.length-1;i++) {
-        sum += ((source.pts[i+1].y + source.pts[i].y)/2.0) * (source.pts[i+1].x - source.pts[i].x);
-        addInt(source.pts[i+1].x, sum);
-      }
-      break;
-    case MATH_FFT_MODULUS:
-      doFFT(source,0);
-      break;
-    case MATH_FFT_PHASE:
-      doFFT(source,1);
-      break;
-  }
+	double sum = 0.0;
+	switch (mathFunction) {
+	case MATH_DERIVATIVE:
+		for (int i = 0; i < source.length - 1; i++) {
+			double d = (source.pts[i + 1].y - source.pts[i].y) / (source.pts[i + 1].x - source.pts[i].x);
+			addInt(source.pts[i].x, d);
+		}
+		break;
+	case MATH_INTEGRAL:
+		addInt(source.pts[0].x, sum);
+		for (int i = 0; i < source.length - 1; i++) {
+			sum += ((source.pts[i + 1].y + source.pts[i].y) / 2.0) * (source.pts[i + 1].x - source.pts[i].x);
+			addInt(source.pts[i + 1].x, sum);
+		}
+		break;
+	case MATH_FFT_MODULUS:
+		doFFT(source, 0);
+		break;
+	case MATH_FFT_PHASE:
+		doFFT(source, 1);
+		break;
+	}
 
-  SAFE_FREE(source.pts);
+	SAFE_FREE(source.pts);
 
 }
 
 /* Reverse bit of idx on p bits */
-int  GLDataView::reverse(int idx,int p) {
-  int i, rev;
-  for (i = rev = 0; i < p; i++) {
-     rev = (rev << 1) | (idx & 1);
-     idx >>= 1;
-  }
-  return rev;
+int  GLDataView::reverse(int idx, int p) {
+	int i, rev;
+	for (i = rev = 0; i < p; i++) {
+		rev = (rev << 1) | (idx & 1);
+		idx >>= 1;
+	}
+	return rev;
 }
 
 /**
@@ -1405,95 +1417,95 @@ int  GLDataView::reverse(int idx,int p) {
  * @param in Input signal
  * @param mode 0=>modulus 1=>argument
  */
-void GLDataView::doFFT(Point2D in,int mode) {
+void GLDataView::doFFT(Point2D in, int mode) {
 
-    int nbSample = in.length;
-    if(nbSample<2) return;
-    int p = 0;
-    int i,idx;
-    // Get the power of 2 above
-    if((nbSample & (nbSample-1))==0) p = -1; // already a power of 2
-    else                             p = 0;
-    while(nbSample!=0) { nbSample = nbSample >> 1; p++; }
-    nbSample = 1 << p;
+	int nbSample = in.length;
+	if (nbSample < 2) return;
+	int p = 0;
+	int i, idx;
+	// Get the power of 2 above
+	if ((nbSample & (nbSample - 1)) == 0) p = -1; // already a power of 2
+	else                             p = 0;
+	while (nbSample != 0) { nbSample = nbSample >> 1; p++; }
+	nbSample = 1 << p;
 
-    // Create initial array
-    double* real = (double *)malloc(nbSample*sizeof(double));
-    double* imag = (double *)malloc(nbSample*sizeof(double));
-    for(i=0;i<in.length;i++) {
-      idx = reverse(i,p);
-      real[idx] = in.pts[i].y;
-      imag[idx] = 0.0;
-    }
-    for(;i<nbSample;i++) {
-      idx = reverse(i,p);
-      real[idx] = 0.0;
-      imag[idx] = 0.0;
-    }
+	// Create initial array
+	double* real = (double*)malloc(nbSample * sizeof(double));
+	double* imag = (double*)malloc(nbSample * sizeof(double));
+	for (i = 0; i < in.length; i++) {
+		idx = reverse(i, p);
+		real[idx] = in.pts[i].y;
+		imag[idx] = 0.0;
+	}
+	for (; i < nbSample; i++) {
+		idx = reverse(i, p);
+		real[idx] = 0.0;
+		imag[idx] = 0.0;
+	}
 
-    // Do the FFT
-    int blockEnd = 1;
-    for (int blockSize = 2; blockSize <= nbSample; blockSize <<= 1) {
+	// Do the FFT
+	int blockEnd = 1;
+	for (int blockSize = 2; blockSize <= nbSample; blockSize <<= 1) {
 
-       double deltaAngle = 2.0 * PI / (double) blockSize;
+		double deltaAngle = 2.0 * PI / (double)blockSize;
 
-       double sm2 = sin(-2.0 * deltaAngle);
-       double sm1 = sin(-deltaAngle);
-       double cm2 = cos(-2.0 * deltaAngle);
-       double cm1 = cos(-deltaAngle);
-       double w = 2.0 * cm1;
-       double ar0, ar1, ar2, ai0, ai1, ai2;
+		double sm2 = sin(-2.0 * deltaAngle);
+		double sm1 = sin(-deltaAngle);
+		double cm2 = cos(-2.0 * deltaAngle);
+		double cm1 = cos(-deltaAngle);
+		double w = 2.0 * cm1;
+		double ar0, ar1, ar2, ai0, ai1, ai2;
 
-       for (i = 0; i < nbSample; i += blockSize) {
-          ar2 = cm2;
-          ar1 = cm1;
+		for (i = 0; i < nbSample; i += blockSize) {
+			ar2 = cm2;
+			ar1 = cm1;
 
-          ai2 = sm2;
-          ai1 = sm1;
+			ai2 = sm2;
+			ai1 = sm1;
 
-          for (int j = i, n = 0; n < blockEnd; j++, n++) {
-             ar0 = w * ar1 - ar2;
-             ar2 = ar1;
-             ar1 = ar0;
+			for (int j = i, n = 0; n < blockEnd; j++, n++) {
+				ar0 = w * ar1 - ar2;
+				ar2 = ar1;
+				ar1 = ar0;
 
-             ai0 = w * ai1 - ai2;
-             ai2 = ai1;
-             ai1 = ai0;
+				ai0 = w * ai1 - ai2;
+				ai2 = ai1;
+				ai1 = ai0;
 
-             int k = j + blockEnd;
-             double tr = ar0 * real[k] - ai0 * imag[k];
-             double ti = ar0 * imag[k] + ai0 * real[k];
+				int k = j + blockEnd;
+				double tr = ar0 * real[k] - ai0 * imag[k];
+				double ti = ar0 * imag[k] + ai0 * real[k];
 
-             real[k] = real[j] - tr;
-             imag[k] = imag[j] - ti;
+				real[k] = real[j] - tr;
+				imag[k] = imag[j] - ti;
 
-             real[j] += tr;
-             imag[j] += ti;
-          }
-       }
+				real[j] += tr;
+				imag[j] += ti;
+			}
+		}
 
-       blockEnd = blockSize;
-    }
+		blockEnd = blockSize;
+	}
 
-    // Create modulus of arguments results
-    switch(mode) {
-      case 0: // Modulus
-        for(i=0;i<nbSample/2;i++) {
-          double n = sqrt( real[i]*real[i] + imag[i]*imag[i] );
-          addInt((double)i,n);
-        }
-        break;
-      case 1: // Arguments (in radians)
-        for(i=0;i<nbSample;i++) {
-          double n = sqrt( real[i]*real[i] + imag[i]*imag[i] );
-          double arg = asin( imag[i]/n );
-          addInt((double)i,arg);
-        }
-        break;
-    }
+	// Create modulus of arguments results
+	switch (mode) {
+	case 0: // Modulus
+		for (i = 0; i < nbSample / 2; i++) {
+			double n = sqrt(real[i] * real[i] + imag[i] * imag[i]);
+			addInt((double)i, n);
+		}
+		break;
+	case 1: // Arguments (in radians)
+		for (i = 0; i < nbSample; i++) {
+			double n = sqrt(real[i] * real[i] + imag[i] * imag[i]);
+			double arg = asin(imag[i] / n);
+			addInt((double)i, arg);
+		}
+		break;
+	}
 
-    free(real);
-    free(imag);
+	free(real);
+	free(imag);
 
 }
 
@@ -1502,227 +1514,230 @@ void GLDataView::doFFT(Point2D in,int mode) {
  * the add(x,y,false) mehtod.
  */
 void GLDataView::updateFilters() {
-  FreeList(theFilteredData);
-  theFilteredData = NULL;
-  theFilteredDataEnd = NULL;
-  filteredDataLength = 0;
-  if(HasFilter()) {
-    interpolate();
-    convolution();
-    mathop();
-    computeDataBounds();
-  }
+	FreeList(theFilteredData);
+	theFilteredData = NULL;
+	theFilteredDataEnd = NULL;
+	filteredDataLength = 0;
+	if (HasFilter()) {
+		interpolate();
+		convolution();
+		mathop();
+		computeDataBounds();
+	}
 }
 
 /** Smoothing filter shapes */
 void GLDataView::updateSmoothCoefs() {
 
-    SAFE_FREE(smoothCoefs);
-    if(smoothMethod==SMOOTH_NONE) {
-      return;
-    }
+	SAFE_FREE(smoothCoefs);
+	if (smoothMethod == SMOOTH_NONE) {
+		return;
+	}
 
-    smoothCoefs = (double *)malloc(smoothNeighbor*sizeof(double));
-    int    nb = smoothNeighbor/2;
-    double l;
+	smoothCoefs = (double*)malloc(smoothNeighbor * sizeof(double));
+	int    nb = smoothNeighbor / 2;
+	double l;
 
-    switch(smoothMethod) {
+	switch (smoothMethod) {
 
-      case SMOOTH_FLAT:
-        // Flat shape
-        for(int i=0;i<smoothNeighbor;i++) smoothCoefs[i]=1.0;
-        break;
+	case SMOOTH_FLAT:
+		// Flat shape
+		for (int i = 0; i < smoothNeighbor; i++) smoothCoefs[i] = 1.0;
+		break;
 
-      case SMOOTH_TRIANGULAR:
-        // Triangular shape
-        l  = 1.0 / ((double)nb + 1.0);
-        for(int i=0;i<nb;i++)
-          smoothCoefs[i]=  (double)(i-nb)*l + 1.0;
-        for(int i=1;i<=nb;i++)
-          smoothCoefs[i+nb]=  (double)(-i)*l + 1.0;
-        smoothCoefs[nb]=1.0;
-        break;
+	case SMOOTH_TRIANGULAR:
+		// Triangular shape
+		l = 1.0 / ((double)nb + 1.0);
+		for (int i = 0; i < nb; i++)
+			smoothCoefs[i] = (double)(i - nb) * l + 1.0;
+		for (int i = 1; i <= nb; i++)
+			smoothCoefs[i + nb] = (double)(-i) * l + 1.0;
+		smoothCoefs[nb] = 1.0;
+		break;
 
-      case SMOOTH_GAUSSIAN:
-        // Gaussian shape
-        double A = 1.0 / (2.0 * sqrt(PI) * smoothSigma);
-        double B = 1.0 / (2.0 * smoothSigma * smoothSigma);
-        for(int i=0;i<smoothNeighbor;i++) {
-          double x = (double)(i-nb);
-          smoothCoefs[i]= A*exp(-x*x*B);
-        }
-        break;
+	case SMOOTH_GAUSSIAN:
+		// Gaussian shape
+		double A = 1.0 / (2.0 * sqrt(PI) * smoothSigma);
+		double B = 1.0 / (2.0 * smoothSigma * smoothSigma);
+		for (int i = 0; i < smoothNeighbor; i++) {
+			double x = (double)(i - nb);
+			smoothCoefs[i] = A * exp(-x * x * B);
+		}
+		break;
 
-    }
+	}
 
-    // Normalize coef
-    double sum = 0.0;
-    for(int i=0;i<smoothNeighbor;i++) sum+=smoothCoefs[i];
-    for(int i=0;i<smoothNeighbor;i++) smoothCoefs[i]=smoothCoefs[i]/sum;
+	// Normalize coef
+	double sum = 0.0;
+	for (int i = 0; i < smoothNeighbor; i++) sum += smoothCoefs[i];
+	for (int i = 0; i < smoothNeighbor; i++) smoothCoefs[i] = smoothCoefs[i] / sum;
 
 }
 
 /** Convolution product */
 void GLDataView::convolution() {
 
-  if(smoothMethod==SMOOTH_NONE)
-    return;
+	if (smoothMethod == SMOOTH_NONE)
+		return;
 
-  int nbG = smoothNeighbor/2;
-  int nbF;   // number of smoothed points
-  int nbE;   // number of exptrapoled points
-  int start; // start index (input signal)
-  int end;   // end index (input signal)
-  int i;
-  double sum;
+	int nbG = smoothNeighbor / 2;
+	int nbF;   // number of smoothed points
+	int nbE;   // number of exptrapoled points
+	int start; // start index (input signal)
+	int end;   // end index (input signal)
+	int i;
+	double sum;
 
-  // Number of added extrapolated points
-  switch(smoothExtrapolation) {
-    case SMOOTH_EXT_NONE:
-      nbE   = 0;
-      break;
-    default:
-      nbE = nbG;
-      break;
-  }
+	// Number of added extrapolated points
+	switch (smoothExtrapolation) {
+	case SMOOTH_EXT_NONE:
+		nbE = 0;
+		break;
+	default:
+		nbE = nbG;
+		break;
+	}
 
-  // Get source data
-  Point2D source;
-  if(interpMethod==INTERPOLATE_NONE)
-    source = getSource(theData,nbE,true);
-  else
-    source = getSource(theFilteredData,nbE,true);
+	// Get source data
+	Point2D source;
+	if (interpMethod == INTERPOLATE_NONE)
+		source = getSource(theData, nbE, true);
+	else
+		source = getSource(theFilteredData, nbE, true);
 
-  nbF   = source.length-2*nbG; // number of smoothed points
-  start = nbG;                 // start index
-  end   = nbF + nbG - 1;       // end index
+	nbF = source.length - 2 * nbG; // number of smoothed points
+	start = nbG;                 // start index
+	end = nbF + nbG - 1;       // end index
 
-  // Too much neighbor or too much NaN
-  if(nbF==nbE || start>end)
-    return;
+	// Too much neighbor or too much NaN
+	if (nbF == nbE || start > end)
+		return;
 
-  // Extrapolation on boundaries
-  // x values are there for testing purpose only.
-  // They do not impact on calculation.
-  switch(smoothExtrapolation) {
+	// Extrapolation on boundaries
+	// x values are there for testing purpose only.
+	// They do not impact on calculation.
+	switch (smoothExtrapolation) {
 
-    // Linearly extrpolate points based on the
-    // average direction of the 3 first (or last) vectors.
-    // TODO: Make this configurable
-    case SMOOTH_EXT_LINEAR: {
+		// Linearly extrpolate points based on the
+		// average direction of the 3 first (or last) vectors.
+		// TODO: Make this configurable
+	case SMOOTH_EXT_LINEAR: {
 
-      int maxPts = 3;
-      APoint2D vect;
+		int maxPts = 3;
+		APoint2D vect;
 
-      // Fisrt points
-      int nb = 0;
-      vect.x =  0.0; // Sum of vectors
-      vect.y =  0.0; // Sum of vectors
-      for(i=start;i<maxPts+start && i<nbF+start-1;i++) {
-        vect.x += (source.pts[i].x - source.pts[i+1].x);
-        vect.y += (source.pts[i].y - source.pts[i+1].y);
-        nb++;
-      }
-      if(nb==0) {
-        // Revert to flat
-        vect.x= source.pts[start].x - (double)nbE;
-        vect.y= source.pts[start].y;
-      } else {
-        vect.x= (vect.x / (double)nb) * (double)nbE + source.pts[start].x;
-        vect.y= (vect.y / (double)nb) * (double)nbE + source.pts[start].y;
-      }
-      for(i=0;i<nbE;i++)
-        source.pts[i] = LinearInterpolate(vect,source.pts[start],(double)i/(double)nbE);
+		// Fisrt points
+		int nb = 0;
+		vect.x = 0.0; // Sum of vectors
+		vect.y = 0.0; // Sum of vectors
+		for (i = start; i < maxPts + start && i < nbF + start - 1; i++) {
+			vect.x += (source.pts[i].x - source.pts[i + 1].x);
+			vect.y += (source.pts[i].y - source.pts[i + 1].y);
+			nb++;
+		}
+		if (nb == 0) {
+			// Revert to flat
+			vect.x = source.pts[start].x - (double)nbE;
+			vect.y = source.pts[start].y;
+		}
+		else {
+			vect.x = (vect.x / (double)nb) * (double)nbE + source.pts[start].x;
+			vect.y = (vect.y / (double)nb) * (double)nbE + source.pts[start].y;
+		}
+		for (i = 0; i < nbE; i++)
+			source.pts[i] = LinearInterpolate(vect, source.pts[start], (double)i / (double)nbE);
 
-      // Last points
-      nb = 0;
-      vect.x =  0.0; // Sum of vectors
-      vect.y =  0.0; // Sum of vectors
-      for(i=end-maxPts;i<end;i++) {
-        if(i>=start) {
-          vect.x += (source.pts[i+1].x - source.pts[i].x);
-          vect.y += (source.pts[i+1].y - source.pts[i].y);
-          nb++;
-        }
-      }
-      if(nb==0) {
-        // Revert to flat
-        vect.x=  source.pts[end].x + (double)nbE;
-        vect.y=  source.pts[end].y;
-      } else {
-        vect.x= (vect.x / (double)nb) * (double)nbE + source.pts[end].x;
-        vect.y= (vect.y / (double)nb) * (double)nbE + source.pts[end].y;
-      }
-      for(i=1;i<=nbE;i++)
-        source.pts[end+i] = LinearInterpolate(source.pts[end],vect,(double)i/(double)nbE);
+		// Last points
+		nb = 0;
+		vect.x = 0.0; // Sum of vectors
+		vect.y = 0.0; // Sum of vectors
+		for (i = end - maxPts; i < end; i++) {
+			if (i >= start) {
+				vect.x += (source.pts[i + 1].x - source.pts[i].x);
+				vect.y += (source.pts[i + 1].y - source.pts[i].y);
+				nb++;
+			}
+		}
+		if (nb == 0) {
+			// Revert to flat
+			vect.x = source.pts[end].x + (double)nbE;
+			vect.y = source.pts[end].y;
+		}
+		else {
+			vect.x = (vect.x / (double)nb) * (double)nbE + source.pts[end].x;
+			vect.y = (vect.y / (double)nb) * (double)nbE + source.pts[end].y;
+		}
+		for (i = 1; i <= nbE; i++)
+			source.pts[end + i] = LinearInterpolate(source.pts[end], vect, (double)i / (double)nbE);
 
-    } break;
+	} break;
 
-    // Duplicate start and end values
-    case SMOOTH_EXT_FLAT:
-      for(i=0;i<nbE;i++) {
-        source.pts[i].x = source.pts[start].x-nbE+i;
-        source.pts[i].y = source.pts[start].y;
-        source.pts[i+end+1].x = source.pts[end].x+i+1.0;
-        source.pts[i+end+1].y = source.pts[end].y;
-      }
-      break;
-  }
+		// Duplicate start and end values
+	case SMOOTH_EXT_FLAT:
+		for (i = 0; i < nbE; i++) {
+			source.pts[i].x = source.pts[start].x - nbE + i;
+			source.pts[i].y = source.pts[start].y;
+			source.pts[i + end + 1].x = source.pts[end].x + i + 1.0;
+			source.pts[i + end + 1].y = source.pts[end].y;
+		}
+		break;
+	}
 
-  // Reset filteredData
-  FreeList(theFilteredData);
-  theFilteredData = NULL;
-  theFilteredDataEnd = NULL;
-  filteredDataLength = 0;
+	// Reset filteredData
+	FreeList(theFilteredData);
+	theFilteredData = NULL;
+	theFilteredDataEnd = NULL;
+	filteredDataLength = 0;
 
-  for (i = start; i <= end; i++) {
-     // Convolution product
-     sum = 0.0;
-     for (int j = 0; j < smoothNeighbor; j++)
-       sum += smoothCoefs[j] * source.pts[i + j - nbG].y;
-     addInt(source.pts[i].x, sum);
-  }
+	for (i = start; i <= end; i++) {
+		// Convolution product
+		sum = 0.0;
+		for (int j = 0; j < smoothNeighbor; j++)
+			sum += smoothCoefs[j] * source.pts[i + j - nbG].y;
+		addInt(source.pts[i].x, sum);
+	}
 
-  SAFE_FREE(source.pts);
+	SAFE_FREE(source.pts);
 
 }
 
 void GLDataView::addInt(APoint2D p) {
-  addInt(p.x, p.y);
+	addInt(p.x, p.y);
 }
 
-void GLDataView::addInt(double x,double y) {
+void GLDataView::addInt(double x, double y) {
 
-  DataList *newData = (DataList *)malloc(sizeof(DataList));
-  newData->x = x;
-  newData->y = y;
-  newData->next = NULL;
+	DataList* newData = (DataList*)malloc(sizeof(DataList));
+	newData->x = x;
+	newData->y = y;
+	newData->next = NULL;
 
-  if (theFilteredData == NULL) {
-    theFilteredData = newData;
-  } else {
-    theFilteredDataEnd->next = newData;
-  }
-  theFilteredDataEnd = newData;
+	if (theFilteredData == NULL) {
+		theFilteredData = newData;
+	}
+	else {
+		theFilteredDataEnd->next = newData;
+	}
+	theFilteredDataEnd = newData;
 
-  filteredDataLength++;
+	filteredDataLength++;
 
 }
 
-Point2D GLDataView::getSegments(DataList *l) {
+Point2D GLDataView::getSegments(DataList* l) {
 
-  int nb = 0;
-  DataList *head = l;
-  while(l!=NULL && !isnan(l->y)) {nb++;l=l->next;}
-  l=head;
-  Point2D ret;
-  ret.length = 0;
-  ret.pts = NULL;
-  for(int i=0;i<nb;i++) {
-    addPts(&ret,l->x,l->y);
-    l=l->next;
-  }
-  return ret;
+	int nb = 0;
+	DataList* head = l;
+	while (l != NULL && !isnan(l->y)) { nb++; l = l->next; }
+	l = head;
+	Point2D ret;
+	ret.length = 0;
+	ret.pts = NULL;
+	for (int i = 0; i < nb; i++) {
+		addPts(&ret, l->x, l->y);
+		l = l->next;
+	}
+	return ret;
 
 }
 
@@ -1732,12 +1747,12 @@ Point2D GLDataView::getSegments(DataList *l) {
  * @param p2 End point (t=1)
  * @param t 0=>p1 to 1=>p2
  */
-APoint2D GLDataView::LinearInterpolate(APoint2D p1,APoint2D p2,double t)
+APoint2D GLDataView::LinearInterpolate(APoint2D p1, APoint2D p2, double t)
 {
-  APoint2D p;
-  p.x = p1.x + (p2.x - p1.x)*t;
-  p.y = p1.y + (p2.y - p1.y)*t;
-  return p;
+	APoint2D p;
+	p.x = p1.x + (p2.x - p1.x) * t;
+	p.y = p1.y + (p2.y - p1.y) * t;
+	return p;
 }
 
 /**
@@ -1746,14 +1761,14 @@ APoint2D GLDataView::LinearInterpolate(APoint2D p1,APoint2D p2,double t)
  * @param p2 End point (t=1)
  * @param t 0=>p1 to 1=>p2
  */
-APoint2D GLDataView::CosineInterpolate(APoint2D p1,APoint2D p2,double t)
+APoint2D GLDataView::CosineInterpolate(APoint2D p1, APoint2D p2, double t)
 {
-  APoint2D p;
-  double t2;
-  t2 = (1.0-cos(t*PI))/2.0;
-  p.x = p1.x + (p2.x - p1.x)*t;
-  p.y =  p1.y*(1.0-t2)+p2.y*t2;
-  return p;
+	APoint2D p;
+	double t2;
+	t2 = (1.0 - cos(t * PI)) / 2.0;
+	p.x = p1.x + (p2.x - p1.x) * t;
+	p.y = p1.y * (1.0 - t2) + p2.y * t2;
+	return p;
 }
 
 /**
@@ -1764,19 +1779,19 @@ APoint2D GLDataView::CosineInterpolate(APoint2D p1,APoint2D p2,double t)
  * @param p3 neighbour point
  * @param t 0=>p1 to 1=>p2
  */
-APoint2D GLDataView::CubicInterpolate(APoint2D p0,APoint2D p1,APoint2D p2,APoint2D p3,double t) {
-  APoint2D p;
-  double t2 = t*t;
-  double t3 = t2*t;
+APoint2D GLDataView::CubicInterpolate(APoint2D p0, APoint2D p1, APoint2D p2, APoint2D p3, double t) {
+	APoint2D p;
+	double t2 = t * t;
+	double t3 = t2 * t;
 
-  double ay3 = p3.y - p2.y - p0.y + p1.y;
-  double ay2 = p0.y - p1.y - ay3;
-  double ay1 = p2.y - p0.y;
-  double ay0 = p1.y;
+	double ay3 = p3.y - p2.y - p0.y + p1.y;
+	double ay2 = p0.y - p1.y - ay3;
+	double ay1 = p2.y - p0.y;
+	double ay0 = p1.y;
 
-  p.x = p1.x + (p2.x - p1.x)*t;
-  p.y = ay3*t3+ay2*t2+ay1*t+ay0;
-  return p;
+	p.x = p1.x + (p2.x - p1.x) * t;
+	p.y = ay3 * t3 + ay2 * t2 + ay1 * t + ay0;
+	return p;
 }
 
 /**
@@ -1790,32 +1805,32 @@ APoint2D GLDataView::CubicInterpolate(APoint2D p0,APoint2D p1,APoint2D p2,APoint
  * @param bias (0 for no bias, positive value towards first segment, negative value towards the others)
  */
 APoint2D GLDataView::HermiteInterpolate(APoint2D p0, APoint2D p1, APoint2D p2, APoint2D p3,
-                                        double mu, double tension, double bias) {
-  double ym0, ym1, xm0, xm1, mu2, mu3;
-  double a0, a1, a2, a3;
-  double t = (1.0 - tension) / 2.0;
-  APoint2D p;
-  mu2 = mu * mu;
-  mu3 = mu2 * mu;
+	double mu, double tension, double bias) {
+	double ym0, ym1, xm0, xm1, mu2, mu3;
+	double a0, a1, a2, a3;
+	double t = (1.0 - tension) / 2.0;
+	APoint2D p;
+	mu2 = mu * mu;
+	mu3 = mu2 * mu;
 
-  a0 = 2.0 * mu3 - 3.0 * mu2 + 1.0;
-  a1 = mu3 - 2.0 * mu2 + mu;
-  a2 = mu3 - mu2;
-  a3 = -2.0 * mu3 + 3.0 * mu2;
+	a0 = 2.0 * mu3 - 3.0 * mu2 + 1.0;
+	a1 = mu3 - 2.0 * mu2 + mu;
+	a2 = mu3 - mu2;
+	a3 = -2.0 * mu3 + 3.0 * mu2;
 
-  xm0 = (p1.x - p0.x) * (1.0 + bias)  * t;
-  xm0 += (p2.x - p1.x) * (1.0 - bias) * t;
-  xm1 = (p2.x - p1.x) * (1.0 + bias)  * t;
-  xm1 += (p3.x - p2.x) * (1.0 - bias) * t;
+	xm0 = (p1.x - p0.x) * (1.0 + bias) * t;
+	xm0 += (p2.x - p1.x) * (1.0 - bias) * t;
+	xm1 = (p2.x - p1.x) * (1.0 + bias) * t;
+	xm1 += (p3.x - p2.x) * (1.0 - bias) * t;
 
-  ym0 = (p1.y - p0.y) * (1.0 + bias)  * t;
-  ym0 += (p2.y - p1.y) * (1.0 - bias) * t;
-  ym1 = (p2.y - p1.y) * (1.0 + bias)  * t;
-  ym1 += (p3.y - p2.y) * (1.0 - bias) * t;
+	ym0 = (p1.y - p0.y) * (1.0 + bias) * t;
+	ym0 += (p2.y - p1.y) * (1.0 - bias) * t;
+	ym1 = (p2.y - p1.y) * (1.0 + bias) * t;
+	ym1 += (p3.y - p2.y) * (1.0 - bias) * t;
 
-  p.x = a0 * p1.x + a1 * xm0 + a2 * xm1 + a3 * p2.x;
-  p.y = a0 * p1.y + a1 * ym0 + a2 * ym1 + a3 * p2.y;
-  return p;
+	p.x = a0 * p1.x + a1 * xm0 + a2 * xm1 + a3 * p2.x;
+	p.y = a0 * p1.y + a1 * ym0 + a2 * ym1 + a3 * p2.y;
+	return p;
 
 }
 
@@ -1824,129 +1839,131 @@ APoint2D GLDataView::HermiteInterpolate(APoint2D p0, APoint2D p1, APoint2D p2, A
  */
 void GLDataView::interpolate() {
 
-  if(interpMethod==INTERPOLATE_NONE)
-    return;
+	if (interpMethod == INTERPOLATE_NONE)
+		return;
 
-  double dt = 1.0/(double)interpStep;
-  double t;
-  int i;
-  APoint2D fP;
-  APoint2D lP;
+	double dt = 1.0 / (double)interpStep;
+	double t;
+	int i;
+	APoint2D fP;
+	APoint2D lP;
 
-  DataList *l = theData;
+	DataList* l = theData;
 
-  while( l!=NULL ) {
+	while (l != NULL) {
 
-    // Get continuous segments
-    Point2D pts = getSegments(l);
-    int nbPts = pts.length;
-    int method = interpMethod;
-    if(nbPts==0) {
-      // NaN found
-      method = INTERPOLATE_NONE;        // No interpolation possible
-      addInt(l->x, l->y);
-      l = l->next;
-    } else if(nbPts==1) {
-      method = INTERPOLATE_NONE;        // No interpolation possible
-      addInt(pts.pts[0]);
-    } else if(nbPts==2) {
-      method = INTERPOLATE_LINEAR; // Fallback to linear when less than 3 points
-    }
+		// Get continuous segments
+		Point2D pts = getSegments(l);
+		int nbPts = pts.length;
+		int method = interpMethod;
+		if (nbPts == 0) {
+			// NaN found
+			method = INTERPOLATE_NONE;        // No interpolation possible
+			addInt(l->x, l->y);
+			l = l->next;
+		}
+		else if (nbPts == 1) {
+			method = INTERPOLATE_NONE;        // No interpolation possible
+			addInt(pts.pts[0]);
+		}
+		else if (nbPts == 2) {
+			method = INTERPOLATE_LINEAR; // Fallback to linear when less than 3 points
+		}
 
-    switch( method ) {
+		switch (method) {
 
-      
-      case INTERPOLATE_LINEAR:
 
-        for(i=0;i<nbPts-2;i++) {
-          for(int j=0;j<interpStep;j++) {
-            t = (double)j * dt;
-            addInt(LinearInterpolate(pts.pts[i],pts.pts[i+1],t));
-          }
-        }
-        for(int j=0;j<=interpStep;j++) {
-          t = (double)j * dt;
-          addInt(LinearInterpolate(pts.pts[i],pts.pts[i+1],t));
-        }
-        break;
+		case INTERPOLATE_LINEAR:
 
-      
-      case INTERPOLATE_COSINE:
+			for (i = 0; i < nbPts - 2; i++) {
+				for (int j = 0; j < interpStep; j++) {
+					t = (double)j * dt;
+					addInt(LinearInterpolate(pts.pts[i], pts.pts[i + 1], t));
+				}
+			}
+			for (int j = 0; j <= interpStep; j++) {
+				t = (double)j * dt;
+				addInt(LinearInterpolate(pts.pts[i], pts.pts[i + 1], t));
+			}
+			break;
 
-        for(i=0;i<nbPts-2;i++) {
-          for(int j=0;j<interpStep;j++) {
-            t = (double)j * dt;
-            addInt(CosineInterpolate(pts.pts[i],pts.pts[i+1],t));
-          }
-        }
-        for(int j=0;j<=interpStep;j++) {
-          t = (double)j * dt;
-          addInt(LinearInterpolate(pts.pts[i],pts.pts[i+1],t));
-        }
-        break;
 
-      
-      case INTERPOLATE_CUBIC:
+		case INTERPOLATE_COSINE:
 
-        // First segment (extend tangent)
-        fP.x = 2.0 * pts.pts[0].x - pts.pts[1].x;
-        fP.y = 2.0 * pts.pts[0].y - pts.pts[1].y;
-        for (int j = 0; j < interpStep; j++) {
-          t = (double) j * dt;
-          addInt(CubicInterpolate(fP, pts.pts[0], pts.pts[1], pts.pts[2], t));
-        }
+			for (i = 0; i < nbPts - 2; i++) {
+				for (int j = 0; j < interpStep; j++) {
+					t = (double)j * dt;
+					addInt(CosineInterpolate(pts.pts[i], pts.pts[i + 1], t));
+				}
+			}
+			for (int j = 0; j <= interpStep; j++) {
+				t = (double)j * dt;
+				addInt(LinearInterpolate(pts.pts[i], pts.pts[i + 1], t));
+			}
+			break;
 
-        // Middle segments
-        for (i = 1; i < nbPts - 2; i++) {
-          for (int j = 0; j < interpStep; j++) {
-            t = (double) j * dt;
-            addInt(CubicInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], pts.pts[i + 2], t));
-          }
-        }
 
-        // Last segment (extend tangent)
-        lP.x = 2.0 * pts.pts[i + 1].x - pts.pts[i].x;
-        lP.y = 2.0 * pts.pts[i + 1].y - pts.pts[i].y;
-        for (int j = 0; j <= interpStep; j++) {
-          t = (double) j * dt;
-          addInt(CubicInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], lP, t));
-        }
-        break;
+		case INTERPOLATE_CUBIC:
 
-      
-      case INTERPOLATE_HERMITE:
+			// First segment (extend tangent)
+			fP.x = 2.0 * pts.pts[0].x - pts.pts[1].x;
+			fP.y = 2.0 * pts.pts[0].y - pts.pts[1].y;
+			for (int j = 0; j < interpStep; j++) {
+				t = (double)j * dt;
+				addInt(CubicInterpolate(fP, pts.pts[0], pts.pts[1], pts.pts[2], t));
+			}
 
-        // First segment (extend tangent)
-        fP.x = 2.0 * pts.pts[0].x - pts.pts[1].x;
-        fP.y = 2.0 * pts.pts[0].y - pts.pts[1].y;
-        for (int j = 0; j < interpStep; j++) {
-          t = (double) j * dt;
-          addInt(HermiteInterpolate(fP, pts.pts[0], pts.pts[1], pts.pts[2], t, interpTension, interpBias));
-        }
+			// Middle segments
+			for (i = 1; i < nbPts - 2; i++) {
+				for (int j = 0; j < interpStep; j++) {
+					t = (double)j * dt;
+					addInt(CubicInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], pts.pts[i + 2], t));
+				}
+			}
 
-        // Middle segments
-        for (i = 1; i < nbPts - 2; i++) {
-          for (int j = 0; j < interpStep; j++) {
-            t = (double) j * dt;
-            addInt(HermiteInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], pts.pts[i + 2], t, interpTension, interpBias));
-          }
-        }
+			// Last segment (extend tangent)
+			lP.x = 2.0 * pts.pts[i + 1].x - pts.pts[i].x;
+			lP.y = 2.0 * pts.pts[i + 1].y - pts.pts[i].y;
+			for (int j = 0; j <= interpStep; j++) {
+				t = (double)j * dt;
+				addInt(CubicInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], lP, t));
+			}
+			break;
 
-        // Last segment (extend tangent)
-        lP.x = 2.0 * pts.pts[i + 1].x - pts.pts[i].x;
-        lP.y = 2.0 * pts.pts[i + 1].y - pts.pts[i].y;
-        for (int j = 0; j <= interpStep; j++) {
-          t = (double) j * dt;
-          addInt(HermiteInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], lP, t, interpTension, interpBias));
-        }
-        break;
 
-    }
+		case INTERPOLATE_HERMITE:
 
-    SAFE_FREE(pts.pts);
-    // Fetch
-    for(i=0;i<nbPts;i++) l=l->next;
+			// First segment (extend tangent)
+			fP.x = 2.0 * pts.pts[0].x - pts.pts[1].x;
+			fP.y = 2.0 * pts.pts[0].y - pts.pts[1].y;
+			for (int j = 0; j < interpStep; j++) {
+				t = (double)j * dt;
+				addInt(HermiteInterpolate(fP, pts.pts[0], pts.pts[1], pts.pts[2], t, interpTension, interpBias));
+			}
 
-  }
+			// Middle segments
+			for (i = 1; i < nbPts - 2; i++) {
+				for (int j = 0; j < interpStep; j++) {
+					t = (double)j * dt;
+					addInt(HermiteInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], pts.pts[i + 2], t, interpTension, interpBias));
+				}
+			}
+
+			// Last segment (extend tangent)
+			lP.x = 2.0 * pts.pts[i + 1].x - pts.pts[i].x;
+			lP.y = 2.0 * pts.pts[i + 1].y - pts.pts[i].y;
+			for (int j = 0; j <= interpStep; j++) {
+				t = (double)j * dt;
+				addInt(HermiteInterpolate(pts.pts[i - 1], pts.pts[i], pts.pts[i + 1], lP, t, interpTension, interpBias));
+			}
+			break;
+
+		}
+
+		SAFE_FREE(pts.pts);
+		// Fetch
+		for (i = 0; i < nbPts; i++) l = l->next;
+
+	}
 
 }

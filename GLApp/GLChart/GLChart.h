@@ -25,8 +25,8 @@ class GLButton;
 
 typedef struct {
 
-  GLCRectangle  rect;
-  GLDataView   *view;
+	GLCRectangle  rect;
+	GLDataView* view;
 
 } LabelRect;
 
@@ -34,135 +34,135 @@ class GLChart : public GLComponent {
 
 public:
 
-  // Construction
-  GLChart(int compId);
-  ~GLChart();
+	// Construction
+	GLChart(int compId);
+	~GLChart();
 
-  // Components method
-  GLAxis *GetXAxis();
-  GLAxis *GetY1Axis();
-  GLAxis *GetY2Axis();
-  void SetMargin(GLCDimension d);
-  GLCDimension GetMargin();
-  void SetBackground(GLColor c);
-  GLColor GetBackground();
-  void SetChartBackground(GLColor c);
-  GLColor GetChartBackground();
-  void SetPaintAxisFirst(bool b);
-  bool IsPaintAxisFirst();
-  void SetHeaderVisible(bool b);
-  void SetHeader(const char *s);
-  char *GetHeader();
-  void SetDisplayDuration(double v);
-  double GetDisplayDuration();
-  void SetHeaderColor(GLColor c);
-  void SetLabelVisible(bool b);
-  bool IsLabelVisible();
-  void SetLabelPlacement(int p);
-  int GetLabelPlacement();
-  void ShowOptionDialog();
-  void ShowDataOptionDialog(GLDataView *v);
-  void SaveFile();
-  void LoadFile();
-  void CopyAllToClipboard();
-  bool IsZoomed();
-  void EnterZoom();
-  void ExitZoom();
-  void UnselectAll();
-  void AddData(GLDataView *v, double x, double y);
-  void RemoveDataView(GLDataView *view);
+	// Components method
+	GLAxis* GetXAxis();
+	GLAxis* GetY1Axis();
+	GLAxis* GetY2Axis();
+	void SetMargin(GLCDimension d);
+	GLCDimension GetMargin();
+	void SetBackground(GLColor c);
+	GLColor GetBackground();
+	void SetChartBackground(GLColor c);
+	GLColor GetChartBackground();
+	void SetPaintAxisFirst(bool b);
+	bool IsPaintAxisFirst();
+	void SetHeaderVisible(bool b);
+	void SetHeader(const char* s);
+	char* GetHeader();
+	void SetDisplayDuration(double v);
+	double GetDisplayDuration();
+	void SetHeaderColor(GLColor c);
+	void SetLabelVisible(bool b);
+	bool IsLabelVisible();
+	void SetLabelPlacement(int p);
+	int GetLabelPlacement();
+	void ShowOptionDialog();
+	void ShowDataOptionDialog(GLDataView* v);
+	void SaveFile();
+	void LoadFile();
+	void CopyAllToClipboard();
+	bool IsZoomed();
+	void EnterZoom();
+	void ExitZoom();
+	void UnselectAll();
+	void AddData(GLDataView* v, double x, double y);
+	void RemoveDataView(GLDataView* view);
 
-  void PlotUserExpression(const std::string& formulaText, GLDataView** views, int& nbView);
+	void PlotUserExpression(const std::string& formulaText, GLDataView** views, int& nbView);
 
-  // Implementation
-  void ProcessMessage(GLComponent *src,int message) override;
-  void Paint();
-  void ManageEvent(SDL_Event *evt);
-  void InvalidateDeviceObjects();
-  void RestoreDeviceObjects();
+	// Implementation
+	void ProcessMessage(GLComponent* src, int message) override;
+	void Paint();
+	void ManageEvent(SDL_Event* evt);
+	void InvalidateDeviceObjects();
+	void RestoreDeviceObjects();
 
-    const std::vector<GLColor> &GetColorScheme() const;
-    GLColor GetFirstAvailableColor();
-    int GetFirstAvailableLinestyle(GLColor availableColor);
-    void SetColorSchemeColorblind();
-    void SetColorSchemeDefault();
+	const std::vector<GLColor>& GetColorScheme() const;
+	GLColor GetFirstAvailableColor();
+	int GetFirstAvailableLinestyle(GLColor availableColor);
+	void SetColorSchemeColorblind();
+	void SetColorSchemeDefault();
 
 private:
 
-  void paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w);
-  void paintLabelAndHeader();
-  void measureGraphItems(int w,int h,GLDataView **views,int nbView);
-  void paintZoomButton(int x,int y);
-  void paintZoomSelection(int x,int y);
-  GLCRectangle buildRect(int x1, int y1, int x2, int y2);
-  void mouseDragged(SDL_Event *evt);
-  void mouseReleased(SDL_Event *evt);
-  void mousePressed(SDL_Event *evt);
-  void redrawPanel();
-  char **buildPanelString(SearchInfo *si);
-  void showPanel(SearchInfo *si);
-  int  garbageData(GLDataView *v);
-  void setRect(GLCRectangle *r,int x,int y,int w,int h);
-  void paintChartBackground(int xOrg,int yOrg);
-  bool insideRect(LabelRect *r,int x,int y);
-  void showChartMenu(int x,int y);
+	void paintLabel(GLDataView* v, GLAxis* axis, int x, int y, int w);
+	void paintLabelAndHeader();
+	void measureGraphItems(int w, int h, GLDataView** views, int nbView);
+	void paintZoomButton(int x, int y);
+	void paintZoomSelection(int x, int y);
+	GLCRectangle buildRect(int x1, int y1, int x2, int y2);
+	void mouseDragged(SDL_Event* evt);
+	void mouseReleased(SDL_Event* evt);
+	void mousePressed(SDL_Event* evt);
+	void redrawPanel();
+	char** buildPanelString(SearchInfo* si);
+	void showPanel(SearchInfo* si);
+	int  garbageData(GLDataView* v);
+	void setRect(GLCRectangle* r, int x, int y, int w, int h);
+	void paintChartBackground(int xOrg, int yOrg);
+	bool insideRect(LabelRect* r, int x, int y);
+	void showChartMenu(int x, int y);
 
-  char header[256];
-  bool headerVisible;
-  GLColor headerColor;
+	char header[256];
+	bool headerVisible;
+	GLColor headerColor;
 
-  bool ipanelVisible;
-  bool paintAxisFirst;
-  GLColor chartBackground;
+	bool ipanelVisible;
+	bool paintAxisFirst;
+	GLColor chartBackground;
 
-  double displayDuration;
+	double displayDuration;
 
-  GLMenu *chartMenu;
-  GLMenu *dvMenuY1;
-  GLMenu *dvMenuY2;
+	GLMenu* chartMenu;
+	GLMenu* dvMenuY1;
+	GLMenu* dvMenuY2;
 
-  bool zoomDrag;
-  bool zoomDragAllowed;
-  int zoomX;
-  int zoomY;
-  GLButton *zoomButton;
+	bool zoomDrag;
+	bool zoomDragAllowed;
+	int zoomX;
+	int zoomY;
+	GLButton* zoomButton;
 
-  int lastX;
-  int lastY;
-  SearchInfo lastSearch;
+	int lastX;
+	int lastY;
+	SearchInfo lastSearch;
 
-  // Measurements stuff
-  GLCRectangle headerR;
-  GLCRectangle labelR;
-  GLCRectangle viewR;
-  GLCDimension margin;
+	// Measurements stuff
+	GLCRectangle headerR;
+	GLCRectangle labelR;
+	GLCRectangle viewR;
+	GLCDimension margin;
 
-  // Label placement
-  LabelRect labelRect[MAX_VIEWS];
-  bool labelVisible;
-  int  labelMode;
-  int labelHeight;
-  int labelWidth;
-  int labelPerLine;
-  int nbLabel;
-  int headerWidth;
-  int axisHeight;
-  int axisWidth;
-  int y1AxisThickness;
-  int y2AxisThickness;
-  int xAxisThickness;
-  int xAxisUpMargin;
+	// Label placement
+	LabelRect labelRect[MAX_VIEWS];
+	bool labelVisible;
+	int  labelMode;
+	int labelHeight;
+	int labelWidth;
+	int labelPerLine;
+	int nbLabel;
+	int headerWidth;
+	int axisHeight;
+	int axisWidth;
+	int y1AxisThickness;
+	int y2AxisThickness;
+	int xAxisThickness;
+	int xAxisUpMargin;
 
-  std::vector<GLColor> colors;
+	std::vector<GLColor> colors;
 
-  // Axis
-  GLAxis *xAxis;
-  GLAxis *y1Axis;
-  GLAxis *y2Axis;
+	// Axis
+	GLAxis* xAxis;
+	GLAxis* y1Axis;
+	GLAxis* y2Axis;
 
-  // Config dialog
-  GLChartOptions *chartOptions;
-  GLDataViewOptions *dvOptions;
+	// Config dialog
+	GLChartOptions* chartOptions;
+	GLDataViewOptions* dvOptions;
 
 };
 

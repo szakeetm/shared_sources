@@ -704,7 +704,7 @@ int GeometryTools::GetCommonEdgesHash(InterfaceGeometry *geometry, std::vector<C
             size_t hash = ((p11 << 16) | (p12));
             auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));
             if(!edge.second) {// edge already exists, append facetid
-                edge.first->second.push_back(facetId);
+                edge.first->second.push_back((int)facetId);
             }
         }
     }
@@ -753,7 +753,7 @@ int GeometryTools::GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<Co
             size_t hash = ((p11 << 16) | (p12));
             auto edge = hashMap.emplace(std::make_pair(hash, std::vector<int>{(int)facetId}));
             if(!edge.second) {// edge already exists, append facetid
-                edge.first->second.push_back(facetId);
+                edge.first->second.push_back((int)facetId);
             }
         }
     }

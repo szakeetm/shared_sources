@@ -378,7 +378,7 @@ public:
 	GLToggle* showIndex;
 	GLToggle* showVertexId;
 	GLButton* viewerMoreButton;
-	GLCombo* modeCombo;
+	GLCombo* physicsModeCombo;
 
 	GLButton* globalSettingsBtn;
 	GLButton* startSimu;
@@ -457,6 +457,7 @@ public:
 	bool AutoSave(bool crashSave = false);
 	void ResetAutoSaveTimer();
 	void CheckForRecovery();
+	void SetDefaultViews();
 
 	std::vector<CameraView>   views;
 	int     curViewer;

@@ -22,17 +22,17 @@
 
 double NaN;
 
-GLChart::GLChart(int compId):GLComponent(compId) {
+GLChart::GLChart(int compId) :GLComponent(compId) {
 
 	// Default
-	GLColor defColor(240,240,240);
-	SetBackgroundColor(240,240,240);
+	GLColor defColor(240, 240, 240);
+	SetBackgroundColor(240, 240, 240);
 	SetChartBackground(defColor);
 	SetOpaque(true);
 	headerColor.r = 0;
 	headerColor.g = 0;
 	headerColor.b = 0;
-	strcpy(header,"");
+	strcpy(header, "");
 	headerVisible = false;
 	labelVisible = true;
 	labelMode = LABEL_ROW;
@@ -40,9 +40,9 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	paintAxisFirst = true;
 	margin.width = 5;
 	margin.height = 5;
-	memset(&headerR,0,sizeof(GLCRectangle));
-	memset(&viewR,0,sizeof(GLCRectangle));
-	memset(&labelR,0,sizeof(GLCRectangle));
+	memset(&headerR, 0, sizeof(GLCRectangle));
+	memset(&viewR, 0, sizeof(GLCRectangle));
+	memset(&labelR, 0, sizeof(GLCRectangle));
 
 	xAxis = new GLAxis(this, HORIZONTAL_DOWN);
 	xAxis->SetAnnotation(TIME_ANNO);
@@ -58,18 +58,18 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 	zoomDragAllowed = false;
 
 	chartMenu = new GLMenu();
-	chartMenu->Add("Chart properties",MENU_CHARTPROP);
+	chartMenu->Add("Chart properties", MENU_CHARTPROP);
 	chartMenu->Add(nullptr);
 	chartMenu->Add("Dataview Y1");
 	chartMenu->Add("Dataview Y2");
 	chartMenu->Add(nullptr);
-	chartMenu->Add("Copy to Clipboard",MENU_COPYALL);
-	chartMenu->Add("Save file (csv,txt)",MENU_SAVETXT);
+	chartMenu->Add("Copy to Clipboard", MENU_COPYALL);
+	chartMenu->Add("Save file (csv,txt)", MENU_SAVETXT);
 	//chartMenu->Add("Load file (TXT)",MENU_LOADTXT);
 	dvMenuY1 = chartMenu->GetSubMenu("Dataview Y1");
 	dvMenuY2 = chartMenu->GetSubMenu("Dataview Y2");
 
-	zoomButton = new GLButton(0,"Zoom back");
+	zoomButton = new GLButton(0, "Zoom back");
 	zoomButton->SetVisible(false);
 	Add(zoomButton);
 
@@ -78,7 +78,7 @@ GLChart::GLChart(int compId):GLComponent(compId) {
 
 	// Load NaN constant
 	size_t iNaN = 0x7ff0000bad0000ffL;
-	memcpy(&NaN,&iNaN,8);
+	memcpy(&NaN, &iNaN, 8);
 	//bool test = isnan(NaN);
 }
 
@@ -94,7 +94,7 @@ GLChart::~GLChart() {
 * Return a handle to the x axis
 * @return Axis handle
 */
-GLAxis *GLChart::GetXAxis() {
+GLAxis* GLChart::GetXAxis() {
 	return xAxis;
 }
 
@@ -102,7 +102,7 @@ GLAxis *GLChart::GetXAxis() {
 * Return a handle to the left y axis
 * @return Axis handle
 */
-GLAxis *GLChart::GetY1Axis() {
+GLAxis* GLChart::GetY1Axis() {
 	return y1Axis;
 }
 
@@ -110,7 +110,7 @@ GLAxis *GLChart::GetY1Axis() {
 * Return a handle to the right y axis
 * @return Axis handle
 */
-GLAxis *GLChart::GetY2Axis() {
+GLAxis* GLChart::GetY2Axis() {
 	return y2Axis;
 }
 
@@ -120,7 +120,7 @@ GLAxis *GLChart::GetY2Axis() {
 * @see getMargin
 */
 void GLChart::SetMargin(GLCDimension d) {
-	margin  = d;
+	margin = d;
 }
 
 /**
@@ -133,12 +133,12 @@ GLCDimension GLChart::GetMargin() {
 }
 
 void GLChart::SetBackground(GLColor c) {
-	SetBackgroundColor(c.r,c.g,c.b);
+	SetBackgroundColor(c.r, c.g, c.b);
 }
 
 GLColor GLChart::GetBackground() {
 	GLColor c;
-	GetBackgroundColor(&(c.r),&(c.g),&(c.b));
+	GetBackgroundColor(&(c.r), &(c.g), &(c.b));
 	return c;
 }
 
@@ -189,10 +189,10 @@ void GLChart::SetHeaderVisible(bool b) {
 * @param s Graph header
 * @see getHeader
 */
-void GLChart::SetHeader(const char *s) {
-	if(s) strcpy(header,s);
-	else  strcpy(header,"");
-	SetHeaderVisible(strlen(header)>0);
+void GLChart::SetHeader(const char* s) {
+	if (s) strcpy(header, s);
+	else  strcpy(header, "");
+	SetHeaderVisible(strlen(header) > 0);
 }
 
 /**
@@ -200,7 +200,7 @@ void GLChart::SetHeader(const char *s) {
 * @return Graph header
 * @see setHeader
 */
-char *GLChart::GetHeader() {
+char* GLChart::GetHeader() {
 	return header;
 }
 
@@ -277,7 +277,7 @@ int GLChart::GetLabelPlacement() {
 */
 void GLChart::ShowOptionDialog() {
 
-	if( chartOptions==NULL ) chartOptions = new GLChartOptions(this);
+	if (chartOptions == NULL) chartOptions = new GLChartOptions(this);
 	chartOptions->DoModal();
 
 }
@@ -285,9 +285,9 @@ void GLChart::ShowOptionDialog() {
 /**
 * Display the data view option dialog.
 */
-void GLChart::ShowDataOptionDialog(GLDataView *v) {
+void GLChart::ShowDataOptionDialog(GLDataView* v) {
 
-	if( dvOptions==NULL ) dvOptions = new GLDataViewOptions(this);
+	if (dvOptions == NULL) dvOptions = new GLDataViewOptions(this);
 	dvOptions->SetDataView(v);
 	dvOptions->DoModal();
 
@@ -333,9 +333,9 @@ void GLChart::UnselectAll() {
 
 // Message management
 
-void GLChart::ProcessMessage(GLComponent *src,int message) {
+void GLChart::ProcessMessage(GLComponent* src, int message) {
 
-	if( src==zoomButton ) {
+	if (src == zoomButton) {
 		ExitZoom();
 	}
 
@@ -356,25 +356,25 @@ void GLChart::RestoreDeviceObjects() {
 }
 
 GLColor GLChart::GetFirstAvailableColor() {
-		std::vector<size_t> colorCount(colors.size(), 0);
-		int nbViews = GetY1Axis()->GetViewNumber();
-		for (int i = 0; i < nbViews; i++) {
-			GLColor c = GetY1Axis()->GetDataView(i)->GetColor();
-			for (size_t ii = 0; ii < colors.size(); ii++) {
-				if (c == colors[ii]) {
-					colorCount[ii]++;
-				}
+	std::vector<size_t> colorCount(colors.size(), 0);
+	int nbViews = GetY1Axis()->GetViewNumber();
+	for (int i = 0; i < nbViews; i++) {
+		GLColor c = GetY1Axis()->GetDataView(i)->GetColor();
+		for (size_t ii = 0; ii < colors.size(); ii++) {
+			if (c == colors[ii]) {
+				colorCount[ii]++;
 			}
 		}
-		//Pick first available color
-		size_t min = 1000; size_t minIndex = 0;
-		for (size_t i = 0; i < colorCount.size(); i++) {
-			if (colorCount[i] < min) {
-				min = colorCount[i];
-				minIndex = i;
-			}
+	}
+	//Pick first available color
+	size_t min = 1000; size_t minIndex = 0;
+	for (size_t i = 0; i < colorCount.size(); i++) {
+		if (colorCount[i] < min) {
+			min = colorCount[i];
+			minIndex = i;
 		}
-		return colors[minIndex];
+	}
+	return colors[minIndex];
 }
 
 /*!
@@ -383,45 +383,45 @@ GLColor GLChart::GetFirstAvailableColor() {
  * @return available style
  */
 int GLChart::GetFirstAvailableLinestyle(GLColor availableColor) {
-    std::list<std::pair<int,bool>> usedType = {
-            {STYLE_SOLID, false},
-            {STYLE_LONG_DASH, false},
-            {STYLE_DASH_DOT, false},
-            {STYLE_DASH, false},
-            {STYLE_DOT, false}
-    };
+	std::list<std::pair<int, bool>> usedType = {
+			{STYLE_SOLID, false},
+			{STYLE_LONG_DASH, false},
+			{STYLE_DASH_DOT, false},
+			{STYLE_DASH, false},
+			{STYLE_DOT, false}
+	};
 
-    int nbViews = GetY1Axis()->GetViewNumber();
-    for (int i = 0; i < nbViews; i++) {
-        if( GetY1Axis()->GetDataView(i)->GetColor() == availableColor){
-            int style = GetY1Axis()->GetDataView(i)->GetStyle();
-            auto it = std::find_if(usedType.begin(), usedType.end(), [&style](const std::pair<int,bool>& element){ return element.first == style;});
-            if(it != usedType.end()) it->second = true;
-        }
-    }
-    for(auto& usableType : usedType){
-        if(!usableType.second){
-            return usableType.first;
-        }
-    }
+	int nbViews = GetY1Axis()->GetViewNumber();
+	for (int i = 0; i < nbViews; i++) {
+		if (GetY1Axis()->GetDataView(i)->GetColor() == availableColor) {
+			int style = GetY1Axis()->GetDataView(i)->GetStyle();
+			auto it = std::find_if(usedType.begin(), usedType.end(), [&style](const std::pair<int, bool>& element) { return element.first == style; });
+			if (it != usedType.end()) it->second = true;
+		}
+	}
+	for (auto& usableType : usedType) {
+		if (!usableType.second) {
+			return usableType.first;
+		}
+	}
 
-    // use the first linestyle in case all of them have been used already
-    // there are enough options, so this or cycling through styles should not be necessary
-    return STYLE_SOLID;
+	// use the first linestyle in case all of them have been used already
+	// there are enough options, so this or cycling through styles should not be necessary
+	return STYLE_SOLID;
 
 }
 
-void GLChart::paintLabel(GLDataView *v,GLAxis *axis,int x,int y,int w) {
+void GLChart::paintLabel(GLDataView* v, GLAxis* axis, int x, int y, int w) {
 
-	int xm   = x + (w - labelWidth) / 2 + 2;
-	int ym   = y;
-	GLAxis::DrawSampleLine(posX+xm,posY+ym + labelHeight/2 + 1, v);
+	int xm = x + (w - labelWidth) / 2 + 2;
+	int ym = y;
+	GLAxis::DrawSampleLine(posX + xm, posY + ym + labelHeight / 2 + 1, v);
 	GLColor c = v->GetLabelColor();
-	GLToolkit::GetDialogFont()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-	GLToolkit::GetDialogFont()->GLDrawText(posX+xm + 44,posY+ym + 2,v->GetExtendedName(),false);
+	GLToolkit::GetDialogFont()->SetTextColor((float)c.r / 255.0f, (float)c.g / 255.0f, (float)c.b / 255.0f);
+	GLToolkit::GetDialogFont()->GLDrawText(posX + xm + 44, posY + ym + 2, v->GetExtendedName(), false);
 	labelRect[nbLabel].rect.x = xm;
 	labelRect[nbLabel].rect.y = ym;
-	labelRect[nbLabel].rect.width  = labelWidth;
+	labelRect[nbLabel].rect.width = labelWidth;
 	labelRect[nbLabel].rect.height = labelHeight;
 	labelRect[nbLabel].view = v;
 	nbLabel++;
@@ -435,19 +435,19 @@ void GLChart::paintLabelAndHeader() {
 	int nbv2 = y2Axis->GetViewNumber();
 
 	// Draw header
-	if (headerR.width>0) {
+	if (headerR.width > 0) {
 		int xpos = ((headerR.width - headerWidth) / 2);
 		GLColor c = headerColor;
-		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r/255.0f,(float)c.g/255.0f,(float)c.b/255.0f);
-		GLToolkit::GetDialogFontBold()->GLDrawText(posX+xpos,posY+headerR.y + 1,header,false);
+		GLToolkit::GetDialogFontBold()->SetTextColor((float)c.r / 255.0f, (float)c.g / 255.0f, (float)c.b / 255.0f);
+		GLToolkit::GetDialogFontBold()->GLDrawText(posX + xpos, posY + headerR.y + 1, header, false);
 	}
 
 	// Draw labels
 	nbLabel = 0;
-	if (labelR.width>0) {
+	if (labelR.width > 0) {
 
-		GLDataView *v;
-		int i,k = 0;
+		GLDataView* v;
+		int i, k = 0;
 		int totLabel = 0;
 		for (i = 0; i < nbv1; i++) {
 			v = y1Axis->GetDataView(i);
@@ -458,7 +458,7 @@ void GLChart::paintLabelAndHeader() {
 			if (v->IsLabelVisible()) totLabel++;
 		}
 
-		if( labelMode==LABEL_ROW && labelPerLine>1 ) {
+		if (labelMode == LABEL_ROW && labelPerLine > 1) {
 
 			int rowWidth = labelR.width / labelPerLine;
 
@@ -466,9 +466,9 @@ void GLChart::paintLabelAndHeader() {
 			for (i = 0; i < nbv1; i++) {
 				v = y1Axis->GetDataView(i);
 				if (v->IsLabelVisible()) {
-					int x = (k%labelPerLine) * rowWidth + labelR.x;
-					int y = (k/labelPerLine) * labelHeight + labelR.y;
-					paintLabel(v,y1Axis,x,y,rowWidth);
+					int x = (k % labelPerLine) * rowWidth + labelR.x;
+					int y = (k / labelPerLine) * labelHeight + labelR.y;
+					paintLabel(v, y1Axis, x, y, rowWidth);
 					k++;
 				}
 			}
@@ -476,21 +476,22 @@ void GLChart::paintLabelAndHeader() {
 			for (i = 0; i < nbv2; i++) {
 				v = y2Axis->GetDataView(i);
 				if (v->IsLabelVisible()) {
-					int x = (k%labelPerLine) * rowWidth + labelR.x;
-					int y = (k/labelPerLine) * labelHeight + labelR.y;
-					paintLabel(v,y2Axis,x,y,rowWidth);
+					int x = (k % labelPerLine) * rowWidth + labelR.x;
+					int y = (k / labelPerLine) * labelHeight + labelR.y;
+					paintLabel(v, y2Axis, x, y, rowWidth);
 					k++;
 				}
 			}
 
-		} else {
+		}
+		else {
 
 			// Draw labels (in column)
 			for (i = 0; i < nbv1; i++) {
 				v = y1Axis->GetDataView(i);
 				if (v->IsLabelVisible()) {
-					int y = labelR.y + (labelR.height-totLabel*labelHeight)/2  + labelHeight * k;
-					paintLabel(v,y1Axis,labelR.x,y,labelR.width);
+					int y = labelR.y + (labelR.height - totLabel * labelHeight) / 2 + labelHeight * k;
+					paintLabel(v, y1Axis, labelR.x, y, labelR.width);
 					k++;
 				}
 			}
@@ -498,8 +499,8 @@ void GLChart::paintLabelAndHeader() {
 			for (i = 0; i < nbv2; i++) {
 				v = y2Axis->GetDataView(i);
 				if (v->IsLabelVisible()) {
-					int y = labelR.y + (labelR.height-totLabel*labelHeight)/2 + labelHeight * k;
-					paintLabel(v,y2Axis,labelR.x,y,labelR.width);
+					int y = labelR.y + (labelR.height - totLabel * labelHeight) / 2 + labelHeight * k;
+					paintLabel(v, y2Axis, labelR.x, y, labelR.width);
 					k++;
 				}
 			}
@@ -510,7 +511,7 @@ void GLChart::paintLabelAndHeader() {
 
 }
 
-void GLChart::setRect(GLCRectangle *r,int x,int y,int w,int h) {
+void GLChart::setRect(GLCRectangle* r, int x, int y, int w, int h) {
 	r->x = x;
 	r->y = y;
 	r->width = w;
@@ -518,7 +519,7 @@ void GLChart::setRect(GLCRectangle *r,int x,int y,int w,int h) {
 }
 
 // Compute size of graph items (Axe,label,header,....
-void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
+void GLChart::measureGraphItems(int w, int h, GLDataView** views, int nbView) {
 
 	int i;
 	int MX = margin.width;
@@ -526,10 +527,10 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 	int labelTHeight = 0; // Total label height
 
 	// Reset sizes ------------------------------------------------------
-	memset(&headerR,0,sizeof(GLCRectangle));
+	memset(&headerR, 0, sizeof(GLCRectangle));
 	headerR.height = 10;
-	memset(&viewR,0,sizeof(GLCRectangle));
-	memset(&labelR,0,sizeof(GLCRectangle));
+	memset(&viewR, 0, sizeof(GLCRectangle));
+	memset(&labelR, 0, sizeof(GLCRectangle));
 	labelWidth = 0;
 	headerWidth = 0;
 	axisWidth = 0;
@@ -538,25 +539,25 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 	y2AxisThickness = 0;
 
 	// Measure header ------------------------------------------------------
-	if ( headerVisible && (strlen(header)>0) ) {
+	if (headerVisible && (strlen(header) > 0)) {
 		headerWidth = GLToolkit::GetDialogFontBold()->GetTextWidth(header);
 		int height = GLToolkit::GetDialogFontBold()->GetTextHeight();
-		setRect(&headerR,MX , MY , w-2*MX , height + 10);
+		setRect(&headerR, MX, MY, w - 2 * MX, height + 10);
 	}
 
 	// Compute label number ------------------------------------------------------
-	nbLabel=0;
+	nbLabel = 0;
 	for (i = 0; i < y1Axis->GetViewNumber(); i++)
-		if( y1Axis->GetDataView(i)->IsLabelVisible() )
+		if (y1Axis->GetDataView(i)->IsLabelVisible())
 			nbLabel++;
 	for (i = 0; i < y2Axis->GetViewNumber(); i++)
-		if( y2Axis->GetDataView(i)->IsLabelVisible() )
+		if (y2Axis->GetDataView(i)->IsLabelVisible())
 			nbLabel++;
 
 	// Measure labels ------------------------------------------------------
-	if (labelVisible && (nbLabel>0)) {
+	if (labelVisible && (nbLabel > 0)) {
 
-		GLDataView *v;
+		GLDataView* v;
 		i = 0;
 
 		double maxLength = 0;
@@ -577,31 +578,32 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 
 		labelHeight = GLToolkit::GetDialogFont()->GetTextHeight() + 2;
 		labelTHeight = (labelHeight * nbLabel) + 10;
-		labelWidth = (int) (maxLength + 55); // sample line width & margin
+		labelWidth = (int)(maxLength + 55); // sample line width & margin
 
-		switch( labelMode ) {
+		switch (labelMode) {
 		case LABEL_UP:
-			setRect(&labelR,MX ,MY + headerR.height ,w-2*MX ,labelTHeight);
+			setRect(&labelR, MX, MY + headerR.height, w - 2 * MX, labelTHeight);
 			break;
 		case LABEL_DOWN:
-			setRect(&labelR,MX ,h-MY-labelTHeight, w-2*MX, labelTHeight);
+			setRect(&labelR, MX, h - MY - labelTHeight, w - 2 * MX, labelTHeight);
 			break;
 		case LABEL_RIGHT:
-			setRect(&labelR,w-MX-labelWidth+2, MY + headerR.height, labelWidth, h-2*MY-headerR.height);
+			setRect(&labelR, w - MX - labelWidth + 2, MY + headerR.height, labelWidth, h - 2 * MY - headerR.height);
 			break;
 		case LABEL_LEFT:
-			setRect(&labelR,MX, MY + headerR.height, labelWidth, h - 2 * MY - headerR.height);
+			setRect(&labelR, MX, MY + headerR.height, labelWidth, h - 2 * MY - headerR.height);
 			break;
 		case LABEL_ROW:
-			labelPerLine = w/labelWidth;
-			if(labelPerLine>nbLabel) labelPerLine = nbLabel;
-			if(labelPerLine<=1) {
+			labelPerLine = w / labelWidth;
+			if (labelPerLine > nbLabel) labelPerLine = nbLabel;
+			if (labelPerLine <= 1) {
 				// Revert to classic LABEL_DOWN
-				setRect(&labelR,MX ,h-MY-labelTHeight, w-2*MX, labelTHeight);
-			} else {
-				labelTHeight = labelHeight*(nbLabel/labelPerLine);
-				if(nbLabel%labelPerLine!=0) labelTHeight += labelHeight;
-				setRect(&labelR,MX ,h-MY-labelTHeight, w-2*MX, labelTHeight);
+				setRect(&labelR, MX, h - MY - labelTHeight, w - 2 * MX, labelTHeight);
+			}
+			else {
+				labelTHeight = labelHeight * (nbLabel / labelPerLine);
+				if (nbLabel % labelPerLine != 0) labelTHeight += labelHeight;
+				setRect(&labelR, MX, h - MY - labelTHeight, w - 2 * MX, labelTHeight);
 			}
 			break;
 		}
@@ -611,61 +613,63 @@ void GLChart::measureGraphItems(int w,int h,GLDataView **views,int nbView) {
 	// Measure view Rectangle --------------------------------------------
 	switch (labelMode) {
 	case LABEL_UP:
-		setRect(&viewR,MX, MY + headerR.height + labelR.height , w - 2 * MX, h - 2*MY - headerR.height - labelR.height);
+		setRect(&viewR, MX, MY + headerR.height + labelR.height, w - 2 * MX, h - 2 * MY - headerR.height - labelR.height);
 		break;
 	case LABEL_DOWN:
 	case LABEL_ROW:
-		setRect(&viewR,MX, MY + headerR.height , w - 2 * MX, h - 2 * MY - headerR.height - labelR.height);
+		setRect(&viewR, MX, MY + headerR.height, w - 2 * MX, h - 2 * MY - headerR.height - labelR.height);
 		break;
 	case LABEL_RIGHT:
-		setRect(&viewR,MX, MY + headerR.height , w - 2 * MX - labelR.width , h - 2 * MY - headerR.height);
+		setRect(&viewR, MX, MY + headerR.height, w - 2 * MX - labelR.width, h - 2 * MY - headerR.height);
 		break;
 	case LABEL_LEFT:
-		setRect(&viewR,MX + labelR.width, MY + headerR.height, w - 2 * MX - labelR.width, h - 2 * MY - headerR.height);
+		setRect(&viewR, MX + labelR.width, MY + headerR.height, w - 2 * MX - labelR.width, h - 2 * MY - headerR.height);
 		break;
 	}
 
 	// Measure Axis ------------------------------------------------------
-	xAxisThickness =  xAxis->GetLabelFontDimension();
-	if(xAxis->GetOrientation()==HORIZONTAL_UP) {
-		xAxisUpMargin = xAxisThickness/2;
-	} else {
+	xAxisThickness = xAxis->GetLabelFontDimension();
+	if (xAxis->GetOrientation() == HORIZONTAL_UP) {
+		xAxisUpMargin = xAxisThickness / 2;
+	}
+	else {
 		xAxisUpMargin = 0;
 	}
 
 	axisHeight = viewR.height - xAxisThickness;
 
-	xAxis->ComputeXScale(views,nbView);
+	xAxis->ComputeXScale(views, nbView);
 	y1Axis->MeasureAxis(0, axisHeight);
 	y2Axis->MeasureAxis(0, axisHeight);
 	y1AxisThickness = y1Axis->GetThickness();
-	if(y1AxisThickness==0) y1AxisThickness = 5;
+	if (y1AxisThickness == 0) y1AxisThickness = 5;
 	y2AxisThickness = y2Axis->GetThickness();
-	if(y2AxisThickness==0) y2AxisThickness = 5;
+	if (y2AxisThickness == 0) y2AxisThickness = 5;
 
-	axisWidth = viewR.width - (y1AxisThickness+y2AxisThickness);
+	axisWidth = viewR.width - (y1AxisThickness + y2AxisThickness);
 
 	xAxis->MeasureAxis(axisWidth, 0);
 
 }
 
 // Paint the zoom mode label
-void GLChart::paintZoomButton(int x,int y) {
+void GLChart::paintZoomButton(int x, int y) {
 
-	if( IsZoomed() ) {
-		zoomButton->SetBounds(posX+x+7,posY+y+5,80,19);
-		zoomButton->SetVisible(80<(axisWidth-7) && 19<(axisHeight-5));
-	} else {
+	if (IsZoomed()) {
+		zoomButton->SetBounds(posX + x + 7, posY + y + 5, 80, 19);
+		zoomButton->SetVisible(80 < (axisWidth - 7) && 19 < (axisHeight - 5));
+	}
+	else {
 		zoomButton->SetVisible(false);
 	}
 
-	if( zoomButton->IsVisible() )
+	if (zoomButton->IsVisible())
 		PaintComponents();
 
 }
 
 // Paint the zoom rectangle
-void GLChart::paintZoomSelection(int x,int y) {
+void GLChart::paintZoomSelection(int x, int y) {
 
 	if (zoomDrag) {
 		GLCRectangle r = buildRect(zoomX, zoomY, lastX, lastY);
@@ -675,27 +679,27 @@ void GLChart::paintZoomSelection(int x,int y) {
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_BLEND);
 		glLineWidth(1.0f);
-		glColor3f(0.0f,0.0f,0.0f);
+		glColor3f(0.0f, 0.0f, 0.0f);
 		glBegin(GL_LINE_STRIP);
-		_glVertex2i(r.x+x        ,r.y+y);
-		_glVertex2i(r.x+r.width+x,r.y+y);
-		_glVertex2i(r.x+r.width+x,r.y+r.height+y);
-		_glVertex2i(r.x+x        ,r.y+r.height+y);
-		_glVertex2i(r.x+x        ,r.y+y);
+		_glVertex2i(r.x + x, r.y + y);
+		_glVertex2i(r.x + r.width + x, r.y + y);
+		_glVertex2i(r.x + r.width + x, r.y + r.height + y);
+		_glVertex2i(r.x + x, r.y + r.height + y);
+		_glVertex2i(r.x + x, r.y + y);
 		glEnd();
 	}
 
 }
 
-void GLChart::paintChartBackground(int xOrg,int yOrg) {
+void GLChart::paintChartBackground(int xOrg, int yOrg) {
 
 	int rb;
 	int gb;
 	int bb;
-	GetBackgroundColor(&rb,&gb,&bb);
-	if( ((chartBackground.r != rb) || (chartBackground.g != gb) || (chartBackground.b != bb))
-		&& axisWidth > 0 && axisHeight > 0 ) {
-			GLToolkit::DrawBox(xOrg, yOrg - axisHeight, axisWidth, axisHeight,chartBackground.r,chartBackground.g,chartBackground.b);
+	GetBackgroundColor(&rb, &gb, &bb);
+	if (((chartBackground.r != rb) || (chartBackground.g != gb) || (chartBackground.b != bb))
+		&& axisWidth > 0 && axisHeight > 0) {
+		GLToolkit::DrawBox(xOrg, yOrg - axisHeight, axisWidth, axisHeight, chartBackground.r, chartBackground.g, chartBackground.b);
 	}
 
 }
@@ -706,7 +710,7 @@ void GLChart::paintChartBackground(int xOrg,int yOrg) {
 */
 void GLChart::Paint() {
 
-	if(!parent) return;
+	if (!parent) return;
 	GLComponent::Paint();
 
 	// Create a vector containing all views
@@ -714,12 +718,12 @@ void GLChart::Paint() {
 	int nbv2 = y2Axis->GetViewNumber();
 	int nbView = nbv1 + nbv2;
 
-	GLDataView *views[MAX_VIEWS];
-	for(int i=0;i<nbv1;i++) views[i]      = y1Axis->GetDataView(i);
-	for(int i=0;i<nbv2;i++) views[nbv1+i] = y2Axis->GetDataView(i);
+	GLDataView* views[MAX_VIEWS];
+	for (int i = 0; i < nbv1; i++) views[i] = y1Axis->GetDataView(i);
+	for (int i = 0; i < nbv2; i++) views[nbv1 + i] = y2Axis->GetDataView(i);
 
 	// Compute bounds of label and graph
-	measureGraphItems(width,height,views,nbView);
+	measureGraphItems(width, height, views, nbView);
 
 	// Draw label and header
 	paintLabelAndHeader();
@@ -730,29 +734,30 @@ void GLChart::Paint() {
 
 	int xOrgY1 = viewR.x;
 	int xOrgY2 = viewR.x + y1AxisThickness + axisWidth;
-	int yOrgY  = viewR.y + xAxisUpMargin;
+	int yOrgY = viewR.y + xAxisUpMargin;
 
-	paintChartBackground(posX+xOrg,posY+yOrg);
+	paintChartBackground(posX + xOrg, posY + yOrg);
 
 	// Paint zoom stuff
-	paintZoomSelection(posX,posY);
+	paintZoomSelection(posX, posY);
 
 	if (paintAxisFirst) {
 
 		//Draw axes
-		y1Axis->PaintAxis(posX+xOrgY1, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y2Axis->IsVisible() || nbv2==0);
-		y2Axis->PaintAxis(posX+xOrgY2, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y1Axis->IsVisible() || nbv1==0);
-		if( xAxis->GetPosition()==HORIZONTAL_ORG2)
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),true);
+		y1Axis->PaintAxis(posX + xOrgY1, posY + yOrgY, xAxis, posX + xOrg, posY + yOrg, GetBackground(), !y2Axis->IsVisible() || nbv2 == 0);
+		y2Axis->PaintAxis(posX + xOrgY2, posY + yOrgY, xAxis, posX + xOrg, posY + yOrg, GetBackground(), !y1Axis->IsVisible() || nbv1 == 0);
+		if (xAxis->GetPosition() == HORIZONTAL_ORG2)
+			xAxis->PaintAxis(posX + xOrg, posY + yOrg, y2Axis, 0, 0, GetBackground(), true);
 		else
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),true);
+			xAxis->PaintAxis(posX + xOrg, posY + yOrg, y1Axis, 0, 0, GetBackground(), true);
 
 		//Draw data
 		y1Axis->PaintDataViews(xAxis, xOrg, yOrg);
 		y2Axis->PaintDataViews(xAxis, xOrg, yOrg);
 		GetWindow()->ClipToWindow();
 
-	} else {
+	}
+	else {
 
 		//Draw data
 		y1Axis->PaintDataViews(xAxis, xOrg, yOrg);
@@ -760,17 +765,17 @@ void GLChart::Paint() {
 		GetWindow()->ClipToWindow();
 
 		//Draw axes
-		y1Axis->PaintAxis(posX+xOrgY1, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y2Axis->IsVisible() || nbv2==0);
-		y2Axis->PaintAxis(posX+xOrgY2, posY+yOrgY, xAxis, posX+xOrg, posY+yOrg, GetBackground(),!y1Axis->IsVisible() || nbv1==0);
+		y1Axis->PaintAxis(posX + xOrgY1, posY + yOrgY, xAxis, posX + xOrg, posY + yOrg, GetBackground(), !y2Axis->IsVisible() || nbv2 == 0);
+		y2Axis->PaintAxis(posX + xOrgY2, posY + yOrgY, xAxis, posX + xOrg, posY + yOrg, GetBackground(), !y1Axis->IsVisible() || nbv1 == 0);
 		if (xAxis->GetPosition() == HORIZONTAL_ORG2)
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y2Axis, 0, 0, GetBackground(),true);
+			xAxis->PaintAxis(posX + xOrg, posY + yOrg, y2Axis, 0, 0, GetBackground(), true);
 		else
-			xAxis->PaintAxis(posX+xOrg, posY+yOrg, y1Axis, 0, 0, GetBackground(),true);
+			xAxis->PaintAxis(posX + xOrg, posY + yOrg, y1Axis, 0, 0, GetBackground(), true);
 
 	}
 
 	redrawPanel();
-	paintZoomButton(xOrg,yOrgY);
+	paintZoomButton(xOrg, yOrgY);
 
 }
 
@@ -781,15 +786,18 @@ GLCRectangle GLChart::buildRect(int x1, int y1, int x2, int y2) {
 
 	if (x1 < x2) {
 		if (y1 < y2) {
-			setRect(&r,x1, y1, x2 - x1, y2 - y1);
-		} else {
-			setRect(&r,x1, y2, x2 - x1, y1 - y2);
+			setRect(&r, x1, y1, x2 - x1, y2 - y1);
 		}
-	} else {
+		else {
+			setRect(&r, x1, y2, x2 - x1, y1 - y2);
+		}
+	}
+	else {
 		if (y1 < y2) {
-			setRect(&r,x2, y1, x1 - x2, y2 - y1);
-		} else {
-			setRect(&r,x2, y2, x1 - x2, y1 - y2);
+			setRect(&r, x2, y1, x1 - x2, y2 - y1);
+		}
+		else {
+			setRect(&r, x2, y2, x1 - x2, y1 - y2);
 		}
 	}
 
@@ -798,13 +806,13 @@ GLCRectangle GLChart::buildRect(int x1, int y1, int x2, int y2) {
 
 // ************************************************************************
 // Event management
-void GLChart::ManageEvent(SDL_Event *evt) {
+void GLChart::ManageEvent(SDL_Event* evt) {
 
 	GLContainer::ManageEvent(evt);
 	GLContainer::RelayEvent(evt);
 
-	if( !evtProcessed ) {
-		switch(evt->type) {
+	if (!evtProcessed) {
+		switch (evt->type) {
 		case SDL_MOUSEBUTTONUP:
 			mouseReleased(evt);
 			break;
@@ -821,60 +829,63 @@ void GLChart::ManageEvent(SDL_Event *evt) {
 
 }
 
-bool GLChart::insideRect(LabelRect *r,int x,int y) {
+bool GLChart::insideRect(LabelRect* r, int x, int y) {
 	return (x >= r->rect.x) && (x <= (r->rect.width + r->rect.x)) &&
 		(y >= r->rect.y) && (y <= (r->rect.height + r->rect.y));
 }
 
-void GLChart::mouseDragged(SDL_Event *evt) {
-	int ex = GetWindow()->GetX(this,evt);
-	int ey = GetWindow()->GetY(this,evt);
+void GLChart::mouseDragged(SDL_Event* evt) {
+	int ex = GetWindow()->GetX(this, evt);
+	int ey = GetWindow()->GetY(this, evt);
 	if (zoomDrag) {
 		lastX = ex;
 		lastY = ey;
 	}
 }
 
-void GLChart::mouseReleased(SDL_Event *evt) {
-	int ex = GetWindow()->GetX(this,evt);
-	int ey = GetWindow()->GetY(this,evt);
+void GLChart::mouseReleased(SDL_Event* evt) {
+	int ex = GetWindow()->GetX(this, evt);
+	int ey = GetWindow()->GetY(this, evt);
 	if (zoomDrag) {
 		GLCRectangle r = buildRect(zoomX, zoomY, ex, ey);
 		zoomDrag = false;
-		xAxis->Zoom(r.x+posX, r.x+r.width+posX);
-		y1Axis->Zoom(r.y+posY, r.y + r.height+posY);
-		y2Axis->Zoom(r.y+posY, r.y + r.height+posY);
+		xAxis->Zoom(r.x + posX, r.x + r.width + posX);
+		y1Axis->Zoom(r.y + posY, r.y + r.height + posY);
+		y2Axis->Zoom(r.y + posY, r.y + r.height + posY);
 	}
 	ipanelVisible = false;
 }
 
-void GLChart::showChartMenu(int x,int y) {
+void GLChart::showChartMenu(int x, int y) {
 
 	int menuId = chartMenu->Track(GetWindow(), x, y);
-	if( menuId>=0 ) {
+	if (menuId >= 0) {
 		int nbV1 = y1Axis->GetViewNumber();
 		int nbV2 = y2Axis->GetViewNumber();
-		if( menuId == MENU_CHARTPROP ) {
+		if (menuId == MENU_CHARTPROP) {
 			ShowOptionDialog();
-		} else if( menuId == MENU_COPYALL ) {
+		}
+		else if (menuId == MENU_COPYALL) {
 			CopyAllToClipboard();
-		} else if( menuId == MENU_SAVETXT ) {
+		}
+		else if (menuId == MENU_SAVETXT) {
 			SaveFile();
 		}/* else if( menuId == MENU_LOADTXT ) {
 			LoadFile();
-		}*/ else if( menuId>=MENU_DVPROPY1 && menuId<MENU_DVPROPY1+nbV1) { 
-			ShowDataOptionDialog(y1Axis->GetDataView(menuId-MENU_DVPROPY1));
-		} else if( menuId>=MENU_DVPROPY2 && menuId<MENU_DVPROPY2+nbV2) {
-			ShowDataOptionDialog(y2Axis->GetDataView(menuId-MENU_DVPROPY2));
+		}*/ else if (menuId >= MENU_DVPROPY1 && menuId < MENU_DVPROPY1 + nbV1) {
+			ShowDataOptionDialog(y1Axis->GetDataView(menuId - MENU_DVPROPY1));
+		}
+		else if (menuId >= MENU_DVPROPY2 && menuId < MENU_DVPROPY2 + nbV2) {
+			ShowDataOptionDialog(y2Axis->GetDataView(menuId - MENU_DVPROPY2));
 		}
 	}
 
 }
 
-void GLChart::mousePressed(SDL_Event *evt) {
+void GLChart::mousePressed(SDL_Event* evt) {
 
-	int ex = GetWindow()->GetX(this,evt);
-	int ey = GetWindow()->GetY(this,evt);
+	int ex = GetWindow()->GetX(this, evt);
+	int ey = GetWindow()->GetY(this, evt);
 
 	// Left button click
 	if (evt->button.button == SDL_BUTTON_LEFT) {
@@ -890,10 +901,10 @@ void GLChart::mousePressed(SDL_Event *evt) {
 		}
 
 		// Look for the nearest value on each dataView
-		SearchInfo *si;
-		SearchInfo *msi = NULL;
-		msi = y1Axis->SearchNearest(ex+posX, ey+posY, xAxis);
-		si = y2Axis->SearchNearest(ex+posX, ey+posY, xAxis);
+		SearchInfo* si;
+		SearchInfo* msi = NULL;
+		msi = y1Axis->SearchNearest(ex + posX, ey + posY, xAxis);
+		si = y2Axis->SearchNearest(ex + posX, ey + posY, xAxis);
 		if (si->found && si->dist < msi->dist) {
 			delete msi;
 			msi = si;
@@ -905,8 +916,8 @@ void GLChart::mousePressed(SDL_Event *evt) {
 		int i = 0;
 		bool found = false;
 		while (i < nbLabel && !found) {
-			LabelRect *r = labelRect + i;
-			found = insideRect(r,ex,ey);
+			LabelRect* r = labelRect + i;
+			found = insideRect(r, ex, ey);
 			if (found) {
 				//Display the Dataview options
 				ShowDataOptionDialog(r->view);
@@ -922,27 +933,29 @@ void GLChart::mousePressed(SDL_Event *evt) {
 		char tmp[64];
 
 		dvMenuY1->Clear();
-		for(int i=0;i<y1Axis->GetViewNumber();i++) {
-			char *name = y1Axis->GetDataView(i)->GetName();
-			if(strlen(name)>0) {
-				dvMenuY1->Add(name,MENU_DVPROPY1+i);
-			} else {
-				sprintf(tmp,"Dataview #%d",i);
-				dvMenuY1->Add(tmp,MENU_DVPROPY1+i);
+		for (int i = 0; i < y1Axis->GetViewNumber(); i++) {
+			char* name = y1Axis->GetDataView(i)->GetName();
+			if (strlen(name) > 0) {
+				dvMenuY1->Add(name, MENU_DVPROPY1 + i);
+			}
+			else {
+				sprintf(tmp, "Dataview #%d", i);
+				dvMenuY1->Add(tmp, MENU_DVPROPY1 + i);
 			}
 		}
 		dvMenuY2->Clear();
-		for(int i=0;i<y2Axis->GetViewNumber();i++) {
-			char *name = y2Axis->GetDataView(i)->GetName();
-			if(strlen(name)>0) {
-				dvMenuY2->Add(name,MENU_DVPROPY2+i);
-			} else {
-				sprintf(tmp,"Dataview #%d",i);
-				dvMenuY2->Add(tmp,MENU_DVPROPY2+i);
+		for (int i = 0; i < y2Axis->GetViewNumber(); i++) {
+			char* name = y2Axis->GetDataView(i)->GetName();
+			if (strlen(name) > 0) {
+				dvMenuY2->Add(name, MENU_DVPROPY2 + i);
+			}
+			else {
+				sprintf(tmp, "Dataview #%d", i);
+				dvMenuY2->Add(tmp, MENU_DVPROPY2 + i);
 			}
 		}
 
-		showChartMenu(posX+ex, posY+ey);
+		showChartMenu(posX + ex, posY + ey);
 
 	}
 
@@ -956,17 +969,18 @@ void GLChart::redrawPanel() {
 
 	// Udpate serachInfo
 	GLCPoint p;
-	GLDataView *vy = lastSearch.dataView;
-	GLDataView *vx = lastSearch.xdataView;
-	DataList *dy = lastSearch.value;
-	DataList *dx = lastSearch.xvalue;
-	GLAxis *yaxis = lastSearch.axis;
+	GLDataView* vy = lastSearch.dataView;
+	GLDataView* vx = lastSearch.xdataView;
+	DataList* dy = lastSearch.value;
+	DataList* dx = lastSearch.xvalue;
+	GLAxis* yaxis = lastSearch.axis;
 
 	if (xAxis->IsXY()) {
 		p = yaxis->transform(vx->GetTransformedValue(dx->y),
 			vy->GetTransformedValue(dy->y),
 			xAxis);
-	} else {
+	}
+	else {
 		p = yaxis->transform(dy->x,
 			vy->GetTransformedValue(dy->y),
 			xAxis);
@@ -978,32 +992,34 @@ void GLChart::redrawPanel() {
 	showPanel(&lastSearch);
 }
 
-char **GLChart::buildPanelString(SearchInfo *si) {
+char** GLChart::buildPanelString(SearchInfo* si) {
 
-	static char *str[4];
+	static char* str[4];
 	char tmp[256];
 
-	char *xValue;
+	char* xValue;
 	if (xAxis->GetAnnotation() == TIME_ANNO) {
-		sprintf(tmp,"Time= %s",xAxis->FormatTimeValue(si->value->x));
+		sprintf(tmp, "Time= %s", xAxis->FormatTimeValue(si->value->x));
 		xValue = strdup(tmp);
-	} else {
-		sprintf(tmp,"X= %g",si->value->x);
+	}
+	else {
+		sprintf(tmp, "X= %g", si->value->x);
 		xValue = strdup(tmp);
 	}
 	if (xAxis->IsXY()) {
-		sprintf(tmp,"%s (Y%d)",si->dataView->GetExtendedName(),(si->axis==y1Axis?1:2));
+		sprintf(tmp, "%s (Y%d)", si->dataView->GetExtendedName(), (si->axis == y1Axis ? 1 : 2));
 		str[0] = strdup(tmp);
 		str[1] = xValue;
-		sprintf(tmp,"X= %s",si->xdataView->FormatValue(si->xdataView->GetTransformedValue(si->xvalue->y)).c_str());
+		sprintf(tmp, "X= %s", si->xdataView->FormatValue(si->xdataView->GetTransformedValue(si->xvalue->y)).c_str());
 		str[2] = strdup(tmp);
-		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
+		sprintf(tmp, "Y= %s %s", si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
 		str[3] = strdup(tmp);
-	} else {
-		sprintf(tmp,"%s (Y%d)",si->dataView->GetExtendedName(),(si->axis==y1Axis?1:2));
+	}
+	else {
+		sprintf(tmp, "%s (Y%d)", si->dataView->GetExtendedName(), (si->axis == y1Axis ? 1 : 2));
 		str[0] = strdup(tmp);
 		str[1] = xValue;
-		sprintf(tmp,"Y= %s %s",si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
+		sprintf(tmp, "Y= %s %s", si->dataView->FormatValue(si->dataView->GetTransformedValue(si->value->y)).c_str(), si->dataView->GetUnit());
 		str[2] = strdup(tmp);
 		str[3] = NULL;
 	}
@@ -1030,12 +1046,12 @@ void GLChart::SaveFile() {
 		if (FileUtils::GetExtension(fn) == "csv") separator = ",";
 		else separator = "\t";
 
-		FILE *f = fopen(fn.c_str(), "w");
+		FILE* f = fopen(fn.c_str(), "w");
 		if (f) {
 
 
 			// Get DataList handle and write dataview name
-			DataList *ptr[MAX_VIEWS];
+			DataList* ptr[MAX_VIEWS];
 			int j = 0;
 			fprintf(f, "X axis\t");
 			for (int i = 0; i < nbv1; i++) {
@@ -1043,15 +1059,15 @@ void GLChart::SaveFile() {
 				sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp) - 1;
 				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
-				fprintf(f,"%s",tmp);
-				if (j < nbView) fprintf(f, "%s",separator.c_str());
+				fprintf(f, "%s", tmp);
+				if (j < nbView) fprintf(f, "%s", separator.c_str());
 			}
 			for (int i = 0; i < nbv2; i++) {
 				ptr[j++] = y2Axis->GetDataView(i)->GetData();
 				sprintf(tmp, "%s", y2Axis->GetDataView(i)->GetName());
 				int l = (int)strlen(tmp) - 1;
 				if (l >= 0 && tmp[l] >= 128) tmp[l] = 0;
-				fprintf(f, "%s",tmp);
+				fprintf(f, "%s", tmp);
 				if (j < nbView) fprintf(f, "%s", separator.c_str());
 			}
 			fprintf(f, "\n");
@@ -1067,7 +1083,7 @@ void GLChart::SaveFile() {
 							fprintf(f, "%g", ptr[i]->y);
 							ptr[i] = ptr[i]->next;
 						}
-						if (i < nbView - 1) fprintf(f, "%s",separator.c_str());
+						if (i < nbView - 1) fprintf(f, "%s", separator.c_str());
 					}
 					fprintf(f, "\n");
 				}
@@ -1117,7 +1133,7 @@ void GLChart::CopyAllToClipboard() {
 		//if(j<nbView) totalLength+=strlen("\t");
 	}
 	//totalLength+=strlen("\n");
-	
+
 	bool eof = false;
 	while(!eof) {
 		eof = true;
@@ -1155,7 +1171,7 @@ void GLChart::CopyAllToClipboard() {
 
 	if(!(hText = GlobalAlloc(GMEM_ZEROINIT | GMEM_MOVEABLE, totalLength+1 ))) {
 		CloseClipboard();
-		return; 
+		return;
 	}
 	if(!(lpszText = (char *)GlobalLock(hText))) {
 		CloseClipboard();
@@ -1220,13 +1236,13 @@ void GLChart::CopyAllToClipboard() {
 #endif
 	*/
 
-DataList *ptr[MAX_VIEWS];
-int nbv1 = y1Axis->GetViewNumber();
-int nbv2 = y2Axis->GetViewNumber();
-int nbView = nbv1 + nbv2;
-if (!nbView) return;
-std::ostringstream clipboardStream;
-char tmp[128];
+	DataList* ptr[MAX_VIEWS];
+	int nbv1 = y1Axis->GetViewNumber();
+	int nbv2 = y2Axis->GetViewNumber();
+	int nbView = nbv1 + nbv2;
+	if (!nbView) return;
+	std::ostringstream clipboardStream;
+	char tmp[128];
 
 	int j = 0;
 	//X axis
@@ -1248,7 +1264,7 @@ char tmp[128];
 		clipboardStream << tmp;
 		if (j < nbView) clipboardStream << '\t';
 	}
-	clipboardStream <<  '\n';
+	clipboardStream << '\n';
 
 	bool eof = false;
 	while (!eof) {
@@ -1286,34 +1302,35 @@ void GLChart::LoadFile() {
 	int nbv1 = y1Axis->GetViewNumber();
 	int nbv2 = y2Axis->GetViewNumber();
 	int nbView = nbv1 + nbv2;
-	if(!nbView) return;
+	if (!nbView) return;
 
 	std::string fn = NFD_OpenFile_Cpp("csv", "");
 	if (!fn.empty()) {
 
-		FILE *f = fopen(fn.c_str(),"r");
-		if(f) {
+		FILE* f = fopen(fn.c_str(), "r");
+		if (f) {
 
 			Clear();
 
-			fgets(tmp,128,f);
+			fgets(tmp, 128, f);
 			TRUNC(tmp);
 			// Create a new DataView
-			GLDataView *v = new GLDataView();
+			GLDataView* v = new GLDataView();
 			v->SetName(tmp);
-			double x = 0.0,y;
-			while(!feof(f)) {
-				fgets(tmp,128,f);
+			double x = 0.0, y;
+			while (!feof(f)) {
+				fgets(tmp, 128, f);
 				TRUNC(tmp);
-				sscanf(tmp,"%lf",&y);
-				v->Add(x,y);
+				sscanf(tmp, "%lf", &y);
+				v->Add(x, y);
 				x = x + 1.0;
 			}
 			GetY1Axis()->AddDataView(v);
 			fclose(f);
 
-		} else {
-			GLMessageBox::Display("Cannot open file for writing","Error",GLDLG_OK,GLDLG_ICONERROR);
+		}
+		else {
+			GLMessageBox::Display("Cannot open file for writing", "Error", GLDLG_OK, GLDLG_ICONERROR);
 		}
 
 	}
@@ -1326,14 +1343,14 @@ void GLChart::LoadFile() {
 * @param si SearchInfo structure.
 * @see JLAxis#searchNearest
 */
-void GLChart::showPanel(SearchInfo *si) {
+void GLChart::showPanel(SearchInfo* si) {
 
 	int maxh = 0;
 	int h = 0;
 	int w;
 	int maxw = 0;
-	int x0 = 0,y0 = 0;
-	char **str;
+	int x0 = 0, y0 = 0;
+	char** str;
 
 	str = buildPanelString(si);
 
@@ -1344,7 +1361,7 @@ void GLChart::showPanel(SearchInfo *si) {
 	h = maxh = GLToolkit::GetDialogFont()->GetTextHeight();
 
 	for (int i = 1; i < 4; i++) {
-		if( str[i] ) {
+		if (str[i]) {
 			w = GLToolkit::GetDialogFont()->GetTextWidth(str[i]);
 			if (w > maxw) maxw = w;
 			maxh += h;
@@ -1354,7 +1371,7 @@ void GLChart::showPanel(SearchInfo *si) {
 	maxw += 12;
 	maxh += 10;
 
-	glColor3f(0.0f,0.0f,0.0f);
+	glColor3f(0.0f, 0.0f, 0.0f);
 	glDisable(GL_TEXTURE_2D);
 	glDisable(GL_CULL_FACE);
 	glDisable(GL_LIGHTING);
@@ -1398,21 +1415,21 @@ void GLChart::showPanel(SearchInfo *si) {
 	}
 
 	// Draw panel
-	GLToolkit::DrawBox(x0, y0, maxw, maxh,255,255,255,false,false,true);
+	GLToolkit::DrawBox(x0, y0, maxw, maxh, 255, 255, 255, false, false, true);
 
 	//Draw info
-	GLToolkit::GetDialogFontBold()->SetTextColor(0.0f,0.0f,0.0f);
-	GLToolkit::GetDialogFont()->SetTextColor(0.0f,0.0f,0.0f);
-	GLToolkit::GetDialogFontBold()->GLDrawText(x0 + 4, y0 + 3 ,str[0],false);
+	GLToolkit::GetDialogFontBold()->SetTextColor(0.0f, 0.0f, 0.0f);
+	GLToolkit::GetDialogFont()->SetTextColor(0.0f, 0.0f, 0.0f);
+	GLToolkit::GetDialogFontBold()->GLDrawText(x0 + 4, y0 + 3, str[0], false);
 	y0 += 3;
 	for (int i = 1; i < 4; i++) {
-		if( str[i] )
-			GLToolkit::GetDialogFont()->GLDrawText(x0 + 5, y0 + 3 + i*h,str[i],false);
+		if (str[i])
+			GLToolkit::GetDialogFont()->GLDrawText(x0 + 5, y0 + 3 + i * h, str[i], false);
 	}
 
 	lastSearch = *si;
 	ipanelVisible = true;
-	for (int i = 0; i < 4; i++) if(str[i]) free(str[i]);
+	for (int i = 0; i < 4; i++) if (str[i]) free(str[i]);
 
 }
 
@@ -1424,7 +1441,7 @@ void GLChart::showPanel(SearchInfo *si) {
 * @param v DataView containing points
 * @return Number of deleted points
 */
-int GLChart::garbageData(GLDataView *v) {
+int GLChart::garbageData(GLDataView* v) {
 
 	int nb = 0;
 
@@ -1443,7 +1460,7 @@ int GLChart::garbageData(GLDataView *v) {
 * @param y y coordinates (real space)
 * @see setDisplayDuration
 */
-void GLChart::AddData(GLDataView *v, double x, double y) {
+void GLChart::AddData(GLDataView* v, double x, double y) {
 
 	//Add data
 	v->Add(x, y);
@@ -1451,25 +1468,25 @@ void GLChart::AddData(GLDataView *v, double x, double y) {
 
 }
 
-void GLChart::RemoveDataView(GLDataView *view) {
+void GLChart::RemoveDataView(GLDataView* view) {
 	if (view != NULL) {
-		GLAxis *axis = view->GetAxis();
+		GLAxis* axis = view->GetAxis();
 		if (axis != NULL) {
 			axis->RemoveDataView(view);
 		}
 	}
 }
 
-void GLChart::SetColorSchemeColorblind(){
-    this->colors = ColorSchemes::okabeIto;
+void GLChart::SetColorSchemeColorblind() {
+	this->colors = ColorSchemes::okabeIto;
 }
 
-void GLChart::SetColorSchemeDefault(){
-    this->colors = ColorSchemes::defaultCol;
+void GLChart::SetColorSchemeDefault() {
+	this->colors = ColorSchemes::defaultCol;
 }
 
-const std::vector<GLColor> & GLChart::GetColorScheme() const{
-    return this->colors;
+const std::vector<GLColor>& GLChart::GetColorScheme() const {
+	return this->colors;
 }
 
 /**
@@ -1558,7 +1575,7 @@ void GLChart::PlotUserExpression(const std::string& formulaText, GLDataView** vi
 	auto xVariable = formula.GetVariableAt(0);
 	int plotPointsPerBin = 5; //if profile size is 100, plot 500 points for smooth curve
 	double plotPointsPerBin_scale = 1.0 / (double)plotPointsPerBin;
-	for (i = 0; i < PROFILE_SIZE* plotPointsPerBin; i++) {
+	for (i = 0; i < PROFILE_SIZE * plotPointsPerBin; i++) {
 		double x = (double)i * plotPointsPerBin_scale;
 		if (nbVar > 0) {
 			xVariable->value = x;

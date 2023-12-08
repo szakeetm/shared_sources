@@ -144,7 +144,7 @@ public:
 	std::vector<size_t> GetAllFacetIndices() const;
 	size_t      GetNbFacet() const;
 	size_t      GetNbVertex() const;
-	Vector3d GetFacetCenter(int facet);
+	Vector3d GetFacetCenter(size_t facet);
 	size_t      GetNbStructure() const;
 	std::string GetStructureName(const int idx);
 	void SetStructureName(const int idx, const std::string& name);
