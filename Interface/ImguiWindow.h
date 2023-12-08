@@ -39,6 +39,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiHistogramPlotter.h"
 #include "ImguiTextureScaling.h"
 #include "ImguiParticleLogger.h"
+#include "ImguiMovingParts.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -90,6 +91,7 @@ public:
     ImHistogramPlotter histPlot;
     ImTextureScaling textScale;
     ImParticleLogger partLog;
+    ImMovingParts movPart;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

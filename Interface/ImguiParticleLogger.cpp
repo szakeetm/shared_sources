@@ -187,26 +187,26 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 		double n = cos(pLog[i].hitTheta);
 		Vector3d hitDir = u * f->sh.nU + v * f->sh.nV + n * f->sh.N;
 
-		tmp.append(fmt::format("{}", hitPos.x) + separator);
-		tmp.append(fmt::format("{}", hitPos.y) + separator);
-		tmp.append(fmt::format("{}", hitPos.z) + separator);
-		tmp.append(fmt::format("{}", pLog[i].facetHitPosition.u) + separator);
-		tmp.append(fmt::format("{}", pLog[i].facetHitPosition.v) + separator);
-		tmp.append(fmt::format("{}", hitDir.x) + separator);
-		tmp.append(fmt::format("{}", hitDir.y) + separator);
-		tmp.append(fmt::format("{}", hitDir.z) + separator);
-		tmp.append(fmt::format("{}", pLog[i].hitTheta) + separator);
-		tmp.append(fmt::format("{}", pLog[i].hitPhi) + separator);
-		tmp.append(fmt::format("{}", pLog[i].oriRatio) + separator);
+		tmp.append(fmt::format("{:.8g}", hitPos.x) + separator);
+		tmp.append(fmt::format("{:.8g}", hitPos.y) + separator);
+		tmp.append(fmt::format("{:.8g}", hitPos.z) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].facetHitPosition.u) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].facetHitPosition.v) + separator);
+		tmp.append(fmt::format("{:.8g}", hitDir.x) + separator);
+		tmp.append(fmt::format("{:.8g}", hitDir.y) + separator);
+		tmp.append(fmt::format("{:.8g}", hitDir.z) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].hitTheta) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].hitPhi) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].oriRatio) + separator);
 #ifdef MOLFLOW
-		tmp.append(fmt::format("{}", pLog[i].velocity) + separator);
-		tmp.append(fmt::format("{}", pLog[i].time) + separator);
-		tmp.append(fmt::format("{}", pLog[i].particleDecayMoment) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].velocity) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].time) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].particleDecayMoment) + separator);
 #endif
 #ifdef SYNRAD
-		tmp.append(fmt::format("{}", pLog[i].energy) + separator);
-		tmp.append(fmt::format("{}", pLog[i].dF/numScans) + separator);
-		tmp.append(fmt::format("{}", pLog[i].dP/numScans) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].energy) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].dF/numScans) + separator);
+		tmp.append(fmt::format("{:.8g}", pLog[i].dP/numScans) + separator);
 #endif
 		tmp.append("\n");
 		if (directToFile) {

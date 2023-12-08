@@ -218,6 +218,8 @@ void ImguiWindow::init() {
     textScale.Init(mApp);
     partLog = ImParticleLogger();
     partLog.Init(mApp);
+    movPart = ImMovingParts();
+    movPart.Init(mApp);
 
     RegisterShortcuts();
 
@@ -409,6 +411,7 @@ void ImguiWindow::renderSingle() {
         histPlot.Draw();
         textScale.Draw();
         partLog.Draw();
+        movPart.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -134,6 +134,7 @@ set(INTERFACE_FILES
         Interface/ImguiHistogramPlotter.cpp
         Interface/ImguiTextureScaling.cpp
         Interface/ImguiParticleLogger.cpp
+        Interface/ImguiMovingParts.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

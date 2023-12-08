@@ -710,10 +710,11 @@ void TakeScreenshotMenuPress() {
 
 #ifdef MOLFLOW //TODO replace with polimorphism
 void MovingPartsMenuPress() {
-    
+    mApp->imWnd->movPart.Show();
+    /*
     if (!mApp->movement) mApp->movement = new Movement(interfGeom, &mApp->worker);
     mApp->movement->Update();
-    mApp->movement->SetVisible(true);
+    mApp->movement->SetVisible(true);*/
 }
 void MeasureForcesMenuPress() {
     
