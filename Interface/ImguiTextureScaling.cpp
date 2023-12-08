@@ -69,7 +69,7 @@ void ImTextureScaling::Draw()
 		if(ImGui::BeginCombo("##includeCombo", includeComboLabels[includeComboVal])) {
 			for (short i = 0; i < 3; i++) {
 				if (ImGui::Selectable(includeComboLabels[i])) {
-					includeComboVal = i;
+					includeComboVal = static_cast<AutoScaleMode>(i);
 				}
 			}
 			ImGui::EndCombo();
@@ -147,7 +147,7 @@ void ImTextureScaling::UpdateSize()
 void ImTextureScaling::Update() {
 	GetCurrentRange();
 	autoscale = molflowGeom->texAutoScale;
-	includeComboVal = molflowGeom->texAutoScaleIncludeConstantFlow;
+	includeComboVal = molflowGeom->texAutoScaleMode;
 	logScale = molflowGeom->texLogScale;
 	colors = molflowGeom->texColormap;
 	showComboVal = molflowGeom->textureMode;
@@ -168,7 +168,7 @@ void ImTextureScaling::SetCurrentButtonPress()
 
 void ImTextureScaling::ApplyButtonPress()
 {
-	molflowGeom->texAutoScaleIncludeConstantFlow = includeComboVal;
+	molflowGeom->texAutoScaleMode = includeComboVal;
 	molflowGeom->texAutoScale = autoscale;
 	if (autoscale) {} // empty if statement, acts like adding !autoscale && to all following else statements
 	else if (!Util::getNumber(&minScale, minInput)) {
@@ -293,18 +293,9 @@ void ImTextureScaling::DrawGradient()
 
 void ImTextureScaling::GetCurrentRange()
 {
-	if (molflowGeom->texAutoScaleIncludeConstantFlow == 0) {
-		cMinScale = molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only;
-		cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only;
-	}
-	else if (molflowGeom->texAutoScaleIncludeConstantFlow == 1) {
-		cMinScale =	std::min(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.moments_only);
-		cMaxScale =	std::max(molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state, molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.moments_only);
-	}
-	else { // == 2
-		cMinScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.min.steady_state;
-		cMaxScale =	molflowGeom->texture_limits[molflowGeom->textureMode].autoscale.max.steady_state;
-	}
+	auto [min, max] = molflowGeom->GetTextureAutoscaleMinMax();
+	cMinScale = min;
+	cMaxScale = max;
 }
 
 double ImTextureScaling::logScaleInterpolate(double x, double leftTick, double rightTick)
@@ -315,7 +306,7 @@ double ImTextureScaling::logScaleInterpolate(double x, double leftTick, double r
 	/*	Code based on:
 		Linear and Logarithmic Interpolation
 		Markus Deserno
-		Max-Planck-Institut fur¨ Polymerforschung, Ackermannweg 10, 55128 Mainz, Germany
+		Max-Planck-Institut furï¿½ Polymerforschung, Ackermannweg 10, 55128 Mainz, Germany
 		https://www.cmu.edu/biolphys/deserno/pdf/log_interpol.pdf (accessed 21-11-2023)
 	*/
 	double a = x - leftTick, b = rightTick - x;

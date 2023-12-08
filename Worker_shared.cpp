@@ -334,8 +334,8 @@ void Worker::CalculateTextureLimits() {
 	MolflowSimulationModel* mf_model = dynamic_cast<MolflowSimulationModel*>(model.get());
 	TEXTURE_MIN_MAX limits[3];
 	for (auto& lim : limits) {
-		lim.max.steady_state = lim.max.moments_only = 0;
-		lim.min.steady_state = lim.min.moments_only = HITMAX;
+		lim.min.steady_state = lim.min.moments_only = std::numeric_limits<double>::infinity();
+		lim.max.steady_state = lim.max.moments_only = -std::numeric_limits<double>::infinity();
 	}
 
 	for (const auto& facet : model->facets) {
@@ -404,9 +404,17 @@ void Worker::CalculateTextureLimits() {
 	}
 
 	// Last put temp limits into global struct
+	auto geom = GetGeometry();
 	for (int v = 0; v < 3; ++v) {
-		GetGeometry()->texture_limits[v].autoscale = limits[v];
+		/*
+		if (!std::isinf(limits[v].min.steady_state)) geom->texture_limits[v].autoscale.min.steady_state = limits[v].min.steady_state;
+		if (!std::isinf(limits[v].max.steady_state)) geom->texture_limits[v].autoscale.max.steady_state = limits[v].max.steady_state;
+		if (!std::isinf(limits[v].min.moments_only)) geom->texture_limits[v].autoscale.min.moments_only = limits[v].min.moments_only;
+		if (!std::isinf(limits[v].max.moments_only)) geom->texture_limits[v].autoscale.max.moments_only = limits[v].max.moments_only;
+		*/		
+		geom->texture_limits[v].autoscale = limits[v];
 	}
+	
 }
 #endif
 

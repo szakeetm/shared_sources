@@ -549,7 +549,7 @@ static void ShowMenuSelection() {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
                 auto Y = [](int i) -> void { mApp->selections.erase(mApp->selections.begin() + (i)); UpdateSelectionShortcuts(); };
                 mApp->imWnd->popup.Open("Clear memorized selection?", ("Are you sure you wish to forget selection " + mApp->selections[i].name), {
-                    std::make_shared<ImIOWrappers::ImButtonFuncInt>("Yes", Y, i, SDL_SCANCODE_RETURN),
+                    std::make_shared<ImIOWrappers::ImButtonFuncInt>("Yes", Y, (int)i, SDL_SCANCODE_RETURN),
                     std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE) 
                     });
             }
@@ -915,7 +915,7 @@ void ExplodeMenuPress() {
             try {
                 err = interfGeom->ExplodeSelected();
             }
-            catch (const std::exception& e) {
+            catch (const std::exception& ) {
                 mApp->imWnd->popup.Close();
                 mApp->imWnd->popup.Open("Error", "Error Exploding", {
                     std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
@@ -1102,7 +1102,7 @@ void ConvexHullMenuPress() {
         try {
             interfGeom->CreatePolyFromVertices_Convex();
         }
-        catch (const std::exception& e) {
+        catch (const std::exception& ) {
             mApp->imWnd->popup.Open("Error", "Error creating polygon", {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
                 });
@@ -1114,10 +1114,9 @@ void SelectionOrderMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->AskToReset()) {
         try {
-            
             interfGeom->CreatePolyFromVertices_Order();
         }
-        catch (const std::exception& e) {
+        catch (const std::exception&) {
             mApp->imWnd->popup.Open("Error", "Error creating polygon", {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
                 });
@@ -1235,7 +1234,7 @@ void VertexCoplanarMenuPress() {
                         });
                 } else {
                     try { mApp->viewers[mApp->curViewer]->SelectCoplanar(mApp->coplanarityTolerance); }
-                    catch (const std::exception& e) {
+                    catch (const std::exception& ) {
                         mApp->imWnd->popup.Open("Error", "Error selecting coplanar vertices", { 
                             std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
                             });

@@ -232,10 +232,10 @@ void GeometryViewer::ToOrigo() {
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;
 
-	view.vLeft = 0.0;
-	view.vRight = 0.0;
-	view.vTop = 0.0;
-	view.vBottom = 0.0;
+	view.vLeft = -1.0;
+	view.vRight = 1.0;
+	view.vTop = -1.0;
+	view.vBottom = 1.0;
 }
 
 bool GeometryViewer::IsSelected() {
@@ -357,8 +357,6 @@ void GeometryViewer::ToSideView() {
 void GeometryViewer::ToFrontView() {
 	ToOrigo();
 	if (!work) return;
-	//view.camAngleOx = 0.0;
-	//view.camAngleOy = 0.0;
 	view.performXY = (view.projMode == ProjectionMode::Perspective) ? CameraPlaneMode::CamNone : CameraPlaneMode::CamFront;
 	AutoScale();
 
@@ -522,7 +520,7 @@ void GeometryViewer::SetCurrentView(CameraView v) {
 	if (!work) return;
 	view = v;
 
-	if (view.projMode == ProjectionMode::Orthographic) {
+	if (view.projMode == ProjectionMode::Orthographic && width > 0 && height > 0) { //Don't rescale if minimized
 
 		// Rescale viewport (aspect ratio correction + recenter)
 		double wA = (double)width / (double)(height - DOWN_MARGIN);
@@ -550,8 +548,8 @@ void GeometryViewer::SetProjection(ProjectionMode projMode) {
 }
 
 void GeometryViewer::SetWorker(Worker* w) {
-	work = w;
-	ToFrontView();
+	work = w;	
+	
 	// Auto size vector length (consider Front View)
 	InterfaceGeometry* interfGeom = work->GetGeometry();
 	AxisAlignedBoundingBox bb = interfGeom->GetBB();
@@ -643,6 +641,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 		else {
 			glOrtho(view.vLeft, view.vRight, view.vBottom, view.vTop, -1E6, 1E6);
 		}
+		GLToolkit::CheckGLErrors("DrawCoordinateAxes");
 		glDisable(GL_DEPTH_TEST);
 		//GLToolkit::SetMaterial(&greenMaterial);
 		//GLToolkit::DrawCoordinateAxes(vectorLength,headSize);
@@ -665,12 +664,12 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glOrtho(0, viewPort.width, 0, viewPort.height, -50, 50);
 		double handedness = mApp->leftHandedView ? 1.0 : -1.0;
 		if (view.projMode == ProjectionMode::Orthographic) {
-			glScaled(handedness, 1.0, 1.0);
-			glTranslatef(handedness * 50, 50, 0);
+			glScaled(handedness, 1.0f, 1.0f);
+			glTranslated(handedness * 50.0, 50.0, 0.0);
 		}
 		else {
 			glScaled(-handedness, 1.0, 1.0);
-			glTranslatef(-handedness * 50, 50, 0);
+			glTranslated(-handedness * 50.0, 50.0, 0.0);
 		}
 
 		glMatrixMode(GL_MODELVIEW);
@@ -698,7 +697,7 @@ void GeometryViewer::DrawCoordinateAxes() {
 		glPopMatrix();
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
-
+		GLToolkit::CheckGLErrors("DrawCoordinateAxes");
 		/*
 		GLToolkit::GetDialogFont()->SetTextColor(0.4f, 0.8f, 0.8f);
 		GLToolkit::DrawStringInit();
@@ -894,10 +893,10 @@ void GeometryViewer::DrawFacetId() {
 		*/
 		//sprintf(tmp, " F#%zd ", selId+1);
 		std::string labelText = fmt::format(" F#{} ", selId + 1);
-		int labelLength = labelText.length() * 5;
+		int labelLength = (int)labelText.length() * 5;
 		int labelHeight = 16;
 		//GLToolkit::DrawString((float)labelVec.x, (float)labelVec.y, (float)labelVec.z + 0.1, tmp, GLToolkit::GetDialogFont(), -10, -10,true);
-		GLToolkit::DrawString(center.x, center.y, center.z, labelText.c_str(), GLToolkit::GetDialogFont(), -labelLength / 2, -labelHeight / 2, true);
+		GLToolkit::DrawString((float)center.x, (float)center.y, (float)center.z, labelText.c_str(), GLToolkit::GetDialogFont(), -labelLength / 2, -labelHeight / 2, true);
 	}
 
 	//Restore
@@ -949,7 +948,7 @@ void GeometryViewer::AutoScale(bool reUpdateMouseCursor) {
 	view.camOffset.x = 0.0;
 	view.camOffset.y = 0.0;
 	view.camOffset.z = 0.0;
-	view.camDist = 1.0f;
+	view.camDist = 1.0;
 	UpdateMatrix();
 
 	// Get geometry transformed BB
@@ -1258,7 +1257,7 @@ void GeometryViewer::Paint() {
 			glEnd();
 			glBegin(GL_LINE_LOOP);
 			float DEG2RAD = (float)(3.14159 / 180.0);
-			float radius = sqrt(pow((float)(selX1 - selX2), 2) + pow((float)(selY1 - selY2), 2));
+			float radius = (float)sqrt(pow((float)(selX1 - selX2), 2) + pow((float)(selY1 - selY2), 2));
 
 			for (int i = 0; i <= 360; i += 2) {
 				float degInRad = i * DEG2RAD;
@@ -1268,7 +1267,7 @@ void GeometryViewer::Paint() {
 		}
 		glDisable(GL_LINE_STIPPLE);
 	}
-
+	GLToolkit::CheckGLErrors("GeometryViewer::Paint");
 	//Status labels
 	//From bottom to up
 	bool displayHideLotLabel = displayWarning;
@@ -1305,7 +1304,9 @@ void GeometryViewer::Paint() {
 	if (screenshotStatus.requested >= 2) {
 		Screenshot();
 	}
+	GLToolkit::CheckGLErrors("GeometryViewer::Paint");
 	PaintCompAndBorder();
+	GLToolkit::CheckGLErrors("GeometryViewer::Paint");
 }
 
 void GeometryViewer::PaintCompAndBorder() {

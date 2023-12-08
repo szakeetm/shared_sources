@@ -111,7 +111,7 @@ void GLGradient::SetMinMax(double min, double max) {
 	if (min < max) {
 		if (axis->GetScale() == LOG_SCALE) {
 			if (min < 1e-20) min = 1e-20;
-			if (max < 1e-20) max = 1e-20;
+			Saturate(max, 1e-20, 1e99); 
 		}
 		axis->SetMinimum(min);
 		axis->SetMaximum(max);

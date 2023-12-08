@@ -338,7 +338,7 @@ bool InterfaceFacet::BuildMesh() {
 			for (auto const& pair : meshvector_partial) {
 				auto cellIndex = pair.first;
 				auto cellProperties = pair.second;
-				cellPropertiesIds[cellIndex] = meshvector.size();
+				cellPropertiesIds[cellIndex] = (int)meshvector.size();
 				meshvector.push_back(cellProperties);
 			}
 		}
