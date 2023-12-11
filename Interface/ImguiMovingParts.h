@@ -5,6 +5,7 @@
 class ImMovingParts : public ImWindow {
 public:
     void Draw();
+    void Update();
 protected:
     void ApplyButtonPress();
     void Apply();
