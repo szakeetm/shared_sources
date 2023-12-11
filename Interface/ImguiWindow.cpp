@@ -220,6 +220,8 @@ void ImguiWindow::init() {
     partLog.Init(mApp);
     movPart = ImMovingParts();
     movPart.Init(mApp);
+    measForce = ImMeasureForce();
+    measForce.Init(mApp);
 
     RegisterShortcuts();
 
@@ -412,6 +414,7 @@ void ImguiWindow::renderSingle() {
         textScale.Draw();
         partLog.Draw();
         movPart.Draw();
+        measForce.Draw();
 
         shortcutMan.DoShortcuts();
 
@@ -439,4 +442,5 @@ void ImguiWindow::Refresh()
 {
     histPlot.LoadHistogramSettings();
     convPlot.Reload();
+    movPart.Update();
 }

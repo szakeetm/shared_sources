@@ -717,10 +717,12 @@ void MovingPartsMenuPress() {
     mApp->movement->SetVisible(true);*/
 }
 void MeasureForcesMenuPress() {
-    
+    mApp->imWnd->measForce.Show();
+    /*
     if (!mApp->measureForces) mApp->measureForces = new MeasureForce(interfGeom, &mApp->worker);
     mApp->measureForces->Update();
     mApp->measureForces->SetVisible(true);
+    */
 }
 #endif //MOLFLOW
 

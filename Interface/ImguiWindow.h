@@ -40,6 +40,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiTextureScaling.h"
 #include "ImguiParticleLogger.h"
 #include "ImguiMovingParts.h"
+#include "ImguiMeasureForce.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -92,6 +93,7 @@ public:
     ImTextureScaling textScale;
     ImParticleLogger partLog;
     ImMovingParts movPart;
+    ImMeasureForce measForce;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

@@ -249,3 +249,63 @@ void ImMovingParts::SelectedVertAsAxisDirectionButtonPress()
         }
     }
 }
+
+void ImMovingParts::Update() { // get values from selection / geometry
+    mode = static_cast<Modes>(mApp->worker.model->sp.motionType);
+
+    vx = 0;
+    vxI = "0";
+    vy = 0;
+    vyI = "0";
+    vz = 0;
+    vzI = "0";
+
+    ax = 0;
+    axI = "0";
+    ay = 0;
+    ayI = "0";
+    az = 0;
+    azI = "0";
+    rx = 0;
+    rxI = "0";
+    ry = 0;
+    ryI = "0";
+    rz = 0;
+    rzI = "0";
+
+    rpm = 0;
+    rpmI = "0";
+    deg = 0;
+    degI = "0";
+    hz = 0;
+    hzI = "0";
+
+    if (mode == Fixed) {
+        vx = mApp->worker.model->sp.motionVector2.x;
+        vxI = fmt::format("{:.3g", vx);
+        vy = mApp->worker.model->sp.motionVector2.y;
+        vyI = fmt::format("{:.3g", vy);
+        vz = mApp->worker.model->sp.motionVector2.z;
+        vzI = fmt::format("{:.3g", vz);
+    }
+    else if (mode == Rotation) {
+        ax = mApp->worker.model->sp.motionVector1.x;
+        axI = fmt::format("{:.3g", ax);
+        ay = mApp->worker.model->sp.motionVector1.y;
+        ayI = fmt::format("{:.3g", ay);
+        az = mApp->worker.model->sp.motionVector1.z;
+        azI = fmt::format("{:.3g", az);
+        Vector3d rot = mApp->worker.model->sp.motionVector2.Normalized();
+        rx = rot.x;
+        rxI = fmt::format("{:.3g}", rx);
+        ry = rot.y;
+        ryI = fmt::format("{:.3g}", ry);
+        rz = rot.z;
+        rzI = fmt::format("{:.3g}", rz);
+        deg = mApp->worker.model->sp.motionVector2.Norme() / 3.14159 * 180.0;
+        rpm = deg / 6;
+        rpmI = fmt::format("{:.3g}", rpm);
+        hz = deg / 360;
+        hzI = fmt::format("{:.3g}", hz);
+    }
+}
