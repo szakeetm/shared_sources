@@ -222,6 +222,8 @@ void ImguiWindow::init() {
     movPart.Init(mApp);
     measForce = ImMeasureForce();
     measForce.Init(mApp);
+    facCoord = ImFacetCoordinates();
+    facCoord.Init(mApp);
 
     RegisterShortcuts();
 
@@ -415,6 +417,7 @@ void ImguiWindow::renderSingle() {
         partLog.Draw();
         movPart.Draw();
         measForce.Draw();
+        facCoord.Draw();
 
         shortcutMan.DoShortcuts();
 

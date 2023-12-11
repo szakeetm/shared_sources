@@ -41,6 +41,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiParticleLogger.h"
 #include "ImguiMovingParts.h"
 #include "ImguiMeasureForce.h"
+#include "ImguiFacetCoordinates.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -94,6 +95,7 @@ public:
     ImParticleLogger partLog;
     ImMovingParts movPart;
     ImMeasureForce measForce;
+    ImFacetCoordinates facCoord;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

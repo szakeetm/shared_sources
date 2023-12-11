@@ -819,9 +819,12 @@ void ShiftIndicesMenuPress() {
     }
 }
 void FacetCoordinatesMenuPress() {
+    mApp->imWnd->facCoord.Show();
+    /*
     if (!mApp->facetCoordinates) mApp->facetCoordinates = new FacetCoordinates();
     mApp->facetCoordinates->Display(&mApp->worker);
     mApp->facetCoordinates->SetVisible(true);
+    */
 }
 
 void FacetScaleMenuPress() {

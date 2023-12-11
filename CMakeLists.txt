@@ -136,6 +136,7 @@ set(INTERFACE_FILES
         Interface/ImguiParticleLogger.cpp
         Interface/ImguiMovingParts.cpp
         Interface/ImguiMeasureForce.cpp
+        Interface/ImguiFacetCoordinates.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
