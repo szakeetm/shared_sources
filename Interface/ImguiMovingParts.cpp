@@ -12,8 +12,8 @@
 void ImMovingParts::Draw() {
     if(!drawn) return;
     ImGui::SetNextWindowPos(ImVec2(5*txtW, 3*txtH), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSize(ImVec2(txtW*75,txtH*15), ImGuiCond_FirstUseEver);
-    ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*75,txtH*15), ImVec2(txtW*100,txtH*60));
+    ImGui::SetNextWindowSize(ImVec2(txtW*75,txtH*16), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*75,txtH*16), ImVec2(txtW*100,txtH*20));
     ImGui::Begin("Define moving parts", &drawn, ImGuiWindowFlags_NoSavedSettings);
     ImGui::TextWrapped("Movement paramenters set here will only apply to facets whih are marked \"moving\" in their parameters");
     ImGui::BeginChild("###movementChild", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH) , true);
@@ -29,17 +29,17 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("vx");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##vx", &vxI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("vy");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##vy", &vyI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("vz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##vz", &vzI);
 
                 ImGui::EndTable();
@@ -58,21 +58,22 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("ax");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##ax", &axI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("ay");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*4);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##ay", &ayI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("az");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##az", &azI);
                 ImGui::TableSetColumnIndex(7);
-                if(ImGui::Button("Use selected vertex")) {}
+                if(ImGui::Button("Use selected vertex")) {
+                    SelectedVertAsAxisOriginButtonPress();
+                }
 
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
@@ -80,20 +81,22 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("rx");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##rx", &rxI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("ry");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##ry", &ryI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("rz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 ImGui::InputText("##rz", &rzI);
                 ImGui::TableSetColumnIndex(7);
-                if(ImGui::Button("Base to sel. vertex")) {}
+                if(ImGui::Button("Base to sel. vertex")) {
+                    SelectedVertAsAxisDirectionButtonPress();
+                }
 
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
@@ -101,37 +104,37 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("RPM");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 if(ImGui::InputText("##rpm", &rpmI)) {
                     if(Util::getNumber(&rpm, rpmI)) {
                         deg = rpm*6;
                         hz = rpm/60;
-                        degI = fmt::format("{}", deg);
-                        hzI = fmt::format("{}", hz);
+                        degI = fmt::format("{:.3g}", deg);
+                        hzI = fmt::format("{:.3g}", hz);
                     }
                 }
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("deg/s");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 if(ImGui::InputText("##deg", &degI)) {
                     if(Util::getNumber(&deg, degI)) {
                         rpm = deg/6;
                         hz = deg/360;
-                        rpmI = fmt::format("{}", rpm);
-                        hzI = fmt::format("{}", hz);
+                        rpmI = fmt::format("{:.3g}", rpm);
+                        hzI = fmt::format("{:.3g}", hz);
                     }
                 }
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("Hz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*4);
+                ImGui::SetNextItemWidth(txtW*6);
                 if(ImGui::InputText("##Hz", &hzI)) {
                     if(Util::getNumber(&hz, hzI)) {
                         deg = hz*360;
                         rpm = hz*60;
-                        degI = fmt::format("{}", deg);
-                        rpmI = fmt::format("{}", rpm);
+                        degI = fmt::format("{:.3g}", deg);
+                        rpmI = fmt::format("{:.3g}", rpm);
                     }
                 }
 
@@ -204,4 +207,45 @@ void ImMovingParts::Apply(){
     mApp->UpdateFacetlistSelected();
     mApp->UpdateViewers();
     mApp->changedSinceSave = true;
+}
+
+void ImMovingParts::SelectedVertAsAxisOriginButtonPress()
+{
+    size_t nbs = interfGeom->GetNbSelectedVertex();
+    if (nbs != 1) {
+        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+        return;
+    }
+    else {
+        for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
+            if (interfGeom->GetVertex(i)->selected) {
+                ax = interfGeom->GetVertex(i)->x;
+                axI = fmt::format("{:.3g}", ax);
+                ay = interfGeom->GetVertex(i)->y;
+                ayI = fmt::format("{:.3g}",ay);
+                az = interfGeom->GetVertex(i)->z;
+                azI = fmt::format("{:.3g}",az);
+                break;
+            }
+        }
+    }
+}
+
+void ImMovingParts::SelectedVertAsAxisDirectionButtonPress()
+{
+    size_t nbs = interfGeom->GetNbSelectedVertex();
+    if (nbs != 1) {
+        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+        return;
+    }
+    else {
+        for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
+            if (interfGeom->GetVertex(i)->selected) {
+                rxI = fmt::format("{:.3g}", interfGeom->GetVertex(i)->x-ax);
+                ryI = fmt::format("{:.3g}", interfGeom->GetVertex(i)->y-ay);
+                rzI = fmt::format("{:.3g}", interfGeom->GetVertex(i)->z-az);
+                break;
+            }
+        }
+    }
 }
