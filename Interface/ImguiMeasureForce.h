@@ -9,6 +9,7 @@ protected:
 	void SelectedVertexButtonPress();
 	void FacetCenterButtonPress();
 	void ApplyButtonPress();
+	void Apply();
 	std::string mx0I = "0", my0I = "0", mz0I = "0";
 	double mx = 0, my = 0, mz = 0;
 };

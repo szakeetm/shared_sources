@@ -1,6 +1,14 @@
 #include "ImguiMeasureForce.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
+#include "ImguiPopup.h"
+#include "Facet_shared.h"
+#include "Helper/StringHelper.h"
+#include "Interface.h"
+
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+#endif
 
 void ImMeasureForce::Draw()
 {
@@ -57,12 +65,75 @@ void ImMeasureForce::Draw()
 
 void ImMeasureForce::SelectedVertexButtonPress()
 {
+	size_t nbs = interfGeom->GetNbSelectedVertex();
+	if (nbs != 1) {
+		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+		return;
+	}
+	else {
+		for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
+			if (interfGeom->GetVertex(i)->selected) {
+				mx = interfGeom->GetVertex(i)->x;
+				mx0I = fmt::format("{:.3g}", mx);
+				my = interfGeom->GetVertex(i)->y;
+				my0I = fmt::format("{:.3g}", my);
+				mz = interfGeom->GetVertex(i)->z;
+				mz0I = fmt::format("{:.3g}", mz);
+				break;
+			}
+		}
+	}
 }
 
 void ImMeasureForce::FacetCenterButtonPress()
 {
+	size_t nbs = interfGeom->GetNbSelectedFacets();
+	if (nbs != 1) {
+		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one facet\n(You have selected {:.3g}).", nbs));
+		return;
+	}
+	else {
+		for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
+			auto f = interfGeom->GetFacet(i);
+			if (f->selected) {
+				mx = f->sh.center.x;
+				mx0I = fmt::format("{:.3g}", mx);
+				my = f->sh.center.y;
+				my0I = fmt::format("{:.3g}", my);
+				mz = f->sh.center.z;
+				mz0I = fmt::format("{:.3g}", mz);
+				break;
+			}
+		}
+	}
 }
 
 void ImMeasureForce::ApplyButtonPress()
 {
+	if (enableForceMeasurement) {
+		if (!Util::getNumber(&mx, mx0I)) {
+			ImIOWrappers::InfoPopup("Error", "Invalix mx0 coordinate");
+			return;
+		}
+		if (!Util::getNumber(&my, my0I)) {
+			ImIOWrappers::InfoPopup("Error", "Invalix my0 coordinate");
+			return;
+		}
+		if (!Util::getNumber(&mz, mz0I)) {
+			ImIOWrappers::InfoPopup("Error", "Invalix mz0 coordinate");
+			return;
+		}
+	}
+	ImIOWrappers::AskToSaveBeforeDoing([this]() { Apply(); });
+}
+
+void ImMeasureForce::Apply()
+{
+	mApp->worker.model->sp.enableForceMeasurement = enableForceMeasurement;
+	if (enableForceMeasurement) {
+		mApp->worker.model->sp.torqueRefPoint = Vector3d(mx, my, mz);
+	}
+	LockWrapper lw(mApp->imguiRenderLock);
+	mApp->worker.MarkToReload();
+	mApp->changedSinceSave = true;
 }
