@@ -4,6 +4,7 @@
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "ImguiWindow.h"
+#include "ImguiExtensions.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -41,28 +42,35 @@ void ImFacetCoordinates::Draw()
 	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("##VIID", &insertIdInput);
 	if (ImGui::Button("Insert as last vertex")) {
-
+		Insert(table.size());
 	} ImGui::SameLine();
-	if (ImGui::Button("Insert before sel. row")) {
-
+	if (ImGui::Button("Insert before sel. row")&&selRow!=-1) {
+		Insert(selRow);
+		selRow--;
 	} ImGui::SameLine();
-	if (ImGui::Button("Remove selected row")) {
-
+	if (ImGui::Button("Remove selected row") && selRow != -1) {
+		table.erase(table.begin() + selRow);
+		selRow--;
 	}
 	ImGui::EndChild();
 	
 	if (ImGui::Button("X")) {
-
+		axis = X;
+		mApp->imWnd->input.Open("Set all X coordinates to:", "New coordinate", [this](std::string v) { SetAllTo(v); });
 	} ImGui::SameLine();
 
 	if (ImGui::Button("Y")) {
-
+		axis = Y;
+		mApp->imWnd->input.Open("Set all Y coordinates to:", "New coordinate", [this](std::string v) { SetAllTo(v); });
 	} ImGui::SameLine();
 
 	if (ImGui::Button("Z")) {
-
+		axis = Z;
+		mApp->imWnd->input.Open("Set all Z coordinates to:", "New coordinate", [this](std::string v) { SetAllTo(v); });
 	} ImGui::SameLine();
 	
+	ImGui::HelpMarker("Use the three axis buttons to bulk set coordinates to one value");
+	ImGui::SameLine();
 	float dummyWidth = ImGui::GetContentRegionAvailWidth() - 6 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidth, 0)); ImGui::SameLine();
 	if (ImGui::Button("Apply")) {
@@ -154,6 +162,22 @@ void ImFacetCoordinates::Apply()
 
 void ImFacetCoordinates::Insert(int pos)
 {
+	if (!Util::getNumber(&insertID, insertIdInput)) {
+		ImIOWrappers::InfoPopup("Error", "Could not parse vertex ID");
+		return;
+	}
+	if (insertID-1 >= interfGeom->GetNbVertex()) {
+		ImIOWrappers::InfoPopup("Error", fmt::format("Invalid vertex id Vertex {} doesn't exist.", insertID));
+		return;
+	}
+	line newLine;
+	newLine.vertexId = insertID-1;
+	newLine.coord = *(mApp->worker.GetGeometry()->GetVertex(newLine.vertexId));
+	newLine.coordInput[0] = fmt::format("{:.10g}", newLine.coord.x);
+	newLine.coordInput[1] = fmt::format("{:.10g}", newLine.coord.y);
+	newLine.coordInput[2] = fmt::format("{:.10g}", newLine.coord.z);
+	table.insert(table.begin() + pos, newLine);
+	selRow = pos;
 }
 
 void ImFacetCoordinates::UpdateFromSelection()
@@ -190,4 +214,29 @@ bool ImFacetCoordinates::ValidateInputs(int idx)
 		return false;
 	}
 	return true;
+}
+
+void ImFacetCoordinates::SetAllTo(std::string val)
+{
+	float tmp = 0;
+	if (!Util::getNumber(&tmp, val)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid input");
+		return;
+	}
+	for (line& ln : table) {
+		switch (axis) {
+		case X:
+			ln.coord.x = tmp;
+			ln.coordInput[0] = fmt::format("{:.10g}", ln.coord.x);
+			break;
+		case Y:
+			ln.coord.y = tmp;
+			ln.coordInput[1] = fmt::format("{:.10g}", ln.coord.y);
+			break;
+		case Z:
+			ln.coord.z = tmp;
+			ln.coordInput[2] = fmt::format("{:.10g}", ln.coord.z);
+			break;
+		}
+	}
 }

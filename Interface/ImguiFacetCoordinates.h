@@ -12,6 +12,9 @@ protected:
 	void Insert(int pos=-1);
 	void UpdateFromSelection();
 	bool ValidateInputs(int idx);
+	enum Axis : short {X,Y,Z};
+	Axis axis = X;
+	void SetAllTo(std::string val);
 	std::string insertIdInput = "0";
 	size_t insertID = 0;
 	InterfaceFacet* selFacet = nullptr;
