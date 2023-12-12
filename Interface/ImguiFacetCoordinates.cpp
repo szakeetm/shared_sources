@@ -3,6 +3,7 @@
 #include "Facet_shared.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
+#include "ImguiWindow.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -11,6 +12,7 @@
 #if defined(SYNRAD)
 #include "../src/SynRad.h"
 #endif
+
 void ImFacetCoordinates::Draw()
 {
 	if (!drawn) return;
@@ -77,8 +79,8 @@ void ImFacetCoordinates::DrawTable()
 
 	int i = 0;
 	if (ImGui::BeginTable("##FCT", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders)) {
-		ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, txtW*3);
-		ImGui::TableSetupColumn("Vertex", ImGuiTableColumnFlags_WidthFixed, txtW * 7);
+		ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, txtW*2);
+		ImGui::TableSetupColumn("Vertex", ImGuiTableColumnFlags_WidthFixed, txtW * 5);
 		ImGui::TableSetupColumn("X");
 		ImGui::TableSetupColumn("Y");
 		ImGui::TableSetupColumn("Z");
@@ -98,13 +100,16 @@ void ImFacetCoordinates::DrawTable()
 			ImGui::Text(fmt::format("{}",ln.vertexId+1));
 			ImGui::TableSetColumnIndex(2);
 			ImGui::SetNextItemWidth(txtW*16);
-			selRow != i ? ImGui::Text(ln.coordInput[0]) : ImGui::InputText("###FCXI", &ln.coordInput[0]);
+			if (selRow != i) ImGui::Text(ln.coordInput[0]);
+			else ImGui::InputText("###FCXI", &ln.coordInput[0]);
 			ImGui::TableSetColumnIndex(3);
 			ImGui::SetNextItemWidth(txtW * 16);
-			selRow != i ? ImGui::Text(ln.coordInput[1]) : ImGui::InputText("###FCYI", &ln.coordInput[1]);
+			if (selRow != i) ImGui::Text(ln.coordInput[1]);
+			else ImGui::InputText("###FCYI", &ln.coordInput[1]);
 			ImGui::TableSetColumnIndex(4);
 			ImGui::SetNextItemWidth(txtW * 16);
-			selRow != i ? ImGui::Text(ln.coordInput[2]) : ImGui::InputText("###FCZI", &ln.coordInput[2]);
+			if (selRow != i) ImGui::Text(ln.coordInput[2]);
+			else ImGui::InputText("###FCZI", &ln.coordInput[2]);
 			i++;
 		}
 		ImGui::EndTable();
@@ -119,10 +124,32 @@ void ImFacetCoordinates::DrawTable()
 
 void ImFacetCoordinates::ApplyButtonPress()
 {
+	for (int i = 0; i < table.size(); i++) {
+		ValidateInputs(i);
+	}
+	if (table.size() < 3) {
+		ImIOWrappers::InfoPopup("Not enough vertices", "A facet must have at least 3 vertices");
+		return;
+	}
+	mApp->imWnd->popup.Open("Question", "Apply geometry changes?", { std::make_shared<ImIOWrappers::ImButtonFunc>("Ok",[this]() { Apply(); },SDL_SCANCODE_RETURN, SDL_SCANCODE_RETURN2),
+		std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", SDL_SCANCODE_ESCAPE)});
 }
 
 void ImFacetCoordinates::Apply()
 {
+	mApp->changedSinceSave = true;
+
+	//Change number of vertices
+	selFacet->sh.nbIndex = (int)table.size();
+	selFacet->indices.resize(selFacet->sh.nbIndex);
+	selFacet->vertices2.resize(selFacet->sh.nbIndex);
+
+	for (size_t i = 0; i < table.size(); i++) {
+		interfGeom->MoveVertexTo(table[i].vertexId, table[i].coord.x, table[i].coord.y, table[i].coord.z);
+		selFacet->indices[i] = table[i].vertexId;
+	}
+	interfGeom->Rebuild(); //Will recalculate facet parameters
+	mApp->worker.MarkToReload();
 }
 
 void ImFacetCoordinates::Insert(int pos)
@@ -146,6 +173,10 @@ void ImFacetCoordinates::UpdateFromSelection()
 bool ImFacetCoordinates::ValidateInputs(int idx)
 {
 	if (idx >= table.size()) return true; // no such row, noting to check
+	if (!(table[idx].vertexId >= 0 && table[idx].vertexId < interfGeom->GetNbVertex())) { //wrong coordinates at row
+		ImIOWrappers::InfoPopup("Error", fmt::format("Invalid vertex id in row {}\n Vertex {} doesn't exist.", idx + 1, table[idx].vertexId + 1));
+		return false;
+	}
 	if (!Util::getNumber(&table[idx].coord.x, table[idx].coordInput[0])) {
 		ImIOWrappers::InfoPopup("Error", fmt::format("Invalid value in vertex {}, X coordinate", idx+1));
 		return false;
