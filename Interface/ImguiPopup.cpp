@@ -20,7 +20,7 @@ extern SynRad* mApp;
 namespace ImIOWrappers {
 
 	bool DoSave() {
-		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+		std::string fn = mApp->worker.GetCurrentFileName();
 		if (!fn.empty()) {
 			try {
 				mApp->imWnd->progress.Show();

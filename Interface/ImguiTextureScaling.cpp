@@ -99,7 +99,7 @@ void ImTextureScaling::Draw()
 	GetCurrentRange();
 	ImGui::Text(fmt::format("Min: {:.3g}", cMinScale));
 	ImGui::Text(fmt::format("Max: {:.3g}", cMaxScale));
-	ImGui::HelpMarker("These are the values obtained from geomatry\nthey are used by autoscale");
+	ImGui::HelpMarker("These are the values obtained from geometry\nthey are used by autoscale");
 	ImGui::EndChild();
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
@@ -163,6 +163,7 @@ void ImTextureScaling::SetCurrentButtonPress()
 	GetCurrentRange();
 	minInput = fmt::format("{:.3g}", cMinScale);
 	maxInput = fmt::format("{:.3g}", cMaxScale);
+	autoscale = false;
 	ApplyButtonPress();
 }
 

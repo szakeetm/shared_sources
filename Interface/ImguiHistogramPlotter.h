@@ -72,7 +72,7 @@ protected:
 	std::vector<size_t> comboOpts[IM_HISTOGRAM_TABS];
 	std::vector<ImPlotData> data[IM_HISTOGRAM_TABS];
 	ImPlotData globals[IM_HISTOGRAM_TABS];
-	long comboSelection=-2;
+	long comboSelection=-1;
 	int maxDisplayed = 1000;
 	bool limitPoints = true;
 	bool showValueOnHover = true;

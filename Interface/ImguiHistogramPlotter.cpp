@@ -57,9 +57,9 @@ void ImHistogramPlotter::Draw()
 		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
 #endif
 		);
-	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
+	if(!globalHist && comboSelection == -1) comboSelection = -1; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
-	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
+	if (ImGui::BeginCombo("##HIST", comboSelection == -1 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
 		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
 
 		for (const auto facetId : comboOpts[plotTab]) {
@@ -111,26 +111,28 @@ void ImHistogramPlotter::Draw()
 		// load selection settings
 		lastSel = interfGeom->GetSelectedFacets();
 		if (lastSel.size() != 0) {
-			InterfaceFacet* f = interfGeom->GetFacet(lastSel[0]);
-			settingsWindow.facetHistSet.recBounce = f->sh.facetHistogramParams.recordBounce;
-			settingsWindow.facetHistSet.nbBouncesMax = f->sh.facetHistogramParams.nbBounceMax;
-			settingsWindow.facetHistSet.maxRecNbBouncesInput = fmt::format("{}", settingsWindow.facetHistSet.nbBouncesMax);
-			settingsWindow.facetHistSet.bouncesBinSize = f->sh.facetHistogramParams.nbBounceBinsize;
-			settingsWindow.facetHistSet.bouncesBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.bouncesBinSize);
+			if (lastSel.size() == 1) {
+				InterfaceFacet* f = interfGeom->GetFacet(lastSel[0]);
+				settingsWindow.facetHistSet.recBounce = f->sh.facetHistogramParams.recordBounce;
+				settingsWindow.facetHistSet.nbBouncesMax = f->sh.facetHistogramParams.nbBounceMax;
+				settingsWindow.facetHistSet.maxRecNbBouncesInput = fmt::format("{}", settingsWindow.facetHistSet.nbBouncesMax);
+				settingsWindow.facetHistSet.bouncesBinSize = f->sh.facetHistogramParams.nbBounceBinsize;
+				settingsWindow.facetHistSet.bouncesBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.bouncesBinSize);
 
 
-			settingsWindow.facetHistSet.recFlightDist = f->sh.facetHistogramParams.recordDistance;
-			settingsWindow.facetHistSet.maxFlightDist = f->sh.facetHistogramParams.distanceMax;
-			settingsWindow.facetHistSet.maxFlightDistInput= fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
-			settingsWindow.facetHistSet.distBinSize = f->sh.facetHistogramParams.distanceBinsize;
-			settingsWindow.facetHistSet.distBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
+				settingsWindow.facetHistSet.recFlightDist = f->sh.facetHistogramParams.recordDistance;
+				settingsWindow.facetHistSet.maxFlightDist = f->sh.facetHistogramParams.distanceMax;
+				settingsWindow.facetHistSet.maxFlightDistInput= fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
+				settingsWindow.facetHistSet.distBinSize = f->sh.facetHistogramParams.distanceBinsize;
+				settingsWindow.facetHistSet.distBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
 #ifdef MOLFLOW
-			settingsWindow.facetHistSet.recTime = f->sh.facetHistogramParams.recordTime;
-			settingsWindow.facetHistSet.maxFlightTime = f->sh.facetHistogramParams.timeMax;
-			settingsWindow.facetHistSet.maxFlightTimeInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
-			settingsWindow.facetHistSet.timeBinSize = f->sh.facetHistogramParams.timeBinsize;
-			settingsWindow.facetHistSet.timeBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
+				settingsWindow.facetHistSet.recTime = f->sh.facetHistogramParams.recordTime;
+				settingsWindow.facetHistSet.maxFlightTime = f->sh.facetHistogramParams.timeMax;
+				settingsWindow.facetHistSet.maxFlightTimeInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
+				settingsWindow.facetHistSet.timeBinSize = f->sh.facetHistogramParams.timeBinsize;
+				settingsWindow.facetHistSet.timeBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
 #endif
+			}
 		}
 	}
 }
@@ -359,6 +361,13 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return;
 			}
+			if (fn.find(".csv")!=std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
+			}
 			fprintf(f, out.c_str());
 			fclose(f);
 		}
@@ -382,7 +391,7 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	globals[time] = ImPlotData();
 	data[time].clear();
 #endif
-	comboSelection = -2;
+	comboSelection = -1;
 
 	// global settings
 	settingsWindow.globalHistSet.recBounce = mApp->worker.model->sp.globalHistogramParams.recordBounce;
@@ -502,6 +511,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	//}
 
 	// global
+	parent->comboSelection = -1;
 	if (globalHistSet.recBounce) {
 		if (globalHistSet.maxRecNbBouncesInput != "...") {
 			if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {
