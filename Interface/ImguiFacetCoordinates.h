@@ -5,12 +5,12 @@
 class ImFacetCoordinates : public ImWindow {
 public:
 	void Draw();
+	void UpdateFromSelection();
 protected:
 	void DrawTable();
 	void ApplyButtonPress();
 	void Apply();
 	void Insert(int pos=-1);
-	void UpdateFromSelection();
 	bool ValidateInputs(int idx);
 	enum Axis : short {X,Y,Z};
 	Axis axis = X;

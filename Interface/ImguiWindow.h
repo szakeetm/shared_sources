@@ -42,6 +42,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiMovingParts.h"
 #include "ImguiMeasureForce.h"
 #include "ImguiFacetCoordinates.h"
+#include "ImguiFacetScale.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -96,6 +97,7 @@ public:
     ImMovingParts movPart;
     ImMeasureForce measForce;
     ImFacetCoordinates facCoord;
+    ImFacetScale facScale;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

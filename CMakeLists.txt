@@ -137,6 +137,7 @@ set(INTERFACE_FILES
         Interface/ImguiMovingParts.cpp
         Interface/ImguiMeasureForce.cpp
         Interface/ImguiFacetCoordinates.cpp
+        Interface/ImguiFacetScale.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h

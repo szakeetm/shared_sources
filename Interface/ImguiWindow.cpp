@@ -224,6 +224,8 @@ void ImguiWindow::init() {
     measForce.Init(mApp);
     facCoord = ImFacetCoordinates();
     facCoord.Init(mApp);
+    facScale = ImFacetScale();
+    facScale.Init(mApp);
 
     RegisterShortcuts();
 
@@ -418,6 +420,7 @@ void ImguiWindow::renderSingle() {
         movPart.Draw();
         measForce.Draw();
         facCoord.Draw();
+        facScale.Draw();
 
         shortcutMan.DoShortcuts();
 
@@ -446,4 +449,5 @@ void ImguiWindow::Refresh()
     histPlot.LoadHistogramSettings();
     convPlot.Reload();
     movPart.Update();
+    facCoord.UpdateFromSelection();
 }

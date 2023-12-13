@@ -810,6 +810,7 @@ void SwapNormalMenuPress() {
     }
 }
 void ShiftIndicesMenuPress() {
+    mApp->imWnd->facCoord.UpdateFromSelection();
     LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
@@ -828,17 +829,17 @@ void FacetCoordinatesMenuPress() {
 }
 
 void FacetScaleMenuPress() {
-    
     if (interfGeom->IsLoaded()) {
+        mApp->imWnd->facScale.Show();
+        /*
         if (!mApp->scaleFacet) mApp->scaleFacet = new ScaleFacet(interfGeom, &mApp->worker);
 
         mApp->scaleFacet->SetVisible(true);
 
+    */
     }
     else {
-        mApp->imWnd->popup.Open("No Geometry", "", {
-            std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
-            });
+        ImIOWrappers::InfoPopup("Error", "No geometry");
     }
 }
 void FacetMirrorProjectMenuPress() {
