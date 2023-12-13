@@ -66,7 +66,7 @@ protected:
 	//variables
 	InterfaceGeometry* interfGeom;
 	ImHistogramSettings settingsWindow;
-	plotTabs plotTab = bounces;
+	plotTabs plotTab = bounces, prevPlotTab = bounces;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
 	std::vector<size_t> comboOpts[IM_HISTOGRAM_TABS];

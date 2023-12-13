@@ -18,7 +18,6 @@ extern MolFlow* mApp;
 void ImHistogramPlotter::Draw()
 {
 	if (!drawn) return;
-
 	float dummyWidth;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::SetWindowPos("Histogram Plotter", ImVec2(settingsWindow.width + (3 * txtW), 4 * txtW), ImGuiCond_FirstUseEver);
@@ -41,6 +40,11 @@ void ImHistogramPlotter::Draw()
 		}
 #endif
 		ImGui::EndTabBar();
+	}
+	if (prevPlotTab != plotTab) {
+		// tab changed
+		comboSelection = -1;
+		prevPlotTab = plotTab;
 	}
 	DrawPlot();
 	if(ImGui::Button("<< Hist settings")) {
@@ -312,7 +316,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 		}
 	}
 	RefreshPlots();
-	bool exportGlobal = globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr;
+	bool exportGlobal = globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr && globals[plotTab].x->size()!=0 && globals[plotTab].y->size() != 0;
 	if (plottedOnly && !exportGlobal && data[plotTab].size() == 0) {
 		ImIOWrappers::InfoPopup("Error", "Nothing to export");
 		return;
@@ -332,7 +336,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 		out.append(fmt::format("{}\t", exportGlobal ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
 		
 		if (exportGlobal) {
-			if (i < globals[plotTab].x->size()) {
+			if (i < globals[plotTab].y->size()) {
 				out.append(fmt::format("{}\t", globals[plotTab].y->at(i)));
 			}
 		}
