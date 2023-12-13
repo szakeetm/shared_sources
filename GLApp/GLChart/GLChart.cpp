@@ -1053,7 +1053,7 @@ void GLChart::SaveFile() {
 			// Get DataList handle and write dataview name
 			DataList* ptr[MAX_VIEWS];
 			int j = 0;
-			fprintf(f, "X axis\t");
+			fprintf(f, "X axis%s",separator.c_str());
 			for (int i = 0; i < nbv1; i++) {
 				ptr[j++] = y1Axis->GetDataView(i)->GetData();
 				sprintf(tmp, "%s", y1Axis->GetDataView(i)->GetName());
