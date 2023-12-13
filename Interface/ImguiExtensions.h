@@ -47,6 +47,7 @@ namespace ImGui {
     bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
     bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width = 0);
     bool TriState(const char* desc, size_t* v);
+    bool InputTextLLabel(const std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width=100);
 
 // Add spacing of checkbox width
     void AddCheckboxWidthSpacing();

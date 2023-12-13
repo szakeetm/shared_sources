@@ -182,6 +182,7 @@ void ImFacetCoordinates::Insert(int pos)
 
 void ImFacetCoordinates::UpdateFromSelection()
 {
+	if (selFacet == nullptr) return;
 	table.clear();
 	size_t nbIndex = selFacet->sh.nbIndex;
 	for (size_t i = 0; i < nbIndex; i++) {

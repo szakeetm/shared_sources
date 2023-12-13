@@ -332,6 +332,15 @@ namespace ImGui {
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
         return pressed;
     }
+    
+    bool InputTextLLabel(const std::string desc, std::string* text, ImGuiInputTextFlags flags, float width)
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(desc); ImGui::SameLine();
+        ImGui::SetNextItemWidth(width);
+        return (ImGui::InputText("##"+desc, text));
+    }
+    
     void HelpMarker(const std::string& text)
     {
         ImGui::TextDisabled("(?)");
