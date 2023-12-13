@@ -8,6 +8,7 @@
 #include "Facet_shared.h"
 #include "implot/implot.h"
 #include "implot/implot_internal.h"
+#include "Helper/MathTools.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -402,10 +403,10 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	size_t n = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < n; i++) {
 		const auto& facet = interfGeom->GetFacet(i);
-		if (facet->facetHistogramCache.nbHitsHistogram.size() != 0) comboOpts[bounces].push_back(i);
-		if (facet->facetHistogramCache.distanceHistogram.size() != 0) comboOpts[distance].push_back(i);
+		if (facet->facetHistogramCache.nbHitsHistogram.size() != 0 && !Contains(comboOpts[bounces],i)) comboOpts[bounces].push_back(i);
+		if (facet->facetHistogramCache.distanceHistogram.size() != 0 && !Contains(comboOpts[distance], i)) comboOpts[distance].push_back(i);
 #ifdef MOLFLOW
-		if (facet->facetHistogramCache.timeHistogram.size() != 0) comboOpts[time].push_back(i);
+		if (facet->facetHistogramCache.timeHistogram.size() != 0 && !Contains(comboOpts[time], i)) comboOpts[time].push_back(i);
 #endif
 	}
 }
@@ -652,14 +653,18 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				if (parent->data[i][j].id == facetId)
 					parent->data[i][j] = ImPlotData();
 		}
-		if(facetHistSet.recBounce && !parent->IsPlotted(bounces,facetId)) parent->comboOpts[bounces].push_back(facetId);
+		if (facetHistSet.recBounce) {
+			if( !Contains(parent->comboOpts[bounces], facetId)) parent->comboOpts[bounces].push_back(facetId);
+		}
 		else {
 			for (int i = 0; i < parent->comboOpts[bounces].size(); i++) if (parent->comboOpts[bounces][i] == facetId) {
 				parent->comboOpts[bounces].erase(parent->comboOpts[bounces].begin() + i);
 				break;
 			}
 		}
-		if(facetHistSet.recFlightDist && !parent->IsPlotted(distance, facetId)) parent->comboOpts[distance].push_back(facetId);
+		if(facetHistSet.recFlightDist) {
+			if (!Contains(parent->comboOpts[distance], facetId)) parent->comboOpts[distance].push_back(facetId);
+		}
 		else {
 			for (int i = 0; i < parent->comboOpts[distance].size(); i++) if (parent->comboOpts[distance][i] == facetId) {
 				parent->comboOpts[distance].erase(parent->comboOpts[distance].begin() + i);
@@ -667,7 +672,9 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			}
 		}
 #ifdef MOLFLOW
-		if(facetHistSet.recTime && !parent->IsPlotted(time, facetId)) parent->comboOpts[time].push_back(facetId);
+		if(facetHistSet.recTime) {
+			if (!Contains(parent->comboOpts[time], facetId)) parent->comboOpts[time].push_back(facetId);
+		}
 		else {
 			for (int i = 0; i < parent->comboOpts[time].size(); i++) if (parent->comboOpts[time][i] == facetId) {
 				parent->comboOpts[time].erase(parent->comboOpts[time].begin() + i);
