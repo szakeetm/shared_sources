@@ -278,7 +278,7 @@ namespace ImGui {
         }
 
     }
-    bool TriState(const char* label, size_t* v) {
+    bool TriState(const char* label, size_t* v, bool allowManualMixed) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -302,9 +302,16 @@ namespace ImGui {
         bool pressed = ButtonBehavior(total_bb, id, &hovered, &held);
         if (pressed)
         {
-            if (*v == 0) *v = 2; // disable -> half
-            else if (*v == 2) *v = 1; // half -> full
-            else if (*v == 1) *v = 0; // full -> disabled
+            if (allowManualMixed) {
+                if (*v == 0) *v = 2; // disabled -> half
+                else if (*v == 2) *v = 1; // half -> full
+                else if (*v == 1) *v = 0; // full -> disabled
+            }
+            else {
+                if (*v == 0) *v = 1; // disable -> enabled
+                else if (*v == 1) *v = 0; // full -> disabled
+                else if (*v == 2) *v = 1; // half -> full
+            }
             MarkItemEdited(id);
         }
 

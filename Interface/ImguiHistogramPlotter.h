@@ -37,19 +37,19 @@ protected:
 		ImHistogramPlotter* parent;
 		typedef struct {
 			bool amIDisabled = true;
-			bool recBounce = false;
+			size_t recBounce = false;
 			std::string maxRecNbBouncesInput = "10000";
 			size_t nbBouncesMax = 10000;
 			std::string bouncesBinSizeInput = "1";
 			int bouncesBinSize = 1;
-			bool recFlightDist = false;
+			size_t recFlightDist = false;
 			std::string maxFlightDistInput = "10";
 			double maxFlightDist = 10;
 			std::string distBinSizeInput = "0.001";
 			double distBinSize = 0.001f;
 
 #ifdef MOLFLOW
-			bool recTime = false;
+			size_t recTime = false;
 			std::string maxFlightTimeInput = "0.1";
 			double maxFlightTime = 0.1f;
 			std::string timeBinSizeInput = "1e-5";
@@ -60,7 +60,7 @@ protected:
 		} histSet;
 		histSet globalHistSet, facetHistSet;
 		bool Apply();
-		void DrawSettingsGroup(histSet& set);
+		void DrawSettingsGroup(histSet& set, bool tristate=false);
 	};
 
 	//variables
