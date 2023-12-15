@@ -37,7 +37,10 @@ namespace ImIOWrappers {
 				mApp->RemoveRecent(fn.c_str());
 			}
 		}
-		if (fn == "") return false;
+		if (fn == "") {
+			LockWrapper myLock(mApp->imguiRenderLock);
+			mApp->SaveFileAs();
+		}
 		return true;
 	}
 

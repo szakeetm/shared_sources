@@ -107,9 +107,10 @@ void ImHistogramPlotter::Draw()
 	ImGui::End();
 	settingsWindow.Draw();
 	static std::vector<size_t> lastSel;
-	if (lastSel != interfGeom->GetSelectedFacets()) {
+	std::vector<size_t> newSel = interfGeom->GetSelectedFacets();
+	if (lastSel != newSel) {
 		// load selection settings
-		lastSel = interfGeom->GetSelectedFacets();
+		lastSel = newSel;
 		settingsWindow.facetHistSet.recBounce = 3;
 		settingsWindow.facetHistSet.maxRecNbBouncesInput = "";
 		settingsWindow.facetHistSet.bouncesBinSizeInput = "";
@@ -742,11 +743,13 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 #endif
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	for (const auto facetId : selectedFacets) { // for every facet
+		/*
 		for (int i = 0; i < IM_HISTOGRAM_TABS; i++) { // for every tab
 			for (int j = 0; j < parent->data[i].size(); j++) // for every plotted graph 
 				if (parent->data[i][j].id == facetId)
 					parent->data[i][j] = ImPlotData();
 		}
+		*/
 		InterfaceFacet* f = interfGeom->GetFacet(facetId);
 		if (facetHistSet.recBounce != 2) f->sh.facetHistogramParams.recordBounce = facetHistSet.recBounce;
 		if (facetHistSet.maxRecNbBouncesInput != "...") f->sh.facetHistogramParams.nbBounceMax = facetHistSet.nbBouncesMax;
@@ -760,7 +763,6 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 		if (facetHistSet.timeBinSizeInput != "...") f->sh.facetHistogramParams.timeBinsize = facetHistSet.timeBinSize;
 #endif
 	}
-	parent->RefreshFacetLists();
 	mApp->changedSinceSave = true;
 	mApp->worker.needsReload = true; // to trigger realreload in update
 	try {
@@ -769,6 +771,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	catch (const std::exception& e) {
 		ImIOWrappers::InfoPopup("Histogram Apply Error", e.what());
 	}
+	parent->RefreshFacetLists();
 	return true;
 }
 
