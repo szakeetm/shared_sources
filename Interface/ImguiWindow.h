@@ -55,6 +55,7 @@ public:
     void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
     void Refresh();
+    void Reset();
 
     GLApplication* app;
 

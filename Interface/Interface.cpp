@@ -1,3 +1,4 @@
+#include "Interface.h"
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -2693,6 +2694,12 @@ void Interface::ImRefresh()
 {
     if (!imWnd) return;
     imWnd->Refresh();
+}
+
+void Interface::ImReset()
+{
+    if (!imWnd) return;
+    imWnd->Reset();
 }
 
 void Interface::ResetAutoSaveTimer() {

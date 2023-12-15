@@ -433,17 +433,6 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 
 void ImHistogramPlotter::LoadHistogramSettings()
 {
-	comboOpts[bounces].clear();
-	globals[bounces] = ImPlotData();
-	data[bounces].clear();
-	comboOpts[distance].clear();
-	globals[distance] = ImPlotData();
-	data[distance].clear();
-#ifdef MOLFLOW
-	comboOpts[time].clear();
-	globals[time] = ImPlotData();
-	data[time].clear();
-#endif
 	comboSelection = -1;
 
 	// global settings
@@ -483,6 +472,44 @@ bool ImHistogramPlotter::IsPlotted(plotTabs tab, size_t facetId)
 		if (plot.id == facetId) return true;
 	}
 	return false;
+}
+
+void ImHistogramPlotter::RefreshFacetLists()
+{
+	comboOpts[bounces].clear();
+	comboOpts[distance].clear();
+#ifdef MOLFLOW
+	comboOpts[time].clear();
+#endif
+	std::vector<size_t> facets = interfGeom->GetAllFacetIndices();
+	for (size_t idx : facets) { // get all facets which have histograms
+		InterfaceFacet* f = interfGeom->GetFacet(idx);
+		if (f->sh.facetHistogramParams.recordBounce) {
+			comboOpts[bounces].push_back(idx);
+		}
+		if (f->sh.facetHistogramParams.recordDistance) {
+			comboOpts[distance].push_back(idx);
+		}
+#ifdef MOLFLOW
+		if (f->sh.facetHistogramParams.recordTime) {
+			comboOpts[time].push_back(idx);
+		}
+#endif
+	}
+	for (short tab = 0; tab < IM_HISTOGRAM_TABS; tab++) { // remove deleted facets from plot
+		for (int i = data[tab].size()-1; i >= 0; --i) {
+			if (!Contains(comboOpts[tab], data[tab][i].id)) {
+				data[tab].erase(data[tab].begin() + i);
+			}
+		}
+	}
+}
+
+void ImHistogramPlotter::Reset()
+{
+	for (short tab = 0; tab < IM_HISTOGRAM_TABS; tab++) {
+		data[tab].clear();
+	}
 }
 
 void ImHistogramPlotter::DrawMenuBar()
@@ -720,35 +747,6 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				if (parent->data[i][j].id == facetId)
 					parent->data[i][j] = ImPlotData();
 		}
-		if (facetHistSet.recBounce==1) {
-			if( !Contains(parent->comboOpts[bounces], facetId)) parent->comboOpts[bounces].push_back(facetId);
-		}
-		else {
-			for (int i = 0; i < parent->comboOpts[bounces].size(); i++) if (parent->comboOpts[bounces][i] == facetId) {
-				parent->comboOpts[bounces].erase(parent->comboOpts[bounces].begin() + i);
-				break;
-			}
-		}
-		if(facetHistSet.recFlightDist==1) {
-			if (!Contains(parent->comboOpts[distance], facetId)) parent->comboOpts[distance].push_back(facetId);
-		}
-		else {
-			for (int i = 0; i < parent->comboOpts[distance].size(); i++) if (parent->comboOpts[distance][i] == facetId) {
-				parent->comboOpts[distance].erase(parent->comboOpts[distance].begin() + i);
-				break;
-			}
-		}
-#ifdef MOLFLOW
-		if(facetHistSet.recTime==1) {
-			if (!Contains(parent->comboOpts[time], facetId)) parent->comboOpts[time].push_back(facetId);
-		}
-		else {
-			for (int i = 0; i < parent->comboOpts[time].size(); i++) if (parent->comboOpts[time][i] == facetId) {
-				parent->comboOpts[time].erase(parent->comboOpts[time].begin() + i);
-				break;
-			}
-		}
-#endif
 		InterfaceFacet* f = interfGeom->GetFacet(facetId);
 		if (facetHistSet.recBounce != 2) f->sh.facetHistogramParams.recordBounce = facetHistSet.recBounce;
 		if (facetHistSet.maxRecNbBouncesInput != "...") f->sh.facetHistogramParams.nbBounceMax = facetHistSet.nbBouncesMax;
@@ -762,7 +760,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 		if (facetHistSet.timeBinSizeInput != "...") f->sh.facetHistogramParams.timeBinsize = facetHistSet.timeBinSize;
 #endif
 	}
-
+	parent->RefreshFacetLists();
 	mApp->changedSinceSave = true;
 	mApp->worker.needsReload = true; // to trigger realreload in update
 	try {
@@ -777,22 +775,22 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set, bool tristate)
 {
 	ImGui::TriState("Record bounces until absorbtion", &set.recBounce, tristate);
-	if (!set.amIDisabled && !set.recBounce) ImGui::BeginDisabled();
+	if (!set.amIDisabled && set.recBounce!=1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded no. of bounces:", &set.maxRecNbBouncesInput,0,txtW*6);
 	ImGui::InputTextRightSide("Bounces bin size:", &set.bouncesBinSizeInput,0,txtW*6);
-	if (!set.amIDisabled && !set.recBounce) ImGui::EndDisabled();
+	if (!set.amIDisabled && set.recBounce != 1) ImGui::EndDisabled();
 
 	ImGui::TriState("Record flight distance until absorption", &set.recFlightDist, tristate);
-	if (!set.amIDisabled && !set.recFlightDist) ImGui::BeginDisabled();
+	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded flight distance (cm):", &set.maxFlightDistInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Distance bin size (cm):", &set.distBinSizeInput, 0, txtW * 6);
-	if (!set.amIDisabled && !set.recFlightDist) ImGui::EndDisabled();
+	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::EndDisabled();
 #ifdef MOLFLOW
 	ImGui::TriState("Record flight time until absorption", &set.recTime, tristate);
-	if (!set.amIDisabled && !set.recTime) ImGui::BeginDisabled();
+	if (!set.amIDisabled && set.recTime != 1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded flight time (s):", &set.maxFlightTimeInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Time bin size (s):", &set.timeBinSizeInput, 0, txtW * 6);
-	if (!set.amIDisabled && !set.recTime) ImGui::EndDisabled();
+	if (!set.amIDisabled && set.recTime != 1) ImGui::EndDisabled();
 #endif
 	// to the best of my understanding, this does not do anything in the Legacy code
 	// if that is the case it can be removed

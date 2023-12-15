@@ -261,6 +261,7 @@ public:
 	virtual void UpdatePlotters() {}
 
 	void ImRefresh();
+	void ImReset();
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time

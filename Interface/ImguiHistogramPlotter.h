@@ -20,6 +20,8 @@ public:
 	void LoadHistogramSettings();
 	bool anchor = true;
 	bool IsPlotted(plotTabs tab, size_t facetId);
+	void RefreshFacetLists();
+	void Reset(); // hard reset, retain no data
 protected:
 	//functions
 	void DrawPlot();

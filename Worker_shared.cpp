@@ -199,6 +199,7 @@ void Worker::ThrowSubProcError(const char* message) {
 void Worker::MarkToReload() {
 	//Schedules a reload
 	//Actual reloading is done by RealReload() method
+	mApp->ImRefresh();
 	needsReload = true;
 #ifdef MOLFLOW
 	if (mApp->globalSettings) mApp->globalSettings->UpdateOutgassing();
