@@ -43,7 +43,7 @@ void ImHistogramPlotter::Draw()
 	}
 	if (prevPlotTab != plotTab) {
 		// tab changed
-		comboSelection = -1;
+		comboSelection = -2;
 		prevPlotTab = plotTab;
 	}
 	DrawPlot();
@@ -57,9 +57,9 @@ void ImHistogramPlotter::Draw()
 		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
 #endif
 		);
-	if(!globalHist && comboSelection == -1) comboSelection = -1; // if global hist was selected but becomes disabled reset selection
+	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
-	if (ImGui::BeginCombo("##HIST", comboSelection == -1 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
+	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
 		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
 
 		for (const auto facetId : comboOpts[plotTab]) {
