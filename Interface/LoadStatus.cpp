@@ -138,7 +138,8 @@ void LoadStatus::Update() {
 		++i;
 	}
 	Uint32 now = SDL_GetTicks();
-	if ((now - lastUpd) > 250) {
+	int delay_ms= IsVisible() ? 250 : 500; //Update frequency vs. initial display delay
+	if ((now - lastUpd) > delay_ms) {
 		SetVisible(true);
 		mApp->DoEvents(); //draw table and catch stop button press
 		lastUpd = SDL_GetTicks();
