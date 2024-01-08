@@ -56,6 +56,7 @@ public:
 
     void Refresh();
     void Reset();
+    void LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 
     GLApplication* app;
 

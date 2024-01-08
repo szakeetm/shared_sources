@@ -28,7 +28,7 @@ protected:
 	bool isDragging = false;
 	float dummyWidth = 0;
 	std::string name = "Texture Plotter []###TexturePlotter";
-	std::vector<std::string> comboOpts = { u8"Cell Area (cm\u00B2)", "# of MC hits", "Impingement rate[1 / m\u00B2 / sec]]", "Particle density[1 / m3]", "Gas density[kg / m3]", "Pressure[mBar]", "Avg.speed estimate[m / s]", "Incident velocity vector[m / s]", "# of velocity vectors" };
+	std::vector<std::string> comboOpts = { u8"Cell Area (cm\u00B2)", "# of MC hits", u8"Impingement rate[1 / m\u00B2 / sec]]", "Particle density[1 / m3]", "Gas density[kg / m3]", "Pressure[mBar]", "Avg.speed estimate[m / s]", "Incident velocity vector[m / s]", "# of velocity vectors" };
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
 	bool resizableColumns = false;
@@ -42,7 +42,6 @@ protected:
 	size_t selFacetId;
 	double maxValue; // value of max value
 	size_t maxX, maxY; // column and row of max value
-	int columnFlags = 0;
 	int tableFlags = 0;
 	int columnWidth; // column width (is multiplied by character width)
 	bool scrollToSelected = false;

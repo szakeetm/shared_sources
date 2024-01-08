@@ -86,7 +86,7 @@ void ImTexturePlotter::DrawTextureTable()
 
 	static ImGuiIO& io = ImGui::GetIO();
 	
-	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags)) {
+	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags | ImGuiTableFlags_RowBg)) {
 		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
 			selectionStart = ImGui::GetMousePos();
 			isDragging = true;
@@ -108,9 +108,10 @@ void ImTexturePlotter::DrawTextureTable()
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < width; ++i) {
-			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), columnFlags, columnWidth*txtW);
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0, columnWidth*txtW);
 		}
-		ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+		ImGui::TableNextRow();
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(186, 212, 243, 255));
 		ImGui::TableSetColumnIndex(0);
 		ImGui::Text(u8"v\u20D7\\u\u20D7");
 		for (int i = 0; i < width; ++i) {

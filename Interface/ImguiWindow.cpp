@@ -441,3 +441,8 @@ void ImguiWindow::Reset()
     histPlot.Reset();
     Refresh();
 }
+
+void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    
+}

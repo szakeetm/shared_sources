@@ -2690,6 +2690,11 @@ int Interface::FrameMove() {
     return GL_OK;
 }
 
+void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    imWnd->LoadProfileFromFile(interfaceSettings);
+}
+
 void Interface::ImRefresh()
 {
     if (!imWnd) return;

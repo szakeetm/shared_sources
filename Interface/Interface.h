@@ -254,8 +254,8 @@ protected:
 	virtual void InsertGeometry(bool newStr, const std::string& fileName) {}
 	virtual void SaveFile() {}
 	int FrameMove() override;
-
 public:
+	virtual void ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 	virtual void UpdateFacetParams(bool updateSelection) {}
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
