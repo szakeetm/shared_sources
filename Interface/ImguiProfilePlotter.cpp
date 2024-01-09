@@ -51,7 +51,7 @@ void ImProfilePlotter::Draw()
 		AddCurve();
 	} ImGui::SameLine();
 	if(ImGui::Button("Remove Curve")) {
-		RemoveCurve();
+		RemoveCurve(selectedProfile);
 	} ImGui::SameLine();
 	if(ImGui::Button("Remove all")) {
 		data.clear();
@@ -94,6 +94,8 @@ void ImProfilePlotter::Init(Interface* mApp_)
 
 void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 {
+	loading = true;
+	data.clear();
 	setLog = log;
 	for (int id : plotted) {
 		if (IsPlotted(id)) continue;
@@ -101,8 +103,16 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	}
 }
 
+void ImProfilePlotter::Refresh()
+{
+	interfGeom = mApp->worker.GetGeometry();
+	if(!loading) data.clear();
+	selectedProfile = -1;
+}
+
 void ImProfilePlotter::DrawProfileGraph()
 {
+	if (loading) loading = false;
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
@@ -165,10 +175,11 @@ void ImProfilePlotter::AddCurve()
 	}
 }
 
-void ImProfilePlotter::RemoveCurve()
+void ImProfilePlotter::RemoveCurve(int id)
 {
 	if (data.size() == 0) return;
-	if (selectedProfile == -1) {
+	if (id == selectedProfile) selectedProfile = -1;
+	if (id == -1) {
 		std::vector<size_t> facetIds = ParseManualFacetList();
 		long long i = data.size()-1; // has to be signed
 		for (; i >= 0 && i<data.size(); i--) {
@@ -182,7 +193,7 @@ void ImProfilePlotter::RemoveCurve()
 		return;
 	}
 	for (size_t i = 0; i < data.size(); i++)
-		if (data[i].id == selectedProfile) {
+		if (data[i].id == id) {
 			data.erase(data.begin() + i);
 			return;
 		}
@@ -201,7 +212,7 @@ void ImProfilePlotter::ComputeProfiles()
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
 		if (plot.id > interfGeom->GetNbFacet()) {
-			data.clear();
+			RemoveCurve(plot.id);
 			return;
 		}
 		plot.y->clear();

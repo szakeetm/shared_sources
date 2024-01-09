@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
-#include "GLFormula.h"
+#include "../GLApp/GLFormula.h"
 #include "Geometry_shared.h"
 #include "imgui.h"
 #include <memory>

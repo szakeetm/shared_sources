@@ -3,7 +3,7 @@
 #include "Geometry_shared.h"
 #include <string>
 #include <vector>
-#include "GLFormula.h"
+#include "../GLApp/GLFormula.h"
 #include "Buffer_shared.h"
 
 class ImProfilePlotter : public ImWindow {
@@ -11,13 +11,14 @@ public:
 	void Draw();
 	void Init(Interface* mApp_);
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
+	void Refresh();
 private:
 	void DrawProfileGraph();
 
 	// button actions
 	void ShowFacet();
 	void AddCurve();
-	void RemoveCurve();
+	void RemoveCurve(int id);
 	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
 	void DrawMenuBar();
@@ -51,4 +52,5 @@ private:
 	bool showDatapoints = false;
 	bool showValueOnHover = true;
 	bool setLog = false;
+	bool loading = false;
 };
