@@ -162,6 +162,22 @@ void ImConvergencePlotter::Reload()
 	selectedFormula = -1;
 }
 
+void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
+{
+	data.clear();
+	logY = log;
+	for (int id : plotted) {
+		id += 494667622;
+		if (IsPlotted(id)) continue;
+		if (id >= 0 && id < mApp->appFormulas->formulas.size()) {
+			if (mApp->appFormulas->formulas[id].hasEvalError) continue;
+			else {
+				this->data.push_back(ImUtils::MakePlotData(id));
+			}
+		}
+	}
+}
+
 void ImConvergencePlotter::Draw()
 {
 	if (!drawn) return;
@@ -236,7 +252,8 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotAxisFlags_LogScale : 0))) {
+		if (logY) logY = false;
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];

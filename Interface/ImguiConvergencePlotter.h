@@ -10,6 +10,7 @@ public:
 	void Init(Interface* mApp);
 	void RemovePlot(int idx);
 	void Reload();
+	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);
