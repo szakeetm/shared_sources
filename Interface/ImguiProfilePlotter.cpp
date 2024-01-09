@@ -200,6 +200,10 @@ void ImProfilePlotter::ComputeProfiles()
 	
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
+		if (plot.id > interfGeom->GetNbFacet()) {
+			data.clear();
+			return;
+		}
 		plot.y->clear();
 		InterfaceFacet* f = interfGeom->GetFacet(plot.id);
 		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.id].momentResults[mApp->worker.displayedMoment].profile;
