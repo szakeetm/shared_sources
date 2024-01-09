@@ -444,5 +444,7 @@ void ImguiWindow::Reset()
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
 {
-    
+    if (interfaceSettings->profilePlotterSettings.hasData) {
+        profPlot.LoadSettingsFromFile(interfaceSettings->profilePlotterSettings.logYscale, interfaceSettings->profilePlotterSettings.viewIds);
+    }
 }

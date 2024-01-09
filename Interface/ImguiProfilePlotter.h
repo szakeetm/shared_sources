@@ -10,6 +10,7 @@ class ImProfilePlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
+	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 private:
 	void DrawProfileGraph();
 
@@ -49,4 +50,5 @@ private:
 	bool lockYtoZero = false;
 	bool showDatapoints = false;
 	bool showValueOnHover = true;
+	bool setLog = false;
 };
