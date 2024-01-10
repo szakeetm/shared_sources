@@ -391,7 +391,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	out[out.size() - 1] = '\n';
 	int n = std::max(exportGlobal ? globals[plotTab].x->size() : 0, data[plotTab].size() == 0 ? 0 : data[plotTab][0].x->size());
 	for (int i = 0; i < n; ++i) {
-		out.append(fmt::format("{}\t", exportGlobal ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
+		out.append(fmt::format("{}\t", (exportGlobal && i<globals[plotTab].x->size()) ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
 		
 		if (exportGlobal) {
 			if (i < globals[plotTab].y->size()) {
