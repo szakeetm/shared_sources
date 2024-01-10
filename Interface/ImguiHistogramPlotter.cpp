@@ -512,7 +512,10 @@ void ImHistogramPlotter::Reset()
 {
 	for (short tab = 0; tab < IM_HISTOGRAM_TABS; tab++) {
 		data[tab].clear();
+		if (globals[tab].x != nullptr) globals[tab].x.reset();
+		if (globals[tab].y != nullptr) globals[tab].y.reset();
 	}
+	RefreshFacetLists();
 }
 
 void ImHistogramPlotter::DrawMenuBar()
