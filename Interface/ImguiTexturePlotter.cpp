@@ -151,7 +151,7 @@ void ImTexturePlotter::DrawTextureTable()
 				}
 				if (ImGui::IsItemHovered()) hovered = true;
 				if (j == width) continue;
-				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + std::to_string(j), isSelected)) {
+				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
 					if (isDragging) continue;
 					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 						BoxSelect(selection[0], std::pair<int, int>(i, j));
