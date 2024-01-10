@@ -41,9 +41,17 @@ void ImHistogramPlotter::Draw()
 #endif
 		ImGui::EndTabBar();
 	}
+	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
+		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
+#ifdef MOLFLOW
+		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
+#endif
+		);
 	if (prevPlotTab != plotTab) {
 		// tab changed
 		comboSelection = -2;
+		if(comboOpts[plotTab].size()!=0) comboSelection = 0;
+		if (globalHist) comboSelection = -1;
 		prevPlotTab = plotTab;
 	}
 	DrawPlot();
@@ -51,12 +59,6 @@ void ImHistogramPlotter::Draw()
 		settingsWindow.Toggle();
 	} ImGui::SameLine();
 	
-	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
-		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
-#ifdef MOLFLOW
-		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
-#endif
-		);
 	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
 	ImGui::SetNextItemWidth(txtW * 20);
 	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
@@ -592,7 +594,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	//}
 
 	// global
-	parent->comboSelection = -1;
+	parent->prevPlotTab=none;
 	if (globalHistSet.recBounce==1) {
 		if (globalHistSet.maxRecNbBouncesInput != "...") {
 			if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {

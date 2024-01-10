@@ -11,7 +11,7 @@
 class ImHistogramPlotter : public ImWindow {
 public:
 #ifdef MOLFLOW
-	enum plotTabs : BYTE {bounces=0, distance=1, time=2}; // using BYTE as it is the smalest type capable of holding 3 values
+	enum plotTabs : BYTE {bounces=0, distance=1, time=2, none=3}; // using BYTE as it is the smalest type capable of holding 3 values
 #else
 	enum plotTabs : BYTE { bounces = 0, distance = 1}; // using BYTE as it is the smalest type capable of holding 3 values
 #endif
@@ -68,7 +68,7 @@ protected:
 	//variables
 	InterfaceGeometry* interfGeom;
 	ImHistogramSettings settingsWindow;
-	plotTabs plotTab = bounces, prevPlotTab = bounces;
+	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
 	std::vector<size_t> comboOpts[IM_HISTOGRAM_TABS];
