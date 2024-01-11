@@ -37,8 +37,10 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	for (int i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
 		if (drawManual) {
-			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
-			xvar->value = data[0].x->at(i);
+			if (formula.GetNbVariable() != 0) {
+				std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+				xvar->value = data[0].x->at(i);
+			}
 			double yvar = formula.Evaluate();
 			out.append(fmt::format("{}\t", yvar));
 		}
