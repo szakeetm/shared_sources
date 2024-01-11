@@ -50,7 +50,7 @@ void ImHistogramPlotter::Draw()
 	if (prevPlotTab != plotTab) {
 		// tab changed
 		comboSelection = -2;
-		if(comboOpts[plotTab].size()!=0) comboSelection = 0;
+		if(comboOpts[plotTab].size()!=0) comboSelection = comboOpts[plotTab][0];
 		if (globalHist) comboSelection = -1;
 		prevPlotTab = plotTab;
 	}
@@ -65,14 +65,7 @@ void ImHistogramPlotter::Draw()
 		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
 
 		for (const auto facetId : comboOpts[plotTab]) {
-			InterfaceFacet* f = interfGeom->GetFacet(facetId);
-			bool showFacet = ((plotTab == bounces && f->sh.facetHistogramParams.recordBounce)
-				|| (plotTab == distance && f->sh.facetHistogramParams.recordDistance)
-#ifdef MOLFLOW
-				|| (plotTab == time && f->sh.facetHistogramParams.recordTime)
-#endif
-				);
-			if (showFacet && ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
+			if (ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
 		}
 
 		ImGui::EndCombo();
@@ -741,10 +734,27 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	if (globalHistSet.recFlightDist != 2) mApp->worker.model->sp.globalHistogramParams.recordDistance = globalHistSet.recFlightDist;
 	if (globalHistSet.maxFlightDistInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceMax = globalHistSet.maxFlightDist;
 	if (globalHistSet.distBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceBinsize = globalHistSet.distBinSize;
+
+	if (!mApp->worker.model->sp.globalHistogramParams.recordBounce) 
+	{
+		parent->globals[bounces].x.reset();
+		parent->globals[bounces].y.reset();
+	}
+	if (!mApp->worker.model->sp.globalHistogramParams.recordDistance) 
+	{
+		parent->globals[distance].x.reset();
+		parent->globals[distance].y.reset();
+	}
 #ifdef MOLFLOW
 	if (globalHistSet.recTime != 2) mApp->worker.model->sp.globalHistogramParams.recordTime = globalHistSet.recTime;
 	if (globalHistSet.maxFlightTimeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeMax = globalHistSet.maxFlightTime;
 	if (globalHistSet.timeBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeBinsize = globalHistSet.timeBinSize;
+
+	if (!mApp->worker.model->sp.globalHistogramParams.recordTime) 
+	{
+		parent->globals[time].x.reset();
+		parent->globals[time].y.reset();
+	}
 #endif
 	auto selectedFacets = interfGeom->GetSelectedFacets();
 	for (const auto facetId : selectedFacets) { // for every facet

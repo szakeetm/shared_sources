@@ -15,13 +15,13 @@ public:
 	};
 	void Draw();
 protected:
-	size_t squareTextrueCheck = 2;
+	short squareTextrueCheck = 2;
 	int mode = none;
-	size_t desorbtionCheck = 2;
-	size_t absorbtionCheck = 2;
-	size_t reflectionCheck = 2;
-	size_t transpPassCheck = 2;
-	size_t directionCheck = 2;
+	short desorbtionCheck = 2;
+	short absorbtionCheck = 2;
+	short reflectionCheck = 2;
+	short transpPassCheck = 2;
+	short directionCheck = 2;
 	double exactlyValue;
 	double minValue;
 	double maxValue;

@@ -278,7 +278,7 @@ namespace ImGui {
         }
 
     }
-    bool TriState(const char* label, size_t* v, bool allowManualMixed) {
+    bool TriState(const char* label, short* v, bool allowManualMixed) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)
             return false;

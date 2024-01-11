@@ -28,7 +28,7 @@ protected:
 	bool isDragging = false;
 	float dummyWidth = 0;
 	std::string name = "Texture Plotter []###TexturePlotter";
-	std::vector<std::string> comboOpts = { u8"Cell Area (cm\u00B2)", "# of MC hits", u8"Impingement rate[1 / m\u00B2 / sec]]", u8"Particle density[1 / m\u00B3]", u8"Gas density[kg / m\u00B3]", "Pressure[mBar]", "Avg.speed estimate[m / s]", "Incident velocity vector[m / s]", "# of velocity vectors" };
+	std::vector<std::string> comboOpts = { u8"Cell Area [cm\u00B2]", "# of MC hits", u8"Impingement rate [1 / m\u00B2 / sec]]", u8"Particle density [1 / m\u00B3]", u8"Gas density [kg / m\u00B3]", "Pressure [mBar]", "Avg.speed estimate [m / s]", "Incident velocity vector [m / s]", "# of velocity vectors" };
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
 	bool resizableColumns = false;

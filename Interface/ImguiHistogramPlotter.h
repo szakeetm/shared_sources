@@ -39,19 +39,19 @@ protected:
 		ImHistogramPlotter* parent;
 		typedef struct {
 			bool amIDisabled = true;
-			size_t recBounce = false;
+			short recBounce = false;
 			std::string maxRecNbBouncesInput = "10000";
-			size_t nbBouncesMax = 10000;
+			long nbBouncesMax = 10000;
 			std::string bouncesBinSizeInput = "1";
-			int bouncesBinSize = 1;
-			size_t recFlightDist = false;
+			short bouncesBinSize = 1;
+			short recFlightDist = false;
 			std::string maxFlightDistInput = "10";
 			double maxFlightDist = 10;
 			std::string distBinSizeInput = "0.001";
 			double distBinSize = 0.001f;
 
 #ifdef MOLFLOW
-			size_t recTime = false;
+			short recTime = false;
 			std::string maxFlightTimeInput = "0.1";
 			double maxFlightTime = 0.1f;
 			std::string timeBinSizeInput = "1e-5";
