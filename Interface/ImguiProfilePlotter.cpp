@@ -409,8 +409,10 @@ bool ImProfilePlotter::Export(bool toFile)
 		out.append(fmt::format("{}\t",data[0].x->at(i)));
 
 		if (drawManual) {
-			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
-			xvar->value = data[0].x->at(i);
+			if (formula.GetNbVariable() != 0) {
+				std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+				xvar->value = data[0].x->at(i);
+			}
 			double yvar = formula.Evaluate();
 			out.append(fmt::format("{}\t", yvar));
 		}
