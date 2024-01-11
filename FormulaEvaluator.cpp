@@ -46,5 +46,7 @@ int FormulaEvaluator::GetFacetIndex(const std::string &varName, const std::strin
             // Conversion failed: prefix doesn't match
             return -1;
         }
+    } else {
+        return -1; //Does not match prefix
     }
 }
