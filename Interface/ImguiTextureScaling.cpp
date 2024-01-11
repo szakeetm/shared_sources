@@ -276,10 +276,10 @@ void ImTextureScaling::DrawGradient()
 	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
 		double linX = MathHelper::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
 		if(!logScale)
-			hoveredVal = fmt::format("{:.4f}", linX);
+			hoveredVal = fmt::format("{:.3g}", linX);
 		else {
 			double val = logScaleInterpolate(linX, gradientMinScale, gradientMaxScale);
-			hoveredVal = fmt::format("{:.2e}", val);
+			hoveredVal = fmt::format("{:.3g}", val);
 		}
 		hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
 		//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
