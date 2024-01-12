@@ -59,6 +59,13 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
 			}
+			if (fn.find(".csv") != std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
+			}
 			fprintf(f, out.c_str());
 			fclose(f);
 		}
@@ -78,7 +85,7 @@ void ImConvergencePlotter::MenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			ImGui::Checkbox("Colorblind mode", &colorBlind);
+			//ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Linewidth:");
@@ -142,7 +149,7 @@ void ImConvergencePlotter::MenuBar()
 
 		if (data.size()!=0 && maxDatapoints< actualNbValues) {
 			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the last {} of {} values", maxDatapoints, actualNbValues).c_str());
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the first {} of {} values", maxDatapoints, actualNbValues).c_str());
 		}
 
 		ImGui::EndMenuBar();

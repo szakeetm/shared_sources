@@ -354,7 +354,7 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			ImGui::Checkbox("Colorblind mode", &colorBlind);
+			//ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::Text("Change linewidth:");
 			ImGui::SameLine();
