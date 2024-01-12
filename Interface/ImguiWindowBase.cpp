@@ -153,8 +153,8 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 					}
 				}
 			}
-			if (drawManual && manualxValues->size()==manualyValues->size()) {
-				for (size_t i = 0; i < manualxValues->size(); i++) { // for every datapoint
+			if (drawManual) {
+				for (size_t i = 0; i < std::min(manualxValues->size(), manualyValues->size()); i++) { // for every datapoint
 					ImVec2 pltPoint = ImPlot::PlotToPixels(ImPlotPoint(manualxValues->at(i), manualyValues->at(i)));
 					ImVec2 mousePos = ImGui::GetMousePos();
 					double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
