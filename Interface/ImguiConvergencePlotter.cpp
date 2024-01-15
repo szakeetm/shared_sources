@@ -26,11 +26,8 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	// first row (headers)
 	out.append("X axis\t");
 	if (drawManual) out.append("manual\t");
-	for (const auto& profile : data) {
-		out.append("F#" + std::to_string(profile.id) + "\t");
-	}
 	for (const auto& formula : data) {
-		out.append("F#" + std::to_string(formula.id) + "\t");
+		out.append(fmt::format("[{}]{}\t",mApp->appFormulas->formulas[formula.id].GetName(), mApp->appFormulas->formulas[formula.id].GetExpression()));
 	}
 	out[out.size() - 1] = '\n';
 	// rows
@@ -51,7 +48,7 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	}
 	if (!toFile) SDL_SetClipboardText(out.c_str());
 	else {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt, csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
