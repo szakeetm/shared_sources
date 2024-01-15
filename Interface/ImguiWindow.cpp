@@ -451,4 +451,5 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     if (interfaceSettings->convergencePlotterSettings.hasData) {
         convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
     } else convPlot.Reload();
+    textScale.Load();
 }

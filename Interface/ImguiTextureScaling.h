@@ -5,6 +5,7 @@ class ImTextureScaling : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
+	void Load();
 protected:
 	void UpdateSize();
 	void Update();
@@ -23,8 +24,8 @@ protected:
 
 	MolflowGeometry* molflowGeom;
 	bool photoMode = false;
-	std::string minInput = "0", maxInput = "1";
-	double minScale = 0, maxScale = 1;
+	std::string minInput[3] = { "0", "0", "0" }, maxInput[3] = { "1","1","1" };
+	double minScale[3] = { 0,0,0 }, maxScale[3] = { 1,1,1 };
 	double cMinScale = 0, cMaxScale = 1;
 	bool autoscale = true, colors = true, logScale = true;
 	AutoScaleMode includeComboVal = AutoscaleMomentsAndConstFlow;
