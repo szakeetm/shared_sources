@@ -48,7 +48,7 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	}
 	if (!toFile) SDL_SetClipboardText(out.c_str());
 	else {
-		std::string fileFilters = "txt, csv";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");

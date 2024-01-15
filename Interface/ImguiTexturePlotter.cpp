@@ -555,7 +555,7 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 	}
 	// wrtie to file
 	if (toFile) {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
@@ -563,7 +563,15 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
 			}
-			fprintf(f, Serialize({startRow,startCol,endRow,endCol}).c_str());
+			std::string out = Serialize({ startRow,startCol,endRow,endCol });
+			if (fn.find(".csv") != std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
+			}
+			fprintf(f, out.c_str());
 			fclose(f);
 		}
 	}
