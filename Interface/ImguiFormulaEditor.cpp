@@ -87,7 +87,11 @@ void ImFormulaEditor::DrawFormulaList() {
 			}
 			// values column
 			ImGui::TableSetColumnIndex(3);
-			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), mApp->appFormulas->GetFormulaValue(i).c_str());
+			while (valuesBuffer.size() <= i) valuesBuffer.push_back("");
+			if (mApp->autoUpdateFormulas) {
+				valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
+			}
+			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), valuesBuffer[i].c_str());
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
@@ -148,6 +152,7 @@ void ImFormulaEditor::DrawFormulaList() {
 				//delete formula
 				mApp->imWnd->convPlot.RemovePlot(selRow); // prevent convergence plotter crash when removing plotted formula
 				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
+				valuesBuffer.erase(valuesBuffer.begin() + selRow);
 				mApp->imWnd->convPlot.DecrementFormulaIndicies(selRow); // prevent convergence plotter crash when removing plotted formula
 			}
 			else {
@@ -243,6 +248,10 @@ void ImFormulaEditor::Draw() {
 	ImGui::EndChild();
 	if (ImGui::Button("Recalculate now")) {
 		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+		while (valuesBuffer.size() <= appFormulas->formulas.size()) valuesBuffer.push_back("");
+		for (int i = 0; i < appFormulas->formulas.size(); i++) {
+			valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
+		}
 	}
 	ImGui::SameLine();
 	float dummyWidthA = ImGui::GetContentRegionAvailWidth() - txtW*20.5;
