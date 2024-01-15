@@ -187,6 +187,14 @@ void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plott
 	}
 }
 
+//pass the first ID value which should be changed
+void ImConvergencePlotter::DecrementFormulaIndicies(int startId)
+{
+	for (auto& formula : data) {
+		if (formula.id >= startId) formula.id--;
+	}
+}
+
 void ImConvergencePlotter::Draw()
 {
 	if (!drawn) return;
@@ -262,7 +270,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotAxisFlags_LogScale : 0))) {
-		if (logY) logY = false;
+		if (logY) logY = false; 
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];

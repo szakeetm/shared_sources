@@ -11,6 +11,7 @@ public:
 	void RemovePlot(int idx);
 	void Reload();
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
+	void DecrementFormulaIndicies(int startId);
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);

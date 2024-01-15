@@ -146,8 +146,9 @@ void ImFormulaEditor::DrawFormulaList() {
 		if (changeIndex > -1) {
 			if (changeName == "" && changeExpression == "") {
 				//delete formula
-				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
 				mApp->imWnd->convPlot.RemovePlot(selRow); // prevent convergence plotter crash when removing plotted formula
+				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
+				mApp->imWnd->convPlot.DecrementFormulaIndicies(selRow); // prevent convergence plotter crash when removing plotted formula
 			}
 			else {
 				//modify formula
