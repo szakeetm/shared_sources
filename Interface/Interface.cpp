@@ -2707,6 +2707,12 @@ void Interface::ImReset()
     imWnd->Reset();
 }
 
+void Interface::ImClear()
+{
+    if (!imWnd) return;
+    imWnd->Clear();
+}
+
 void Interface::ResetAutoSaveTimer() {
     UpdateStats(); //updates m_fTime
     if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTimer.Elapsed();

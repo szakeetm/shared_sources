@@ -1348,6 +1348,7 @@ void InterfaceGeometry::Clear() {
 	if (mApp && mApp->splitFacet) mApp->splitFacet->ClearUndoFacets();
 	if (mApp && mApp->buildIntersection) mApp->buildIntersection->ClearUndoFacets();
 	if (mApp && mApp->mirrorFacet) mApp->mirrorFacet->ClearUndoVertices();
+	if (mApp && mApp->imWnd) mApp->ImClear();
 	if (mApp && mApp->mirrorVertex) mApp->mirrorVertex->ClearUndoVertices();
 
 	// Init default

@@ -843,7 +843,7 @@ void FacetScaleMenuPress() {
     }
 }
 void FacetMirrorProjectMenuPress() {
-    mApp->imWnd->mirrProj.Show();
+    mApp->imWnd->mirrProjFacet.Show();
     /*
     if (!mApp->mirrorFacet) mApp->mirrorFacet = new MirrorFacet(interfGeom, &mApp->worker);
     mApp->mirrorFacet->SetVisible(true);

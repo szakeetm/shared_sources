@@ -262,6 +262,7 @@ public:
 
 	void ImRefresh();
 	void ImReset();
+	void ImClear();
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time

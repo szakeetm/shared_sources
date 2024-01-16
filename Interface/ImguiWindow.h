@@ -62,6 +62,7 @@ public:
 
     void Refresh();
     void Reset();
+    void Clear();
     void LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 
     GLApplication* app;
@@ -101,7 +102,7 @@ public:
     ImMeasureForce measForce;
     ImFacetCoordinates facCoord;
     ImFacetScale facScale;
-    ImFacetMirrorProject mirrProj;
+    ImFacetMirrorProject mirrProjFacet;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

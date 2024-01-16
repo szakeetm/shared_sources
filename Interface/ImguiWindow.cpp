@@ -226,8 +226,8 @@ void ImguiWindow::init() {
     facCoord.Init(mApp);
     facScale = ImFacetScale();
     facScale.Init(mApp);
-    mirrProj = ImFacetMirrorProject();
-    mirrProj.Init(mApp);
+    mirrProjFacet = ImFacetMirrorProject();
+    mirrProjFacet.Init(mApp);
 
     RegisterShortcuts();
 
@@ -423,7 +423,7 @@ void ImguiWindow::renderSingle() {
         measForce.Draw();
         facCoord.Draw();
         facScale.Draw();
-        mirrProj.Draw();
+        mirrProjFacet.Draw();
 
         shortcutMan.DoShortcuts();
 
@@ -465,6 +465,11 @@ void ImguiWindow::Reset()
     convPlot.Reload();
     textScale.Load();
     partLog.Reset();
+}
+
+void ImguiWindow::Clear()
+{
+    mirrProjFacet.Clear();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
