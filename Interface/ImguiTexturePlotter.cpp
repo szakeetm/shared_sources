@@ -86,7 +86,7 @@ void ImTexturePlotter::DrawTextureTable()
 
 	static ImGuiIO& io = ImGui::GetIO();
 	
-	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags)) {
+	if (ImGui::BeginTable("##TPTable", width+1, ImGuiTableFlags_Borders	| ImGuiTableFlags_ScrollY | tableFlags | ImGuiTableFlags_RowBg)) {
 		if (hovered && !isDragging && ImGui::IsMouseDragging(0,0.1f)) {
 			selectionStart = ImGui::GetMousePos();
 			isDragging = true;
@@ -108,9 +108,10 @@ void ImTexturePlotter::DrawTextureTable()
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < width; ++i) {
-			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), columnFlags, columnWidth*txtW);
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0, columnWidth*txtW);
 		}
-		ImGui::TableNextRow(ImGuiTableRowFlags_Headers);
+		ImGui::TableNextRow();
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(186, 212, 243, 255));
 		ImGui::TableSetColumnIndex(0);
 		ImGui::Text(u8"v\u20D7\\u\u20D7");
 		for (int i = 0; i < width; ++i) {
@@ -150,7 +151,7 @@ void ImTexturePlotter::DrawTextureTable()
 				}
 				if (ImGui::IsItemHovered()) hovered = true;
 				if (j == width) continue;
-				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + std::to_string(j), isSelected)) {
+				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
 					if (isDragging) continue;
 					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 						BoxSelect(selection[0], std::pair<int, int>(i, j));
@@ -217,6 +218,9 @@ void ImTexturePlotter::GetData()
 
 	if (width == 0 || height == 0) return;
 
+	bool error = false;
+	const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
+	if ((width - 1) + (height - 1) * width >= facetSnapshot.texture.size()) error = true;
 	switch (viewIdx) { // whole switch copied from legacy and slightly adjusted, a lot of repeted code, perhaps could be rewritten?
 	case 0: {// Cell area
 		for (size_t i = 0; i < width; i++) {
@@ -235,29 +239,39 @@ void ImTexturePlotter::GetData()
 		break; }
 	case 1: {// MC Hits
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		//TextureCell *texture = (TextureCell *)((BYTE *)buffer + (selFacet->sh.hitOffset + facetHitsSize + profSize + mApp->worker.displayedMoment*w*h * sizeof(TextureCell)));
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				//int tSize = selFacet->sp.texWidth*selFacet->sp.texHeight;
-				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::MCHits, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
-				double realVal = val.value;
-				if (realVal > maxValue) {
-					maxValue = realVal;
-					maxX = i; maxY = j;
+				if (error) {
+					data[j].push_back("Error");
+					continue;
 				}
-				data[j].push_back(fmt::format("{}", (int)realVal));
+				//int tSize = selFacet->sp.texWidth*selFacet->sp.texHeight;
+				try {
+					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::MCHits, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
+					double realVal = val.value;
+					if (realVal > maxValue) {
+						maxValue = realVal;
+						maxX = i; maxY = j;
+					}
+					data[j].push_back(fmt::format("{}", (int)realVal));
+				}
+				catch (...) {
+					data[j].push_back("Error");
+				}
 			}
 		}
 		break; }
 	case 2: {// Impingement rate
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
+				if (error) {
+					data[j].push_back("Error");
+					continue;
+				}
 				try {
-					if (facetSnapshot.texture.size() == 0) throw std::exception();
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::ImpingementRate, moleculesPerTP, 1.0, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
 					double realVal = val.value;
 					if (realVal > maxValue) {
@@ -267,7 +281,6 @@ void ImTexturePlotter::GetData()
 					data[j].push_back(fmt::format("{:.4g}", realVal));
 				} catch (...) {
 					data[j].push_back("Error");
-
 				}
 			}
 		}
@@ -276,57 +289,73 @@ void ImTexturePlotter::GetData()
 	case 3: {// Particle density [1/m3]
 
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		double densityCorrection = selFacet->DensityCorrection();
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::ParticleDensity, moleculesPerTP, densityCorrection, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
-				double rho = val.value;
-
-				if (rho > maxValue) {
-					maxValue = rho;
-					maxX = i; maxY = j;
+				if (error) {
+					data[j].push_back("Error");
+					continue;
 				}
-				data[j].push_back(fmt::format("{:.6g}", rho));
-			}
+				try {
+					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::ParticleDensity, moleculesPerTP, densityCorrection, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
+					double rho = val.value;
+
+					if (rho > maxValue) {
+						maxValue = rho;
+						maxX = i; maxY = j;
+					}
+					data[j].push_back(fmt::format("{:.6g}", rho));
+				}
+				catch (...) {
+						data[j].push_back("Error");
+					}
+				}
 		}
 
 		break; }
 	case 4: {// Gas density [kg/m3]
 
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		double densityCorrection = selFacet->DensityCorrection();
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::GasDensity, moleculesPerTP, densityCorrection, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
-				double rho_mass = val.value;
-				if (rho_mass > maxValue) {
-					maxValue = rho_mass;
-					maxX = i; maxY = j;
+				if (error) {
+					data[j].push_back("Error");
+					continue;
 				}
-				data[j].push_back(fmt::format("{:.6g}", rho_mass));
+				try {
+					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::GasDensity, moleculesPerTP, densityCorrection, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
+					double rho_mass = val.value;
+					if (rho_mass > maxValue) {
+						maxValue = rho_mass;
+						maxX = i; maxY = j;
+					}
+					data[j].push_back(fmt::format("{:.6g}", rho_mass));
+				}
+				catch (...) {
+					data[j].push_back("Error");
+				}
 			}
 		}
 
 		break; }
 	case 5: {// Pressure
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		double moleculesPerTP = mApp->worker.GetMoleculesPerTP(mApp->worker.displayedMoment);
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				if (facetSnapshot.texture.size() == 0) {
+				if (error) {
 					data[j].push_back("Error");
+					continue;
 				}
-				else {
+				try {
 					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::Pressure, moleculesPerTP, 1.0, mApp->worker.model->sp.gasMass, (int)(i + j * width), facetSnapshot);
 					double p = val.value;
 
@@ -337,24 +366,35 @@ void ImTexturePlotter::GetData()
 
 					data[j].push_back(fmt::format("{:.6g}", p));
 				}
+				catch (...) {
+					data[j].push_back("Error");
+				}
 			}
 		}
 		break; }
 	case 6: {// Average gas velocity [m/s]
 
 		profSize = (selFacet->sh.isProfile) ? (PROFILE_SIZE * sizeof(ProfileSlice) * (1 + nbMoments)) : 0;
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::AvgGasVelocity, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
-				double realVal = val.value;
-
-				if (realVal > maxValue) {
-					maxValue = realVal;
-					maxX = i; maxY = j;
+				if (error) {
+					data[j].push_back("Error");
+					continue;
 				}
-				data[j].push_back(fmt::format("{:.6g}", realVal));
+				try {
+					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::AvgGasVelocity, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
+					double realVal = val.value;
+
+					if (realVal > maxValue) {
+						maxValue = realVal;
+						maxX = i; maxY = j;
+					}
+					data[j].push_back(fmt::format("{:.6g}", realVal));
+				}
+				catch (...) {
+					data[j].push_back("Error");
+				}
 			}
 		}
 		break; }
@@ -364,23 +404,31 @@ void ImTexturePlotter::GetData()
 		size_t nbElem = selFacet->sh.texWidth * selFacet->sh.texHeight;
 		size_t tSize = nbElem * sizeof(TextureCell);
 		size_t dSize = nbElem * sizeof(DirectionCell);
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
-				if (selFacet->sh.countDirection && facetSnapshot.direction.size()!=0) {
-					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::GasVelocityVector, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
-					Vector3d v_vect = val.vect;
+				if (selFacet->sh.countDirection && facetSnapshot.direction.size() != 0) {
+					if (error) {
+						data[j].push_back("Error");
+						continue;
+					}
+					try {
+						PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::GasVelocityVector, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
+						Vector3d v_vect = val.vect;
 
-					std::string out;
-					out.append(fmt::format("{:.4g}, ", v_vect.x));
-					out.append(fmt::format("{:.4g}, ", v_vect.y));
-					out.append(fmt::format("{:.4g}", v_vect.z));
-					data[j].push_back(out);
+						std::string out;
+						out.append(fmt::format("{:.4g}, ", v_vect.x));
+						out.append(fmt::format("{:.4g}, ", v_vect.y));
+						out.append(fmt::format("{:.4g}", v_vect.z));
+						data[j].push_back(out);
 
-					double length = v_vect.Norme();
-					if (length > maxValue) {
-						maxValue = length;
-						maxX = i; maxY = j;
+						double length = v_vect.Norme();
+						if (length > maxValue) {
+							maxValue = length;
+							maxX = i; maxY = j;
+						}
+					}
+					catch (...) {
+						data[j].push_back("Error");
 					}
 				}
 				else {
@@ -395,20 +443,28 @@ void ImTexturePlotter::GetData()
 		size_t nbElem = selFacet->sh.texWidth * selFacet->sh.texHeight;
 		size_t tSize = nbElem * sizeof(TextureCell);
 		size_t dSize = nbElem * sizeof(DirectionCell);
-		const FacetMomentSnapshot& facetSnapshot = mApp->worker.globalState->facetStates[selFacetId].momentResults[mApp->worker.displayedMoment];
 
 		for (size_t i = 0; i < width; i++) {
 			for (size_t j = 0; j < height; j++) {
 				if (selFacet->sh.countDirection) {
-					PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::NbVelocityVectors, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
-					size_t count = val.count;
-
-					data[j].push_back(fmt::format("{}", (int)count));
-					double countEq = (double)count;
-					if (countEq > maxValue) {
-						maxValue = countEq;
-						maxX = i; maxY = j;
+					if (error) {
+						data[j].push_back("Error");
+						continue;
 					}
+					try {
+						PhysicalValue val = mApp->worker.GetGeometry()->GetPhysicalValue(selFacet, PhysicalMode::NbVelocityVectors, 1.0, 1.0, 1.0, (int)(i + j * width), facetSnapshot);
+						size_t count = val.count;
+
+						data[j].push_back(fmt::format("{}", (int)count));
+						double countEq = (double)count;
+						if (countEq > maxValue) {
+							maxValue = countEq;
+							maxX = i; maxY = j;
+						}
+					}
+					catch (...) {
+					data[j].push_back("Error");
+				}
 				}
 				else {
 					data[j].push_back("Direction not recorded");
@@ -499,7 +555,7 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 	}
 	// wrtie to file
 	if (toFile) {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
@@ -507,7 +563,15 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
 			}
-			fprintf(f, Serialize({startRow,startCol,endRow,endCol}).c_str());
+			std::string out = Serialize({ startRow,startCol,endRow,endCol });
+			if (fn.find(".csv") != std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
+			}
+			fprintf(f, out.c_str());
 			fclose(f);
 		}
 	}

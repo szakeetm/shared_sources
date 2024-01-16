@@ -1,3 +1,4 @@
+#include "Interface.h"
 /*
 Program:     MolFlow+ / Synrad+
 Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
@@ -2689,10 +2690,21 @@ int Interface::FrameMove() {
     return GL_OK;
 }
 
+void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    imWnd->LoadProfileFromFile(interfaceSettings);
+}
+
 void Interface::ImRefresh()
 {
     if (!imWnd) return;
     imWnd->Refresh();
+}
+
+void Interface::ImReset()
+{
+    if (!imWnd) return;
+    imWnd->Reset();
 }
 
 void Interface::ResetAutoSaveTimer() {

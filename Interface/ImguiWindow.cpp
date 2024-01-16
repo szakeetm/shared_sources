@@ -446,8 +446,27 @@ void ImguiWindow::renderSingle() {
 
 void ImguiWindow::Refresh()
 {
+    histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
     convPlot.Reload();
     movPart.Update();
     facCoord.UpdateFromSelection();
+}
+
+void ImguiWindow::Reset()
+{
+    histPlot.Reset();
+    histPlot.RefreshFacetLists();
+    histPlot.LoadHistogramSettings();
+}
+
+void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    if (interfaceSettings->profilePlotterSettings.hasData) {
+        profPlot.LoadSettingsFromFile(interfaceSettings->profilePlotterSettings.logYscale, interfaceSettings->profilePlotterSettings.viewIds);
+    }
+    if (interfaceSettings->convergencePlotterSettings.hasData) {
+        convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
+    } else convPlot.Reload();
+    textScale.Load();
 }

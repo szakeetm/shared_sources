@@ -26,19 +26,18 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	// first row (headers)
 	out.append("X axis\t");
 	if (drawManual) out.append("manual\t");
-	for (const auto& profile : data) {
-		out.append("F#" + std::to_string(profile.id) + "\t");
-	}
 	for (const auto& formula : data) {
-		out.append("F#" + std::to_string(formula.id) + "\t");
+		out.append(fmt::format("[{}]{}\t",mApp->appFormulas->formulas[formula.id].GetName(), mApp->appFormulas->formulas[formula.id].GetExpression()));
 	}
 	out[out.size() - 1] = '\n';
 	// rows
 	for (int i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
 		if (drawManual) {
-			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
-			xvar->value = data[0].x->at(i);
+			if (formula.GetNbVariable() != 0) {
+				std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+				xvar->value = data[0].x->at(i);
+			}
 			double yvar = formula.Evaluate();
 			out.append(fmt::format("{}\t", yvar));
 		}
@@ -49,13 +48,20 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	}
 	if (!toFile) SDL_SetClipboardText(out.c_str());
 	else {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
 			if (f == NULL) {
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
+			}
+			if (fn.find(".csv") != std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
 			}
 			fprintf(f, out.c_str());
 			fclose(f);
@@ -76,7 +82,7 @@ void ImConvergencePlotter::MenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			ImGui::Checkbox("Colorblind mode", &colorBlind);
+			//ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Linewidth:");
@@ -140,7 +146,7 @@ void ImConvergencePlotter::MenuBar()
 
 		if (data.size()!=0 && maxDatapoints< actualNbValues) {
 			ImGui::SameLine();
-			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the last {} of {} values", maxDatapoints, actualNbValues).c_str());
+			ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("   Warning! Showing the first {} of {} values", maxDatapoints, actualNbValues).c_str());
 		}
 
 		ImGui::EndMenuBar();
@@ -160,6 +166,30 @@ void ImConvergencePlotter::Reload()
 {
 	data.clear();
 	selectedFormula = -1;
+}
+
+void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
+{
+	data.clear();
+	logY = log;
+	for (int id : plotted) {
+		id += 494667622;
+		if (IsPlotted(id)) continue;
+		if (id >= 0 && id < mApp->appFormulas->formulas.size()) {
+			if (mApp->appFormulas->formulas[id].hasEvalError) continue;
+			else {
+				this->data.push_back(ImUtils::MakePlotData(id));
+			}
+		}
+	}
+}
+
+//pass the first ID value which should be changed
+void ImConvergencePlotter::DecrementFormulaIndicies(int startId)
+{
+	for (auto& formula : data) {
+		if (formula.id >= startId) formula.id--;
+	}
 }
 
 void ImConvergencePlotter::Draw()
@@ -236,7 +266,8 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotAxisFlags_LogScale : 0))) {
+		if (logY) logY = false; 
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];

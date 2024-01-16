@@ -273,7 +273,7 @@ std::string molflowToUnicode(std::string text)
     
     out = findAndReplace(out, "\201", u8"u\u20D7"); // vector u
     out = findAndReplace(out, "\202", u8"v\u20D7"); // vector v
-    out = findAndReplace(out, "\262", u8"\u00B4"); // ^2
+    out = findAndReplace(out, "\262", u8"\u00B2"); // ^2
     out = findAndReplace(out, "\263", u8"\u00B3"); // ^3
     
     return out;

@@ -51,7 +51,7 @@ void ImProfilePlotter::Draw()
 		AddCurve();
 	} ImGui::SameLine();
 	if(ImGui::Button("Remove Curve")) {
-		RemoveCurve();
+		RemoveCurve(selectedProfile);
 	} ImGui::SameLine();
 	if(ImGui::Button("Remove all")) {
 		data.clear();
@@ -92,12 +92,32 @@ void ImProfilePlotter::Init(Interface* mApp_)
 	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
+void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
+{
+	loading = true;
+	data.clear();
+	setLog = log;
+	for (int id : plotted) {
+		if (IsPlotted(id)) continue;
+		data.push_back({ (size_t)id, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
+	}
+}
+
+void ImProfilePlotter::Refresh()
+{
+	interfGeom = mApp->worker.GetGeometry();
+	if(!loading) data.clear();
+	selectedProfile = -1;
+}
+
 void ImProfilePlotter::DrawProfileGraph()
 {
+	if (loading) loading = false;
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotAxisFlags_LogScale : 0))) {
+		if (setLog) setLog = false;
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
@@ -155,10 +175,11 @@ void ImProfilePlotter::AddCurve()
 	}
 }
 
-void ImProfilePlotter::RemoveCurve()
+void ImProfilePlotter::RemoveCurve(int id)
 {
 	if (data.size() == 0) return;
-	if (selectedProfile == -1) {
+	if (id == selectedProfile) selectedProfile = -1;
+	if (id == -1) {
 		std::vector<size_t> facetIds = ParseManualFacetList();
 		long long i = data.size()-1; // has to be signed
 		for (; i >= 0 && i<data.size(); i--) {
@@ -172,7 +193,7 @@ void ImProfilePlotter::RemoveCurve()
 		return;
 	}
 	for (size_t i = 0; i < data.size(); i++)
-		if (data[i].id == selectedProfile) {
+		if (data[i].id == id) {
 			data.erase(data.begin() + i);
 			return;
 		}
@@ -190,6 +211,10 @@ void ImProfilePlotter::ComputeProfiles()
 	
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
+		if (plot.id > interfGeom->GetNbFacet()) {
+			RemoveCurve(plot.id);
+			return;
+		}
 		plot.y->clear();
 		InterfaceFacet* f = interfGeom->GetFacet(plot.id);
 		const std::vector<ProfileSlice>& profile = mApp->worker.globalState->facetStates[plot.id].momentResults[mApp->worker.displayedMoment].profile;
@@ -329,7 +354,7 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("View")) {
-			ImGui::Checkbox("Colorblind mode", &colorBlind);
+			//ImGui::Checkbox("Colorblind mode", &colorBlind);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::Text("Change linewidth:");
 			ImGui::SameLine();
@@ -384,8 +409,10 @@ bool ImProfilePlotter::Export(bool toFile)
 		out.append(fmt::format("{}\t",data[0].x->at(i)));
 
 		if (drawManual) {
-			std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
-			xvar->value = data[0].x->at(i);
+			if (formula.GetNbVariable() != 0) {
+				std::list<Variable>::iterator xvar = formula.GetVariableAt(0);
+				xvar->value = data[0].x->at(i);
+			}
 			double yvar = formula.Evaluate();
 			out.append(fmt::format("{}\t", yvar));
 		}
@@ -397,13 +424,20 @@ bool ImProfilePlotter::Export(bool toFile)
 	}
 	if(!toFile) SDL_SetClipboardText(out.c_str());
 	else {
-		std::string fileFilters = "txt";
+		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
 			FILE* f = fopen(fn.c_str(), "w");
 			if (f == NULL) {
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
+			}
+			if (fn.find(".csv") != std::string::npos) {
+				size_t found = out.find('\t');
+				while (found != std::string::npos) {
+					out.replace(found, 1, ",");
+					found = out.find('\t', found + 1);
+				}
 			}
 			fprintf(f, out.c_str());
 			fclose(f);

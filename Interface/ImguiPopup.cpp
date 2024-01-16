@@ -20,7 +20,7 @@ extern SynRad* mApp;
 namespace ImIOWrappers {
 
 	bool DoSave() {
-		std::string fn = NFD_SaveFile_Cpp(fileSaveFilters, "");
+		std::string fn = mApp->worker.GetCurrentFileName();
 		if (!fn.empty()) {
 			try {
 				mApp->imWnd->progress.Show();
@@ -37,7 +37,10 @@ namespace ImIOWrappers {
 				mApp->RemoveRecent(fn.c_str());
 			}
 		}
-		if (fn == "") return false;
+		if (fn == "") {
+			LockWrapper myLock(mApp->imguiRenderLock);
+			mApp->SaveFileAs();
+		}
 		return true;
 	}
 

@@ -48,13 +48,13 @@ void ImTextureScaling::Draw()
 		ImGui::Text("Max");
 		ImGui::TableNextColumn();
 		ImGui::SetNextItemWidth(10 * txtW);
-		ImGui::InputText("##minInput", &minInput);
+		ImGui::InputText("##minInput", &minInput[showComboVal]);
 		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
 			autoscale = false;
 			ApplyButtonPress();
 		}
 		ImGui::SetNextItemWidth(10 * txtW);
-		ImGui::InputText("##maxInput", &maxInput);
+		ImGui::InputText("##maxInput", &maxInput[showComboVal]);
 		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
 			autoscale = false;
 			ApplyButtonPress();
@@ -70,6 +70,8 @@ void ImTextureScaling::Draw()
 			for (short i = 0; i < 3; i++) {
 				if (ImGui::Selectable(includeComboLabels[i])) {
 					includeComboVal = static_cast<AutoScaleMode>(i);
+					molflowGeom->texAutoScaleMode = includeComboVal;
+					WorkerUpdate();
 				}
 			}
 			ImGui::EndCombo();
@@ -99,7 +101,7 @@ void ImTextureScaling::Draw()
 	GetCurrentRange();
 	ImGui::Text(fmt::format("Min: {:.3g}", cMinScale));
 	ImGui::Text(fmt::format("Max: {:.3g}", cMaxScale));
-	ImGui::HelpMarker("These are the values obtained from geomatry\nthey are used by autoscale");
+	ImGui::HelpMarker("These are the values obtained from geometry\nthey are used by autoscale");
 	ImGui::EndChild();
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
@@ -130,6 +132,25 @@ void ImTextureScaling::Init(Interface* mApp_)
 	Update(); // will get the toggle and combo states and min/max values from the molflowGeom object
 }
 
+void ImTextureScaling::Load()
+{
+	minScale[AutoscaleMomentsOnly] = interfGeom->texture_limits[AutoscaleMomentsOnly].manual.min.steady_state;
+	minScale[AutoscaleMomentsAndConstFlow] = interfGeom->texture_limits[AutoscaleMomentsAndConstFlow].manual.min.steady_state;
+	minScale[AutoscaleConstFlow] = interfGeom->texture_limits[AutoscaleConstFlow].manual.min.steady_state;
+
+	maxScale[AutoscaleMomentsOnly] = interfGeom->texture_limits[AutoscaleMomentsOnly].manual.max.steady_state;
+	maxScale[AutoscaleMomentsAndConstFlow] = interfGeom->texture_limits[AutoscaleMomentsAndConstFlow].manual.max.steady_state;
+	maxScale[AutoscaleConstFlow] = interfGeom->texture_limits[AutoscaleConstFlow].manual.max.steady_state;
+
+	minInput[AutoscaleMomentsOnly] = fmt::format("{}", minScale[AutoscaleMomentsOnly]);
+	minInput[AutoscaleMomentsAndConstFlow] = fmt::format("{}", minScale[AutoscaleMomentsAndConstFlow]);
+	minInput[AutoscaleConstFlow] = fmt::format("{}", minScale[AutoscaleConstFlow]);
+
+	maxInput[AutoscaleMomentsOnly] = fmt::format("{}", maxScale[AutoscaleMomentsOnly]);
+	maxInput[AutoscaleMomentsAndConstFlow] = fmt::format("{}", maxScale[AutoscaleMomentsAndConstFlow]);
+	maxInput[AutoscaleConstFlow] = fmt::format("{}", maxScale[AutoscaleConstFlow]);
+}
+
 void ImTextureScaling::UpdateSize()
 {
 	size_t swap = 0;
@@ -153,16 +174,17 @@ void ImTextureScaling::Update() {
 	showComboVal = molflowGeom->textureMode;
 	UpdateSize();
 
-	minInput = std::to_string(minScale);
-	maxInput = std::to_string(maxScale);
+	minInput[showComboVal] = std::to_string(minScale[showComboVal]);
+	maxInput[showComboVal] = std::to_string(maxScale[showComboVal]);
 
 }
 
 void ImTextureScaling::SetCurrentButtonPress()
 {
 	GetCurrentRange();
-	minInput = fmt::format("{:.3g}", cMinScale);
-	maxInput = fmt::format("{:.3g}", cMaxScale);
+	minInput[showComboVal] = fmt::format("{:.3g}", cMinScale);
+	maxInput[showComboVal] = fmt::format("{:.3g}", cMaxScale);
+	autoscale = false;
 	ApplyButtonPress();
 }
 
@@ -171,24 +193,24 @@ void ImTextureScaling::ApplyButtonPress()
 	molflowGeom->texAutoScaleMode = includeComboVal;
 	molflowGeom->texAutoScale = autoscale;
 	if (autoscale) {} // empty if statement, acts like adding !autoscale && to all following else statements
-	else if (!Util::getNumber(&minScale, minInput)) {
+	else if (!Util::getNumber(&minScale[showComboVal], minInput[showComboVal])) {
 		ImIOWrappers::InfoPopup("Error", "Invalid minimum value");
 		Update();
 		return;
 	}
-	else if (!Util::getNumber(&maxScale, maxInput)) {
+	else if (!Util::getNumber(&maxScale[showComboVal], maxInput[showComboVal])) {
 		ImIOWrappers::InfoPopup("Error", "Invalid maximum value");
 		Update();
 		return;
 	}
-	else if (minScale > maxScale) {
+	else if (minScale[showComboVal] > maxScale[showComboVal]) {
 		ImIOWrappers::InfoPopup("Error", "min must be lower than max");
 		Update();
 		return;
 	}
 	else {
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state = minScale;
-		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state = maxScale;
+		molflowGeom->texture_limits[molflowGeom->textureMode].manual.min.steady_state = minScale[showComboVal];
+		molflowGeom->texture_limits[molflowGeom->textureMode].manual.max.steady_state = maxScale[showComboVal];
 	}
 
 	WorkerUpdate();
@@ -253,8 +275,8 @@ void ImTextureScaling::DrawGradient()
 		}
 	}
 	else {
-		gradientMinScale = minScale;
-		gradientMaxScale = maxScale;
+		gradientMinScale = minScale[showComboVal];
+		gradientMaxScale = maxScale[showComboVal];
 	}
 
 	for (const auto& tick : majorTicVals) {
@@ -275,10 +297,10 @@ void ImTextureScaling::DrawGradient()
 	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
 		double linX = MathHelper::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
 		if(!logScale)
-			hoveredVal = fmt::format("{:.4f}", linX);
+			hoveredVal = fmt::format("{:.3g}", linX);
 		else {
 			double val = logScaleInterpolate(linX, gradientMinScale, gradientMaxScale);
-			hoveredVal = fmt::format("{:.2e}", val);
+			hoveredVal = fmt::format("{:.3g}", val);
 		}
 		hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
 		//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
