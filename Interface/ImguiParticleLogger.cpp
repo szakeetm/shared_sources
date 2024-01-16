@@ -91,6 +91,11 @@ void ImParticleLogger::Draw()
 	ImGui::End();
 }
 
+void ImParticleLogger::Reset() {
+	enableLogging = false;
+	facetNumInput = "";
+}
+
 void ImParticleLogger::Init(Interface* mApp_)
 {
 	mApp = mApp_;

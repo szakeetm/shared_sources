@@ -8,6 +8,7 @@ class ImParticleLogger : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
+	void Reset();
 private:
 	void ApplyButtonPress();
 	void UpdateMemoryEstimate();

@@ -192,7 +192,8 @@ void ImMovingParts::ApplyButtonPress()
 
 void ImMovingParts::Apply(){
     LockWrapper lw(mApp->imguiRenderLock);
-    mApp->worker.model->sp.motionType = mode;
+    if (!mApp->AskToReset()) return;
+    mApp->worker.model->sp.motionType = (int)mode;
     switch (mode) {
     case Modes::Fixed:
         mApp->worker.model->sp.motionVector2 = AXIS_DIR;
@@ -213,7 +214,7 @@ void ImMovingParts::SelectedVertAsAxisOriginButtonPress()
 {
     size_t nbs = interfGeom->GetNbSelectedVertex();
     if (nbs != 1) {
-        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {}).", nbs));
         return;
     }
     else {
@@ -235,7 +236,7 @@ void ImMovingParts::SelectedVertAsAxisDirectionButtonPress()
 {
     size_t nbs = interfGeom->GetNbSelectedVertex();
     if (nbs != 1) {
-        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+        ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {}).", nbs));
         return;
     }
     else {

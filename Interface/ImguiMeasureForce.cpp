@@ -124,16 +124,17 @@ void ImMeasureForce::ApplyButtonPress()
 			return;
 		}
 	}
-	ImIOWrappers::AskToSaveBeforeDoing([this]() { Apply(); });
+	Apply();
 }
 
 void ImMeasureForce::Apply()
 {
+	LockWrapper imLock(mApp->imguiRenderLock);
+	if (!mApp->AskToReset()) return;
 	mApp->worker.model->sp.enableForceMeasurement = enableForceMeasurement;
 	if (enableForceMeasurement) {
 		mApp->worker.model->sp.torqueRefPoint = Vector3d(mx, my, mz);
 	}
-	LockWrapper lw(mApp->imguiRenderLock);
 	mApp->worker.MarkToReload();
 	mApp->changedSinceSave = true;
 }

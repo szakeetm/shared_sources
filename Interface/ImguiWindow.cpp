@@ -458,6 +458,10 @@ void ImguiWindow::Reset()
     histPlot.Reset();
     histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
+    profPlot.Refresh();
+    convPlot.Reload();
+    textScale.Load();
+    partLog.Reset();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)

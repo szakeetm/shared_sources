@@ -6,8 +6,6 @@ public:
 	void Draw();
 protected:
 	void GetSelectedFacetButtonPress();
-	void ScaleFacetButtonPress();
-	void CopyFacetButtonPress();
 	enum InvariantPoint : short {
 		Coords,
 		Vertex,
@@ -24,6 +22,11 @@ protected:
 		Y = 1,
 		Z = 2
 	};
+	enum Action : short {
+		Scale,
+		Copy
+	};
+	void Apply(Action action);
 	std::string invariantPointInput[3] = { "0","0","0" }, facetIdInput = "0", distortedScaleFactorInput[3] = { "1","1" ,"1" } , uniformScaleNumeratorInput = "1", uniformScaleDenominatorInput = "";
 	double invariantPoint[3] = { 0,0,0 }, distortedScaleFactor[3] = { 1,1,1 }, uniformScaleNumerator=1, uniformScaleDenumerator=1;
 	size_t facetId = 0;
