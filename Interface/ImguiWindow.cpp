@@ -226,6 +226,8 @@ void ImguiWindow::init() {
     facCoord.Init(mApp);
     facScale = ImFacetScale();
     facScale.Init(mApp);
+    mirrProj = ImFacetMirrorProject();
+    mirrProj.Init(mApp);
 
     RegisterShortcuts();
 
@@ -421,6 +423,7 @@ void ImguiWindow::renderSingle() {
         measForce.Draw();
         facCoord.Draw();
         facScale.Draw();
+        mirrProj.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -43,6 +43,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiMeasureForce.h"
 #include "ImguiFacetCoordinates.h"
 #include "ImguiFacetScale.h"
+#include "ImguiFacetMirrorProject.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -100,6 +101,7 @@ public:
     ImMeasureForce measForce;
     ImFacetCoordinates facCoord;
     ImFacetScale facScale;
+    ImFacetMirrorProject mirrProj;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
