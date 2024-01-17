@@ -130,14 +130,14 @@ void ImFacetRotate::Draw()
 	ImGui::EndChild();
 	if (ImGui::InputTextLLabel("Degrees:", &degIn, 0, txtW * 6)) {
 		if (Util::getNumber(&deg, degIn)) {
-			rad = deg/100.0*PI;
+			rad = deg/180.0*PI;
 			radIn = fmt::format("{}", rad);
 		}
 	}
 	ImGui::SameLine();
 	if (ImGui::InputTextLLabel("Radians:", &radIn, 0, txtW * 6)) {
 		if (Util::getNumber(&rad, radIn)) {
-			deg = rad / PI * 100.0;
+			deg = rad / PI * 180.0;
 			degIn = fmt::format("{}", deg);
 		}
 	}
