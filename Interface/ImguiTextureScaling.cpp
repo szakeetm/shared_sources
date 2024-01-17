@@ -32,13 +32,13 @@ void ImTextureScaling::Draw()
 		return;
 	}
 	ImGui::SetNextWindowPos(ImVec2(3*txtW, 3*txtH), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(72*txtW,15*txtH),ImVec2(1000*txtW,100*txtH));
+	ImGui::SetNextWindowSize(ImVec2(74*txtW,15*txtH));
 
 	ImGui::Begin("Texture Scaling###TextureScaling", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	
-	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 15 * txtW, 6 * txtH), true);
+	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 16 * txtW, 5.75 * txtH), true);
 	ImGui::TextDisabled("Texture Range");
-	if(ImGui::BeginTable("##layoutHelper", 4, ImGuiTableFlags_SizingStretchProp))
+	if (ImGui::BeginTable("##layoutHelper", 4, ImGuiTableFlags_SizingStretchProp))
 	{
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
@@ -48,13 +48,17 @@ void ImTextureScaling::Draw()
 		ImGui::Text("Max");
 		ImGui::TableNextColumn();
 		ImGui::SetNextItemWidth(10 * txtW);
+		if (autoscale) ImGui::BeginDisabled();
 		ImGui::InputText("##minInput", &minInput[showComboVal]);
+		if (autoscale) ImGui::EndDisabled();
 		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
 			autoscale = false;
 			ApplyButtonPress();
 		}
 		ImGui::SetNextItemWidth(10 * txtW);
+		if (autoscale) ImGui::BeginDisabled();
 		ImGui::InputText("##maxInput", &maxInput[showComboVal]);
+		if (autoscale) ImGui::EndDisabled();
 		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
 			autoscale = false;
 			ApplyButtonPress();
@@ -64,9 +68,9 @@ void ImTextureScaling::Draw()
 			molflowGeom->texAutoScale = autoscale;
 			WorkerUpdate();
 		}
-		ImGui::SetNextItemWidth(txtW*20);
+		ImGui::SetNextItemWidth(txtW * 20);
 		if (!autoscale) ImGui::BeginDisabled();
-		if(ImGui::BeginCombo("##includeCombo", includeComboLabels[includeComboVal])) {
+		if (ImGui::BeginCombo("##includeCombo", includeComboLabels[includeComboVal])) {
 			for (short i = 0; i < 3; i++) {
 				if (ImGui::Selectable(includeComboLabels[i])) {
 					includeComboVal = static_cast<AutoScaleMode>(i);
@@ -88,20 +92,19 @@ void ImTextureScaling::Draw()
 		}
 		ImGui::EndTable();
 	}
-	if (ImGui::Button("Set to geometry")) SetCurrentButtonPress();
-	ImGui::SameLine();
-	if (ImGui::Button("Apply")) ApplyButtonPress();
+	if (ImGui::Button("Apply min/max")) ApplyButtonPress();
 	ImGui::SameLine();
 	UpdateSize();
 	ImGui::Text("Swap: "+swapText);
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 6 * txtH), true);
-	ImGui::TextDisabled("Geometry");
+	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 5.75 * txtH), true);
+	ImGui::TextDisabled("Geometry"); ImGui::SameLine();
+	ImGui::HelpMarker("These are the values obtained from geometry\nthey are used by autoscale");
 	GetCurrentRange();
 	ImGui::Text(fmt::format("Min: {:.3g}", cMinScale));
 	ImGui::Text(fmt::format("Max: {:.3g}", cMaxScale));
-	ImGui::HelpMarker("These are the values obtained from geometry\nthey are used by autoscale");
+	if (ImGui::Button("Copy to manual")) SetCurrentButtonPress();
 	ImGui::EndChild();
 
 	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
