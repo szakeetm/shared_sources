@@ -850,9 +850,11 @@ void FacetMirrorProjectMenuPress() {
     */
 }
 void FacetRotateMenuPress() {
-    
+    mApp->imWnd->rotFacet.Show();
+    /*
     if (!mApp->rotateFacet) mApp->rotateFacet = new RotateFacet(interfGeom, &mApp->worker);
     mApp->rotateFacet->SetVisible(true);
+    */
 }
 void AlignToMenuPress() {
     

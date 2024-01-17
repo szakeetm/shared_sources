@@ -185,25 +185,25 @@ void ImguiWindow::init() {
     show_perfo = false;
     show_window_license = false;
 
+    // general
     popup = ImIOWrappers::ImPopup();
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
     progress.Hide();
+    sideBar = ImGuiSidebar();
+    shortcutMan = ShortcutManager();
+    // selection
     smartSelect = ImSmartSelection();
     smartSelect.Init(mApp);
     selByNum = ImSelectDialog();
     selByNum.Init(mApp);
     selByTex = ImSelectTextureType();
     selByTex.Init(mApp);
-    facetMov = ImFacetMove();
-    facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
     globalSet.Init(mApp);
     selFacetByResult = ImSelectFacetByResult();
     selFacetByResult.Init(mApp);
-
-    shortcutMan = ShortcutManager();
-    sideBar = ImGuiSidebar();
+    //tools
     formulaEdit = ImFormulaEditor();
     formulaEdit.Init(mApp, mApp->appFormulas);
     convPlot = ImConvergencePlotter();
@@ -222,12 +222,17 @@ void ImguiWindow::init() {
     movPart.Init(mApp);
     measForce = ImMeasureForce();
     measForce.Init(mApp);
+    // facet
     facCoord = ImFacetCoordinates();
     facCoord.Init(mApp);
+    facetMov = ImFacetMove();
+    facetMov.Init(mApp, mApp->worker.GetGeometry());
     facScale = ImFacetScale();
     facScale.Init(mApp);
     mirrProjFacet = ImFacetMirrorProject();
     mirrProjFacet.Init(mApp);
+    rotFacet = ImFacetRotate();
+    rotFacet.Init(mApp);
 
     RegisterShortcuts();
 
@@ -424,6 +429,7 @@ void ImguiWindow::renderSingle() {
         facCoord.Draw();
         facScale.Draw();
         mirrProjFacet.Draw();
+        rotFacet.Draw();
 
         shortcutMan.DoShortcuts();
 

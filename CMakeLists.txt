@@ -139,6 +139,7 @@ set(INTERFACE_FILES
         Interface/ImguiFacetCoordinates.cpp
         Interface/ImguiFacetScale.cpp
         Interface/ImguiFacetMirrorProject.cpp
+        Interface/ImguiFacetRotate.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
