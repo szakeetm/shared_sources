@@ -21,7 +21,7 @@ protected:
 	ImVec4 SelectionBounds();
 	bool SaveTexturePlotter(bool toFile=true);
 	void DrawMenuBar();
-	typedef struct SelRect { int startRow, startCol, endRow, endCol; };
+	typedef struct { int startRow, startCol, endRow, endCol; } SelRect;
 	std::string Serialize(SelRect bounds = { 0,0,0,0 }, char lineBreak = '\n', std::string rowBreak = "\t");
 
 	// UI variables

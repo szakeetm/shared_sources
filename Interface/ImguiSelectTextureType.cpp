@@ -1,10 +1,13 @@
-#include "ImguiSelectTextureType.h"
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiSelectTextureType.h"
 #include "Helper/StringHelper.h"
 #include "ImguiWindow.h"
 #include "ImguiExtensions.h"
-#include "imgui_internal.h"
+//#include "imgui_internal.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
 #include "Helper/MathTools.h"
@@ -26,7 +29,7 @@ void ImSelectTextureType::Preprocess() {
 	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
-				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,SDL_SCANCODE_RETURN) 
+				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
 		}
@@ -34,13 +37,13 @@ void ImSelectTextureType::Preprocess() {
 	else if (mode == between) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
-				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,SDL_SCANCODE_RETURN) 
+				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
 		}
 		if (minValue > maxValue) {
 			mApp->imWnd->popup.Open("Error", "Minimum cannot be greater than maximum", { 
-				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,SDL_SCANCODE_RETURN) 
+				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
 		}

@@ -18,14 +18,13 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
-#ifndef MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-#define MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif
 #include "imgui/imgui.h"
+#include <imgui/imgui_internal.h>
 #include <string>
 
-#define IMGUI_DEFINE_MATH_OPERATORS
-#include <imgui/imgui_internal.h>
 #include "ImguiExtensions.h"
 
 #include "imgui_stdlib/imgui_stdlib.h"
@@ -370,4 +369,3 @@ namespace ImMath {
         return topLeft.x <= point.x && point.x <= bottomRight.x && topLeft.y <= point.y && point.y <= bottomRight.y;
     }
 }
-#endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H

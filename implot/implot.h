@@ -23,6 +23,9 @@
 // ImPlot v0.12 WIP
 
 #pragma once
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
 //-----------------------------------------------------------------------------
@@ -728,14 +731,14 @@ IMPLOT_API bool BeginDragDropTargetLegend();
 IMPLOT_API void EndDragDropTarget();
 
 // NB: By default, plot and axes drag and drop *sources* require holding the Ctrl modifier to initiate the drag.
-// You can change the modifier if desired. If ImGuiKeyModFlags_None is provided, the axes will be locked from panning.
+// You can change the modifier if desired. If ImGuiModFlags_None is provided, the axes will be locked from panning.
 
 // Turns the current plot's plotting area into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSource(ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
+IMPLOT_API bool BeginDragDropSource(ImGuiModFlags key_mods = ImGuiModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
 // Turns the current plot's X-axis into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSourceX(ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
+IMPLOT_API bool BeginDragDropSourceX(ImGuiModFlags key_mods = ImGuiModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
 // Turns the current plot's Y-axis into a drag and drop source. Don't forget to call EndDragDropSource!
-IMPLOT_API bool BeginDragDropSourceY(ImPlotYAxis axis = ImPlotYAxis_1, ImGuiKeyModFlags key_mods = ImGuiKeyModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
+IMPLOT_API bool BeginDragDropSourceY(ImPlotYAxis axis = ImPlotYAxis_1, ImGuiModFlags key_mods = ImGuiModFlags_Ctrl, ImGuiDragDropFlags flags = 0);
 // Turns an item in the current plot's legend into drag and drop source. Don't forget to call EndDragDropSource!
 IMPLOT_API bool BeginDragDropSourceItem(const char* label_id, ImGuiDragDropFlags flags = 0);
 // Ends a drag and drop source (currently just an alias for ImGui::EndDragDropSource).

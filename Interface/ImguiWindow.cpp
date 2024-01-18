@@ -18,9 +18,14 @@ GNU General Public License for more details.
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui/imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
+#include <imgui/imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -30,15 +35,12 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-
-#include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl2.h"
-#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdl2.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 
-#include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 #include <implot/implot.h>
@@ -310,7 +312,7 @@ void ImguiWindow::renderSingle() {
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
         // ImGui!).
-        if ((io.KeyCtrl && io.KeyShift && io.KeyAlt && ImGui::IsKeyDown(SDL_GetScancodeFromKey(SDLK_d))))
+        if ((io.KeyCtrl && io.KeyShift && io.KeyAlt && ImGui::IsKeyDown(ImGuiKey_D)))
             show_demo_window = !show_demo_window;
         if (show_demo_window) {
             ImGui::ShowDemoWindow(&show_demo_window);
@@ -342,8 +344,8 @@ void ImguiWindow::renderSingle() {
                 ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
                 if (ImGui::Button("Test Popup Wrapper")) {
                     popup.Open("Title##0", "Message", { 
-                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN),
-                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
+                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter),
+                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, ImGuiKey_Escape)
                         }); // Open wrapped popup
                 }
                 if (popup.WasResponse()) { // if there was a response

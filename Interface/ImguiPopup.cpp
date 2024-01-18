@@ -1,5 +1,5 @@
-#include "ImguiPopup.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiPopup.h"
 #include <exception>
 #include <memory>
 #include "ImguiExtensions.h"
@@ -84,7 +84,7 @@ namespace ImIOWrappers {
 		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::TextWrapped(message);
 			for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
-				if (buttons.at(i)->key == SDL_SCANCODE_RETURN && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
+				if (buttons.at(i)->key == ImGuiKey_Enter && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
 				if (ImGui::Button(("  " + (buttons.at(i)->name) + "  ").c_str()) || io.KeysDown[buttons.at(i)->key] || io.KeysDown[buttons.at(i)->key2]) { // draw them
 					buttons.at(i)->DoCall(); // call the function
 					returnValue = (buttons.at(i))->retVal; // if pressed change the return value
@@ -118,7 +118,7 @@ namespace ImIOWrappers {
 		this->retVal = retVal_;
 		this->key = key_;
 		this->key2 = key2_;
-		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
+		if (this->key == ImGuiKey_Enter && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	ImButtonFunc::ImButtonFunc(const std::string& name_, const std::function<void()>& func_, int key_, int key2_) {
@@ -127,7 +127,7 @@ namespace ImIOWrappers {
 		this->key = key_;
 		this->key2 = key2_;
 		this->retVal = buttonFunction;
-		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
+		if (this->key == ImGuiKey_Enter && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void ImButtonFunc::DoCall() {
@@ -141,7 +141,7 @@ namespace ImIOWrappers {
 		this->key = key_;
 		this->key2 = key2_;
 		this->retVal = buttonFunction;
-		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
+		if (this->key == ImGuiKey_Enter && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void ImButtonFuncStr::DoCall() {
@@ -154,7 +154,7 @@ namespace ImIOWrappers {
 		this->key = key_;
 		this->key2 = key2_;
 		this->retVal = buttonFunction;
-		if (this->key == SDL_SCANCODE_RETURN && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
+		if (this->key == ImGuiKey_Enter && this->key2 == -1) this->key2 = SDL_SCANCODE_KP_ENTER;
 	}
 
 	void ImButtonFuncInt::DoCall() {
@@ -189,15 +189,15 @@ namespace ImIOWrappers {
 		ImGuiIO& io = ImGui::GetIO();
 		ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
 		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
-			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize(message.c_str()).x);
+			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(message.c_str()).x);
 			ImGui::InputText(this->message.c_str(), &this->value);
-			if (ImGui::Button("  OK  ") || io.KeysDown[SDL_SCANCODE_RETURN] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
+			if (ImGui::Button("  OK  ") || io.KeysDown[ImGuiKey_Enter] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 				this->returnValue = buttonFunction;
 				function(this->value);
 			} ImGui::SameLine();
-			if (ImGui::Button("  Cancel  ") || io.KeysDown[SDL_SCANCODE_ESCAPE]) {
+			if (ImGui::Button("  Cancel  ") || io.KeysDown[ImGuiKey_Escape]) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 			}
@@ -211,7 +211,7 @@ namespace ImIOWrappers {
 		}
 	}
 	void InfoPopup(const std::string& title, const std::string& msg) {
-		mApp->imWnd->popup.Open(title, msg, { std::make_shared<ImButtonInt>("Ok", buttonOk,SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER) });
+		mApp->imWnd->popup.Open(title, msg, { std::make_shared<ImButtonInt>("Ok", buttonOk,ImGuiKey_Enter, SDL_SCANCODE_KP_ENTER) });
 	}
 	void AskToSaveBeforeDoing(const std::function<void()>& action)
 	{
@@ -220,9 +220,9 @@ namespace ImIOWrappers {
 		} else {
 			auto Y = [action]() { if (DoSave()) action(); }; // note: this can happen at an arbitrary time during execution
 			mApp->imWnd->popup.Open("File not saved", "Save current geometry?", {
-				std::make_shared<ImButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN, SDL_SCANCODE_KP_ENTER), // save, then do action
+				std::make_shared<ImButtonFunc>("Yes", Y, ImGuiKey_Enter, SDL_SCANCODE_KP_ENTER), // save, then do action
 				std::make_shared<ImButtonFunc>("No", action), // just do the action
-				std::make_shared<ImButtonInt>("Cancel", buttonCancel, SDL_SCANCODE_ESCAPE) // do nothing
+				std::make_shared<ImButtonInt>("Cancel", buttonCancel, ImGuiKey_Escape) // do nothing
 				});
 		}
 	}

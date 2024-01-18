@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiTexturePlotter.h"
 #include "Geometry_shared.h"
@@ -40,7 +43,7 @@ void ImTexturePlotter::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
-	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),true);
+	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
 	if (ImGui::Button("FindMax")) {
@@ -49,7 +52,7 @@ void ImTexturePlotter::Draw()
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
-	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5+3));
+	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvail().x - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
 	if (ImGui::BeginCombo("##View", comboOpts[viewIdx])) {
@@ -184,10 +187,10 @@ void ImTexturePlotter::DrawTextureTable()
 			if (key) { anyKeyDown = true; break; }
 		}
 		if (selection.size() == 1 && anyKeyDown) {
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))		selection[0].first--;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))		selection[0].first++;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		selection[0].second--;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))	selection[0].second++;
+			if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))		selection[0].first--;
+			if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))		selection[0].first++;
+			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))		selection[0].second--;
+			if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))	selection[0].second++;
 
 			if (selection[0].second < 0) selection[0].second = 0;
 			if (selection[0].second > width-1) selection[0].second = width-1;

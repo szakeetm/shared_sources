@@ -95,17 +95,17 @@ ImPlotContext* GImPlot = NULL;
 
 ImPlotInputMap::ImPlotInputMap() {
     PanButton             = ImGuiMouseButton_Left;
-    PanMod                = ImGuiKeyModFlags_None;
+    PanMod                = ImGuiModFlags_None;
     FitButton             = ImGuiMouseButton_Left;
     ContextMenuButton     = ImGuiMouseButton_Right;
     BoxSelectButton       = ImGuiMouseButton_Right;
-    BoxSelectMod          = ImGuiKeyModFlags_None;
+    BoxSelectMod          = ImGuiModFlags_None;
     BoxSelectCancelButton = ImGuiMouseButton_Left;
     QueryButton           = ImGuiMouseButton_Middle;
-    QueryMod              = ImGuiKeyModFlags_None;
-    QueryToggleMod        = ImGuiKeyModFlags_Ctrl;
-    HorizontalMod         = ImGuiKeyModFlags_Alt;
-    VerticalMod           = ImGuiKeyModFlags_Shift;
+    QueryMod              = ImGuiModFlags_None;
+    QueryToggleMod        = ImGuiModFlags_Ctrl;
+    HorizontalMod         = ImGuiModFlags_Alt;
+    VerticalMod           = ImGuiModFlags_Shift;
 }
 
 ImPlotStyle::ImPlotStyle() {
@@ -2084,7 +2084,8 @@ bool BeginPlot(const char* title, const char* x_label, const char* y1_label, con
         return false;
     }
     // NB: ImGuiButtonFlags_AllowItemOverlap and SetItemAllowOverlap() required for DragLine and DragPoint
-    ImGui::ButtonBehavior(plot.FrameRect,plot.ID,&plot.FrameHovered,&plot.FrameHeld,ImGuiButtonFlags_AllowItemOverlap);
+    ImGui::SetNextItemAllowOverlap();
+    ImGui::ButtonBehavior(plot.FrameRect,plot.ID,&plot.FrameHovered,&plot.FrameHeld);
     ImGui::SetItemAllowOverlap();
 
     // canvas/axes bb
@@ -2865,7 +2866,8 @@ bool BeginSubplots(const char* title, int rows, int cols, const ImVec2& size, Im
             ImGui::KeepAliveID(sep_id);
             const ImRect sep_bb = ImRect(subplot.GridRect.Min.x, ypos-SUBPLOT_SPLITTER_HALF_THICKNESS, subplot.GridRect.Max.x, ypos+SUBPLOT_SPLITTER_HALF_THICKNESS);
             bool sep_hov = false, sep_hld = false;
-            const bool sep_clk = ImGui::ButtonBehavior(sep_bb, sep_id, &sep_hov, &sep_hld, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_AllowItemOverlap | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnDoubleClick);
+            ImGui::SetNextItemAllowOverlap();
+            const bool sep_clk = ImGui::ButtonBehavior(sep_bb, sep_id, &sep_hov, &sep_hld, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnDoubleClick);
             if ((sep_hov && G.HoveredIdTimer > SUBPLOT_SPLITTER_FEEDBACK_TIMER) || sep_hld) {
                 if (sep_clk && ImGui::IsMouseDoubleClicked(0)) {
                     float p = (subplot.RowRatios[r] + subplot.RowRatios[r+1])/2;
@@ -2895,7 +2897,8 @@ bool BeginSubplots(const char* title, int rows, int cols, const ImVec2& size, Im
             ImGui::KeepAliveID(sep_id);
             const ImRect sep_bb = ImRect(xpos-SUBPLOT_SPLITTER_HALF_THICKNESS, subplot.GridRect.Min.y, xpos+SUBPLOT_SPLITTER_HALF_THICKNESS, subplot.GridRect.Max.y);
             bool sep_hov = false, sep_hld = false;
-            const bool sep_clk = ImGui::ButtonBehavior(sep_bb, sep_id, &sep_hov, &sep_hld, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_AllowItemOverlap | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnDoubleClick);
+            ImGui::SetNextItemAllowOverlap();
+            const bool sep_clk = ImGui::ButtonBehavior(sep_bb, sep_id, &sep_hov, &sep_hld, ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_PressedOnClick | ImGuiButtonFlags_PressedOnDoubleClick);
             if ((sep_hov && G.HoveredIdTimer > SUBPLOT_SPLITTER_FEEDBACK_TIMER) || sep_hld) {
                 if (sep_clk && ImGui::IsMouseDoubleClicked(0)) {
                     float p = (subplot.ColRatios[c] + subplot.ColRatios[c+1])/2;
@@ -3518,7 +3521,7 @@ void EndDragDropTarget() {
 	ImGui::EndDragDropTarget();
 }
 
-bool BeginDragDropSourceEx(ImGuiID source_id, bool is_hovered, ImGuiDragDropFlags flags, ImGuiKeyModFlags key_mods) {
+bool BeginDragDropSourceEx(ImGuiID source_id, bool is_hovered, ImGuiDragDropFlags flags, ImGuiModFlags key_mods) {
     ImGuiContext& g = *GImGui;
     ImGuiWindow* window = g.CurrentWindow;
     ImGuiMouseButton mouse_button = ImGuiMouseButton_Left;
@@ -3541,7 +3544,6 @@ bool BeginDragDropSourceEx(ImGuiID source_id, bool is_hovered, ImGuiDragDropFlag
     g.ActiveIdAllowOverlap = is_hovered;
     g.ActiveIdUsingNavDirMask = ~(ImU32)0;
     g.ActiveIdUsingNavInputMask = ~(ImU32)0;
-    g.ActiveIdUsingKeyInputMask = ~(ImU64)0;
 
     if (ImGui::IsMouseDragging(mouse_button)) {
 
@@ -3572,7 +3574,7 @@ bool BeginDragDropSourceEx(ImGuiID source_id, bool is_hovered, ImGuiDragDropFlag
     return false;
 }
 
-bool BeginDragDropSource(ImGuiKeyModFlags key_mods, ImGuiDragDropFlags flags) {
+bool BeginDragDropSource(ImGuiModFlags key_mods, ImGuiDragDropFlags flags) {
     if (ImGui::GetIO().KeyMods == key_mods) {
         GImPlot->CurrentPlot->XAxis.Dragging = false;
         for (int i = 0; i < IMPLOT_Y_AXES; ++i)
@@ -3583,7 +3585,7 @@ bool BeginDragDropSource(ImGuiKeyModFlags key_mods, ImGuiDragDropFlags flags) {
     return  ImGui::ItemAdd(rect, ID, &rect) && BeginDragDropSourceEx(ID, GImPlot->CurrentPlot->PlotHovered, flags, key_mods);
 }
 
-bool BeginDragDropSourceX(ImGuiKeyModFlags key_mods, ImGuiDragDropFlags flags) {
+bool BeginDragDropSourceX(ImGuiModFlags key_mods, ImGuiDragDropFlags flags) {
     if (ImGui::GetIO().KeyMods == key_mods)
         GImPlot->CurrentPlot->XAxis.Dragging = false;
     const ImGuiID ID = GImGui->CurrentWindow->GetID(IMPLOT_ID_XAX);
@@ -3591,7 +3593,7 @@ bool BeginDragDropSourceX(ImGuiKeyModFlags key_mods, ImGuiDragDropFlags flags) {
     return  ImGui::ItemAdd(rect, ID, &rect) && BeginDragDropSourceEx(ID, GImPlot->CurrentPlot->XAxis.ExtHovered, flags, key_mods);
 }
 
-bool BeginDragDropSourceY(ImPlotYAxis axis, ImGuiKeyModFlags key_mods, ImGuiDragDropFlags flags) {
+bool BeginDragDropSourceY(ImPlotYAxis axis, ImGuiModFlags key_mods, ImGuiDragDropFlags flags) {
     if (ImGui::GetIO().KeyMods == key_mods)
         GImPlot->CurrentPlot->YAxis[axis].Dragging = false;
     const ImGuiID ID = GImGui->CurrentWindow->GetID(IMPLOT_ID_YAX + axis);
@@ -3606,7 +3608,7 @@ bool BeginDragDropSourceItem(const char* label_id, ImGuiDragDropFlags flags) {
     ImPlotItem* item = gp.CurrentItems->GetItem(item_id);
     bool is_hovered = item && item->LegendHovered;
     ImGuiID temp_id = ImGui::GetIDWithSeed("dnd",NULL,item->ID); // total hack
-    return BeginDragDropSourceEx(temp_id, is_hovered, flags, ImGuiKeyModFlags_None);
+    return BeginDragDropSourceEx(temp_id, is_hovered, flags, ImGuiModFlags_None);
 }
 
 void EndDragDropSource() {

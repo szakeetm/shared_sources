@@ -1,7 +1,7 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiProfilePlotter.h"
 #include "Facet_shared.h"
-#include "imgui_stdlib/imgui_stdlib.h"
 #include "implot/implot.h"
 #include "implot/implot_internal.h"
 #include "ProfileModes.h"
@@ -77,7 +77,7 @@ void ImProfilePlotter::Draw()
 	}
 	
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18+3);
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (18+3);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	if (ImGui::Button("Select plotted facets")) {
 		interfGeom->UnselectAll();
@@ -104,7 +104,11 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	loading = true;
 	data.clear();
 	setLog = log;
+	size_t nbFacets = interfGeom->GetNbFacet();
 	for (int id : plotted) {
+		if (id >= nbFacets || id<0) continue;
+		InterfaceFacet* f = interfGeom->GetFacet(id);
+		if (!f->sh.isProfile) continue;
 		if (IsPlotted(id)) continue;
 		data.push_back({ (size_t)id, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 	}
@@ -123,7 +127,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotAxisFlags_LogScale : 0))) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotAxisFlags_LogScale : 0))) {
 		if (setLog) setLog = false;
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);

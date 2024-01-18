@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiTextureScaling.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Geometry_shared.h"
@@ -15,7 +18,7 @@ void ImTextureScaling::Draw()
 	
 	if (photoMode) {
 		ImGui::SetNextWindowSize(ImVec2(50 * txtW, 5 * txtH));
-		ImGui::Begin("Legend###TextureScaling", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
+		ImGui::Begin("Legend###TextureScaling", &drawn, ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav | ImGuiWindowFlags_NoBackground);
 		if (!mApp->whiteBg) {
 			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 1, 1, 1));
 		}
@@ -24,10 +27,10 @@ void ImTextureScaling::Draw()
 			ImGui::PopStyleColor();
 		}
 		ImGui::SameLine();
-		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvailWidth()-3*txtW,txtH));
+		ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x-3*txtW,txtH));
 		ImGui::SameLine();
 		ImGui::HelpMarker("Hover me and press ESC to exit photo mode");
-		if (ImGui::IsWindowHovered() && ImGui::IsKeyPressed(SDL_SCANCODE_ESCAPE)) photoMode = false;
+		if (ImGui::IsWindowHovered() && ImGui::IsKeyPressed(ImGuiKey_Escape)) photoMode = false;
 		ImGui::End();
 		return;
 	}
@@ -51,7 +54,7 @@ void ImTextureScaling::Draw()
 		if (autoscale) ImGui::BeginDisabled();
 		ImGui::InputText("##minInput", &minInput[showComboVal]);
 		if (autoscale) ImGui::EndDisabled();
-		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
+		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
 			autoscale = false;
 			ApplyButtonPress();
 		}
@@ -59,7 +62,7 @@ void ImTextureScaling::Draw()
 		if (autoscale) ImGui::BeginDisabled();
 		ImGui::InputText("##maxInput", &maxInput[showComboVal]);
 		if (autoscale) ImGui::EndDisabled();
-		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(SDL_SCANCODE_RETURN) || ImGui::IsKeyPressed(SDL_SCANCODE_RETURN2))) {
+		if (ImGui::IsItemFocused() && (ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter))) {
 			autoscale = false;
 			ApplyButtonPress();
 		}
