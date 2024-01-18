@@ -184,7 +184,7 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
 				float txtW = ImGui::CalcTextSize("X").x;
 				float txtH = ImGui::GetTextLineHeightWithSpacing();
-				ImPlot::AnnotateClamped(X, Y, ImVec2(txtH,txtH), col, ("X=" + xVal + "\nY=" + yVal).c_str());
+				ImPlot::Annotation(X, Y, data[plotIdx].color, ImVec2(txtH, txtH), true, ("X=" + xVal + "\nY=" + yVal).c_str());
 			}
 		}
 	}

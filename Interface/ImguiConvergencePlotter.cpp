@@ -13,7 +13,6 @@
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
-	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
 bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
@@ -265,8 +264,8 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
-	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotAxisFlags_LogScale : 0))) {
+	ImPlot::SetNextAxesLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotScale_Log10 : 0))) {
 		if (logY) logY = false; 
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() < i) break;
@@ -295,12 +294,14 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	/*
 	if (lockYtoZero) {
 		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##Convergence");
 		thisPlot.YAxis->SetMin(0, true);
 		thisPlot.XAxis.SetMin(0, true);
 		lockYtoZero = false;
 	}
+	*/
 }
 
 bool ImConvergencePlotter::IsPlotted(size_t idx)

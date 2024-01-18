@@ -96,7 +96,6 @@ void ImProfilePlotter::Init(Interface* mApp_)
 {
 	ImWindow::Init(mApp_);
 	interfGeom = mApp->worker.GetGeometry();
-	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
 void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -127,7 +126,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotAxisFlags_LogScale : 0))) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
 		if (setLog) setLog = false;
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
@@ -142,12 +141,14 @@ void ImProfilePlotter::DrawProfileGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	/*
 	if (lockYtoZero) {
 		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##ProfilePlot");
 		thisPlot.YAxis->SetMin(0, true);
 		thisPlot.XAxis.SetMin(0, true);
 		lockYtoZero = false;
 	}
+	*/
 	if (updateHilights) {
 		FacetHiglighting(identProfilesInGeom);
 		updateHilights = false;
