@@ -15,6 +15,12 @@
 #endif
 void ImProfilePlotter::Draw()
 {
+	static bool wasDrawn = false;
+	if (drawn != wasDrawn) {
+		// visibility changed
+		wasDrawn = drawn;
+		FacetHiglighting(drawn ? identProfilesInGeom : false);
+	}
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
