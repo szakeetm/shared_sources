@@ -147,6 +147,7 @@ namespace ImIOWrappers {
 	void ImButtonFuncStr::DoCall() {
 		return this->function(argument);
 	}
+
 	ImButtonFuncInt::ImButtonFuncInt(const std::string& name_, const std::function<void(int)>& func, int arg, ImGuiKey key_, ImGuiKey key2_) {
 		this->name = name_;
 		this->function = func;
@@ -191,13 +192,13 @@ namespace ImIOWrappers {
 		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(message.c_str()).x);
 			ImGui::InputText(this->message.c_str(), &this->value);
-			if (ImGui::Button("  OK  ") || io.KeysDown[ImGuiKey_Enter] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
+			if (ImGui::Button("  OK  ") || ImGui::IsKeyPressed(ImGuiKey_Enter) || ImGui::IsKeyPressed(ImGuiKey_KeypadEnter)) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 				this->returnValue = buttonFunction;
 				function(this->value);
 			} ImGui::SameLine();
-			if (ImGui::Button("  Cancel  ") || io.KeysDown[ImGuiKey_Escape]) {
+			if (ImGui::Button("  Cancel  ") || ImGui::IsKeyPressed(ImGuiKey_Escape)) {
 				ImGui::CloseCurrentPopup();
 				this->drawn = false;
 			}

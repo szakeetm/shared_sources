@@ -82,7 +82,7 @@ void ImSelectTextureType::Draw()
 	float txtH = ImGui::GetTextLineHeightWithSpacing();
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	if (ImGui::Begin("Select facets by texture properties", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_AlwaysAutoResize)) {
-		if (ImGui::BeginChild("Texture resolution", ImVec2(0, txtH * 7.5), true, ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ImGui::BeginChild("Texture resolution", ImVec2(0, txtH * 7.5), true)) {
 			ImGui::TextDisabled("Texture resolution");
 			ImGui::TriState("Square texture", &squareTextrueCheck);
 			ImGui::TextWrapped("For non-square textures, condition applies to either of the two dimensions:");

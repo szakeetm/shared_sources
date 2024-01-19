@@ -10,10 +10,12 @@ class ImTexturePlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
+	void Update();
 protected:
 	// functions
 	void DrawTextureTable();
 	void GetData();
+	bool isUpToDate = false;
 	bool IsCellSelected(size_t row, size_t col);
 	void SelectRow(size_t row);
 	void SelectColumn(size_t col);

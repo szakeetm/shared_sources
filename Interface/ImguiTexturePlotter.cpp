@@ -18,6 +18,7 @@ extern MolFlow* mApp;
 void ImTexturePlotter::Draw()
 {
 	if (!drawn) return;
+	GetData();
 
 	// assemble table & columns flags
 	tableFlags = 0;
@@ -25,12 +26,12 @@ void ImTexturePlotter::Draw()
 	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
 	
 	std::vector<size_t> facets = interfGeom->GetSelectedFacets();
+	static int lastSel = -1;
 	if (facets.size() > 0) {
 		if (facets[0] != selFacetId) {
 			selFacetId = facets[0];
 			name = "Texture Plotter [Facet #" + std::to_string(facets[0] + 1) + "]###TexturePlotter";
 			selFacet = interfGeom->GetFacet(selFacetId);
-			GetData();
 		}
 	} else {
 		selFacet = nullptr;
@@ -39,6 +40,10 @@ void ImTexturePlotter::Draw()
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
 		selection.clear();
+	}
+	if (lastSel != selFacetId) {
+		lastSel = selFacetId;
+		isUpToDate = false; // selection changed
 	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
@@ -52,6 +57,10 @@ void ImTexturePlotter::Draw()
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
+	if (ImGui::Button("Force Refresh")) {
+		isUpToDate = false;
+	} ImGui::SameLine();
+
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvail().x - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
@@ -59,6 +68,7 @@ void ImTexturePlotter::Draw()
 		for (short i = 0; i < comboOpts.size(); i++) {
 			if (ImGui::Selectable(comboOpts[i])) {
 				viewIdx = i;
+				isUpToDate = false;
 			}
 		}
 		ImGui::EndCombo();
@@ -75,6 +85,11 @@ void ImTexturePlotter::Init(Interface* mApp_)
 {
 	mApp = mApp_;
 	interfGeom = mApp->worker.GetGeometry();
+}
+
+void ImTexturePlotter::Update()
+{
+	isUpToDate = false;
 }
 
 void ImTexturePlotter::DrawTextureTable()
@@ -204,6 +219,11 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
+	if (isUpToDate) return;
+	if (!selFacet) {
+		data.clear();
+		return;
+	}
 	{
 		LockWrapper lWrap(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) return;
@@ -476,6 +496,7 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	}
+	isUpToDate = true;
 }
 
 bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
