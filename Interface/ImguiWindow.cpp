@@ -341,7 +341,7 @@ void ImguiWindow::renderSingle() {
 
             static int response;
             if (ImGui::CollapsingHeader("Popups")) {
-                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
+                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3));
                 if (ImGui::Button("Test Popup Wrapper")) {
                     popup.Open("Title##0", "Message", { 
                         std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter),
