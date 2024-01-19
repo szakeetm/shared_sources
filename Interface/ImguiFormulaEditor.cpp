@@ -55,7 +55,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 		ImGui::TableHeadersRow();
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*4));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*0.1));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 
 		// this loop draws a row

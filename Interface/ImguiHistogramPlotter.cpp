@@ -211,6 +211,8 @@ void ImHistogramPlotter::DrawPlot()
 #endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
 	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+		if (logX) ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));

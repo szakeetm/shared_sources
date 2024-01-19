@@ -82,4 +82,5 @@ protected:
 	bool limitPoints = true;
 	bool showValueOnHover = true;
 	bool overrange = true;
+	bool logX = false, logY = false;
 };

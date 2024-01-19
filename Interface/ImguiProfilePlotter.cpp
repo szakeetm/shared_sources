@@ -127,7 +127,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
 	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
-		if (setLog) setLog = false;
+		if (setLog) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
@@ -372,6 +372,7 @@ void ImProfilePlotter::DrawMenuBar()
 		}
 		if (ImGui::BeginMenu("View")) {
 			//ImGui::Checkbox("Colorblind mode", &colorBlind);
+			ImGui::Checkbox("Log Y", &setLog);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::Text("Change linewidth:");
 			ImGui::SameLine();

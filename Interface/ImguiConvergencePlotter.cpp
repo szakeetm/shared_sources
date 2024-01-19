@@ -82,6 +82,7 @@ void ImConvergencePlotter::MenuBar()
 		}
 		if (ImGui::BeginMenu("View")) {
 			//ImGui::Checkbox("Colorblind mode", &colorBlind);
+			ImGui::Checkbox("Log Y", &logY);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Linewidth:");
@@ -265,8 +266,8 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextAxesLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotScale_Log10 : 0))) {
-		if (logY) logY = false; 
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() < i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
