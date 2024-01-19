@@ -81,7 +81,7 @@ namespace ImIOWrappers {
 		}
 		ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
 		ImGuiIO& io = ImGui::GetIO();
-		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiChildFlags_AlwaysAutoResize)) {
 			ImGui::TextWrapped(message);
 			for (int i = 0; i < buttons.size(); i++) { // go over all the buttons on the list
 				if (buttons.at(i)->key == ImGuiKey_Enter && buttons.at(i)->key2 == -1) buttons.at(i)->key2 = SDL_SCANCODE_KP_ENTER;
@@ -188,7 +188,7 @@ namespace ImIOWrappers {
 		}
 		ImGuiIO& io = ImGui::GetIO();
 		ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
-		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+		if (ImGui::BeginPopupModal(title.c_str(), NULL, ImGuiChildFlags_AlwaysAutoResize)) {
 			ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize(message.c_str()).x);
 			ImGui::InputText(this->message.c_str(), &this->value);
 			if (ImGui::Button("  OK  ") || io.KeysDown[ImGuiKey_Enter] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
