@@ -36,6 +36,7 @@ private:
 	size_t profileSize = PROFILE_SIZE;
 
 	bool correctForGas = false;
+	bool updateHilights = false;
 
 	InterfaceGeometry* interfGeom;
 	size_t selectedProfile = -1;

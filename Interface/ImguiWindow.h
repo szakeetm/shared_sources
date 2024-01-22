@@ -45,6 +45,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiFacetScale.h"
 #include "ImguiFacetMirrorProject.h"
 #include "ImguiFacetRotate.h"
+#include "ImguiFacetAlign.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -105,6 +106,7 @@ public:
     ImFacetScale facScale;
     ImFacetMirrorProject mirrProjFacet;
     ImFacetRotate rotFacet;
+    ImFacetAlign alignFacet;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

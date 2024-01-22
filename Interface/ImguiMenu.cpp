@@ -857,10 +857,12 @@ void FacetRotateMenuPress() {
     */
 }
 void AlignToMenuPress() {
-    
+    mApp->imWnd->alignFacet.Show();
+    /*
     if (!mApp->alignFacet) mApp->alignFacet = new AlignFacet(interfGeom, &mApp->worker);
     mApp->alignFacet->MemorizeSelection();
     mApp->alignFacet->SetVisible(true);
+    */
 }
 void ExtrudeMenuPress() {
     

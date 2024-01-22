@@ -15,6 +15,12 @@
 #endif
 void ImProfilePlotter::Draw()
 {
+	static bool wasDrawn = false;
+	if (drawn != wasDrawn) {
+		// visibility changed
+		wasDrawn = drawn;
+		FacetHiglighting(drawn ? identProfilesInGeom : false);
+	}
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
@@ -59,6 +65,7 @@ void ImProfilePlotter::Draw()
 		drawManual = false;
 		manualPlot.x = nullptr;
 		manualPlot.y = nullptr;
+		FacetHiglighting(identProfilesInGeom);
 	}
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
@@ -137,6 +144,10 @@ void ImProfilePlotter::DrawProfileGraph()
 		thisPlot.XAxis.SetMin(0, true);
 		lockYtoZero = false;
 	}
+	if (updateHilights) {
+		FacetHiglighting(identProfilesInGeom);
+		updateHilights = false;
+	}
 }
 
 void ImProfilePlotter::ShowFacet()
@@ -157,6 +168,7 @@ void ImProfilePlotter::ShowFacet()
 
 void ImProfilePlotter::AddCurve()
 {
+	updateHilights = true;
 	if (selectedProfile != -1) {
 		if (IsPlotted(selectedProfile)) {
 			ImIOWrappers::InfoPopup("Error", "Already Plotted");
@@ -177,6 +189,7 @@ void ImProfilePlotter::AddCurve()
 
 void ImProfilePlotter::RemoveCurve(int id)
 {
+	updateHilights = true;
 	if (data.size() == 0) return;
 	if (id == selectedProfile) selectedProfile = -1;
 	if (id == -1) {
@@ -192,8 +205,7 @@ void ImProfilePlotter::RemoveCurve(int id)
 		}
 		return;
 	}
-	for (size_t i = 0; i < data.size(); i++)
-		if (data[i].id == id) {
+	for (size_t i = 0; i < data.size(); i++) if (data[i].id == id) {
 			data.erase(data.begin() + i);
 			return;
 		}
