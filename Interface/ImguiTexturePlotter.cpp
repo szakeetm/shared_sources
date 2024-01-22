@@ -51,7 +51,7 @@ void ImTexturePlotter::Draw()
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
-	if (ImGui::Button("FindMax")) {
+	if (ImGui::Button("Find Max")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
 		scrollToSelected = true;
@@ -149,17 +149,19 @@ void ImTexturePlotter::DrawTextureTable()
 				ImGui::TableSetColumnIndex(0); // move to first column
 				if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
 					SelectRow(i);
+					scrollToSelected = false;
 				}
 				for (int j = 0; j <= width; j++) {
 					if (j != width) {
 						ImGui::TableSetColumnIndex(j+1);
 					}
 					bool isSelected = IsCellSelected(i,j);
-					if (scrollToSelected && selection.size()==0 && isSelected && !ImGui::IsKeyDown(ImGuiKey_LeftShift)) { // works but not well because ImGui is not redrawn all the time
+					if (scrollToSelected && selection.size()==1 && isSelected) { // works but not well because ImGui is not redrawn all the time
 						ImGui::SetScrollHereX(0.5f);
 						ImGui::SetScrollHereY(0.5f);
 					}
 					if (isDragging) {
+						scrollToSelected = false;
 						ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 						if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
 							if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
@@ -173,6 +175,7 @@ void ImTexturePlotter::DrawTextureTable()
 					if (ImGui::IsItemHovered()) hovered = true;
 					if (j == width) continue;
 					if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
+						scrollToSelected = false;
 						if (isDragging) continue;
 						if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 							BoxSelect(selection[0], std::pair<int, int>(i, j));
@@ -627,6 +630,15 @@ void ImTexturePlotter::DrawMenuBar()
 			if (ImGui::MenuItem("Autosize to window")) {
 				resizableColumns = false;
 				fitToWindow = true;
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Data")) {
+			if (data.size() > maxX && data[maxX].size() > maxY) {
+				ImGui::Text(fmt::format("Highest value is {} in row {}, col {}", data[maxX][maxY], maxY+1, maxX+1));
+			}
+			else {
+				ImGui::Text("No Data");
 			}
 			ImGui::EndMenu();
 		}
