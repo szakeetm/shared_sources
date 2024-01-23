@@ -235,6 +235,8 @@ void ImguiWindow::init() {
     rotFacet.Init(mApp);
     alignFacet = ImFacetAlign();
     alignFacet.Init(mApp);
+    extrudeFacet = ImFacetExtrude();
+    extrudeFacet.Init(mApp);
 
     RegisterShortcuts();
 
@@ -433,6 +435,7 @@ void ImguiWindow::renderSingle() {
         mirrProjFacet.Draw();
         rotFacet.Draw();
         alignFacet.Draw();
+        extrudeFacet.Draw();
 
         shortcutMan.DoShortcuts();
 

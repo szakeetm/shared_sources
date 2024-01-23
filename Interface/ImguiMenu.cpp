@@ -865,12 +865,14 @@ void AlignToMenuPress() {
     */
 }
 void ExtrudeMenuPress() {
-    
+    mApp->imWnd->extrudeFacet.Show();
+    /*
     if (!mApp->extrudeFacet || !mApp->extrudeFacet->IsVisible()) {
         SAFE_DELETE(mApp->extrudeFacet);
         mApp->extrudeFacet = new ExtrudeFacet(interfGeom, &mApp->worker);
     }
     mApp->extrudeFacet->SetVisible(true);
+    */
 }
 void SplitMenuPress() {
     
