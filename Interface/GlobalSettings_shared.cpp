@@ -211,7 +211,7 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                 }
                 mApp->autoSaveFrequency = autosavefreq;
 
-                GLWindow::ProcessMessage(NULL,MSG_CLOSE);
+                //GLWindow::ProcessMessage(NULL,MSG_CLOSE);
                 return;
             }
             break;
