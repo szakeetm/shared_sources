@@ -17,6 +17,11 @@ protected:
 	void FacetNXButtonPress();
 	void FacetNYButtonPress();
 	void FacetNZButtonPress();
+	void PreProcessExtrude();
+	void DoExtrude();
+	int baseId=-1, dirId=-1, curveDirFac=-1;
+	std::optional<size_t> AssertOneVertexSelected();
+	std::optional<size_t> AssertOneFacetSelected();
 	enum Mode : int {
 		none,
 		facetNormal,
@@ -27,7 +32,7 @@ protected:
 	};
 	Mode mode = none;
 	std::string facetLengthInput="1", pathDXInput, pathDYInput, pathDZInput, curveX0Input, curveY0Input, curveZ0Input,
-		curvedXInput, curvedYInput, curveDZInput, radiusInput, angleDegInput, angleRadInput, curveLengthInput, stepsInput;
+		curveDXInput, curveDYInput, curveDZInput, radiusInput, angleDegInput, angleRadInput, curveLengthInput, stepsInput, facetInfo;
 	double facetLength=1, pathDX, pathDY, pathDZ, curveX0, curveY0, curveZ0,
-		curvedX, curvedY, curveDZ, radius, angleDeg, angleRad, curveLength, steps;
+		curveDX, curveDY, curveDZ, radius, angleDeg, angleRad, curveLength, steps;
 };
