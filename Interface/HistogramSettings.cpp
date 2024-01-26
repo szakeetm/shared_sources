@@ -52,7 +52,7 @@ extern SynRad*mApp;
 HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow() {
 
 	int wD = 270;
-	int panelHeight = 215;
+	int panelHeight = 240;
 	int hD = 2*panelHeight+10;
 
 #if defined(MOLFLOW)
@@ -137,9 +137,13 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 	globalSettingsPanel->Add(globalTimeBinsizeText);
 	globalTextFields.push_back(globalTimeBinsizeText);
 
-	globalMemoryEstimateLabel = new GLLabel("Memory estimate of global histogram:");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel6, globalMemoryEstimateLabel, 0, 25, globalLabel3->GetWidth(), globalLabel1->GetHeight());
-	globalSettingsPanel->Add(globalMemoryEstimateLabel);
+	globalMemoryEstimateLabel_current = new GLLabel("Current memory (global):");
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel6, globalMemoryEstimateLabel_current, 0, 25, globalLabel3->GetWidth(), globalLabel1->GetHeight());
+	globalSettingsPanel->Add(globalMemoryEstimateLabel_current);
+
+	globalMemoryEstimateLabel_new = new GLLabel("After applying (global):");
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalMemoryEstimateLabel_current, globalMemoryEstimateLabel_new, 0, 25, globalLabel3->GetWidth(), globalLabel1->GetHeight());
+	globalSettingsPanel->Add(globalMemoryEstimateLabel_new);
 #endif
 
 
@@ -219,9 +223,13 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 	facetTextFields.push_back(facetTimeBinsizeText);
 #endif
 
-	facetMemoryEstimateLabel = new GLLabel("Memory estimate on sel.facets:");
-	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel6, facetMemoryEstimateLabel, 0, 25, facetLabel3->GetWidth(), facetLabel1->GetHeight());
-	facetSettingsPanel->Add(facetMemoryEstimateLabel);
+	facetMemoryEstimateLabel_current = new GLLabel("Current memory (all facets):");
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetLabel6, facetMemoryEstimateLabel_current, 0, 25, facetLabel3->GetWidth(), facetLabel1->GetHeight());
+	facetSettingsPanel->Add(facetMemoryEstimateLabel_current);
+
+	facetMemoryEstimateLabel_new = new GLLabel("After applying (sel.facets):");
+	facetSettingsPanel->SetCompBoundsRelativeTo(facetMemoryEstimateLabel_current, facetMemoryEstimateLabel_new, 0, 25, facetLabel3->GetWidth(), facetLabel1->GetHeight());
+	facetSettingsPanel->Add(facetMemoryEstimateLabel_new);
 
 	applyButton = new GLButton(0,"Apply");
 	applyButton->SetBounds(wD/2-50,hD-44,100,21);
@@ -296,7 +304,7 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	globalTimeLimitText->SetText(work->model->sp.globalHistogramParams.timeMax);
 	globalTimeBinsizeText->SetText(work->model->sp.globalHistogramParams.timeBinsize);
 #endif
-	UpdateMemoryEstimate_Global();
+	UpdateMemoryEstimate_New_Global();
 
 	//Facet histogram panel
 	nbSelectedFacetCache = selectedFacetIds.size();
@@ -402,8 +410,8 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 #endif
 
 	}
-	UpdateMemoryEstimate_SelectedFacets(nbSelectedFacetCache);
-
+	UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
+	UpdateMemoryEstimate_Current();
 	EnableDisableControls();
 }
 
@@ -446,18 +454,18 @@ void HistogramSettings::ProcessMessage(GLComponent *src,int message) {
 			EnableDisableControls();
 			
 			if (Contains(globalToggles, src)) {
-				UpdateMemoryEstimate_Global();
+				UpdateMemoryEstimate_New_Global();
 			}
 			else if (Contains(facetToggles, src)) {
-				UpdateMemoryEstimate_SelectedFacets(nbSelectedFacetCache);
+				UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
 			}
 			break;
 		case MSG_TEXT_UPD: //Update estimate as you type
 			if (Contains(globalTextFields, src)) {
-				UpdateMemoryEstimate_Global();
+				UpdateMemoryEstimate_New_Global();
 			}
 			else if (Contains(facetTextFields, src)) {
-				UpdateMemoryEstimate_SelectedFacets(nbSelectedFacetCache);
+				UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
 			}
 			break;		
 	}
@@ -582,19 +590,19 @@ HistogramSettings::HistogramGUISettings HistogramSettings::GetGUIValues()
 	return result;
 }
 
-void HistogramSettings::UpdateMemoryEstimate_Global() {
+void HistogramSettings::UpdateMemoryEstimate_New_Global() {
 	HistogramGUISettings guiSettings;
 	try {
 		guiSettings = GetGUIValues();
 		size_t memory_bytes = guiSettings.globalParams.GetDataSize() * (work->interfaceMomentCache.size()+1);
-		globalMemoryEstimateLabel->SetText(fmt::format("Memory estimate of global histogram: {}", FormatMemory(memory_bytes)));
+		globalMemoryEstimateLabel_new->SetText(fmt::format("After applying: {}", FormatMemory(memory_bytes)));
 	}
 	catch (...) {
-		globalMemoryEstimateLabel->SetText("Memory estimate: [invalid textbox value(s)]");
+		globalMemoryEstimateLabel_new->SetText("After applying: [invalid textbox value(s)]");
 	}
 }
 
-void HistogramSettings::UpdateMemoryEstimate_SelectedFacets(size_t nbSelectedFacets) {
+void HistogramSettings::UpdateMemoryEstimate_New_SelectedFacets(size_t nbSelectedFacets) {
 	HistogramGUISettings guiSettings;
 	try {
 		guiSettings = GetGUIValues();
@@ -612,15 +620,27 @@ void HistogramSettings::UpdateMemoryEstimate_SelectedFacets(size_t nbSelectedFac
 					(guiSettings.facetTimeLimitMixed || guiSettings.facetTimeBinsizeMixed)))
 #endif
 			) {
-			facetMemoryEstimateLabel->SetText("Memory estimate: [can't calc. in mixed state]");
+			facetMemoryEstimateLabel_new->SetText("After applying (sel.facets): [mixed state]");
 		}
 		else {
 			size_t memory_bytes = guiSettings.facetParams.GetDataSize() * nbSelectedFacets * (work->interfaceMomentCache.size() + 1);
-			facetMemoryEstimateLabel->SetText(fmt::format("Memory estimate of sel.facet hist: {}", FormatMemory(memory_bytes)));
+			facetMemoryEstimateLabel_new->SetText(fmt::format("After applying (sel.facets): {}", FormatMemory(memory_bytes)));
 		}
 	}
 	catch (...) {
-		facetMemoryEstimateLabel->SetText("Memory estimate: [invalid textbox value(s)]");
+		facetMemoryEstimateLabel_new->SetText("After applying (sel.facets): [invalid textbox value(s)]");
 	}
 }
 
+void HistogramSettings::UpdateMemoryEstimate_Current()
+{
+	globalMemoryEstimateLabel_current->SetText(fmt::format("Current memory (global): {}",
+		FormatMemory(work->model->sp.globalHistogramParams.GetDataSize() * (work->interfaceMomentCache.size() + 1))));
+	size_t facetsHistogramSize = 0;
+	size_t nbFacet = interfGeom->GetNbFacet();
+	for (size_t i = 0; i < nbFacet; i++) {
+		facetsHistogramSize += interfGeom->GetFacet(i)->sh.facetHistogramParams.GetDataSize();
+	}
+	facetsHistogramSize *= (work->interfaceMomentCache.size() + 1);
+	facetMemoryEstimateLabel_current->SetText(fmt::format("Current memory (all facets): {}", FormatMemory(facetsHistogramSize)));
+}

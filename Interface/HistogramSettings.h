@@ -44,6 +44,7 @@ public:
   void Refresh(const std::vector<size_t>& selectedFacetIds);
   void EnableDisableControls();
   void Apply();
+  void UpdateMemoryEstimate_Current(); //Called from outside for ex. on number of moments change
 
   // Implementation
   void ProcessMessage(GLComponent *src,int message) override;
@@ -92,15 +93,18 @@ struct HistogramGUISettings {
   GLTextField* globalTimeBinsizeText, * facetTimeBinsizeText;
 #endif
 
-  GLLabel  *globalMemoryEstimateLabel,*facetMemoryEstimateLabel;
+  GLLabel* globalMemoryEstimateLabel_current;
+  GLLabel* facetMemoryEstimateLabel_current; //expensive to update (scan all facets) - only when selection changes
+  GLLabel* globalMemoryEstimateLabel_new;
+  GLLabel* facetMemoryEstimateLabel_new; //cheap to update (uses cached nbSelectedFacets) - every toggle or textbox change
 
   GLButton *applyButton;
 
   //Helpers to know which memory estimate (global or facets) to update on click/text edit
   std::vector<GLComponent*> globalToggles,facetToggles,globalTextFields,facetTextFields;
 
-  void UpdateMemoryEstimate_SelectedFacets(size_t nbSelectedFacets);
-  void UpdateMemoryEstimate_Global();
+  void UpdateMemoryEstimate_New_SelectedFacets(size_t nbSelectedFacets);
+  void UpdateMemoryEstimate_New_Global();
   HistogramGUISettings GetGUIValues(); //Unified function for Apply() and UpdateMemoryEstimate(); Throws Error
 
   size_t nbSelectedFacetCache=0; //To avoid rescanning geometry on every keystroke
