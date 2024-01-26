@@ -52,9 +52,11 @@ public:
 	bool recordBounce = false;
 	size_t nbBounceMax = 10000;
 	size_t nbBounceBinsize = 1;
+
 	bool recordDistance = false;
 	double distanceMax = 10.0;
 	double distanceBinsize = 0.001;
+
 #if defined(MOLFLOW)
 	bool recordTime = false;
 	double timeMax = 0.1;
@@ -91,27 +93,26 @@ public:
 	}
 #endif
 	size_t GetDataSize() const {
-		size_t size = 0;
-		if (recordBounce) size += sizeof(double) * GetBounceHistogramSize();
-		if (recordDistance) size += sizeof(double) * GetDistanceHistogramSize();
+		return 
+			GetBouncesDataSize()
+			+ GetDistanceDataSize()
 #if defined(MOLFLOW)
-		if (recordTime) size += sizeof(double) * GetTimeHistogramSize();
+		    + GetTimeDataSize()
 #endif
-		return size;
-
+			;
 	}
 	size_t GetBouncesDataSize() const {
 		if (!recordBounce) return 0;
-		else return sizeof(double) * GetBounceHistogramSize();
+		else return sizeof(size_t) * GetBounceHistogramSize();
 	}
 	size_t GetDistanceDataSize() const {
 		if (!recordDistance) return 0;
-		else return sizeof(double) * GetDistanceHistogramSize();
+		else return sizeof(size_t) * GetDistanceHistogramSize();
 	}
 #if defined(MOLFLOW)
 	size_t GetTimeDataSize() const {
 		if (!recordTime) return 0;
-		else return sizeof(double) * GetTimeHistogramSize();
+		else return sizeof(size_t) * GetTimeHistogramSize();
 	}
 #endif
 };
