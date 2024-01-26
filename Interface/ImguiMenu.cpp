@@ -206,9 +206,9 @@ void ImportDesorptionFromSYNFileMenuPress() {
 #endif // MOLFLOW
 
 void NewGeometry() {
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->worker.IsRunning())
         mApp->worker.Stop_Public();
-    LockWrapper myLock(mApp->imguiRenderLock);
     mApp->EmptyGeometry();
 }
 

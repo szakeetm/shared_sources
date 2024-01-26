@@ -238,6 +238,7 @@ void ImHistogramPlotter::RemovePlot()
 
 void ImHistogramPlotter::AddPlot()
 {
+	if (comboSelection < -1) return;
 	if (IsPlotted(plotTab, comboSelection)) return;
 	ImPlotData newPlot;
 	if (comboSelection != -1) newPlot.id = comboSelection;
@@ -264,6 +265,7 @@ void ImHistogramPlotter::RefreshPlots()
 		double xSpacing = 1;
 		size_t nBins = 0;
 		size_t facetId = plot.id;
+		if (facetId < 0) continue;
 		switch (plotTab) {
 		case bounces:
 			plot.y = std::make_shared<std::vector<double>>(interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram); // yaxis
