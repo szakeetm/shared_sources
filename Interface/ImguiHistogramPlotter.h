@@ -38,6 +38,7 @@ protected:
 		float width;
 		ImHistogramPlotter* parent;
 		typedef struct {
+			bool tristate[3] = { false, false, false };
 			bool amIDisabled = true;
 			short recBounce = false;
 			std::string maxRecNbBouncesInput = "10000";
@@ -62,7 +63,8 @@ protected:
 		} histSet;
 		histSet globalHistSet, facetHistSet;
 		bool Apply();
-		void DrawSettingsGroup(histSet& set, bool tristate=false);
+		void DrawSettingsGroup(histSet& set);
+		void EvaluateMixedState(ImHistogramSettings::histSet* settings);
 	};
 
 	//variables

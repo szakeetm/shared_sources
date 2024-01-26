@@ -562,7 +562,7 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 	if (ImGui::BeginChild("Global histogram", ImVec2(0, childHeight), true)) {
 		ImGui::TextDisabled("Global histogram");
 		globalHistSet.amIDisabled = false;
-		DrawSettingsGroup(globalHistSet, false);
+		DrawSettingsGroup(globalHistSet);
 	}
 	ImGui::EndChild();
 	if (ImGui::BeginChild("Facet histogram", ImVec2(0, childHeight), true)) {
@@ -573,7 +573,8 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 		}
 		
 		// internal ImGui structure for data storage
-		DrawSettingsGroup(facetHistSet, interfGeom->GetNbSelectedFacets()>1);
+		EvaluateMixedState(&facetHistSet);
+		DrawSettingsGroup(facetHistSet);
 
 		if (facetHistSet.amIDisabled) ImGui::EndDisabled();
 	}
@@ -792,21 +793,21 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	return true;
 }
 
-void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set, bool tristate)
+void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set)
 {
-	ImGui::TriState("Record bounces until absorbtion", &set.recBounce, tristate);
+	ImGui::TriState("Record bounces until absorbtion", &set.recBounce, set.tristate[0]);
 	if (!set.amIDisabled && set.recBounce!=1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded no. of bounces:", &set.maxRecNbBouncesInput,0,txtW*6);
 	ImGui::InputTextRightSide("Bounces bin size:", &set.bouncesBinSizeInput,0,txtW*6);
 	if (!set.amIDisabled && set.recBounce != 1) ImGui::EndDisabled();
 
-	ImGui::TriState("Record flight distance until absorption", &set.recFlightDist, tristate);
+	ImGui::TriState("Record flight distance until absorption", &set.recFlightDist, set.tristate[1]);
 	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded flight distance (cm):", &set.maxFlightDistInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Distance bin size (cm):", &set.distBinSizeInput, 0, txtW * 6);
 	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::EndDisabled();
 #ifdef MOLFLOW
-	ImGui::TriState("Record flight time until absorption", &set.recTime, tristate);
+	ImGui::TriState("Record flight time until absorption", &set.recTime, set.tristate[2]);
 	if (!set.amIDisabled && set.recTime != 1) ImGui::BeginDisabled();
 	ImGui::InputTextRightSide("Max recorded flight time (s):", &set.maxFlightTimeInput, 0, txtW * 6);
 	ImGui::InputTextRightSide("Time bin size (s):", &set.timeBinSizeInput, 0, txtW * 6);
@@ -815,4 +816,45 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set, bo
 	// to the best of my understanding, this does not do anything in the Legacy code
 	// if that is the case it can be removed
 	ImGui::Text("Memory estimate of histogram: " + (set.showMemEst ? std::to_string(set.memEst) : ""));
+}
+
+void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState(ImHistogramSettings::histSet* settings)
+{
+	if (interfGeom->GetNbSelectedFacets() <= 1) { // one or none selected
+		settings->tristate[0] = false;
+		settings->tristate[1] = false;
+#ifdef MOLFLOW
+		settings->tristate[2] = false;
+#endif
+		return;
+	}
+	std::vector<size_t> selected = interfGeom->GetSelectedFacets();
+
+	InterfaceFacet* f = interfGeom->GetFacet(selected[0]);
+	bool facet1states[3];
+	facet1states[0] = f->sh.facetHistogramParams.recordBounce;
+	facet1states[1] = f->sh.facetHistogramParams.recordDistance;
+#ifdef MOLFLOW
+	facet1states[2] = f->sh.facetHistogramParams.recordTime;
+#endif
+
+	for (int i = 1; i < interfGeom->GetNbSelectedFacets(); i++) {
+		InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
+		if (facet1states[0] != f->sh.facetHistogramParams.recordBounce) {
+			settings->tristate[0] = true;
+			settings->recBounce = 2;
+		}
+		if (facet1states[1] != f->sh.facetHistogramParams.recordDistance) {
+			settings->tristate[1] = true;
+			settings->recFlightDist = 2;
+		}
+#ifdef MOLFLOW
+		if (facet1states[2] != f->sh.facetHistogramParams.recordTime) {
+			settings->tristate[2] = true;
+			settings->recTime = 2;
+		}
+		if (settings->tristate[0] && settings->tristate[1] && settings->tristate[2]) break;
+#endif
+		if (settings->tristate[0] && settings->tristate[1]) break;
+	}
 }
