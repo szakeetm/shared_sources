@@ -146,7 +146,7 @@ void ImHistogramPlotter::Draw()
 			else if (settingsWindow.facetHistSet.recFlightDist != toggle) settingsWindow.facetHistSet.recFlightDist = 2;
 
 			settingsWindow.facetHistSet.maxFlightDist = f->sh.facetHistogramParams.distanceMax;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.maxFlightDist);
 			if (settingsWindow.facetHistSet.maxFlightDistInput == "") {
 				settingsWindow.facetHistSet.maxFlightDistInput = tmp; // first checked facet
 			}
@@ -154,7 +154,7 @@ void ImHistogramPlotter::Draw()
 				settingsWindow.facetHistSet.maxFlightDistInput = "...";
 			}
 			settingsWindow.facetHistSet.distBinSize = f->sh.facetHistogramParams.distanceBinsize;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distBinSize);
 			if (settingsWindow.facetHistSet.distBinSizeInput == "") {
 				settingsWindow.facetHistSet.distBinSizeInput = tmp; // first checked facet
 			}
@@ -166,7 +166,7 @@ void ImHistogramPlotter::Draw()
 			if (settingsWindow.facetHistSet.recTime == 3) settingsWindow.facetHistSet.recTime = toggle;
 			else if (settingsWindow.facetHistSet.recTime != toggle) settingsWindow.facetHistSet.recTime = 2;
 			settingsWindow.facetHistSet.maxFlightTime = f->sh.facetHistogramParams.timeMax;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.maxFlightTime);
 			if (settingsWindow.facetHistSet.maxFlightTimeInput == "") {
 				settingsWindow.facetHistSet.maxFlightTimeInput = tmp; // first checked facet
 			}
@@ -174,7 +174,7 @@ void ImHistogramPlotter::Draw()
 				settingsWindow.facetHistSet.maxFlightTimeInput = "...";
 			}
 			settingsWindow.facetHistSet.timeBinSize = f->sh.facetHistogramParams.timeBinsize;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeBinSize);
 			if (settingsWindow.facetHistSet.timeBinSizeInput == "") {
 				settingsWindow.facetHistSet.timeBinSizeInput = tmp; // first checked facet
 			}
@@ -440,15 +440,15 @@ void ImHistogramPlotter::LoadHistogramSettings()
 
 	settingsWindow.globalHistSet.recFlightDist = mApp->worker.model->sp.globalHistogramParams.recordDistance;
 	settingsWindow.globalHistSet.maxFlightDist = mApp->worker.model->sp.globalHistogramParams.distanceMax;
-	settingsWindow.globalHistSet.maxFlightDistInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightDist);
+	settingsWindow.globalHistSet.maxFlightDistInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.maxFlightDist);
 	settingsWindow.globalHistSet.distBinSize = mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
-	settingsWindow.globalHistSet.distBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.distBinSize);
+	settingsWindow.globalHistSet.distBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distBinSize);
 #ifdef MOLFLOW
 	settingsWindow.globalHistSet.recTime = mApp->worker.model->sp.globalHistogramParams.recordTime;
 	settingsWindow.globalHistSet.maxFlightTime = mApp->worker.model->sp.globalHistogramParams.timeMax;
-	settingsWindow.globalHistSet.maxFlightTimeInput = fmt::format("{}", settingsWindow.facetHistSet.maxFlightTime);
+	settingsWindow.globalHistSet.maxFlightTimeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.maxFlightTime);
 	settingsWindow.globalHistSet.timeBinSize = mApp->worker.model->sp.globalHistogramParams.timeBinsize;
-	settingsWindow.globalHistSet.timeBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.timeBinSize);
+	settingsWindow.globalHistSet.timeBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeBinSize);
 #endif
 	// combo lists
 	size_t n = interfGeom->GetNbFacet();
