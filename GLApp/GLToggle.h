@@ -1,6 +1,5 @@
 // Copyright (c) 2011 rubicon IT GmbH
-#ifndef _GLTOGGLEH_
-#define _GLTOGGLEH_
+#pragma once
 
 #include "GLComponent.h"
 #include <string>
@@ -27,12 +26,10 @@ public:
 private:
 
   char text[512];
-  int  state; // 0=>Unchekced 1=>Checked 2=>Multiple
+  int  state; // 0=>Unchecked 1=>Checked 2=>Mixed
   float rText;
   float gText;
   float bText;
-  bool allowMixedState; //Allow "multiple" state
+  bool allowMixedState;
 
 };
-
-#endif /* _GLTOGGLEH_ */
