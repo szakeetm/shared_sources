@@ -598,7 +598,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				return false;
 			}
 			else if (globalHistSet.nbBouncesMax <= 0) {
-				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce limit must be a non-negative integer");
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce limit must be a positive integer");
 				return false;
 			}
 		}
@@ -620,7 +620,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			return false;
 		}
 		else if (globalHistSet.maxFlightDist <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Global distance limit must be a non-negative scalar");
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global distance limit must be a positive scalar");
 			return false;
 		}
 		if (globalHistSet.distBinSizeInput == "...") {}
@@ -641,7 +641,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			return false;
 		}
 		else if (globalHistSet.maxFlightTime <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Global time limit must be a non-negative scalar");
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global time limit must be a positive scalar");
 			return false;
 		}
 		if (globalHistSet.timeBinSizeInput == "...") {}
@@ -664,7 +664,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			return false;
 		}
 		else if (facetHistSet.nbBouncesMax <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce limit must be a non-negative integer");
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce limit must be a positive integer");
 			return false;
 		}
 		if (facetHistSet.bouncesBinSizeInput == "...") {}
@@ -684,7 +684,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			return false;
 		}
 		else if (facetHistSet.maxFlightDist <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "facet distance limit must be a non-negative scalar");
+			ImIOWrappers::InfoPopup("Histogram parameter error", "facet distance limit must be a positive scalar");
 			return false;
 		}
 		if (facetHistSet.distBinSizeInput == "...") {}
@@ -705,7 +705,7 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			return false;
 		}
 		else if (facetHistSet.maxFlightTime <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time limit must be a non-negative scalar");
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time limit must be a positive scalar");
 			return false;
 		}
 		if (facetHistSet.timeBinSizeInput == "...") {}
