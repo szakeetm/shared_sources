@@ -477,63 +477,36 @@ HistogramSettings::HistogramGUISettings HistogramSettings::GetGUIValues()
 	HistogramGUISettings result;
 
 	//Global histogram - no mixed state
-	result.globalParams.recordBounce = globalRecordBounceToggle->GetState();
-
-	if (result.globalParams.recordBounce) {
-
-		if (globalHitLimitText->GetText() != "...")
-		{
-			if (!globalHitLimitText->GetNumberSizeT(&result.globalParams.nbBounceMax) || result.globalParams.nbBounceMax <= 0) {
-				throw Error("Global bounce limit must be a positive integer");
-			}
+	if (result.globalParams.recordBounce = globalRecordBounceToggle->GetState()) {
+		if (!globalHitLimitText->GetNumberSizeT(&result.globalParams.nbBounceMax) || result.globalParams.nbBounceMax <= 0) {
+			throw Error("Global bounce limit must be a positive integer");
 		}
 
-		if (globalHitBinsizeText->GetText() != "...")
-		{
-			if (!globalHitBinsizeText->GetNumberSizeT(&result.globalParams.nbBounceBinsize) || result.globalParams.nbBounceBinsize <= 0) {
-				throw Error("Global bounce bin size must be a positive integer");
-			}
+		if (!globalHitBinsizeText->GetNumberSizeT(&result.globalParams.nbBounceBinsize) || result.globalParams.nbBounceBinsize <= 0) {
+			throw Error("Global bounce bin size must be a positive integer");
 		}
 	}
 
-	result.globalParams.recordDistance = globalRecordDistanceToggle->GetState();
-
-	if (result.globalParams.recordDistance) {
-		if (globalDistanceLimitText->GetText() != "...") {
-			if (!globalDistanceLimitText->GetNumber(&result.globalParams.distanceMax) || result.globalParams.distanceMax <= 0.0) {
-				throw Error("Global distance limit must be a positive scalar");
-			}
+	if (result.globalParams.recordDistance = globalRecordDistanceToggle->GetState()) {
+		if (!globalDistanceLimitText->GetNumber(&result.globalParams.distanceMax) || result.globalParams.distanceMax <= 0.0) {
+			throw Error("Global distance limit must be a positive scalar");
 		}
 
-		if (globalDistanceBinsizeText->GetText() != "...") {
-
-			if (!globalDistanceBinsizeText->GetNumber(&result.globalParams.distanceBinsize) || result.globalParams.distanceBinsize <= 0) {
-				throw Error("Global distance bin size must be a positive scalar");
-			}
+		if (!globalDistanceBinsizeText->GetNumber(&result.globalParams.distanceBinsize) || result.globalParams.distanceBinsize <= 0) {
+			throw Error("Global distance bin size must be a positive scalar");
 		}
 	}
 
 #if defined(MOLFLOW)
-	result.globalParams.recordTime = globalRecordTimeToggle->GetState();
-
-	if (result.globalParams.recordTime) {
-		if (globalTimeLimitText->GetText() != "...") {
-
-			if (!globalTimeLimitText->GetNumber(&result.globalParams.timeMax) || result.globalParams.timeMax <= 0) {
-				throw Error("Global time limit must be a positive scalar");
-			}
+	if (result.globalParams.recordTime = globalRecordTimeToggle->GetState()) {
+		if (!globalTimeLimitText->GetNumber(&result.globalParams.timeMax) || result.globalParams.timeMax <= 0) {
+			throw Error("Global time limit must be a positive scalar");
 		}
-
-		if (globalTimeBinsizeText->GetText() != "...") {
-
-			if (!globalTimeBinsizeText->GetNumber(&result.globalParams.timeBinsize) || result.globalParams.timeBinsize <= 0) {
-				throw Error("Global time bin size must be a positive scalar");
-			}
+		if (!globalTimeBinsizeText->GetNumber(&result.globalParams.timeBinsize) || result.globalParams.timeBinsize <= 0) {
+			throw Error("Global time bin size must be a positive scalar");
 		}
 	}
 #endif
-
-
 
 	//Selected facets - each setting can have mixed state
 	//For code compacting, the if conditions also assign values, might be hard to read
