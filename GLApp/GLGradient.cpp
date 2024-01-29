@@ -109,10 +109,9 @@ void GLGradient::SetMouseCursor(bool enable) {
 void GLGradient::SetMinMax(double min, double max) {
 
 	if (min < max) {
-		if (axis->GetScale() == LOG_SCALE) {
-			if (min < 1e-20) min = 1e-20;
-			Saturate(max, 1e-20, 1e99); 
-		}
+		Saturate(min, 1e-20, 1e100);
+		Saturate(max, 1e-20, 1e100);			
+		
 		axis->SetMinimum(min);
 		axis->SetMaximum(max);
 	}
