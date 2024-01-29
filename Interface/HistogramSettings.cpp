@@ -42,18 +42,18 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #if defined(MOLFLOW)
-extern MolFlow *mApp;
+extern MolFlow* mApp;
 #endif
 
 #if defined(SYNRAD)
-extern SynRad*mApp;
+extern SynRad* mApp;
 #endif
 
-HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow() {
+HistogramSettings::HistogramSettings(InterfaceGeometry* g, Worker* w) :GLWindow() {
 
 	int wD = 270;
 	int panelHeight = 240;
-	int hD = 2*panelHeight+10;
+	int hD = 2 * panelHeight + 10;
 
 #if defined(MOLFLOW)
 	hD += 6 * 25; //Time parameters
@@ -77,7 +77,7 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 	globalSettingsPanel->Add(globalLabel1);
 
 	globalHitLimitText = new GLTextField(0, "");
-	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel1, globalHitLimitText, globalLabel1->GetWidth()+5, 0, 70, globalLabel1->GetHeight());
+	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel1, globalHitLimitText, globalLabel1->GetWidth() + 5, 0, 70, globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalHitLimitText);
 	globalTextFields.push_back(globalHitLimitText);
 
@@ -94,7 +94,7 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalLabel2, globalRecordDistanceToggle, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalRecordDistanceToggle);
 	globalToggles.push_back(globalRecordDistanceToggle);
-	
+
 	GLLabel* globalLabel3 = new GLLabel("Max recorded flight distance (cm):");
 	globalSettingsPanel->SetCompBoundsRelativeTo(globalRecordDistanceToggle, globalLabel3, 0, 25, globalLabel1->GetWidth(), globalLabel1->GetHeight());
 	globalSettingsPanel->Add(globalLabel3);
@@ -231,16 +231,16 @@ HistogramSettings::HistogramSettings(InterfaceGeometry *g, Worker *w):GLWindow()
 	facetSettingsPanel->SetCompBoundsRelativeTo(facetMemoryEstimateLabel_current, facetMemoryEstimateLabel_new, 0, 25, facetLabel3->GetWidth(), facetLabel1->GetHeight());
 	facetSettingsPanel->Add(facetMemoryEstimateLabel_new);
 
-	applyButton = new GLButton(0,"Apply");
-	applyButton->SetBounds(wD/2-50,hD-44,100,21);
+	applyButton = new GLButton(0, "Apply");
+	applyButton->SetBounds(wD / 2 - 50, hD - 44, 100, 21);
 	Add(applyButton);
-	
+
 
 	// Right center
-	SetBounds(5,35,wD,hD); //Default position
+	SetBounds(5, 35, wD, hD); //Default position
 
 	RestoreDeviceObjects();
-	
+
 	this->interfGeom = g;
 	this->work = w;
 }
@@ -249,12 +249,12 @@ void HistogramSettings::Apply() {
 	//Check input, return false if error, otherwise apply and return true
 	HistogramGUISettings guiSettings;
 	try {
-		 guiSettings = GetGUIValues();
+		guiSettings = GetGUIValues();
 	}
 	catch (const Error& err) {
 		GLMessageBox::Display(err.what(), "Histogram parameter error", GLDLG_OK, GLDLG_ICONERROR);
 		return;
-	}	
+	}
 
 	if (mApp->AskToReset()) {
 		//Apply
@@ -279,19 +279,19 @@ void HistogramSettings::Apply() {
 
 		mApp->changedSinceSave = true;
 		work->needsReload = true; // to trigger realreload in update
-		try{
-		    work->Update(mApp->m_fTime); //To refresh histogram cache
-        }
-        catch (const std::exception &e) {
-            GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
-        }
+		try {
+			work->Update(mApp->m_fTime); //To refresh histogram cache
+		}
+		catch (const std::exception& e) {
+			GLMessageBox::Display(e.what(), "Histogram Apply Error", GLDLG_OK, GLDLG_ICONERROR);
+		}
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();
 		Refresh(interfGeom->GetSelectedFacets());
 	}
 }
 
 void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
-	
+
 	//Global histogram panel
 	globalRecordBounceToggle->SetState(work->model->sp.globalHistogramParams.recordBounce);
 	globalHitLimitText->SetText(work->model->sp.globalHistogramParams.nbBounceMax);
@@ -325,10 +325,10 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 	facetRecordBounceToggle->SetEnabled(hasFacetSelected);
 	facetRecordDistanceToggle->SetEnabled(hasFacetSelected);
 #if defined(MOLFLOW)
-    facetRecordTimeToggle->SetEnabled(hasFacetSelected);
+	facetRecordTimeToggle->SetEnabled(hasFacetSelected);
 #endif
 
-    if (hasFacetSelected) {
+	if (hasFacetSelected) {
 		//Fill in facet-specific text
 		bool recordBounceEqual = true, bounceMaxEqual = true, bounceBinsizeEqual = true,
 			recordDistanceEqual = true, distanceMaxEqual = true, distanceBinsizeEqual = true;
@@ -348,11 +348,11 @@ void HistogramSettings::Refresh(const std::vector<size_t>& selectedFacetIds) {
 		double timeBinsize = f0->sh.facetHistogramParams.timeBinsize;
 #endif
 
-		for (size_t i = 1; i < selectedFacetIds.size();i++) {
+		for (size_t i = 1; i < selectedFacetIds.size(); i++) {
 			InterfaceFacet* f = interfGeom->GetFacet(selectedFacetIds[i]);
 			recordBounceEqual = recordBounceEqual && (f->sh.facetHistogramParams.recordBounce == recBounce);
 			bounceMaxEqual = bounceMaxEqual && (f->sh.facetHistogramParams.nbBounceMax == bounceMax);
-			bounceBinsizeEqual = bounceBinsizeEqual && (f->sh.facetHistogramParams.nbBounceBinsize== bounceBinsize);
+			bounceBinsizeEqual = bounceBinsizeEqual && (f->sh.facetHistogramParams.nbBounceBinsize == bounceBinsize);
 			recordDistanceEqual = recordDistanceEqual && (f->sh.facetHistogramParams.recordDistance == recDist);
 			distanceMaxEqual = distanceMaxEqual && (f->sh.facetHistogramParams.distanceMax == distMax);
 			distanceBinsizeEqual = distanceBinsizeEqual && (f->sh.facetHistogramParams.distanceBinsize == distBinsize);
@@ -427,49 +427,49 @@ void HistogramSettings::EnableDisableControls() {
 #endif
 
 	//Selected facets (mixed enabled state: don't allow value edit)
-	facetHitLimitText->SetEditable(facetRecordBounceToggle->GetState()==1);
-	facetHitBinsizeText->SetEditable(facetRecordBounceToggle->GetState()==1);
-	facetDistanceLimitText->SetEditable(facetRecordDistanceToggle->GetState()==1);
-	facetDistanceBinsizeText->SetEditable(facetRecordDistanceToggle->GetState()==1);
+	facetHitLimitText->SetEditable(facetRecordBounceToggle->GetState() == 1);
+	facetHitBinsizeText->SetEditable(facetRecordBounceToggle->GetState() == 1);
+	facetDistanceLimitText->SetEditable(facetRecordDistanceToggle->GetState() == 1);
+	facetDistanceBinsizeText->SetEditable(facetRecordDistanceToggle->GetState() == 1);
 #if defined(MOLFLOW)
-	facetTimeLimitText->SetEditable(facetRecordTimeToggle->GetState()==1);
-	facetTimeBinsizeText->SetEditable(facetRecordTimeToggle->GetState()==1);
+	facetTimeLimitText->SetEditable(facetRecordTimeToggle->GetState() == 1);
+	facetTimeBinsizeText->SetEditable(facetRecordTimeToggle->GetState() == 1);
 #endif
 }
 
-void HistogramSettings::ProcessMessage(GLComponent *src,int message) {
-	
+void HistogramSettings::ProcessMessage(GLComponent* src, int message) {
+
 
 	switch (message) {
-		
-		case MSG_BUTTON:
 
-			if (src==applyButton) {
-				//Set histogram parameters on selected facets
-				Apply();
-			}
-			break;
-		
-		case MSG_TOGGLE:
-			EnableDisableControls();
-			
-			if (Contains(globalToggles, src)) {
-				UpdateMemoryEstimate_New_Global();
-			}
-			else if (Contains(facetToggles, src)) {
-				UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
-			}
-			break;
-		case MSG_TEXT_UPD: //Update estimate as you type
-			if (Contains(globalTextFields, src)) {
-				UpdateMemoryEstimate_New_Global();
-			}
-			else if (Contains(facetTextFields, src)) {
-				UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
-			}
-			break;		
+	case MSG_BUTTON:
+
+		if (src == applyButton) {
+			//Set histogram parameters on selected facets
+			Apply();
+		}
+		break;
+
+	case MSG_TOGGLE:
+		EnableDisableControls();
+
+		if (Contains(globalToggles, src)) {
+			UpdateMemoryEstimate_New_Global();
+		}
+		else if (Contains(facetToggles, src)) {
+			UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
+		}
+		break;
+	case MSG_TEXT_UPD: //Update estimate as you type
+		if (Contains(globalTextFields, src)) {
+			UpdateMemoryEstimate_New_Global();
+		}
+		else if (Contains(facetTextFields, src)) {
+			UpdateMemoryEstimate_New_SelectedFacets(nbSelectedFacetCache);
+		}
+		break;
 	}
-	GLWindow::ProcessMessage(src,message);
+	GLWindow::ProcessMessage(src, message);
 }
 
 HistogramSettings::HistogramGUISettings HistogramSettings::GetGUIValues()
@@ -477,63 +477,36 @@ HistogramSettings::HistogramGUISettings HistogramSettings::GetGUIValues()
 	HistogramGUISettings result;
 
 	//Global histogram - no mixed state
-	result.globalParams.recordBounce = globalRecordBounceToggle->GetState();
-
-	if (result.globalParams.recordBounce) {
-
-		if (globalHitLimitText->GetText() != "...")
-		{
-			if (!globalHitLimitText->GetNumberSizeT(&result.globalParams.nbBounceMax) || result.globalParams.nbBounceMax <= 0) {
-				throw Error("Global bounce limit must be a positive integer");
-			}
+	if (result.globalParams.recordBounce = globalRecordBounceToggle->GetState()) {
+		if (!globalHitLimitText->GetNumberSizeT(&result.globalParams.nbBounceMax) || result.globalParams.nbBounceMax <= 0) {
+			throw Error("Global bounce limit must be a positive integer");
 		}
 
-		if (globalHitBinsizeText->GetText() != "...")
-		{
-			if (!globalHitBinsizeText->GetNumberSizeT(&result.globalParams.nbBounceBinsize) || result.globalParams.nbBounceBinsize <= 0) {
-				throw Error("Global bounce bin size must be a positive integer");
-			}
+		if (!globalHitBinsizeText->GetNumberSizeT(&result.globalParams.nbBounceBinsize) || result.globalParams.nbBounceBinsize <= 0) {
+			throw Error("Global bounce bin size must be a positive integer");
 		}
 	}
 
-	result.globalParams.recordDistance = globalRecordDistanceToggle->GetState();
-
-	if (result.globalParams.recordDistance) {
-		if (globalDistanceLimitText->GetText() != "...") {
-			if (!globalDistanceLimitText->GetNumber(&result.globalParams.distanceMax) || result.globalParams.distanceMax <= 0.0) {
-				throw Error("Global distance limit must be a positive scalar");
-			}
+	if (result.globalParams.recordDistance = globalRecordDistanceToggle->GetState()) {
+		if (!globalDistanceLimitText->GetNumber(&result.globalParams.distanceMax) || result.globalParams.distanceMax <= 0.0) {
+			throw Error("Global distance limit must be a positive scalar");
 		}
 
-		if (globalDistanceBinsizeText->GetText() != "...") {
-
-			if (!globalDistanceBinsizeText->GetNumber(&result.globalParams.distanceBinsize) || result.globalParams.distanceBinsize <= 0) {
-				throw Error("Global distance bin size must be a positive scalar");
-			}
+		if (!globalDistanceBinsizeText->GetNumber(&result.globalParams.distanceBinsize) || result.globalParams.distanceBinsize <= 0) {
+			throw Error("Global distance bin size must be a positive scalar");
 		}
 	}
 
 #if defined(MOLFLOW)
-	result.globalParams.recordTime = globalRecordTimeToggle->GetState();
-
-	if (result.globalParams.recordTime) {
-		if (globalTimeLimitText->GetText() != "...") {
-
-			if (!globalTimeLimitText->GetNumber(&result.globalParams.timeMax) || result.globalParams.timeMax <= 0) {
-				throw Error("Global time limit must be a positive scalar");
-			}
+	if (result.globalParams.recordTime = globalRecordTimeToggle->GetState()) {
+		if (!globalTimeLimitText->GetNumber(&result.globalParams.timeMax) || result.globalParams.timeMax <= 0) {
+			throw Error("Global time limit must be a positive scalar");
 		}
-
-		if (globalTimeBinsizeText->GetText() != "...") {
-
-			if (!globalTimeBinsizeText->GetNumber(&result.globalParams.timeBinsize) || result.globalParams.timeBinsize <= 0) {
-				throw Error("Global time bin size must be a positive scalar");
-			}
+		if (!globalTimeBinsizeText->GetNumber(&result.globalParams.timeBinsize) || result.globalParams.timeBinsize <= 0) {
+			throw Error("Global time bin size must be a positive scalar");
 		}
 	}
 #endif
-
-
 
 	//Selected facets - each setting can have mixed state
 	//For code compacting, the if conditions also assign values, might be hard to read
@@ -546,7 +519,7 @@ HistogramSettings::HistogramGUISettings HistogramSettings::GetGUIValues()
 				}
 			} //if not mixed value
 
-			if (!(result.facetHitBinsizeMixed = (facetHitBinsizeText->GetText() == "...")))	{
+			if (!(result.facetHitBinsizeMixed = (facetHitBinsizeText->GetText() == "..."))) {
 				if (!facetHitBinsizeText->GetNumberSizeT(&result.facetParams.nbBounceBinsize) || result.facetParams.nbBounceBinsize <= 0) {
 					throw Error("Facet bounce bin size must be a positive integer");
 				}
@@ -594,7 +567,7 @@ void HistogramSettings::UpdateMemoryEstimate_New_Global() {
 	HistogramGUISettings guiSettings;
 	try {
 		guiSettings = GetGUIValues();
-		size_t memory_bytes = guiSettings.globalParams.GetDataSize() * (work->interfaceMomentCache.size()+1);
+		size_t memory_bytes = guiSettings.globalParams.GetDataSize() * (work->interfaceMomentCache.size() + 1);
 		globalMemoryEstimateLabel_new->SetText(fmt::format("After applying: {}", FormatMemory(memory_bytes)));
 	}
 	catch (...) {
@@ -608,7 +581,7 @@ void HistogramSettings::UpdateMemoryEstimate_New_SelectedFacets(size_t nbSelecte
 		guiSettings = GetGUIValues();
 		if ((guiSettings.facetRecBounceMixed //Mixed state
 			|| (guiSettings.facetParams.recordBounce && //Recording enabled and a textbox in mixed state
-				(guiSettings.facetHitLimitMixed	|| guiSettings.facetHitBinsizeMixed)))
+				(guiSettings.facetHitLimitMixed || guiSettings.facetHitBinsizeMixed)))
 
 			|| (guiSettings.facetRecDistanceMixed //Mixed state
 				|| (guiSettings.facetParams.recordDistance && //Recording enabled and a textbox in mixed state
