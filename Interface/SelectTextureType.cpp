@@ -166,7 +166,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 			exactRatio = true;
 		}
 		else if (ratioMinMaxToggle->GetState()) {
-			if (!ratioMinText->GetNumber(&minRatio) || minRatio <= 0.0) {
+			if (!ratioMinText->GetNumber(&minRatio) || minRatio < 0.0) {
 				GLMessageBox::Display("Invalid min. ratio", "Error", GLDLG_OK, GLDLG_ICONINFO);
 				return;
 			}
