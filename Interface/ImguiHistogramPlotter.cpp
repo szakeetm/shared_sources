@@ -106,80 +106,80 @@ void ImHistogramPlotter::Draw()
 	if (lastSel != newSel) {
 		// load selection settings
 		lastSel = newSel;
-		settingsWindow.facetHistSet.recBounce = 3;
-		settingsWindow.facetHistSet.maxRecNbBouncesInput = "";
-		settingsWindow.facetHistSet.bouncesBinSizeInput = "";
-		settingsWindow.facetHistSet.recFlightDist = 3;
-		settingsWindow.facetHistSet.maxFlightDistInput = "";
-		settingsWindow.facetHistSet.distBinSizeInput = "";
+		settingsWindow.facetRecordBounce = 3;
+		settingsWindow.facetBouncesMaxInput = "";
+		settingsWindow.facetBouncesBinSizeInput = "";
+		settingsWindow.facetRecordDistance = 3;
+		settingsWindow.facetDistanceMaxInput = "";
+		settingsWindow.facetDistanceBinSizeInput = "";
 #ifdef MOLFLOW
-		settingsWindow.facetHistSet.recTime = 3;
-		settingsWindow.facetHistSet.maxFlightTimeInput = "";
-		settingsWindow.facetHistSet.timeBinSizeInput = "";
+		settingsWindow.facetRecordTime = 3;
+		settingsWindow.facetTimeMaxInput = "";
+		settingsWindow.facetTimeBinSizeInput = "";
 #endif
 		std::string tmp;
 		bool toggle;
 		for (size_t facetIdx : lastSel) {
 			InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
 			toggle = f->sh.facetHistogramParams.recordBounce;
-			if (settingsWindow.facetHistSet.recBounce == 3) settingsWindow.facetHistSet.recBounce = toggle;
-			else if (settingsWindow.facetHistSet.recBounce != toggle) settingsWindow.facetHistSet.recBounce = 2;
-			settingsWindow.facetHistSet.nbBouncesMax = f->sh.facetHistogramParams.nbBounceMax;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.nbBouncesMax);
-			if (settingsWindow.facetHistSet.maxRecNbBouncesInput == "") {
-				settingsWindow.facetHistSet.maxRecNbBouncesInput = tmp; // first checked facet
+			if (settingsWindow.facetRecordBounce == 3) settingsWindow.facetRecordBounce = toggle;
+			else if (settingsWindow.facetRecordBounce != toggle) settingsWindow.facetRecordBounce = 2;
+			settingsWindow.facetHistSet.nbBounceMax = f->sh.facetHistogramParams.nbBounceMax;
+			tmp = fmt::format("{}", settingsWindow.facetHistSet.nbBounceMax);
+			if (settingsWindow.facetBouncesMaxInput == "") {
+				settingsWindow.facetBouncesMaxInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.maxRecNbBouncesInput != tmp) {
-				settingsWindow.facetHistSet.maxRecNbBouncesInput = "...";
+			else if (settingsWindow.facetBouncesMaxInput != tmp) {
+				settingsWindow.facetBouncesMaxInput = "...";
 			}
-			settingsWindow.facetHistSet.bouncesBinSize = f->sh.facetHistogramParams.nbBounceBinsize;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.bouncesBinSize);
-			if (settingsWindow.facetHistSet.bouncesBinSizeInput == "") {
-				settingsWindow.facetHistSet.bouncesBinSizeInput = tmp; // first checked facet
+			settingsWindow.facetHistSet.nbBounceBinsize = f->sh.facetHistogramParams.nbBounceBinsize;
+			tmp = fmt::format("{}", settingsWindow.facetHistSet.nbBounceBinsize);
+			if (settingsWindow.facetBouncesBinSizeInput == "") {
+				settingsWindow.facetBouncesBinSizeInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.bouncesBinSizeInput != tmp) {
-				settingsWindow.facetHistSet.bouncesBinSizeInput = "...";
+			else if (settingsWindow.facetBouncesBinSizeInput != tmp) {
+				settingsWindow.facetBouncesBinSizeInput = "...";
 			}
 
 			toggle = f->sh.facetHistogramParams.recordDistance;
-			if (settingsWindow.facetHistSet.recFlightDist == 3) settingsWindow.facetHistSet.recFlightDist = toggle;
-			else if (settingsWindow.facetHistSet.recFlightDist != toggle) settingsWindow.facetHistSet.recFlightDist = 2;
+			if (settingsWindow.facetRecordDistance == 3) settingsWindow.facetRecordDistance = toggle;
+			else if (settingsWindow.facetRecordDistance != toggle) settingsWindow.facetRecordDistance = 2;
 
-			settingsWindow.facetHistSet.maxFlightDist = f->sh.facetHistogramParams.distanceMax;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.maxFlightDist);
-			if (settingsWindow.facetHistSet.maxFlightDistInput == "") {
-				settingsWindow.facetHistSet.maxFlightDistInput = tmp; // first checked facet
+			settingsWindow.facetHistSet.distanceMax = f->sh.facetHistogramParams.distanceMax;
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distanceMax);
+			if (settingsWindow.facetDistanceMaxInput == "") {
+				settingsWindow.facetDistanceMaxInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.maxFlightDistInput != tmp) {
-				settingsWindow.facetHistSet.maxFlightDistInput = "...";
+			else if (settingsWindow.facetDistanceMaxInput != tmp) {
+				settingsWindow.facetDistanceMaxInput = "...";
 			}
-			settingsWindow.facetHistSet.distBinSize = f->sh.facetHistogramParams.distanceBinsize;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distBinSize);
-			if (settingsWindow.facetHistSet.distBinSizeInput == "") {
-				settingsWindow.facetHistSet.distBinSizeInput = tmp; // first checked facet
+			settingsWindow.facetHistSet.distanceBinsize = f->sh.facetHistogramParams.distanceBinsize;
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distanceBinsize);
+			if (settingsWindow.facetDistanceBinSizeInput == "") {
+				settingsWindow.facetDistanceBinSizeInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.distBinSizeInput != tmp) {
-				settingsWindow.facetHistSet.distBinSizeInput = "...";
+			else if (settingsWindow.facetDistanceBinSizeInput != tmp) {
+				settingsWindow.facetDistanceBinSizeInput = "...";
 			}
 #ifdef MOLFLOW
 			toggle = f->sh.facetHistogramParams.recordTime;
-			if (settingsWindow.facetHistSet.recTime == 3) settingsWindow.facetHistSet.recTime = toggle;
-			else if (settingsWindow.facetHistSet.recTime != toggle) settingsWindow.facetHistSet.recTime = 2;
-			settingsWindow.facetHistSet.maxFlightTime = f->sh.facetHistogramParams.timeMax;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.maxFlightTime);
-			if (settingsWindow.facetHistSet.maxFlightTimeInput == "") {
-				settingsWindow.facetHistSet.maxFlightTimeInput = tmp; // first checked facet
+			if (settingsWindow.facetRecordTime == 3) settingsWindow.facetRecordTime = toggle;
+			else if (settingsWindow.facetRecordTime != toggle) settingsWindow.facetRecordTime = 2;
+			settingsWindow.facetHistSet.timeMax = f->sh.facetHistogramParams.timeMax;
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeMax);
+			if (settingsWindow.facetTimeMaxInput == "") {
+				settingsWindow.facetTimeMaxInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.maxFlightTimeInput != tmp) {
-				settingsWindow.facetHistSet.maxFlightTimeInput = "...";
+			else if (settingsWindow.facetTimeMaxInput != tmp) {
+				settingsWindow.facetTimeMaxInput = "...";
 			}
-			settingsWindow.facetHistSet.timeBinSize = f->sh.facetHistogramParams.timeBinsize;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeBinSize);
-			if (settingsWindow.facetHistSet.timeBinSizeInput == "") {
-				settingsWindow.facetHistSet.timeBinSizeInput = tmp; // first checked facet
+			settingsWindow.facetHistSet.timeBinsize = f->sh.facetHistogramParams.timeBinsize;
+			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeBinsize);
+			if (settingsWindow.facetTimeBinSizeInput == "") {
+				settingsWindow.facetTimeBinSizeInput = tmp; // first checked facet
 			}
-			else if (settingsWindow.facetHistSet.timeBinSizeInput != tmp) {
-				settingsWindow.facetHistSet.timeBinSizeInput = "...";
+			else if (settingsWindow.facetTimeBinSizeInput != tmp) {
+				settingsWindow.facetTimeBinSizeInput = "...";
 			}
 #endif
 		}
@@ -434,23 +434,26 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	comboSelection = -1;
 
 	// global settings
-	settingsWindow.globalHistSet.recBounce = mApp->worker.model->sp.globalHistogramParams.recordBounce;
-	settingsWindow.globalHistSet.nbBouncesMax = mApp->worker.model->sp.globalHistogramParams.nbBounceMax;
-	settingsWindow.globalHistSet.maxRecNbBouncesInput = fmt::format("{}", settingsWindow.facetHistSet.nbBouncesMax);
-	settingsWindow.globalHistSet.bouncesBinSize = mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize;
-	settingsWindow.globalHistSet.bouncesBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.bouncesBinSize);
+	settingsWindow.globalHistSet.recordBounce = mApp->worker.model->sp.globalHistogramParams.recordBounce;
+	settingsWindow.globalRecordBounce = settingsWindow.globalHistSet.recordBounce;
+	settingsWindow.globalHistSet.nbBounceMax = mApp->worker.model->sp.globalHistogramParams.nbBounceMax;
+	settingsWindow.globalBouncesMaxInput = fmt::format("{}", settingsWindow.facetHistSet.nbBounceMax);
+	settingsWindow.globalHistSet.nbBounceBinsize = mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize;
+	settingsWindow.globalBouncesBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.nbBounceBinsize);
 
-	settingsWindow.globalHistSet.recFlightDist = mApp->worker.model->sp.globalHistogramParams.recordDistance;
-	settingsWindow.globalHistSet.maxFlightDist = mApp->worker.model->sp.globalHistogramParams.distanceMax;
-	settingsWindow.globalHistSet.maxFlightDistInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.maxFlightDist);
-	settingsWindow.globalHistSet.distBinSize = mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
-	settingsWindow.globalHistSet.distBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distBinSize);
+	settingsWindow.globalHistSet.recordDistance = mApp->worker.model->sp.globalHistogramParams.recordDistance;
+	settingsWindow.globalRecordDistance = settingsWindow.globalHistSet.recordDistance;
+	settingsWindow.globalHistSet.distanceMax = mApp->worker.model->sp.globalHistogramParams.distanceMax;
+	settingsWindow.globalDistanceMaxInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distanceMax);
+	settingsWindow.globalHistSet.distanceBinsize = mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
+	settingsWindow.globalDistanceBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distanceBinsize);
 #ifdef MOLFLOW
-	settingsWindow.globalHistSet.recTime = mApp->worker.model->sp.globalHistogramParams.recordTime;
-	settingsWindow.globalHistSet.maxFlightTime = mApp->worker.model->sp.globalHistogramParams.timeMax;
-	settingsWindow.globalHistSet.maxFlightTimeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.maxFlightTime);
-	settingsWindow.globalHistSet.timeBinSize = mApp->worker.model->sp.globalHistogramParams.timeBinsize;
-	settingsWindow.globalHistSet.timeBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeBinSize);
+	settingsWindow.globalHistSet.recordTime = mApp->worker.model->sp.globalHistogramParams.recordTime;
+	settingsWindow.globalRecordTime = settingsWindow.globalHistSet.recordTime;
+	settingsWindow.globalHistSet.timeMax = mApp->worker.model->sp.globalHistogramParams.timeMax;
+	settingsWindow.globalTimeMaxInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeMax);
+	settingsWindow.globalHistSet.timeBinsize = mApp->worker.model->sp.globalHistogramParams.timeBinsize;
+	settingsWindow.globalTimeBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeBinsize);
 #endif
 	// combo lists
 	size_t n = interfGeom->GetNbFacet();
@@ -474,9 +477,19 @@ bool ImHistogramPlotter::IsPlotted(plotTabs tab, size_t facetId)
 
 void ImHistogramPlotter::RefreshFacetLists()
 {
+	if (!mApp->worker.model->sp.globalHistogramParams.recordBounce) {
+		globals[bounces] = ImPlotData();
+	}
 	comboOpts[bounces].clear();
+
+	if (!mApp->worker.model->sp.globalHistogramParams.recordDistance) {
+		globals[distance] = ImPlotData();
+	}
 	comboOpts[distance].clear();
 #ifdef MOLFLOW
+	if (!mApp->worker.model->sp.globalHistogramParams.recordTime) {
+		globals[time] = ImPlotData();
+	}
 	comboOpts[time].clear();
 #endif
 	std::vector<size_t> facets = interfGeom->GetAllFacetIndices();
@@ -554,29 +567,28 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 {
 	if (!drawn) return;
 	width = 40 * txtW;
-	ImGui::SetNextWindowSize(ImVec2(width,32*txtH));
+	ImGui::SetNextWindowSize(ImVec2(width,34*txtH));
 	ImGui::Begin("Histogram settings", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
 	float childHeight = (ImGui::GetContentRegionAvail().y - 1.5*txtH) * 0.5;
 
 	if (ImGui::BeginChild("Global histogram", ImVec2(0, childHeight), true)) {
 		ImGui::TextDisabled("Global histogram");
-		globalHistSet.amIDisabled = false;
-		DrawSettingsGroup(globalHistSet);
+		DrawSettingsGroup(globalHistSet, true, false);
 	}
 	ImGui::EndChild();
 	if (ImGui::BeginChild("Facet histogram", ImVec2(0, childHeight), true)) {
 		ImGui::TextDisabled("Facet histogram");
-		facetHistSet.amIDisabled = interfGeom->GetNbSelectedFacets() == 0;
-		if (facetHistSet.amIDisabled) {
+		bool disabled = interfGeom->GetNbSelectedFacets() == 0;
+		if (disabled) {
 			ImGui::BeginDisabled();
 		}
 		
 		// internal ImGui structure for data storage
-		EvaluateMixedState(&facetHistSet);
-		DrawSettingsGroup(facetHistSet);
+		EvaluateMixedState();
+		DrawSettingsGroup(facetHistSet, false, disabled);
 
-		if (facetHistSet.amIDisabled) ImGui::EndDisabled();
+		if (disabled) ImGui::EndDisabled();
 	}
 	ImGui::EndChild();
 	ImGui::PlaceAtRegionCenter(" Apply ");
@@ -594,65 +606,68 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 
 	// global
 	parent->prevPlotTab=none;
-	if (globalHistSet.recBounce==1) {
-		if (globalHistSet.maxRecNbBouncesInput != "...") {
-			if (!Util::getNumber(&globalHistSet.nbBouncesMax,globalHistSet.maxRecNbBouncesInput)) {
+	globalHistSet.recordBounce = globalRecordBounce;
+	if (globalHistSet.recordBounce==1) {
+		if (globalBouncesMaxInput != "...") {
+			if (!Util::getNumber(&globalHistSet.nbBounceMax,globalBouncesMaxInput)) {
 				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce limit");
 				return false;
 			}
-			else if (globalHistSet.nbBouncesMax <= 0) {
+			else if (globalHistSet.nbBounceMax <= 0) {
 				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce limit must be a positive integer");
 				return false;
 			}
 		}
-		if (globalHistSet.bouncesBinSizeInput != "...") {
-			if (!Util::getNumber(&globalHistSet.bouncesBinSize, globalHistSet.bouncesBinSizeInput)) {
+		if (globalBouncesBinSizeInput != "...") {
+			if (!Util::getNumber(&globalHistSet.nbBounceBinsize, globalBouncesBinSizeInput)) {
 				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce bin size");
 				return false;
 			}
-			else if (globalHistSet.bouncesBinSize <= 0) {
+			else if (globalHistSet.nbBounceBinsize <= 0) {
 				ImIOWrappers::InfoPopup("Histogram parameter error", "Global bounce bin size must be a positive integer");
 				return false;
 			}
 		}
 	}
-	if (globalHistSet.recFlightDist==1) {
-		if (globalHistSet.maxFlightDistInput == "...") {}
-		else if (!Util::getNumber(&globalHistSet.maxFlightDist, globalHistSet.maxFlightDistInput)) {
+	globalHistSet.recordDistance = globalRecordDistance;
+	if (globalHistSet.recordDistance==1) {
+		if (globalDistanceMaxInput == "...") {}
+		else if (!Util::getNumber(&globalHistSet.distanceMax, globalDistanceMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global distance limit");
 			return false;
 		}
-		else if (globalHistSet.maxFlightDist <= 0) {
+		else if (globalHistSet.distanceMax <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global distance limit must be a positive scalar");
 			return false;
 		}
-		if (globalHistSet.distBinSizeInput == "...") {}
-		else if (!Util::getNumber(&globalHistSet.distBinSize, globalHistSet.distBinSizeInput)) {
+		if (globalDistanceBinSizeInput == "...") {}
+		else if (!Util::getNumber(&globalHistSet.distanceBinsize, globalDistanceBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global distance bin size");
 			return false;
 		}
-		else if (globalHistSet.distBinSize <= 0) {
+		else if (globalHistSet.distanceBinsize <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global distance bin size must be a positive scalar");
 			return false;
 		}
 	}
 #if defined(MOLFLOW)
-	if (globalHistSet.recTime==1) {
-		if (globalHistSet.maxFlightTimeInput == "...") {}
-		else if (!Util::getNumber(&globalHistSet.maxFlightTime, globalHistSet.maxFlightTimeInput)) {
+	globalHistSet.recordTime = globalRecordTime;
+	if (globalHistSet.recordTime==1) {
+		if (globalTimeMaxInput == "...") {}
+		else if (!Util::getNumber(&globalHistSet.timeMax, globalTimeMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global time limit");
 			return false;
 		}
-		else if (globalHistSet.maxFlightTime <= 0) {
+		else if (globalHistSet.timeMax <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global time limit must be a positive scalar");
 			return false;
 		}
-		if (globalHistSet.timeBinSizeInput == "...") {}
-		else if (!Util::getNumber(&globalHistSet.timeBinSize, globalHistSet.timeBinSizeInput)) {
+		if (globalTimeBinSizeInput == "...") {}
+		else if (!Util::getNumber(&globalHistSet.timeBinsize, globalTimeBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global time bin size");
 			return false;
 		}
-		else if (globalHistSet.timeBinSize<= 0) {
+		else if (globalHistSet.timeBinsize<= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global time bin size must be a positive scalar");
 			return false;
 		}
@@ -660,63 +675,66 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	}
 
 	// facet
-	if (facetHistSet.recBounce==1) {
-		if (facetHistSet.maxRecNbBouncesInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.nbBouncesMax, facetHistSet.maxRecNbBouncesInput)) {
+	if (facetRecordBounce != 2) facetHistSet.recordBounce = facetRecordBounce;
+	if (facetHistSet.recordBounce == 1) {
+		if (facetBouncesMaxInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.nbBounceMax, facetBouncesMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce limit");
 			return false;
 		}
-		else if (facetHistSet.nbBouncesMax <= 0) {
+		else if (facetHistSet.nbBounceMax <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce limit must be a positive integer");
 			return false;
 		}
-		if (facetHistSet.bouncesBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.bouncesBinSize, facetHistSet.bouncesBinSizeInput)) {
+		if (facetBouncesBinSizeInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.nbBounceBinsize, facetBouncesBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce bin size");
 			return false;
 		}
-		else if (facetHistSet.bouncesBinSize <= 0) {
+		else if (facetHistSet.nbBounceBinsize <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce bin size must be a positive integer");
 			return false;
 		}
 	}
-	if (facetHistSet.recFlightDist==1) {
-		if (facetHistSet.maxFlightDistInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.maxFlightDist, facetHistSet.maxFlightDistInput)) {
+	if (facetRecordDistance != 2) facetHistSet.recordDistance = facetRecordDistance;
+	if (facetRecordDistance==1) {
+		if (facetDistanceMaxInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.distanceMax, facetDistanceMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance limit");
 			return false;
 		}
-		else if (facetHistSet.maxFlightDist <= 0) {
+		else if (facetHistSet.distanceMax <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "facet distance limit must be a positive scalar");
 			return false;
 		}
-		if (facetHistSet.distBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.distBinSize, facetHistSet.distBinSizeInput)) {
+		if (facetDistanceBinSizeInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.distanceBinsize, facetDistanceBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance bin size");
 			return false;
 		}
-		else if (facetHistSet.distBinSize <= 0) {
+		else if (facetHistSet.distanceBinsize <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet distance bin size must be a positive scalar");
 			return false;
 		}
 	}
 #if defined(MOLFLOW)
-	if (facetHistSet.recTime==1) {
-		if (facetHistSet.maxFlightTimeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.maxFlightTime, facetHistSet.maxFlightTimeInput)) {
+	if (facetRecordTime != 2) facetHistSet.recordTime = facetRecordTime;
+	if (facetRecordTime==1) {
+		if (facetTimeMaxInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.timeMax, facetTimeMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time limit");
 			return false;
 		}
-		else if (facetHistSet.maxFlightTime <= 0) {
+		else if (facetHistSet.timeMax <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time limit must be a positive scalar");
 			return false;
 		}
-		if (facetHistSet.timeBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.timeBinSize, facetHistSet.timeBinSizeInput)) {
+		if (facetTimeBinSizeInput == "...") {}
+		else if (!Util::getNumber(&facetHistSet.timeBinsize, facetTimeBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time bin size");
 			return false;
 		}
-		else if (facetHistSet.timeBinSize <= 0) {
+		else if (facetHistSet.timeBinsize <= 0) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time bin size must be a positive scalar");
 			return false;
 		}
@@ -731,27 +749,29 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 	if (!mApp->AskToReset()) return false; // early return if mApp gives problems
 	
 	
-	if (globalHistSet.recBounce != 2) mApp->worker.model->sp.globalHistogramParams.recordBounce = globalHistSet.recBounce;
-	if (globalHistSet.maxRecNbBouncesInput != "...") mApp->worker.model->sp.globalHistogramParams.nbBounceMax = globalHistSet.nbBouncesMax;
-	if (globalHistSet.bouncesBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize = globalHistSet.bouncesBinSize;
-	if (globalHistSet.recFlightDist != 2) mApp->worker.model->sp.globalHistogramParams.recordDistance = globalHistSet.recFlightDist;
-	if (globalHistSet.maxFlightDistInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceMax = globalHistSet.maxFlightDist;
-	if (globalHistSet.distBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceBinsize = globalHistSet.distBinSize;
-
+	if (globalRecordBounce != 2) mApp->worker.model->sp.globalHistogramParams.recordBounce = globalHistSet.recordBounce;
+	if (globalBouncesMaxInput != "...") mApp->worker.model->sp.globalHistogramParams.nbBounceMax = globalHistSet.nbBounceMax;
+	if (globalBouncesBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize = globalHistSet.nbBounceBinsize;
+	
 	if (!mApp->worker.model->sp.globalHistogramParams.recordBounce) 
 	{
 		parent->globals[bounces].x.reset();
 		parent->globals[bounces].y.reset();
 	}
+
+	if (globalRecordDistance != 2) mApp->worker.model->sp.globalHistogramParams.recordDistance = globalHistSet.recordDistance;
+	if (globalDistanceMaxInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceMax = globalHistSet.distanceMax;
+	if (globalDistanceBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.distanceBinsize = globalHistSet.distanceBinsize;
+
 	if (!mApp->worker.model->sp.globalHistogramParams.recordDistance) 
 	{
 		parent->globals[distance].x.reset();
 		parent->globals[distance].y.reset();
 	}
 #ifdef MOLFLOW
-	if (globalHistSet.recTime != 2) mApp->worker.model->sp.globalHistogramParams.recordTime = globalHistSet.recTime;
-	if (globalHistSet.maxFlightTimeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeMax = globalHistSet.maxFlightTime;
-	if (globalHistSet.timeBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeBinsize = globalHistSet.timeBinSize;
+	if (globalRecordTime != 2) mApp->worker.model->sp.globalHistogramParams.recordTime = globalHistSet.recordTime;
+	if (globalTimeMaxInput != "...") mApp->worker.model->sp.globalHistogramParams.timeMax = globalHistSet.timeMax;
+	if (globalTimeBinSizeInput != "...") mApp->worker.model->sp.globalHistogramParams.timeBinsize = globalHistSet.timeBinsize;
 
 	if (!mApp->worker.model->sp.globalHistogramParams.recordTime) 
 	{
@@ -769,16 +789,16 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 		}
 		*/
 		InterfaceFacet* f = interfGeom->GetFacet(facetId);
-		if (facetHistSet.recBounce != 2) f->sh.facetHistogramParams.recordBounce = facetHistSet.recBounce;
-		if (facetHistSet.maxRecNbBouncesInput != "...") f->sh.facetHistogramParams.nbBounceMax = facetHistSet.nbBouncesMax;
-		if (facetHistSet.bouncesBinSizeInput != "...") f->sh.facetHistogramParams.nbBounceBinsize = facetHistSet.bouncesBinSize;
-		if (facetHistSet.recFlightDist != 2) f->sh.facetHistogramParams.recordDistance = facetHistSet.recFlightDist;
-		if (facetHistSet.maxFlightDistInput != "...") f->sh.facetHistogramParams.distanceMax = facetHistSet.maxFlightDist;
-		if (facetHistSet.distBinSizeInput != "...") f->sh.facetHistogramParams.distanceBinsize = facetHistSet.distBinSize;
+		if (facetRecordBounce != 2) f->sh.facetHistogramParams.recordBounce = facetHistSet.recordBounce;
+		if (facetBouncesMaxInput != "...") f->sh.facetHistogramParams.nbBounceMax = facetHistSet.nbBounceMax;
+		if (facetBouncesBinSizeInput != "...") f->sh.facetHistogramParams.nbBounceBinsize = facetHistSet.nbBounceBinsize;
+		if (facetRecordDistance != 2) f->sh.facetHistogramParams.recordDistance = facetHistSet.recordDistance;
+		if (facetDistanceMaxInput != "...") f->sh.facetHistogramParams.distanceMax = facetHistSet.distanceMax;
+		if (facetDistanceBinSizeInput != "...") f->sh.facetHistogramParams.distanceBinsize = facetHistSet.distanceBinsize;
 #ifdef MOLFLOW
-		if (facetHistSet.recTime != 2) f->sh.facetHistogramParams.recordTime = facetHistSet.recTime;
-		if (facetHistSet.maxFlightTimeInput != "...") f->sh.facetHistogramParams.timeMax = facetHistSet.maxFlightTime;
-		if (facetHistSet.timeBinSizeInput != "...") f->sh.facetHistogramParams.timeBinsize = facetHistSet.timeBinSize;
+		if (facetRecordTime != 2) f->sh.facetHistogramParams.recordTime = facetHistSet.recordTime;
+		if (facetTimeMaxInput != "...") f->sh.facetHistogramParams.timeMax = facetHistSet.timeMax;
+		if (facetTimeBinSizeInput != "...") f->sh.facetHistogramParams.timeBinsize = facetHistSet.timeBinsize;
 #endif
 	}
 	mApp->changedSinceSave = true;
@@ -790,41 +810,42 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 		ImIOWrappers::InfoPopup("Histogram Apply Error", e.what());
 	}
 	parent->RefreshFacetLists();
+	CalculateMemoryEstimate_Current();
 	return true;
 }
 
-void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(histSet& set)
+void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(HistogramParams& set, bool global, bool disabled)
 {
-	ImGui::TriState("Record bounces until absorbtion", &set.recBounce, set.tristate[0]);
-	if (!set.amIDisabled && set.recBounce!=1) ImGui::BeginDisabled();
-	ImGui::InputTextRightSide("Max recorded no. of bounces:", &set.maxRecNbBouncesInput,0,txtW*6);
-	ImGui::InputTextRightSide("Bounces bin size:", &set.bouncesBinSizeInput,0,txtW*6);
-	if (!set.amIDisabled && set.recBounce != 1) ImGui::EndDisabled();
+	ImGui::TriState("Record bounces until absorbtion", global ? &globalRecordBounce : &facetRecordBounce, global ? false : states.facetRecBounceMixed);
+	if (!disabled && (global ? globalRecordBounce : facetRecordBounce) != 1) ImGui::BeginDisabled();
+	ImGui::InputTextRightSide("Max recorded no. of bounces:", global ? &globalBouncesMaxInput : &facetBouncesMaxInput ,0,txtW*6);
+	ImGui::InputTextRightSide("Bounces bin size:", global ? &globalBouncesBinSizeInput : &facetBouncesBinSizeInput, 0, txtW * 6);
+	if (!disabled && (global ? globalRecordBounce : facetRecordBounce) != 1) ImGui::EndDisabled();
 
-	ImGui::TriState("Record flight distance until absorption", &set.recFlightDist, set.tristate[1]);
-	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::BeginDisabled();
-	ImGui::InputTextRightSide("Max recorded flight distance (cm):", &set.maxFlightDistInput, 0, txtW * 6);
-	ImGui::InputTextRightSide("Distance bin size (cm):", &set.distBinSizeInput, 0, txtW * 6);
-	if (!set.amIDisabled && set.recFlightDist != 1) ImGui::EndDisabled();
+	ImGui::TriState("Record flight distance until absorption", global ? &globalRecordDistance : &facetRecordDistance, global ? false : states.facetRecDistanceMixed);
+	if (!disabled && (global ? globalRecordDistance : facetRecordDistance) != 1) ImGui::BeginDisabled();
+	ImGui::InputTextRightSide("Max recorded flight distance (cm):", global ? &globalDistanceMaxInput : &facetDistanceMaxInput, 0, txtW * 6);
+	ImGui::InputTextRightSide("Distance bin size (cm):", global ? &globalDistanceBinSizeInput : &facetDistanceBinSizeInput, 0, txtW * 6);
+	if (!disabled && (global ? globalRecordDistance : facetRecordDistance) != 1) ImGui::EndDisabled();
 #ifdef MOLFLOW
-	ImGui::TriState("Record flight time until absorption", &set.recTime, set.tristate[2]);
-	if (!set.amIDisabled && set.recTime != 1) ImGui::BeginDisabled();
-	ImGui::InputTextRightSide("Max recorded flight time (s):", &set.maxFlightTimeInput, 0, txtW * 6);
-	ImGui::InputTextRightSide("Time bin size (s):", &set.timeBinSizeInput, 0, txtW * 6);
-	if (!set.amIDisabled && set.recTime != 1) ImGui::EndDisabled();
+	ImGui::TriState("Record flight time until absorption", global ? &globalRecordTime : &facetRecordTime, global ? false : states.facetRecTimeMixed);
+	if (!disabled && (global ? globalRecordTime : facetRecordTime) != 1) ImGui::BeginDisabled();
+	ImGui::InputTextRightSide("Max recorded flight time (s):", global ? &globalTimeMaxInput : &facetTimeMaxInput, 0, txtW * 6);
+	ImGui::InputTextRightSide("Time bin size (s):", global ? &globalTimeBinSizeInput : &facetTimeBinSizeInput, 0, txtW * 6);
+	if (!disabled && (global ? globalRecordTime : facetRecordTime) != 1) ImGui::EndDisabled();
 #endif
-	// to the best of my understanding, this does not do anything in the Legacy code
-	// if that is the case it can be removed
-	ImGui::Text("Memory estimate of histogram: " + (set.showMemEst ? std::to_string(set.memEst) : ""));
+
+	ImGui::Text(fmt::format("Current memory ({}): {}", global ? "global" : "all facets", FormatMemory(global ? states.memCurrentGlobal : states.memCurrentFacet)));
+	ImGui::Text(fmt::format("After applying ({}): {}", global ? "global" : "all facets", (global ? states.memNewGlobal : states.memNewFacet)));
 }
 
-void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState(ImHistogramSettings::histSet* settings)
+void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 {
 	if (interfGeom->GetNbSelectedFacets() <= 1) { // one or none selected
-		settings->tristate[0] = false;
-		settings->tristate[1] = false;
+		states.facetRecBounceMixed = false;
+		states.facetRecDistanceMixed = false;
 #ifdef MOLFLOW
-		settings->tristate[2] = false;
+		states.facetRecTimeMixed = false;
 #endif
 		return;
 	}
@@ -841,20 +862,33 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState(ImHistogramSett
 	for (int i = 1; i < interfGeom->GetNbSelectedFacets(); i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
 		if (facet1states[0] != f->sh.facetHistogramParams.recordBounce) {
-			settings->tristate[0] = true;
-			settings->recBounce = 2;
+			states.facetRecBounceMixed = true;
+			facetRecordBounce = 2;
 		}
 		if (facet1states[1] != f->sh.facetHistogramParams.recordDistance) {
-			settings->tristate[1] = true;
-			settings->recFlightDist = 2;
+			states.facetRecDistanceMixed = true;
+			facetRecordDistance = 2;
 		}
 #ifdef MOLFLOW
 		if (facet1states[2] != f->sh.facetHistogramParams.recordTime) {
-			settings->tristate[2] = true;
-			settings->recTime = 2;
+			states.facetRecTimeMixed = true;
+			facetRecordTime = 2;
 		}
-		if (settings->tristate[0] && settings->tristate[1] && settings->tristate[2]) break;
+		if (states.facetRecBounceMixed && states.facetRecDistanceMixed && states.facetRecTimeMixed) break;
 #endif
-		if (settings->tristate[0] && settings->tristate[1]) break;
+		if (states.facetRecBounceMixed && states.facetRecDistanceMixed) break;
 	}
+}
+
+void ImHistogramPlotter::ImHistogramSettings::CalculateMemoryEstimate_Current()
+{
+	states.memCurrentGlobal = mApp->worker.model->sp.globalHistogramParams.GetDataSize() * (mApp->worker.interfaceMomentCache.size() + 1);
+
+	// calculate facet global hist mem est
+	states.memCurrentFacet = 0;
+	size_t nbFacet = interfGeom->GetNbFacet();
+	for (size_t i = 0; i < nbFacet; i++) {
+		states.memCurrentFacet += interfGeom->GetFacet(i)->sh.facetHistogramParams.GetDataSize();
+	}
+	states.memCurrentFacet *= (mApp->worker.interfaceMomentCache.size() + 1);
 }
