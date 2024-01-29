@@ -23,6 +23,7 @@ public:
 	bool IsPlotted(plotTabs tab, size_t facetId);
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
+	void UpdateOnFacetChange();
 
 protected:
 	//functions
@@ -39,6 +40,7 @@ protected:
 	public:
 		void Draw();
 		float width;
+		void UpdateOnFacetChange();
 		ImHistogramPlotter* parent;
 		bool Apply();
 		void DrawSettingsGroup(HistogramParams& set, bool global = false, bool disabled = false);
@@ -97,7 +99,6 @@ protected:
 
 	//variables
 	InterfaceGeometry* interfGeom;
-	ImHistogramSettings settingsWindow;
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
@@ -109,4 +110,5 @@ protected:
 	bool limitPoints = true;
 	bool showValueOnHover = true;
 	bool overrange = true;
+	ImHistogramSettings settingsWindow;
 };

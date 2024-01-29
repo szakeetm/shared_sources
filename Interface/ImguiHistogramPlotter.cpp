@@ -526,6 +526,11 @@ void ImHistogramPlotter::Reset()
 	RefreshFacetLists();
 }
 
+void ImHistogramPlotter::UpdateOnFacetChange()
+{
+	settingsWindow.UpdateOnFacetChange();
+}
+
 void ImHistogramPlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {
@@ -585,7 +590,6 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 		}
 		
 		// internal ImGui structure for data storage
-		EvaluateMixedState();
 		DrawSettingsGroup(facetHistSet, false, disabled);
 
 		if (disabled) ImGui::EndDisabled();
@@ -594,6 +598,11 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 	ImGui::PlaceAtRegionCenter(" Apply ");
 	if (ImGui::Button("Apply")) Apply();
 	ImGui::End();
+}
+
+void ImHistogramPlotter::ImHistogramSettings::UpdateOnFacetChange()
+{
+	EvaluateMixedState();
 }
 
 bool ImHistogramPlotter::ImHistogramSettings::Apply()
