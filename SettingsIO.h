@@ -31,10 +31,11 @@ namespace SettingsIO {
     struct CLIArguments {
         size_t nbThreads = 0;
         uint64_t simDuration = 0;
+        uint64_t desLimit = 0;
         uint64_t statprintInterval = 60;
         uint64_t autoSaveInterval = 600; // default: autosave every 600s=10min
         bool loadAutosave = false;
-        std::list<uint64_t> desLimit;
+        
         bool resetOnStart = false;
         std::string paramFile;
         std::vector<std::string> paramChanges;
