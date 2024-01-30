@@ -24,9 +24,9 @@ namespace ImIOWrappers {
 		if (!fn.empty()) {
 			try {
 				mApp->imWnd->progress.Show();
-				LockWrapper myLock(mApp->imguiRenderLock);
+				//LockWrapper myLock(mApp->imguiRenderLock);
 				mApp->worker.SaveGeometry(fn, mApp->imWnd->progress);
-				mApp->imWnd->progress.Hide();
+				//mApp->imWnd->progress.Hide();
 				mApp->changedSinceSave = false;
 				mApp->UpdateTitle();
 				mApp->AddRecent(fn);

@@ -9,6 +9,7 @@ protected:
 public:
 	virtual void SetMessage(const std::string& msg, const bool newLine=false, const bool forceDraw=false);
 	virtual void SetProgress(const double prg);
+	virtual void Hide();
 	virtual double GetProgress();
 	virtual std::string GetMsg();
 	GLProgress_Abstract() = default;

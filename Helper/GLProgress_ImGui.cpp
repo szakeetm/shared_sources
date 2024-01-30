@@ -14,6 +14,11 @@ void ImProgress::Draw() {
 	}
 }
 
+void ImProgress::Hide()
+{
+	drawn = false;
+}
+
 void ImProgress::SetProgress(const double prg) {
 	int newPrg = static_cast<int>(prg * 100.0);
 	progress = newPrg;

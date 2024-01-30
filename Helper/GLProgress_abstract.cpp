@@ -22,3 +22,7 @@ void GLProgress_Abstract::SetProgress(const double prg)
 		progress = newPrg;
 	}
 }
+
+void GLProgress_Abstract::Hide()
+{
+}
