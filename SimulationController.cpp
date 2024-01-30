@@ -610,6 +610,7 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
         return false;
 	}
 
+    /*
     if (simulationPtr->model->otfParams.desorptionLimit > 0) {
         if (simulationPtr->totalDesorbed >=
             simulationPtr->model->otfParams.desorptionLimit /
@@ -619,6 +620,7 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
             return false;
         }
     }
+    */
 
     procInfo.InitHitUpdateQueue();
 
