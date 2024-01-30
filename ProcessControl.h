@@ -42,7 +42,8 @@ enum ControllerState {
 enum ThreadState : int { //type specified to allow forward declare
 	Idle, //Not running
 	ThreadError, //Running + error (temporary, will exit -> Idle)
-    Running
+    Running,
+    LimitReached
 };
 
 static std::map<ControllerState, std::string> controllerStateStrings = {
@@ -60,7 +61,8 @@ static std::map<ControllerState, std::string> controllerStateStrings = {
 static std::map<ThreadState, std::string> threadStateStrings = {
     {ThreadState::Running,"Running"},
     {ThreadState::Idle,"Idle"},
-    {ThreadState::ThreadError,"Error"}
+    {ThreadState::ThreadError,"Error"},
+    {ThreadState::LimitReached,"Limit Reached"}
 };
 
 enum SimCommand {
@@ -70,7 +72,8 @@ enum SimCommand {
     Pause,
     Reset,
     Kill,
-    UpdateParams
+    UpdateParams,
+    MarkIdle
 };
 
 static std::map<SimCommand, std::string> simCommandStrings = {
@@ -80,7 +83,8 @@ static std::map<SimCommand, std::string> simCommandStrings = {
     {SimCommand::Pause,"Command: Pause"},
     {SimCommand::Reset,"Command: Reset"},
     {SimCommand::Kill,"Command: Exit"},
-    {SimCommand::UpdateParams,"Update params"}
+    {SimCommand::UpdateParams,"Update params"},
+    {SimCommand::MarkIdle,"Mark threads Idle"}
 };
 
 struct PROCESS_INFO{

@@ -64,6 +64,7 @@ public:
 
     std::shared_ptr<MFSim::ParticleTracer> particleTracerPtr;
     LoopResult RunLoop();
+    void MarkIdle();
     [[nodiscard]] std::string ConstructMyThreadStatus() const;
 
 private:
@@ -100,6 +101,7 @@ public:
     bool StartAndRun(LoadStatus_abstract* loadStatus=nullptr);
     void Load(LoadStatus_abstract* loadStatus = nullptr);
     void Reset(LoadStatus_abstract* loadStatus = nullptr);
+    void MarkThreadsIdle(LoadStatus_abstract* loadStatus = nullptr);
 
     void EmergencyExit();
 protected:

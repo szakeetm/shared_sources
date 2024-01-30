@@ -68,7 +68,7 @@ protected:
 
     void ForwardCommand(SimCommand command, size_t param, size_t param2);
 
-    int WaitForControllerAndThreadState(const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
+    int WaitForControllerAndThreadState(const std::vector<ControllerState>& successControllerStates, const std::vector<ThreadState>& successThreadStates,
         LoadStatus_abstract* loadStatus =nullptr);
 
 public:
@@ -85,8 +85,10 @@ public:
     void ShareWithSimUnits(void *data, size_t size, LoadType loadType, LoadStatus_abstract* loadStatus = nullptr);
 
     int ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
-        const std::optional<ControllerState>& successControllerStateconst, const std::optional<ThreadState>& successThreadState,
+        const std::vector<ControllerState>& successControllerStates, const std::vector<ThreadState>& successThreadStates,
         LoadStatus_abstract* loadStatus);
+
+    //void UpdateLimitReachedAndErrorStates();
 
     int SetUpSimulation(LoadStatus_abstract* loadStatus=nullptr);
 
@@ -127,7 +129,7 @@ public:
     bool asyncMode=false; //Commands issued to threads with non-blocking mode. Default for GUI, disabled for CLI and test suite
     bool noProgress = false; //Don't print percentage updates for progressbars, useful if output written to log file
     bool isRunning=false;
-    bool allProcsFinished=false;
+    bool allProcsReachedLimit=false;
     bool hasErrorStatus=false;
     bool simulationChanged = true; // by default, always init simulation process the first time
 
