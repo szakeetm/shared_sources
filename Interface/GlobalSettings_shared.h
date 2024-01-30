@@ -43,6 +43,7 @@ public:
     void ProcessMessage_shared(GLComponent *src,int message);
     void Display(Worker *w);
     void Update_shared();
+    void UpdateDesLimitButtonText();
     virtual void ProcessMessage(GLComponent *src,int message) = 0;
     virtual void Update() = 0; //! implements software specific update steps on top of Update_shared
 protected:
@@ -54,7 +55,7 @@ protected:
     GLLabel* coreLabel;
     GLLabel* subProcLabel;
     GLButton    *restartButton;
-    GLButton    *maxButton;
+    GLButton    *desLimitButton;
     GLTextField *nbProcText;
     GLTextField *autoSaveText;
 
@@ -62,7 +63,7 @@ protected:
     GLButton    *lowFluxInfo;
     GLTextField *cutoffText;
 
-    int lastUpdate;
+    int lastUpdate=0;
 
     GLToggle      *chkAntiAliasing;
     GLToggle      *chkWhiteBg;

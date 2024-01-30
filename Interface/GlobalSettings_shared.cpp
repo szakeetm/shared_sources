@@ -49,7 +49,6 @@ static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,AL
 
 GlobalSettingsBase::GlobalSettingsBase(Worker *w) : GLWindow(){
     worker = w;
-    lastUpdate = 0;
 }
 
 void GlobalSettingsBase::Display(Worker *w) {
@@ -149,20 +148,21 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
             if (src==restartButton) {
                 RestartProc();
             }
-            else if (src==maxButton) {
+            else if (src==desLimitButton) {
                 if( worker->GetGeometry()->IsLoaded() ) {
                     char tmp[128];
-                    sprintf(tmp,"%zd",worker->model->otfParams.desorptionLimit);
-                    char *val = GLInputBox::GetInput(tmp,"Desorption max (0=>endless)","Edit MAX");
+                    sprintf(tmp,"%g",(double)worker->model->otfParams.desorptionLimit);
+                    char *val = GLInputBox::GetInput(tmp,"Desorption limit (0 = infinite)","Edit desorption limit");
                     if (val) {
                         char* endptr;
                         size_t maxDes = strtold(val,&endptr); // use double function to allow exponential format
                         if (val==endptr) {
-                            GLMessageBox::Display("Invalid 'maximum desorption' number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display("Invalid desorption limit", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         else {
                             worker->model->otfParams.desorptionLimit = maxDes;
                             worker->ChangeSimuParams(); //Sync with subprocesses
+                            UpdateDesLimitButtonText();
                         }
                     }
                 } else {
@@ -262,4 +262,16 @@ void GlobalSettingsBase::Update_shared() {
     }
     chkCompressSavedFiles->SetState(mApp->compressSavedFiles);
     nbProcText->SetText(fmt::format("{}", worker->GetProcNumber()));
+}
+
+void GlobalSettingsBase::UpdateDesLimitButtonText(){
+    std::ostringstream desLimitLabel;
+    desLimitLabel << "Desorption limit: ";
+    if (worker->model->otfParams.desorptionLimit == 0) {
+        desLimitLabel << "infinite";
+    }
+    else {
+        desLimitLabel << (double)worker->model->otfParams.desorptionLimit; //Large numbers as floating point
+    }
+    desLimitButton->SetText(desLimitLabel.str().c_str());
 }
