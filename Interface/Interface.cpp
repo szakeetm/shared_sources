@@ -177,7 +177,7 @@ Interface::Interface() : GLApplication(){
     planarityThreshold = 1e-5;
 
     updateRequested = true;
-    prevRunningState = false;
+    //prevRunningState = false;
 }
 
 Interface::~Interface() {
@@ -2526,8 +2526,12 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalStatCache.globalHits;
-    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) { //Running and and update is due (each second), or just started
+
+    bool oneSecSinceLastUpdate = m_fTime - lastUpdate >= 1.0f;
+    bool justStopped = !runningState && worker.simuTimer.isActive;
+    if ((runningState && oneSecSinceLastUpdate) || justStopped) {
         {
+            //if (justStopped) __debugbreak();
             sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
             sTime->SetText(tmp);
             wereEvents = true; //Will repaint
@@ -2535,7 +2539,7 @@ int Interface::FrameMove() {
             UpdateStats(); //Update m_fTime
             lastUpdate = m_fTime;
 
-            if (updateRequested || autoFrameMove) {
+            if (updateRequested || autoFrameMove  || justStopped) {
 
                 forceFrameMoveButton->SetEnabled(false);
                 forceFrameMoveButton->SetText("Updating...");
