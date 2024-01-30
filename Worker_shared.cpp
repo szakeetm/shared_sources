@@ -148,7 +148,7 @@ void Worker::ExportTextures(const char* fileName, int grouping, int mode, bool a
 
 void Worker::Stop_Public() {
 	// Stop
-	InnerStop(mApp->m_fTime);
+	InnerStop();
 	try {
 		Stop();
 		Update(mApp->m_fTime);
@@ -226,7 +226,7 @@ std::string Worker::GetErrorDetails() {
 	return simManager.GetErrorDetails();
 }
 
-void Worker::InnerStop(float appTime) {
+void Worker::InnerStop() {
 	simuTimer.Stop();
 }
 
@@ -234,7 +234,7 @@ void Worker::StartStop(float appTime) {
 	if (IsRunning()) {
 
 		// Stop
-		InnerStop(appTime);
+		InnerStop();
 		try {
 			Stop();
 			Update(appTime);
