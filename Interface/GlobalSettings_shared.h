@@ -37,7 +37,7 @@ public:
 
     // Construction
     GlobalSettingsBase(Worker *w);
-    void SMPUpdate();
+    void UpdateProcessList();
 
     // Implementation
     void ProcessMessage_shared(GLComponent *src,int message);

@@ -61,55 +61,55 @@ void GlobalSettingsBase::Display(Worker *w) {
 /**
 * \brief Function to update the thread information table in the global settings window.
 */
-void GlobalSettingsBase::SMPUpdate() {
+void GlobalSettingsBase::UpdateProcessList() {
+	{ //Frame limiter. Doing it here so "lastUpdate" is own member
+		if (!IsVisible() || IsIconic()) return;
+		int time = SDL_GetTicks();
+		if (time - lastUpdate < 500) return;
+	}
 
-    int time = SDL_GetTicks();
+	size_t nb = worker->GetProcNumber();
+	if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2, true);
 
-    if (!IsVisible() || IsIconic()) return;
-    size_t nb = worker->GetProcNumber();
-    if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2,true);
+	ProcComm procInfo;
+	worker->GetProcStatus(procInfo);
 
-    if( time-lastUpdate>333 ) {
-
-        ProcComm procInfo;
-        worker->GetProcStatus(procInfo);
-
-        processList->ClearValues();
-        const double byte_to_mbyte = 1.0/(1024.0*1024.0);
-        //Interface
+	//processList->ClearValues(); //Will be overwritten
+	const double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+	//Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
-        const double memDenominator_sys = (1024.0 * 1024.0);
+	size_t currPid = GetCurrentProcessId();
+	const double memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
-        const double memDenominator_sys = (1024.0);
+	size_t currPid = getpid();
+	const double memDenominator_sys = (1024.0);
 #endif
-        PROCESS_INFO parentInfo{};
-        GetProcInfo(currPid, &parentInfo);
+	PROCESS_INFO parentInfo{};
+	GetProcInfo(currPid, &parentInfo);
 
-        processList->SetValueAt(0, 0, "Interface");
-        processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-        processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator_sys));
-        processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator_sys));
-        processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
+	processList->SetValueAt(0, 0, "Interface");
+	processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
+	processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator_sys));
+	processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator_sys));
+	processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
-        processList->SetValueAt(0, 1, "SimManager");
-        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
-        processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
+	processList->SetValueAt(0, 1, "SimManager");
+	processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
+	processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
-        size_t i = 2;
-        for (auto& proc : procInfo.threadInfos)
-        {
-            processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
-            processList->SetValueAt(1, i, fmt::format("")); //placeholder for thread id
-            processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)proc.runtimeInfo.counterSize * byte_to_mbyte));
-            processList->SetValueAt(3, i, ""); //mem peak placeholder
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[proc.threadState], proc.threadStatus));
-            ++i;
-        }
-        lastUpdate = SDL_GetTicks();
-    }
+	size_t i = 2;
+	for (auto& proc : procInfo.threadInfos)
+	{
+		processList->SetValueAt(0, i, fmt::format("Thread {}", i - 1));
+		processList->SetValueAt(1, i, fmt::format("")); //placeholder for thread id
+		processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)proc.runtimeInfo.counterSize * byte_to_mbyte));
+		processList->SetValueAt(3, i, ""); //mem peak placeholder
+		processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[proc.threadState], proc.threadStatus));
+		++i;
+	}
+	lastUpdate = SDL_GetTicks();
 }
+
 
 /**
 * \brief Function to apply changes to the number of processes.

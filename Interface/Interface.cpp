@@ -2530,60 +2530,60 @@ int Interface::FrameMove() {
     bool oneSecSinceLastUpdate = m_fTime - lastUpdate >= 1.0f;
     bool justStopped = !runningState && worker.simuTimer.isActive;
     if ((runningState && oneSecSinceLastUpdate) || justStopped) {
-        {
-            //if (justStopped) __debugbreak();
-            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
-            sTime->SetText(tmp);
-            wereEvents = true; //Will repaint
+        
+        
+        sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        sTime->SetText(tmp);
+        wereEvents = true; //Will repaint
 
-            UpdateStats(); //Update m_fTime
-            lastUpdate = m_fTime;
+        UpdateStats(); //Update m_fTime
+        lastUpdate = m_fTime;
 
-            if (updateRequested || autoFrameMove  || justStopped) {
+        if (updateRequested || autoFrameMove  || justStopped) {
 
-                forceFrameMoveButton->SetEnabled(false);
-                forceFrameMoveButton->SetText("Updating...");
-                //forceFrameMoveButton->Paint();
-                //GLWindowManager::Repaint();
+            forceFrameMoveButton->SetEnabled(false);
+            forceFrameMoveButton->SetText("Updating...");
+            //forceFrameMoveButton->Paint();
+            //GLWindowManager::Repaint();
 
-                updateRequested = false;
+            updateRequested = false;
 
-                // Update hits
-                try {
-                    worker.Update(m_fTime);
+            // Update hits
+            try {
+                worker.Update(m_fTime);
+            }
+            catch (const std::exception &e) {
+                GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+            }
+            // Simulation monitoring
+            if (appFormulas->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) appFormulas->EvaluateFormulas(hitCache.nbDesorbed);
+            UpdatePlotters();
+
+            // Formulas
+            //if (autoUpdateFormulas) UpdateFormula();
+            if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
+                formulaEditor->UpdateValues();
+            }
+            if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
+            //lastUpdate = GetTick(); //changed from m_fTime: include update duration
+
+            // Update timing measurements
+            if (hitCache.nbMCHit != lastNbHit ||
+                hitCache.nbDesorbed != lastNbDes) {
+                auto dTime = (double) (m_fTime - lastMeasTime);
+                if(dTime > 1e-6) {
+                    hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
+                    dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
+                    //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
+                    //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
                 }
-                catch (const std::exception &e) {
-                    GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
-                }
-                // Simulation monitoring
-                if (appFormulas->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) appFormulas->EvaluateFormulas(hitCache.nbDesorbed);
-                UpdatePlotters();
 
-                // Formulas
-                //if (autoUpdateFormulas) UpdateFormula();
-                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
-                    formulaEditor->UpdateValues();
-                }
-                if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
-                //lastUpdate = GetTick(); //changed from m_fTime: include update duration
-
-                // Update timing measurements
-                if (hitCache.nbMCHit != lastNbHit ||
-                    hitCache.nbDesorbed != lastNbDes) {
-                    auto dTime = (double) (m_fTime - lastMeasTime);
-                    if(dTime > 1e-6) {
-                        hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
-                        dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
-                        //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
-                        //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
-                    }
-
-                    lastNbHit = hitCache.nbMCHit;
-                    lastNbDes = hitCache.nbDesorbed;
-                    lastMeasTime = m_fTime;
-                }
+                lastNbHit = hitCache.nbMCHit;
+                lastNbDes = hitCache.nbDesorbed;
+                lastMeasTime = m_fTime;
             }
         }
+        
 
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
