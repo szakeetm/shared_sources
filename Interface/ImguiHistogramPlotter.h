@@ -46,6 +46,7 @@ protected:
 		void DrawSettingsGroup(HistogramParams& set, bool global = false, bool disabled = false);
 		void EvaluateMixedState();
 		void CalculateMemoryEstimate_Current();
+		void CalculateMemoryEstimate_New(bool global);
 
 		HistogramParams globalHistSet, facetHistSet;
 
