@@ -101,89 +101,6 @@ void ImHistogramPlotter::Draw()
 	}
 	ImGui::End();
 	settingsWindow.Draw();
-	static std::vector<size_t> lastSel;
-	std::vector<size_t> newSel = interfGeom->GetSelectedFacets();
-	if (lastSel != newSel) {
-		// load selection settings
-		lastSel = newSel;
-		settingsWindow.facetRecordBounce = 3;
-		settingsWindow.facetBouncesMaxInput = "";
-		settingsWindow.facetBouncesBinSizeInput = "";
-		settingsWindow.facetRecordDistance = 3;
-		settingsWindow.facetDistanceMaxInput = "";
-		settingsWindow.facetDistanceBinSizeInput = "";
-#ifdef MOLFLOW
-		settingsWindow.facetRecordTime = 3;
-		settingsWindow.facetTimeMaxInput = "";
-		settingsWindow.facetTimeBinSizeInput = "";
-#endif
-		std::string tmp;
-		bool toggle;
-		for (size_t facetIdx : lastSel) {
-			InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
-			toggle = f->sh.facetHistogramParams.recordBounce;
-			if (settingsWindow.facetRecordBounce == 3) settingsWindow.facetRecordBounce = toggle;
-			else if (settingsWindow.facetRecordBounce != toggle) settingsWindow.facetRecordBounce = 2;
-			settingsWindow.facetHistSet.nbBounceMax = f->sh.facetHistogramParams.nbBounceMax;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.nbBounceMax);
-			if (settingsWindow.facetBouncesMaxInput == "") {
-				settingsWindow.facetBouncesMaxInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetBouncesMaxInput != tmp) {
-				settingsWindow.facetBouncesMaxInput = "...";
-			}
-			settingsWindow.facetHistSet.nbBounceBinsize = f->sh.facetHistogramParams.nbBounceBinsize;
-			tmp = fmt::format("{}", settingsWindow.facetHistSet.nbBounceBinsize);
-			if (settingsWindow.facetBouncesBinSizeInput == "") {
-				settingsWindow.facetBouncesBinSizeInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetBouncesBinSizeInput != tmp) {
-				settingsWindow.facetBouncesBinSizeInput = "...";
-			}
-
-			toggle = f->sh.facetHistogramParams.recordDistance;
-			if (settingsWindow.facetRecordDistance == 3) settingsWindow.facetRecordDistance = toggle;
-			else if (settingsWindow.facetRecordDistance != toggle) settingsWindow.facetRecordDistance = 2;
-
-			settingsWindow.facetHistSet.distanceMax = f->sh.facetHistogramParams.distanceMax;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distanceMax);
-			if (settingsWindow.facetDistanceMaxInput == "") {
-				settingsWindow.facetDistanceMaxInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetDistanceMaxInput != tmp) {
-				settingsWindow.facetDistanceMaxInput = "...";
-			}
-			settingsWindow.facetHistSet.distanceBinsize = f->sh.facetHistogramParams.distanceBinsize;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.distanceBinsize);
-			if (settingsWindow.facetDistanceBinSizeInput == "") {
-				settingsWindow.facetDistanceBinSizeInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetDistanceBinSizeInput != tmp) {
-				settingsWindow.facetDistanceBinSizeInput = "...";
-			}
-#ifdef MOLFLOW
-			toggle = f->sh.facetHistogramParams.recordTime;
-			if (settingsWindow.facetRecordTime == 3) settingsWindow.facetRecordTime = toggle;
-			else if (settingsWindow.facetRecordTime != toggle) settingsWindow.facetRecordTime = 2;
-			settingsWindow.facetHistSet.timeMax = f->sh.facetHistogramParams.timeMax;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeMax);
-			if (settingsWindow.facetTimeMaxInput == "") {
-				settingsWindow.facetTimeMaxInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetTimeMaxInput != tmp) {
-				settingsWindow.facetTimeMaxInput = "...";
-			}
-			settingsWindow.facetHistSet.timeBinsize = f->sh.facetHistogramParams.timeBinsize;
-			tmp = fmt::format("{:.4g}", settingsWindow.facetHistSet.timeBinsize);
-			if (settingsWindow.facetTimeBinSizeInput == "") {
-				settingsWindow.facetTimeBinSizeInput = tmp; // first checked facet
-			}
-			else if (settingsWindow.facetTimeBinSizeInput != tmp) {
-				settingsWindow.facetTimeBinSizeInput = "...";
-			}
-#endif
-		}
-	}
 }
 
 void ImHistogramPlotter::Init(Interface* mApp_)
@@ -914,7 +831,86 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(HistogramParams&
 
 void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 {
-	if (interfGeom->GetNbSelectedFacets() <= 1) { // one or none selected
+	std::vector<size_t> selected = interfGeom->GetSelectedFacets();
+	// load selection settings
+	facetRecordBounce = 3;
+	facetBouncesMaxInput = "";
+	facetBouncesBinSizeInput = "";
+	facetRecordDistance = 3;
+	facetDistanceMaxInput = "";
+	facetDistanceBinSizeInput = "";
+#ifdef MOLFLOW
+	facetRecordTime = 3;
+	facetTimeMaxInput = "";
+	facetTimeBinSizeInput = "";
+#endif
+	std::string tmp;
+	bool toggle;
+	for (size_t facetIdx : selected) {
+		InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
+		toggle = f->sh.facetHistogramParams.recordBounce;
+		if (facetRecordBounce == 3) facetRecordBounce = toggle;
+		else if (facetRecordBounce != toggle) facetRecordBounce = 2;
+		facetHistSet.nbBounceMax = f->sh.facetHistogramParams.nbBounceMax;
+		tmp = fmt::format("{}", facetHistSet.nbBounceMax);
+		if (facetBouncesMaxInput == "") {
+			facetBouncesMaxInput = tmp; // first checked facet
+		}
+		else if (facetBouncesMaxInput != tmp) {
+			facetBouncesMaxInput = "...";
+		}
+		facetHistSet.nbBounceBinsize = f->sh.facetHistogramParams.nbBounceBinsize;
+		tmp = fmt::format("{}", facetHistSet.nbBounceBinsize);
+		if (facetBouncesBinSizeInput == "") {
+			facetBouncesBinSizeInput = tmp; // first checked facet
+		}
+		else if (facetBouncesBinSizeInput != tmp) {
+			facetBouncesBinSizeInput = "...";
+		}
+
+		toggle = f->sh.facetHistogramParams.recordDistance;
+		if (facetRecordDistance == 3) facetRecordDistance = toggle;
+		else if (facetRecordDistance != toggle) facetRecordDistance = 2;
+
+		facetHistSet.distanceMax = f->sh.facetHistogramParams.distanceMax;
+		tmp = fmt::format("{:.4g}", facetHistSet.distanceMax);
+		if (facetDistanceMaxInput == "") {
+			facetDistanceMaxInput = tmp; // first checked facet
+		}
+		else if (facetDistanceMaxInput != tmp) {
+			facetDistanceMaxInput = "...";
+		}
+		facetHistSet.distanceBinsize = f->sh.facetHistogramParams.distanceBinsize;
+		tmp = fmt::format("{:.4g}", facetHistSet.distanceBinsize);
+		if (facetDistanceBinSizeInput == "") {
+			facetDistanceBinSizeInput = tmp; // first checked facet
+		}
+		else if (facetDistanceBinSizeInput != tmp) {
+			facetDistanceBinSizeInput = "...";
+		}
+#ifdef MOLFLOW
+		toggle = f->sh.facetHistogramParams.recordTime;
+		if (facetRecordTime == 3) facetRecordTime = toggle;
+		else if (facetRecordTime != toggle) facetRecordTime = 2;
+		facetHistSet.timeMax = f->sh.facetHistogramParams.timeMax;
+		tmp = fmt::format("{:.4g}", facetHistSet.timeMax);
+		if (facetTimeMaxInput == "") {
+			facetTimeMaxInput = tmp; // first checked facet
+		}
+		else if (facetTimeMaxInput != tmp) {
+			facetTimeMaxInput = "...";
+		}
+		facetHistSet.timeBinsize = f->sh.facetHistogramParams.timeBinsize;
+		tmp = fmt::format("{:.4g}", facetHistSet.timeBinsize);
+		if (facetTimeBinSizeInput == "") {
+			facetTimeBinSizeInput = tmp; // first checked facet
+		}
+		else if (facetTimeBinSizeInput != tmp) {
+			facetTimeBinSizeInput = "...";
+		}
+#endif
+	}
+	if (selected.size() <= 1) { // one or none selected
 		states.facetRecBounceMixed = false;
 		states.facetRecDistanceMixed = false;
 #ifdef MOLFLOW
@@ -922,7 +918,6 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 #endif
 		return;
 	}
-	std::vector<size_t> selected = interfGeom->GetSelectedFacets();
 
 	InterfaceFacet* f = interfGeom->GetFacet(selected[0]);
 	bool facet1states[3];
@@ -932,7 +927,7 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 	facet1states[2] = f->sh.facetHistogramParams.recordTime;
 #endif
 
-	for (int i = 1; i < interfGeom->GetNbSelectedFacets(); i++) {
+	for (int i = 1; i < selected.size(); i++) {
 		InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
 		if (facet1states[0] != f->sh.facetHistogramParams.recordBounce) {
 			states.facetRecBounceMixed = true;
