@@ -841,17 +841,17 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(HistogramParams&
 	if (!disabled && (global ? globalRecordBounce : facetRecordBounce) != 1) ImGui::BeginDisabled();
 	if (ImGui::InputTextRightSide("Max recorded no. of bounces:", global ? &globalBouncesMaxInput : &facetBouncesMaxInput, 0, txtW * 6)) {
 		if ((global ? globalBouncesMaxInput : facetBouncesMaxInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.nbBounceMax, globalBouncesMaxInput);
-			else Util::getNumber(&facetHistSet.nbBounceMax, facetBouncesMaxInput);
+			if (global && Util::getNumber(&globalHistSet.nbBounceMax, globalBouncesMaxInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.nbBounceMax, facetBouncesMaxInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (ImGui::InputTextRightSide("Bounces bin size:", global ? &globalBouncesBinSizeInput : &facetBouncesBinSizeInput, 0, txtW * 6)) {
 		if ((global ? globalBouncesBinSizeInput : facetBouncesBinSizeInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.nbBounceBinsize, globalBouncesBinSizeInput);
-			else Util::getNumber(&facetHistSet.nbBounceBinsize, facetBouncesBinSizeInput);
+			if (global && Util::getNumber(&globalHistSet.nbBounceBinsize, globalBouncesBinSizeInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.nbBounceBinsize, facetBouncesBinSizeInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (!disabled && (global ? globalRecordBounce : facetRecordBounce) != 1) ImGui::EndDisabled();
 
@@ -865,41 +865,41 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(HistogramParams&
 	if (!disabled && (global ? globalRecordDistance : facetRecordDistance) != 1) ImGui::BeginDisabled();
 	if (ImGui::InputTextRightSide("Max recorded flight distance (cm):", global ? &globalDistanceMaxInput : &facetDistanceMaxInput, 0, txtW * 6)) {
 		if ((global ? globalDistanceMaxInput : facetDistanceMaxInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.distanceMax, globalDistanceMaxInput);
-			else Util::getNumber(&facetHistSet.distanceMax, facetDistanceMaxInput);
+			if (global && Util::getNumber(&globalHistSet.distanceMax, globalDistanceMaxInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.distanceMax, facetDistanceMaxInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (ImGui::InputTextRightSide("Distance bin size (cm):", global ? &globalDistanceBinSizeInput : &facetDistanceBinSizeInput, 0, txtW * 6)) {
 		if ((global ? globalDistanceBinSizeInput : facetDistanceBinSizeInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.distanceBinsize, globalDistanceBinSizeInput);
-			else Util::getNumber(&facetHistSet.distanceBinsize, facetDistanceBinSizeInput);
+			if (global && Util::getNumber(&globalHistSet.distanceBinsize, globalDistanceBinSizeInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.distanceBinsize, facetDistanceBinSizeInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (!disabled && (global ? globalRecordDistance : facetRecordDistance) != 1) ImGui::EndDisabled();
 #ifdef MOLFLOW
 	if (ImGui::TriState("Record flight time until absorption", global ? &globalRecordTime : &facetRecordTime, global ? false : states.facetRecTimeMixed)) {
 		if ((global ? globalRecordTime : facetRecordTime) != 2) {
 			if (global) globalHistSet.recordTime = globalRecordTime;
-			else facetHistSet.recordTime= facetRecordTime;
+			else facetHistSet.recordTime = facetRecordTime;
 		}
 		updateEstimate = true;
 	}
 	if (!disabled && (global ? globalRecordTime : facetRecordTime) != 1) ImGui::BeginDisabled();
 	if (ImGui::InputTextRightSide("Max recorded flight time (s):", global ? &globalTimeMaxInput : &facetTimeMaxInput, 0, txtW * 6)) {
 		if ((global ? globalTimeMaxInput : facetTimeMaxInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.timeMax, globalTimeMaxInput);
-			else Util::getNumber(&facetHistSet.timeMax, facetTimeMaxInput);
+			if (global && Util::getNumber(&globalHistSet.timeMax, globalTimeMaxInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.timeMax, facetTimeMaxInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (ImGui::InputTextRightSide("Time bin size (s):", global ? &globalTimeBinSizeInput : &facetTimeBinSizeInput, 0, txtW * 6)) {
 		if ((global ? globalTimeBinSizeInput : facetTimeBinSizeInput) != "...") {
-			if (global) Util::getNumber(&globalHistSet.timeBinsize, globalTimeBinSizeInput);
-			else Util::getNumber(&facetHistSet.timeBinsize, facetTimeBinSizeInput);
+			if (global && Util::getNumber(&globalHistSet.timeBinsize, globalTimeBinSizeInput)) updateEstimate = true;
+			else if (!global && Util::getNumber(&facetHistSet.timeBinsize, facetTimeBinSizeInput)) updateEstimate = true;
+			else (global ? states.memNewGlobal : states.memNewFacet) = "[invalid textbox value(s)]";
 		}
-		updateEstimate = true;
 	}
 	if (!disabled && (global ? globalRecordTime : facetRecordTime) != 1) ImGui::EndDisabled();
 #endif
@@ -909,7 +909,7 @@ void ImHistogramPlotter::ImHistogramSettings::DrawSettingsGroup(HistogramParams&
 	}
 
 	ImGui::Text(fmt::format("Current memory ({}): {}", global ? "global" : "all facets", FormatMemory(global ? states.memCurrentGlobal : states.memCurrentFacet)));
-	ImGui::Text(fmt::format("After applying ({}): {}", global ? "global" : "sel facets", (global ? states.memNewGlobal : states.memNewFacet)));
+	ImGui::Text(fmt::format("After applying ({}): {}", global ? "global" : "sel facets", ((global ? states.memNewGlobal : states.memNewFacet))));
 }
 
 void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()

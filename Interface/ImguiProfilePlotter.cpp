@@ -114,6 +114,8 @@ void ImProfilePlotter::Refresh()
 	interfGeom = mApp->worker.GetGeometry();
 	if(!loading) data.clear();
 	selectedProfile = -1;
+	if (loading) loading = false;
+	UpdatePlotter();
 }
 
 void ImProfilePlotter::UpdatePlotter()
@@ -123,7 +125,6 @@ void ImProfilePlotter::UpdatePlotter()
 
 void ImProfilePlotter::DrawProfileGraph()
 {
-	if (loading) loading = false;
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
@@ -179,6 +180,7 @@ void ImProfilePlotter::AddCurve()
 			return;
 		}
 		data.push_back({ selectedProfile, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
+		ComputeProfiles();
 		return;
 	}
 
@@ -189,6 +191,7 @@ void ImProfilePlotter::AddCurve()
 			data.push_back({ facetId, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 		}
 	}
+	ComputeProfiles();
 }
 
 void ImProfilePlotter::RemoveCurve(int id)
