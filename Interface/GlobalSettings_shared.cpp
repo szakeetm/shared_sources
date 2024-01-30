@@ -269,6 +269,8 @@ void GlobalSettingsBase::Update_shared() {
     }
     chkCompressSavedFiles->SetState(mApp->compressSavedFiles);
     nbProcText->SetText(fmt::format("{}", worker->GetProcNumber()));
+
+    UpdateDesLimitButtonText();
 }
 
 void GlobalSettingsBase::UpdateDesLimitButtonText(){
