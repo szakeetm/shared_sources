@@ -28,7 +28,6 @@ void ImProfilePlotter::Draw()
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
 	DrawMenuBar();
-	ComputeProfiles();
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
@@ -70,7 +69,7 @@ void ImProfilePlotter::Draw()
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 20);
-	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
+	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
 		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
@@ -115,6 +114,11 @@ void ImProfilePlotter::Refresh()
 	interfGeom = mApp->worker.GetGeometry();
 	if(!loading) data.clear();
 	selectedProfile = -1;
+}
+
+void ImProfilePlotter::UpdatePlotter()
+{
+	ComputeProfiles();
 }
 
 void ImProfilePlotter::DrawProfileGraph()

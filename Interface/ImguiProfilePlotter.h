@@ -12,6 +12,7 @@ public:
 	void Init(Interface* mApp_);
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
+	void UpdatePlotter();
 private:
 	void DrawProfileGraph();
 
