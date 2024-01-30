@@ -155,12 +155,19 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
                     char *val = GLInputBox::GetInput(tmp,"Desorption limit (0 = infinite)","Edit desorption limit");
                     if (val) {
                         char* endptr;
-                        size_t maxDes = strtold(val,&endptr); // use double function to allow exponential format
+                        long double maxDes_double = strtod(val,&endptr); // use double function to allow exponential format
+                        constexpr long double max_sizet_double = static_cast<long double>(std::numeric_limits<size_t>::max());
                         if (val==endptr) {
                             GLMessageBox::Display("Invalid desorption limit", "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }
+                        else if (maxDes_double < 0.0) {
+                            GLMessageBox::Display("Des. limit must be non-negative", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        }
+                        else if (maxDes_double > max_sizet_double) {
+                            GLMessageBox::Display(fmt::format("Des. limit must be smaller than {:.6g}", max_sizet_double).c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        }
                         else {
-                            worker->model->otfParams.desorptionLimit = maxDes;
+                            worker->model->otfParams.desorptionLimit = static_cast<size_t>(maxDes_double);
                             worker->ChangeSimuParams(); //Sync with subprocesses
                             UpdateDesLimitButtonText();
                         }
