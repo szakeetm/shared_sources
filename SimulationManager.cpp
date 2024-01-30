@@ -252,34 +252,34 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, c
  * @param successStatus Process Status that should be waited for
  * @return 0 if wait is successful, 1 if error or abort
  */
-int SimulationManager::WaitForControllerAndThreadState(const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
+int SimulationManager::WaitForControllerAndThreadState(const std::vector<ControllerState>& successControllerStates, const std::vector<ThreadState>& successThreadStates,
     LoadStatus_abstract* loadStatus) {
     // Wait for completion
     bool finished = false;
     const int waitAmount_ms = 500;
-    allProcsFinished = true;
+    allProcsReachedLimit = true;
     hasErrorStatus = false;
     bool abortRequested = false;
 	do {
 
 		finished = true;
         //Check thread success
-        if (successThreadState.has_value()) {
+        if (!successThreadStates.empty()) {
             for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
                 auto procState = procInformation.threadInfos[i].threadState;
-                finished = finished && (procState==*successThreadState);
+                finished = finished && Contains(successThreadStates,procState);
 
                 if (procState == ThreadState::ThreadError) {
                     hasErrorStatus = true;
                     finished = true;
                     break;
                 }
-                allProcsFinished = allProcsFinished && (procState == ThreadState::Idle);
+                allProcsReachedLimit = allProcsReachedLimit && (procState == ThreadState::LimitReached);
             }
         }
 
-        if (successControllerState.has_value()) {
-            finished = finished && (*successControllerState == procInformation.controllerState);
+        if (!successControllerStates.empty()) {
+            finished = finished && Contains(successControllerStates,procInformation.controllerState);
             if (procInformation.controllerState == ControllerState::InError) {
                 hasErrorStatus = true;
                 finished = true;
