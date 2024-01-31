@@ -130,11 +130,6 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 		m_bitsPerPixel = SDL_BITSPERPIXEL(SDL_GetWindowPixelFormat(mainScreen));
 
         SDL_EnableScreenSaver();
-        // start ImGui
-        if (!imWnd) {
-            imWnd = new ImguiWindow(this);
-            imWnd->init();
-        }
 	}
 
 	errCode = GLToolkit::RestoreDeviceObjects(m_screenWidth, m_screenHeight);

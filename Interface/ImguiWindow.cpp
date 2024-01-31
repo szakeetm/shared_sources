@@ -221,6 +221,7 @@ void ImguiWindow::init() {
 
     start_time = ImGui::GetTime();
     didIinit = true;
+    renderSingle();
 }
 
 // Gracefully clears and shutsdown Dear ImGui context
