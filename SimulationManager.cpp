@@ -80,6 +80,22 @@ int SimulationManager::RefreshProcStatus() {
     else return 0; //valid thread
 }
 
+/*
+void SimulationManager::UpdateLimitReachedAndErrorStates() {
+    allProcsReachedLimit = true;
+        for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
+            auto procState = procInformation.threadInfos[i].threadState;
+
+            if (procState == ThreadState::ThreadError) {
+                hasErrorStatus = true;
+                break;
+            }
+            allProcsReachedLimit = allProcsReachedLimit && (procState == ThreadState::LimitReached);
+        }
+    
+}
+*/
+
 /*!
  * @brief Starts the simulation on all available simulation units
  */
@@ -94,12 +110,17 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
         if (!controllerLoopThread)
             throw Error("No active simulation thread.");
 
-        if (ExecuteAndWait(SimCommand::Run, 0,0,
-            std::nullopt, { ThreadState::Running },
+        if (ExecuteAndWait(SimCommand::MarkIdle, 0, 0, //In case they are "LimitReached", set back to "Idle"
+            {}, { ThreadState::Idle },
             loadStatus)) {
-            throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
+            throw Error(MakeSubProcError("Threads couldn't be marked Idle"));
         }
-        if(allProcsFinished){
+        if (ExecuteAndWait(SimCommand::Run, 0,0,
+            {}, { ThreadState::Running, ThreadState::LimitReached },
+            loadStatus)) {
+            throw Error(MakeSubProcError("Threads could not start the simulation"));
+        }
+        if(allProcsReachedLimit){
             isRunning = false;
             throw Error("All threads already reached des. limit");
         }
@@ -109,7 +130,7 @@ void SimulationManager::StartSimulation(LoadStatus_abstract* loadStatus) {
         procInformation.masterCmd  = SimCommand::Run; // TODO: currently needed to not break the loop
 
         if (!simController->StartAndRun()) {
-            throw Error(MakeSubProcError("Subprocesses could not start the simulation"));
+            throw Error(MakeSubProcError("Threads could not start the simulation"));
         }
     }
 }
@@ -126,9 +147,9 @@ void SimulationManager::StopSimulation(LoadStatus_abstract* loadStatus) {
 
         procInformation.UpdateControllerStatus({ ControllerState::Pausing }, std::nullopt, loadStatus);
         if (ExecuteAndWait(SimCommand::Pause, 0, 0, 
-            { ControllerState::Ready }, { ThreadState::Idle },
+            { ControllerState::Ready }, { ThreadState::Idle, ThreadState::LimitReached }, //Might reach limit while pausing
             loadStatus))
-            throw Error(MakeSubProcError("Subprocesses could not stop the simulation"));
+            throw Error(MakeSubProcError("Threads could not stop the simulation"));
     }
     else {
         //Nothing, in blocking mode program is blocked while sim. is running
@@ -142,9 +163,9 @@ void SimulationManager::LoadSimulation(LoadStatus_abstract* loadStatus){
 
         procInformation.UpdateControllerStatus({ ControllerState::Loading }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
         if (ExecuteAndWait(SimCommand::Load, 0, 0,
-            { ControllerState::Ready }, { ThreadState::Idle },
+            { ControllerState::Ready }, { ThreadState::Idle, ThreadState::LimitReached },
             loadStatus)) {
-            std::string errString = "Failed to send geometry to sub process:\n";
+            std::string errString = "Failed to send geometry to threads:\n";
             errString.append(GetErrorDetails());
             throw Error(errString);
         }
@@ -228,7 +249,7 @@ int SimulationManager::SetUpSimulation(LoadStatus_abstract* loadStatus) {
     procInformation.UpdateControllerStatus({ ControllerState::Initializing }, { "Creating worker threads..." }, loadStatus);
     CreateCPUHandle();
     procInformation.UpdateControllerStatus(std::nullopt, { "Waiting for worker threads to be ready..." }, loadStatus);
-    auto result = WaitForControllerAndThreadState(std::nullopt, { ThreadState::Idle });
+    int result = WaitForControllerAndThreadState({}, { ThreadState::Idle, ThreadState::LimitReached });
     procInformation.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
     return result;
 }
@@ -252,34 +273,34 @@ void SimulationManager::InitSimulation(std::shared_ptr<SimulationModel> model, c
  * @param successStatus Process Status that should be waited for
  * @return 0 if wait is successful, 1 if error or abort
  */
-int SimulationManager::WaitForControllerAndThreadState(const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
+int SimulationManager::WaitForControllerAndThreadState(const std::vector<ControllerState>& successControllerStates, const std::vector<ThreadState>& successThreadStates,
     LoadStatus_abstract* loadStatus) {
     // Wait for completion
     bool finished = false;
     const int waitAmount_ms = 500;
-    allProcsFinished = true;
+    allProcsReachedLimit = true;
     hasErrorStatus = false;
     bool abortRequested = false;
 	do {
 
 		finished = true;
         //Check thread success
-        if (successThreadState.has_value()) {
+        if (!successThreadStates.empty()) {
             for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
                 auto procState = procInformation.threadInfos[i].threadState;
-                finished = finished && (procState==*successThreadState);
+                finished = finished && Contains(successThreadStates,procState);
 
                 if (procState == ThreadState::ThreadError) {
                     hasErrorStatus = true;
                     finished = true;
                     break;
                 }
-                allProcsFinished = allProcsFinished && (procState == ThreadState::Idle);
+                allProcsReachedLimit = allProcsReachedLimit && (procState == ThreadState::LimitReached);
             }
         }
 
-        if (successControllerState.has_value()) {
-            finished = finished && (*successControllerState == procInformation.controllerState);
+        if (!successControllerStates.empty()) {
+            finished = finished && Contains(successControllerStates,procInformation.controllerState);
             if (procInformation.controllerState == ControllerState::InError) {
                 hasErrorStatus = true;
                 finished = true;
@@ -331,10 +352,10 @@ void SimulationManager::ForwardCommand(const SimCommand command, const size_t pa
  * @return 0=success, 1=fail
  */
 int SimulationManager::ExecuteAndWait(const SimCommand command, const size_t param, const size_t param2,
-     const std::optional<ControllerState>& successControllerState, const std::optional<ThreadState>& successThreadState,
+     const std::vector<ControllerState>& successControllerStates, const std::vector<ThreadState>& successThreadStates,
     LoadStatus_abstract* loadStatus) {
     ForwardCommand(command, param, param2); // sets master state to command, param and param2
-    if (!WaitForControllerAndThreadState(successControllerState, successThreadState, loadStatus)) { // and wait
+    if (!WaitForControllerAndThreadState(successControllerStates, successThreadStates, loadStatus)) { // and wait
         return 0; //success
     }
     return 1; //error or aborted
@@ -343,7 +364,7 @@ int SimulationManager::ExecuteAndWait(const SimCommand command, const size_t par
 void SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
     if( controllerLoopThread ) {
         if(ExecuteAndWait(SimCommand::Kill, 0, 0,
-            { ControllerState::Exit }, { ThreadState::Idle },
+            { ControllerState::Exit }, { ThreadState::Idle, ThreadState::LimitReached },
             loadStatus)) { // execute
             // Force kill
             simController->EmergencyExit(); //Request particle tracers to not do more MC steps
@@ -379,13 +400,13 @@ void SimulationManager::KillSimulation(LoadStatus_abstract* loadStatus) {
         }
         bool allKilled = true;
         for (size_t i = 0; i < procInformation.threadInfos.size(); i++) {
-            allKilled = allKilled && procInformation.threadInfos[i].threadState == ThreadState::Idle;
+            allKilled = allKilled && Contains({ThreadState::Idle, ThreadState::LimitReached},procInformation.threadInfos[i].threadState);
         }
         if (allKilled) {
             controllerLoopThread->join();
         } else {
             if (ExecuteAndWait(SimCommand::Kill, 0, 0,
-                { ControllerState::Exit }, { ThreadState::Idle },
+                { ControllerState::Exit }, { ThreadState::Idle, ThreadState::LimitReached },
                 loadStatus)) {
                 exit(1);
             }
@@ -401,7 +422,7 @@ void SimulationManager::ResetSimulations(LoadStatus_abstract* loadStatus) {
 	if (asyncMode) {
 		procInformation.UpdateControllerStatus({ ControllerState::Resetting }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
 		if (ExecuteAndWait(SimCommand::Reset, 0, 0,
-			{ ControllerState::Ready }, std::nullopt,
+            { ControllerState::Ready }, {},
 			loadStatus)) {
 			throw Error(MakeSubProcError("Subprocesses could not reset"));
 		}
@@ -446,17 +467,19 @@ int SimulationManager::GetProcStatus(size_t *states, std::vector<std::string>& s
  */
 bool SimulationManager::IsRunning(){
 
-    bool done = true;
+    bool allThreadsReachedLimit = true;
+    bool atLeastOneThreadRunning = false;
     for (auto & i : procInformation.threadInfos) {
         auto procState = i.threadState;
-        done = done && (procState==ThreadState::ThreadError || procState==ThreadState::Idle);
+        atLeastOneThreadRunning = atLeastOneThreadRunning || procState == ThreadState::Running;
+        allThreadsReachedLimit = allThreadsReachedLimit && procState == ThreadState::LimitReached;
         if( procState==ThreadState::ThreadError ) {
             hasErrorStatus = true;
         }
     }
 
-    allProcsFinished = done;
-    isRunning = isRunning && !allProcsFinished;
+    allProcsReachedLimit = allThreadsReachedLimit;
+    isRunning = atLeastOneThreadRunning;
 
     return isRunning;
 }
@@ -510,7 +533,7 @@ void SimulationManager::ShareWithSimUnits(void *data, size_t size, LoadType load
         case LoadType::LOADPARAM:{
             procInformation.UpdateControllerStatus({ ControllerState::ParamUpdating }, std::nullopt, loadStatus); //Otherwise Executeandwait would immediately succeed
             if (ExecuteAndWait(SimCommand::UpdateParams, size, 0,
-                { ControllerState::Ready }, { ThreadState::Idle }, //With the current design param change always stops the simulation
+                { ControllerState::Ready }, { ThreadState::Idle, ThreadState::LimitReached }, //With the current design param change always stops the simulation
                 loadStatus)) {
                 std::string errString = "Failed to send params to sub process:\n";
                 errString.append(GetErrorDetails());

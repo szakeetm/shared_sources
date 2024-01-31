@@ -108,6 +108,10 @@ int SimThreadHandle::advanceForTime(double simDuration) {
 }
 */
 
+void SimThreadHandle::MarkIdle(){
+    SetMyState(ThreadState::Idle);
+}
+
 /**
 * \brief Simulation loop for an individual thread
  * \return true when simulation end has been reached via desorption limit, false otherwise
@@ -181,7 +185,12 @@ LoopResult SimThreadHandle::RunLoop() {
             masterProcInfo.threadInfos[threadNum].threadState, masterProcInfo.threadInfos[threadNum].threadStatus, masterProcInfo.procDataMutex, 20000); // Update hit with 20s timeout
     }
     SetMyStatus(ConstructMyThreadStatus());
-    SetMyState(ThreadState::Idle);
+    if (loopResult == LoopResult::DesLimitReached) {
+        SetMyState(ThreadState::LimitReached);
+    }
+    else {
+        SetMyState(ThreadState::Idle);
+    }
     return loopResult;
 }
 
@@ -469,11 +478,15 @@ void SimulationController::ControllerLoop() {
                 exitRequested = true;
                 break;
             }
-            default: {
-                ProcessSleep(WAITTIME);
-                break;
-            }
-        }
+		    case SimCommand::MarkIdle: {
+                MarkThreadsIdle();
+			    break;
+		    }
+		    default: {
+			    ProcessSleep(WAITTIME);
+			    break;
+		    }
+		}
     }
     procInfo.UpdateControllerStatus({ ControllerState::Exit }, { "Exited on request" });
 }
@@ -597,6 +610,7 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
         return false;
 	}
 
+    /*
     if (simulationPtr->model->otfParams.desorptionLimit > 0) {
         if (simulationPtr->totalDesorbed >=
             simulationPtr->model->otfParams.desorptionLimit /
@@ -606,6 +620,7 @@ bool SimulationController::StartAndRun(LoadStatus_abstract* loadStatus) {
             return false;
         }
     }
+    */
 
     procInfo.InitHitUpdateQueue();
 
@@ -663,6 +678,18 @@ void SimulationController::Reset(LoadStatus_abstract* loadStatus) {
 }
 
 void SimulationController::EmergencyExit(){
-    for(auto& thread : simThreadHandles)
+    for (auto& thread : simThreadHandles) {
         thread.particleTracerPtr->exitRequested = true;
+    }
 };
+
+void SimulationController::MarkThreadsIdle(LoadStatus_abstract* loadStatus) {
+    procInfo.UpdateControllerStatus({ ControllerState::Initializing }, { "Marking threads idle..." }, loadStatus);
+    
+    for (auto& thread : simThreadHandles) {
+        thread.MarkIdle();
+    }
+
+    procInfo.UpdateControllerStatus({ ControllerState::Ready }, { "" }, loadStatus);
+    ClearCommand();
+}

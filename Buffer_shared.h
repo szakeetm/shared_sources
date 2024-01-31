@@ -103,16 +103,16 @@ public:
 	}
 	size_t GetBouncesDataSize() const {
 		if (!recordBounce) return 0;
-		else return sizeof(size_t) * GetBounceHistogramSize();
+		else return sizeof(double) * GetBounceHistogramSize();
 	}
 	size_t GetDistanceDataSize() const {
 		if (!recordDistance) return 0;
-		else return sizeof(size_t) * GetDistanceHistogramSize();
+		else return sizeof(double) * GetDistanceHistogramSize();
 	}
 #if defined(MOLFLOW)
 	size_t GetTimeDataSize() const {
 		if (!recordTime) return 0;
-		else return sizeof(size_t) * GetTimeHistogramSize();
+		else return sizeof(double) * GetTimeHistogramSize();
 	}
 #endif
 };
