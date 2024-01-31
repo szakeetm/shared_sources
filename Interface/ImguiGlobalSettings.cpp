@@ -53,22 +53,25 @@ void ImGlobalSettings::ProcessControlTable() {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        ProcComm procInfo;
-        mApp->worker.GetProcStatus(procInfo);
+        int time = SDL_GetTicks();
+        if (time - lastUpdate >= 500) {
+            mApp->worker.GetProcStatus(procInfo);
 
-        ImGui::TableNextRow();
 
-        double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
-        //Interface
+            byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+            //Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
-        double memDenominator_sys = (1024.0 * 1024.0);
+            currPid = GetCurrentProcessId();
+            memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
-        double memDenominator_sys = (1024.0);
+            size_t currPid = getpid();
+            memDenominator_sys = (1024.0);
 #endif
-        PROCESS_INFO parentInfo{};
-        GetProcInfo(currPid, &parentInfo);
+            PROCESS_INFO parentInfo{};
+            GetProcInfo(currPid, &parentInfo);
+            lastUpdate = SDL_GetTicks();
+        }
+        ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("Interface");
         ImGui::TableSetColumnIndex(1);
