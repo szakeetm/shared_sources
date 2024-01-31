@@ -173,9 +173,13 @@ void ImGlobalSettings::Draw() {
         appSettingsChanged |= ImGui::Checkbox(
             "White Background",
             &mApp->whiteBg); // Edit bools storing our window open/close state
-        appSettingsChanged |= ImGui::Checkbox("Left-handed coord. system",
-            &mApp->leftHandedView); // Edit bools storing our
-        // window open/close state
+        if (ImGui::Checkbox("Left-handed coord. system", &mApp->leftHandedView)) {
+            appSettingsChanged |= true;
+            for (auto& i : mApp->viewers) {
+                i->UpdateMatrix();
+                i->UpdateLabelColors();
+            }
+        }
         ImGui::Checkbox(
             "Highlight non-planar facets",
             &mApp->highlightNonplanarFacets); // Edit bools storing our window
