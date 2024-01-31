@@ -6,8 +6,8 @@ public:
 	void Draw();
 	void Init(Interface* mApp_);
 	void Load();
-protected:
 	void UpdateSize();
+protected:
 	void Update();
 
 	void SetCurrentButtonPress();
