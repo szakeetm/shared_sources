@@ -202,7 +202,6 @@ void ImguiWindow::init() {
     RegisterShortcuts();
 
     start_time = ImGui::GetTime();
-    didIinit = true;
     renderSingle();
 }
 
