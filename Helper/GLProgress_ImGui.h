@@ -7,6 +7,7 @@ public:
 	void Draw();
 	void Hide();
 	void SetProgress(const double prg);
+	void SetMessage(const std::string& msg, const bool newLine=false, const bool forceDraw=false);
 	void SetTitle(std::string title);
 	void SetVisible(bool value); // needs to be overriden since both parent classes have such function
 protected:

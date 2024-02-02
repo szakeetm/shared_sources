@@ -192,7 +192,7 @@ void ImguiWindow::init() {
     popup = ImIOWrappers::ImPopup();
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
-    progress.Hide();
+    progress.Init(mApp);
     smartSelect = ImSmartSelection();
     smartSelect.Init(mApp);
     selByNum = ImSelectDialog();

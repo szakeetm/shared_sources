@@ -1,5 +1,16 @@
 #include "GLProgress_ImGui.h"
 #include "../imgui/imgui.h"
+#include "ImguiWindow.h"
+
+#if defined(MOLFLOW)
+#include "../../src/MolFlow.h"
+extern MolFlow* mApp;
+#endif
+extern char fileSaveFilters[];
+#if defined(SYNRAD)
+extern SynRad* mApp;
+#include "../src/SynRad.h"
+#endif
 
 void ImProgress::Draw() {
 	if (!drawn) return;
@@ -21,14 +32,34 @@ void ImProgress::Hide()
 
 void ImProgress::SetProgress(const double prg) {
 	int newPrg = static_cast<int>(prg * 100.0);
-	progress = newPrg;
+	if (progress != newPrg) {
+		progress = newPrg;
+		mApp->imWnd->renderSingle();
+	}
+}
+
+void ImProgress::SetMessage(const std::string& msg, const bool newLine, const bool forceDraw) {
+	std::string newStatus;
+	if (newLine) {
+		newStatus = status + "\n" + msg;
+	}
+	else {
+		newStatus = msg;
+	}
+
+	if (forceDraw || newStatus!=status) {
+		status = newStatus;
+		mApp->imWnd->renderSingle();
+	}
 }
 
 void ImProgress::SetTitle(std::string title)
 {
 	this->title = title;
+	mApp->imWnd->renderSingle();
 }
 
 void ImProgress::SetVisible(bool value) {
 	drawn = value;
+	mApp->imWnd->renderSingle();
 }
