@@ -141,19 +141,26 @@ void ImguiWindow::init() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
-    // io.Fonts->AddFontDefault();
+    int oversample = 1;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
-    ImFontConfig sym_config;
-    sym_config.MergeMode = true;
-    sym_config.PixelSnapH = true;
-    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &sym_config, sym_ranges); // vector arrow
+    ImFontConfig fontConfig;
+    fontConfig.MergeMode = true;
+    fontConfig.PixelSnapH = true;
+    fontConfig.OversampleH = oversample;
+    fontConfig.OversampleV = oversample;
+    //fontConfig.RasterizerMultiply = 0;
+    //io.Fonts->AddFontDefault(&fontConfig);
+    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
     ImFontConfig icons_config;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
