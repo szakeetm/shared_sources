@@ -142,13 +142,14 @@ void ImguiWindow::init() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
+    int oversample = 1;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
     ImFontConfig fontConfig;
     fontConfig.MergeMode = true;
     fontConfig.PixelSnapH = true;
-    fontConfig.OversampleH = 0;
-    fontConfig.OversampleV = 0;
-    fontConfig.RasterizerMultiply = 0;
+    fontConfig.OversampleH = oversample;
+    fontConfig.OversampleV = oversample;
+    //fontConfig.RasterizerMultiply = 0;
     //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
@@ -158,6 +159,9 @@ void ImguiWindow::init() {
     ImFontConfig icons_config;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
