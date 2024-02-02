@@ -253,13 +253,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					if (found_local) {
 						
 						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
 								double maxAngleDiff;
-								if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+								if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 								} else 
 									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
@@ -356,12 +356,12 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
 		double maxAngleDiff;
-		if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+		if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 			maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 		}
 		else
@@ -818,7 +818,7 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	GLCOLOR currentColor;
 
 	for (const auto sel : selectedFacets) {
-		if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+		if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
@@ -1566,7 +1566,7 @@ void InterfaceGeometry::BuildSelectList() {
 #pragma omp for
 		for (int i = 0; i < selectedFacets.size(); ++i) {
 			const auto& f = facets[selectedFacets[i]];
-			if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+			if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
 				auto it = colorHighlighting.find(i);
 				// Check if element exists in map or not
 				if (it != colorHighlighting.end()) {
@@ -1611,7 +1611,7 @@ void InterfaceGeometry::BuildSelectList() {
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last
-	if (!colorHighlighting.empty() && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) {
+	if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
 		for (auto& sel : selectedFacets) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
