@@ -214,7 +214,11 @@ void ImConvergencePlotter::Draw()
 	ImGui::BeginChild("Sidebar", ImVec2(txtW*20, ImGui::GetContentRegionAvail().y), true);
 	if(ImGui::TriState("All", &aggregateState, mixedState)) {
 		ApplyAggregateState();
-	}
+	} ImGui::SameLine();
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * 3;
+	ImGui::Dummy(ImVec2(dummyWidth,0));
+	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 	ImGui::Separator();
 	for (int i = 0; i < nFormulas; i++) {
 		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
@@ -226,61 +230,7 @@ void ImConvergencePlotter::Draw()
 	}
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginGroup();
 	DrawConvergenceGraph();
-	ImGui::SetNextItemWidth(txtW*30);
-	
-
-	if (nFormulas == 0) ImGui::BeginDisabled();
-	if (ImGui::BeginCombo("##Formula Picker",
-			nFormulas==0 ? "No formula found" :
-		selectedFormula==-1 || selectedFormula>=nFormulas ? "Choose Formula" :
-		("[" + mApp->appFormulas->formulas[selectedFormula].GetName() + "]" + mApp->appFormulas->formulas[selectedFormula].GetExpression()).c_str())) {
-		for (int i = 0; i < nFormulas; i++) {
-			if (ImGui::Selectable(("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression()).c_str(),
-				i == selectedFormula)) {
-				selectedFormula = i;
-			}
-		}
-		ImGui::EndCombo();
-	}
-	if (nFormulas == 0) ImGui::EndDisabled();
-	
-	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (33.5+3);
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
-
-	if (ImGui::Button("Add curve")) {
-		if (IsPlotted(selectedFormula)) {
-			ImIOWrappers::InfoPopup("Info", "Profile already plotted");
-		}
-		else if (selectedFormula != -1) {
-			if (mApp->appFormulas->formulas[selectedFormula].hasEvalError) {
-				ImIOWrappers::InfoPopup("Error", fmt::format("Formula can't be evaluated:\n{}", mApp->appFormulas->formulas[selectedFormula].GetEvalErrorMsg()));
-			}
-			else data.push_back(ImUtils::MakePlotData(selectedFormula));
-		}
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove curve")) {
-		if (IsPlotted(selectedFormula)) {
-			for (int i=0;i<data.size();i++) if (data[i].id==selectedFormula)
-			{
-				data.erase(data.begin() + i);
-				break;
-			}
-		}
-		else ImIOWrappers::InfoPopup("Error", "Profile not plotted");
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove all")) 
-	{
-		data.clear();
-		drawManual = false;
-		manualxValues.clear();
-		manualyValues.clear();
-	}
-	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
-	ImGui::EndGroup();
 	ImGui::End();
 }
 
@@ -290,7 +240,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextAxesLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() <= data[i].id) break;
