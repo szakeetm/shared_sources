@@ -288,7 +288,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
-			if (mApp->appFormulas->convergenceData.size() < i) break;
+			if (mApp->appFormulas->convergenceData.size() <= i) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();
 			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();

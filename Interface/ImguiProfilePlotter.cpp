@@ -226,7 +226,7 @@ void ImProfilePlotter::RemoveCurve(int id)
 void ImProfilePlotter::ComputeProfiles()
 {
 	{
-		//LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->imguiRenderLock) LockWrapper lW(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) return;
 	}
 	
