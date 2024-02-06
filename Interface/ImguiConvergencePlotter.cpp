@@ -166,6 +166,14 @@ void ImConvergencePlotter::Reload()
 {
 	data.clear();
 	selectedFormula = -1;
+	UpdateSidebarMasterToggle();
+}
+
+void ImConvergencePlotter::Refresh()
+{
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
+	UpdateSidebarMasterToggle();
 }
 
 void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -173,7 +181,7 @@ void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plott
 	data.clear();
 	logY = log;
 	for (int id : plotted) {
-		id += 494667622;
+		id += 494667622; // offset from unsigned to signed
 		if (IsPlotted(id)) continue;
 		if (id >= 0 && id < mApp->appFormulas->formulas.size()) {
 			if (mApp->appFormulas->formulas[id].hasEvalError) continue;
@@ -182,6 +190,7 @@ void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plott
 			}
 		}
 	}
+	UpdateSidebarMasterToggle();
 }
 
 //pass the first ID value which should be changed
@@ -201,22 +210,18 @@ void ImConvergencePlotter::Draw()
 	ImGui::Begin("Convergence Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	
 	MenuBar();
-	int nFormulas = mApp->appFormulas->formulas.size();
-	formulaDrawToggle.resize(nFormulas, false);
 
 	ImGui::BeginChild("Sidebar", ImVec2(txtW*20, ImGui::GetContentRegionAvail().y), true);
-	static short aggregateState = 0;
-	static bool mixedState = false;
-	//if(ImGui::TriState("All", &aggregateState, mixedState)) {}
+	if(ImGui::TriState("All", &aggregateState, mixedState)) {
+		ApplyAggregateState();
+	}
+	ImGui::Separator();
 	for (int i = 0; i < nFormulas; i++) {
 		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
 		if (ImGui::Checkbox(fName.c_str(), (bool*)&(formulaDrawToggle[i]))) {
 			if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
 			else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
-			if (formulaDrawToggle[i] != aggregateState) {
-				aggregateState = 2;
-				mixedState = true;
-			}
+			UpdateSidebarMasterToggle();
 		}
 	}
 	ImGui::EndChild();
@@ -288,7 +293,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
-			if (mApp->appFormulas->convergenceData.size() <= i) break;
+			if (mApp->appFormulas->convergenceData.size() <= data[i].id) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();
 			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();
@@ -330,4 +335,34 @@ bool ImConvergencePlotter::IsPlotted(size_t idx)
 		if (idx == formula.id) return true;
 	}
 	return false;
+}
+
+void ImConvergencePlotter::UpdateSidebarMasterToggle()
+{
+	mixedState = false;
+	if (nFormulas == 0) {
+		aggregateState = 0;
+		return;
+	}
+	formulaDrawToggle.resize(nFormulas, false);
+	aggregateState = formulaDrawToggle[0];
+	for (int i = 1; i < nFormulas; i++) {
+		if (aggregateState != formulaDrawToggle[i]) {
+			aggregateState = 2;
+			mixedState = true;
+			return;
+		}
+	}
+}
+
+void ImConvergencePlotter::ApplyAggregateState()
+{
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
+	mixedState = false;
+	for (int i = 0; i < nFormulas; i++) {
+		formulaDrawToggle[i] = aggregateState;
+		if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
+		else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+	}
 }

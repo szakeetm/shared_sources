@@ -146,6 +146,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			newExpression = "";
 			// remove when ImGui becomes main UI
 			UpdateLegacyGUI();
+			mApp->imWnd->convPlot.Refresh();
 		}
 
 
@@ -172,6 +173,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			selRow = -1;
 
 			UpdateLegacyGUI();
+			mApp->imWnd->convPlot.Refresh();
 		}
 
 		ImGui::EndTable();
