@@ -197,15 +197,34 @@ void ImConvergencePlotter::Draw()
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(30*txtW, 40*txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 90, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Convergence Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	
 	MenuBar();
-	DrawConvergenceGraph();
+	int nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
 
+	ImGui::BeginChild("Sidebar", ImVec2(txtW*20, ImGui::GetContentRegionAvail().y), true);
+	static short aggregateState = 0;
+	static bool mixedState = false;
+	//if(ImGui::TriState("All", &aggregateState, mixedState)) {}
+	for (int i = 0; i < nFormulas; i++) {
+		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
+		if (ImGui::Checkbox(fName.c_str(), (bool*)&(formulaDrawToggle[i]))) {
+			if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
+			else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+			if (formulaDrawToggle[i] != aggregateState) {
+				aggregateState = 2;
+				mixedState = true;
+			}
+		}
+	}
+	ImGui::EndChild();
+	ImGui::SameLine();
+	ImGui::BeginGroup();
+	DrawConvergenceGraph();
 	ImGui::SetNextItemWidth(txtW*30);
 	
-	int nFormulas = mApp->appFormulas->formulas.size();
 
 	if (nFormulas == 0) ImGui::BeginDisabled();
 	if (ImGui::BeginCombo("##Formula Picker",
@@ -256,7 +275,7 @@ void ImConvergencePlotter::Draw()
 	}
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
-
+	ImGui::EndGroup();
 	ImGui::End();
 }
 
