@@ -21,22 +21,6 @@ void ImTexturePlotter::Draw()
 	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
 	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
 	
-	std::vector<size_t> facets = interfGeom->GetSelectedFacets();
-	if (facets.size() > 0) {
-		if (facets[0] != selFacetId) {
-			selFacetId = facets[0];
-			name = "Texture Plotter [Facet #" + std::to_string(facets[0] + 1) + "]###TexturePlotter";
-			selFacet = interfGeom->GetFacet(selFacetId);
-			GetData();
-		}
-	} else {
-		selFacet = nullptr;
-		selFacetId = -1;
-		width = 0;
-		height = 0;
-		name = "Texture Plotter []###TexturePlotter";
-		selection.clear();
-	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
@@ -74,9 +58,33 @@ void ImTexturePlotter::Init(Interface* mApp_)
 	interfGeom = mApp->worker.GetGeometry();
 }
 
+void ImTexturePlotter::UpdateOnFacetChange(std::vector<size_t>& selectedFacets)
+{
+	if (selectedFacets.size() > 0) {
+		if (selectedFacets[0] != selFacetId) {
+			selFacetId = selectedFacets[0];
+			name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
+			selFacet = interfGeom->GetFacet(selFacetId);
+		}
+		if (selectedFacets.size() == 1) GetData();
+	}
+	else {
+		selFacet = nullptr;
+		selFacetId = -1;
+		width = 0;
+		height = 0;
+		name = "Texture Plotter []###TexturePlotter";
+		selection.clear();
+	}
+}
+
+void ImTexturePlotter::UpdatePlotter()
+{
+	GetData();
+}
+
 void ImTexturePlotter::DrawTextureTable()
 {
-	if( selFacet!=nullptr) GetData();
 	if (width < 1 || height < 1) return;
 
 	static ImVec2 selectionStart;
@@ -123,48 +131,52 @@ void ImTexturePlotter::DrawTextureTable()
 			ImGui::PopID();
 		}
 		hovered = false;
-		for (int i = 0; i < height; i++) {
-			ImGui::TableNextRow();
-			ImGui::TableSetColumnIndex(0); // move to first column
-			if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
-				SelectRow(i);
-			}
-			for (int j = 0; j <= width; j++) {
-				if (j != width) {
-					ImGui::TableSetColumnIndex(j+1);
+		ImGuiListClipper clipper = ImGuiListClipper();
+		clipper.Begin(height);
+		while (clipper.Step()) {
+			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
+				ImGui::TableNextRow();
+				ImGui::TableSetColumnIndex(0); // move to first column
+				if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
+					SelectRow(i);
 				}
-				bool isSelected = IsCellSelected(i,j);
-				if (scrollToSelected && isSelected) { // works but not well because ImGui is not redrawn all the time
-					ImGui::SetScrollHereX(0.5f);
-					ImGui::SetScrollHereY(0.5f);
-				}
-				if (isDragging) {
-					ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
-					if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
-						if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
-							selection.push_back(std::pair<int, int>(i, j - 1));
+				for (int j = 0; j <= width; j++) {
+					if (j != width) {
+						ImGui::TableSetColumnIndex(j+1);
+					}
+					bool isSelected = IsCellSelected(i,j);
+					if (scrollToSelected && selection.size()==0 && isSelected && !ImGui::IsKeyDown(SDL_SCANCODE_LSHIFT)) { // works but not well because ImGui is not redrawn all the time
+						ImGui::SetScrollHereX(0.5f);
+						ImGui::SetScrollHereY(0.5f);
+					}
+					if (isDragging) {
+						ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+						if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
+							if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
+								selection.push_back(std::pair<int, int>(i, j - 1));
+							}
+						}
+						else if (Contains(selection, std::pair<int, int>(i, j - 1))) {
+							selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int, int>(i, j-1)), selection.end());
 						}
 					}
-					else if (Contains(selection, std::pair<int, int>(i, j - 1))) {
-						selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int, int>(i, j-1)), selection.end());
-					}
-				}
-				if (ImGui::IsItemHovered()) hovered = true;
-				if (j == width) continue;
-				if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
-					if (isDragging) continue;
-					if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
-						BoxSelect(selection[0], std::pair<int, int>(i, j));
-						continue;
-					}
+					if (ImGui::IsItemHovered()) hovered = true;
+					if (j == width) continue;
+					if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
+						if (isDragging) continue;
+						if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
+							BoxSelect(selection[0], std::pair<int, int>(i, j));
+							continue;
+						}
 
-					selection.clear();
+						selection.clear();
 
-					if (isSelected) { // deselect if was selected
-						selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int,int>(i,j)), selection.end());
-						continue;
+						if (isSelected) { // deselect if was selected
+							selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int,int>(i,j)), selection.end());
+							continue;
+						}
+						selection.push_back(std::pair<int, int>(i, j)); // regular select
 					}
-					selection.push_back(std::pair<int, int>(i, j)); // regular select
 				}
 			}
 		}
@@ -201,8 +213,9 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
+	if (selFacet == nullptr) return;
 	{
-		LockWrapper lWrap(mApp->imguiRenderLock);
+		//LockWrapper lWrap(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) return;
 	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
@@ -482,7 +495,7 @@ bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
 	for (const auto& pair : selection) {
 		if (pair.first == row && pair.second == col) return true;
 	}
-	return out;;
+	return out;
 }
 
 void ImTexturePlotter::SelectRow(size_t row)

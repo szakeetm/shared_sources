@@ -1,6 +1,7 @@
 #pragma once
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
+#include "Buffer_shared.h"
 
 #ifdef MOLFLOW
 #define IM_HISTOGRAM_TABS 3
@@ -22,6 +23,8 @@ public:
 	bool IsPlotted(plotTabs tab, size_t facetId);
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
+	void UpdateOnFacetChange();
+
 protected:
 	//functions
 	void DrawPlot();
@@ -30,44 +33,73 @@ protected:
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
+	
 
 	//types
 	class ImHistogramSettings : public ImWindow {
 	public:
 		void Draw();
 		float width;
+		void UpdateOnFacetChange();
 		ImHistogramPlotter* parent;
-		typedef struct {
-			bool amIDisabled = true;
-			short recBounce = false;
-			std::string maxRecNbBouncesInput = "10000";
-			long nbBouncesMax = 10000;
-			std::string bouncesBinSizeInput = "1";
-			short bouncesBinSize = 1;
-			short recFlightDist = false;
-			std::string maxFlightDistInput = "10";
-			double maxFlightDist = 10;
-			std::string distBinSizeInput = "0.001";
-			double distBinSize = 0.001f;
-
-#ifdef MOLFLOW
-			short recTime = false;
-			std::string maxFlightTimeInput = "0.1";
-			double maxFlightTime = 0.1f;
-			std::string timeBinSizeInput = "1e-5";
-			double timeBinSize = 0.00001f;
-#endif
-			bool showMemEst = false;
-			double memEst = 0;
-		} histSet;
-		histSet globalHistSet, facetHistSet;
 		bool Apply();
-		void DrawSettingsGroup(histSet& set, bool tristate=false);
+		void DrawSettingsGroup(HistogramParams& set, bool global = false, bool disabled = false);
+		void EvaluateMixedState();
+		void CalculateMemoryEstimate_Current();
+		void CalculateMemoryEstimate_New(bool global);
+
+		HistogramParams globalHistSet, facetHistSet;
+
+		short globalRecordBounce = 0;
+		std::string globalBouncesMaxInput = "10000";
+		std::string globalBouncesBinSizeInput = "1";
+
+		short globalRecordDistance = 0;
+		std::string globalDistanceMaxInput = "10.0";
+		std::string globalDistanceBinSizeInput = "0.001";
+
+#if defined(MOLFLOW)
+		short globalRecordTime = 0;
+		std::string globalTimeMaxInput = "10.0";
+		std::string globalTimeBinSizeInput = "0.001";
+#endif
+		short facetRecordBounce = 0;
+		std::string facetBouncesMaxInput = "10000";
+		std::string facetBouncesBinSizeInput = "1";
+
+		short facetRecordDistance = 0;
+		std::string facetDistanceMaxInput = "10.0";
+		std::string facetDistanceBinSizeInput = "0.001";
+
+#if defined(MOLFLOW)
+		short facetRecordTime = 0;
+		std::string facetTimeMaxInput = "10.0";
+		std::string facetTimeBinSizeInput = "0.001";
+#endif
+		struct HistogramGUISettings {
+
+			//Extra flags to handle mixed state
+			bool facetRecBounceMixed = false;
+			bool facetHitLimitMixed = false;
+			bool facetHitBinsizeMixed = false;
+
+			bool facetRecDistanceMixed = false;
+			bool facetDistanceLimitMixed = false;
+			bool facetDistanceBinsizeMixed = false;
+
+#if defined(MOLFLOW)
+			bool facetRecTimeMixed = false;
+			bool facetTimeLimitMixed = false;
+			bool facetTimeBinsizeMixed = false;
+
+			size_t memCurrentGlobal = 0, memCurrentFacet = 0;
+			std::string memNewGlobal = "0 bytes", memNewFacet = "0 bytes";
+#endif
+		} states;
 	};
 
 	//variables
 	InterfaceGeometry* interfGeom;
-	ImHistogramSettings settingsWindow;
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
@@ -79,4 +111,5 @@ protected:
 	bool limitPoints = true;
 	bool showValueOnHover = true;
 	bool overrange = true;
+	ImHistogramSettings settingsWindow;
 };

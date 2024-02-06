@@ -49,7 +49,6 @@ static const int   plAligns[] = { ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,ALIGN_LEFT,AL
 
 GlobalSettingsBase::GlobalSettingsBase(Worker *w) : GLWindow(){
     worker = w;
-    lastUpdate = 0;
 }
 
 void GlobalSettingsBase::Display(Worker *w) {
@@ -61,55 +60,55 @@ void GlobalSettingsBase::Display(Worker *w) {
 /**
 * \brief Function to update the thread information table in the global settings window.
 */
-void GlobalSettingsBase::SMPUpdate() {
+void GlobalSettingsBase::UpdateProcessList() {
+	{ //Frame limiter. Doing it here so "lastUpdate" is own member
+		if (!IsVisible() || IsIconic()) return;
+		int time = SDL_GetTicks();
+		if (time - lastUpdate < 500) return;
+	}
 
-    int time = SDL_GetTicks();
+	size_t nb = worker->GetProcNumber();
+	if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2, true);
 
-    if (!IsVisible() || IsIconic()) return;
-    size_t nb = worker->GetProcNumber();
-    if (processList->GetNbRow() != (nb + 2)) processList->SetSize(5, nb + 2,true);
+	ProcComm procInfo;
+	worker->GetProcStatus(procInfo);
 
-    if( time-lastUpdate>333 ) {
-
-        ProcComm procInfo;
-        worker->GetProcStatus(procInfo);
-
-        processList->ClearValues();
-        const double byte_to_mbyte = 1.0/(1024.0*1024.0);
-        //Interface
+	//processList->ClearValues(); //Will be overwritten
+	const double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+	//Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
-        const double memDenominator_sys = (1024.0 * 1024.0);
+	size_t currPid = GetCurrentProcessId();
+	const double memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
-        const double memDenominator_sys = (1024.0);
+	size_t currPid = getpid();
+	const double memDenominator_sys = (1024.0);
 #endif
-        PROCESS_INFO parentInfo{};
-        GetProcInfo(currPid, &parentInfo);
+	PROCESS_INFO parentInfo{};
+	GetProcInfo(currPid, &parentInfo);
 
-        processList->SetValueAt(0, 0, "Interface");
-        processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
-        processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator_sys));
-        processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator_sys));
-        processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
+	processList->SetValueAt(0, 0, "Interface");
+	processList->SetValueAt(1, 0, fmt::format("{}", currPid), currPid);
+	processList->SetValueAt(2, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_use / memDenominator_sys));
+	processList->SetValueAt(3, 0, fmt::format("{:.0f} MB", (double)parentInfo.mem_peak / memDenominator_sys));
+	processList->SetValueAt(4, 0, fmt::format("[Geom: {}]", worker->model->sh.name));
 
-        processList->SetValueAt(0, 1, "SimManager");
-        processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
-        processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
+	processList->SetValueAt(0, 1, "SimManager");
+	processList->SetValueAt(2, 1, fmt::format("{:.0f} MB", (double)worker->model->memSizeCache * byte_to_mbyte));
+	processList->SetValueAt(4, 1, worker->GetSimManagerStatus());
 
-        size_t i = 2;
-        for (auto& proc : procInfo.threadInfos)
-        {
-            processList->SetValueAt(0, i, fmt::format("Thread {}", i-1));
-            processList->SetValueAt(1, i, fmt::format("")); //placeholder for thread id
-            processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)proc.runtimeInfo.counterSize * byte_to_mbyte));
-            processList->SetValueAt(3, i, ""); //mem peak placeholder
-            processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[proc.threadState], proc.threadStatus));
-            ++i;
-        }
-        lastUpdate = SDL_GetTicks();
-    }
+	size_t i = 2;
+	for (auto& proc : procInfo.threadInfos)
+	{
+		processList->SetValueAt(0, i, fmt::format("Thread {}", i - 1));
+		processList->SetValueAt(1, i, fmt::format("")); //placeholder for thread id
+		processList->SetValueAt(2, i, fmt::format("{:.0f} MB", (double)proc.runtimeInfo.counterSize * byte_to_mbyte));
+		processList->SetValueAt(3, i, ""); //mem peak placeholder
+		processList->SetValueAt(4, i, fmt::format("[{}] {}", threadStateStrings[proc.threadState], proc.threadStatus));
+		++i;
+	}
+	lastUpdate = SDL_GetTicks();
 }
+
 
 /**
 * \brief Function to apply changes to the number of processes.
@@ -149,20 +148,28 @@ void GlobalSettingsBase::ProcessMessage_shared(GLComponent *src, int message) {
             if (src==restartButton) {
                 RestartProc();
             }
-            else if (src==maxButton) {
+            else if (src==desLimitButton) {
                 if( worker->GetGeometry()->IsLoaded() ) {
                     char tmp[128];
-                    sprintf(tmp,"%zd",worker->model->otfParams.desorptionLimit);
-                    char *val = GLInputBox::GetInput(tmp,"Desorption max (0=>endless)","Edit MAX");
+                    sprintf(tmp,"%g",(double)worker->model->otfParams.desorptionLimit);
+                    char *val = GLInputBox::GetInput(tmp,"Desorption limit (0 = infinite)","Edit desorption limit");
                     if (val) {
                         char* endptr;
-                        size_t maxDes = strtold(val,&endptr); // use double function to allow exponential format
+                        long double maxDes_double = strtod(val,&endptr); // use double function to allow exponential format
+                        constexpr long double max_sizet_double = static_cast<long double>(std::numeric_limits<size_t>::max());
                         if (val==endptr) {
-                            GLMessageBox::Display("Invalid 'maximum desorption' number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                            GLMessageBox::Display("Invalid desorption limit", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        }
+                        else if (maxDes_double < 0.0) {
+                            GLMessageBox::Display("Des. limit must be non-negative", "Error", GLDLG_OK, GLDLG_ICONERROR);
+                        }
+                        else if (maxDes_double > max_sizet_double) {
+                            GLMessageBox::Display(fmt::format("Des. limit must be smaller than {:.6g}", max_sizet_double).c_str(), "Error", GLDLG_OK, GLDLG_ICONERROR);
                         }
                         else {
-                            worker->model->otfParams.desorptionLimit = maxDes;
+                            worker->model->otfParams.desorptionLimit = static_cast<size_t>(maxDes_double);
                             worker->ChangeSimuParams(); //Sync with subprocesses
+                            UpdateDesLimitButtonText();
                         }
                     }
                 } else {
@@ -262,4 +269,18 @@ void GlobalSettingsBase::Update_shared() {
     }
     chkCompressSavedFiles->SetState(mApp->compressSavedFiles);
     nbProcText->SetText(fmt::format("{}", worker->GetProcNumber()));
+
+    UpdateDesLimitButtonText();
+}
+
+void GlobalSettingsBase::UpdateDesLimitButtonText(){
+    std::ostringstream desLimitLabel;
+    desLimitLabel << "Desorption limit: ";
+    if (worker->model->otfParams.desorptionLimit == 0) {
+        desLimitLabel << "infinite";
+    }
+    else {
+        desLimitLabel << (double)worker->model->otfParams.desorptionLimit; //Large numbers as floating point
+    }
+    desLimitButton->SetText(desLimitLabel.str().c_str());
 }

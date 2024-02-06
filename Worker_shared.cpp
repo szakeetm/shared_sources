@@ -148,7 +148,7 @@ void Worker::ExportTextures(const char* fileName, int grouping, int mode, bool a
 
 void Worker::Stop_Public() {
 	// Stop
-	InnerStop(mApp->m_fTime);
+	InnerStop();
 	try {
 		Stop();
 		Update(mApp->m_fTime);
@@ -226,7 +226,7 @@ std::string Worker::GetErrorDetails() {
 	return simManager.GetErrorDetails();
 }
 
-void Worker::InnerStop(float appTime) {
+void Worker::InnerStop() {
 	simuTimer.Stop();
 }
 
@@ -234,7 +234,7 @@ void Worker::StartStop(float appTime) {
 	if (IsRunning()) {
 
 		// Stop
-		InnerStop(appTime);
+		InnerStop();
 		try {
 			Stop();
 			Update(appTime);
@@ -260,7 +260,8 @@ void Worker::StartStop(float appTime) {
 		}
 
 		// Particular case when simulation ends before getting RUN state
-		if (simManager.allProcsFinished) {
+		//simManager.UpdateLimitReachedAndErrorStates();
+		if (simManager.allProcsReachedLimit) {
 			Update(appTime);
 			GLMessageBox::Display("Max desorption reached", "Information (Start)", GLDLG_OK, GLDLG_ICONINFO);
 		}
@@ -507,9 +508,10 @@ size_t Worker::GetProcNumber() const {
 bool Worker::IsRunning() {
 	// In case a simulation ended prematurely escaping the check routines in FrameMove (only executed after at least one second)
 	bool state = simManager.IsRunning();
+	/*
 	if (!state && simuTimer.isActive) {
 		simuTimer.Stop();
-	}
+	}*/
 	return state;
 }
 
@@ -522,8 +524,12 @@ void Worker::Update(float appTime) {
 	if (!ReloadIfNeeded()) return;
 
 	// End of simulation reached (Stop GUI)
-	if ((simManager.allProcsFinished || simManager.hasErrorStatus) && (IsRunning() || (!IsRunning() && simuTimer.isActive)) && (appTime != 0.0f)) {
-		InnerStop(appTime);
+	bool runningNow = IsRunning();
+	bool justStopped = !runningNow && simuTimer.isActive;
+	if (justStopped) InnerStop();
+	//simManager.UpdateLimitReachedAndErrorStates();
+	bool stoppedBySimManager = (simManager.allProcsReachedLimit || simManager.hasErrorStatus && ( runningNow || justStopped) && (appTime != 0.0f)); //Not by user through Pause click
+	if (stoppedBySimManager) {
 		if (simManager.hasErrorStatus) ThrowSubProcError();
 	}
 

@@ -1784,8 +1784,8 @@ std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P
 	}
 
 	if (nbSelFacet == 0) return undoPoints;
-	if (!project) SwapNormal();
 	InitializeGeometry();
+	if (!project) SwapNormal();
     
 	//update textures
 	/*try {

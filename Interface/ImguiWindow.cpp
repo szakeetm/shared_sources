@@ -72,7 +72,7 @@ void ImguiWindow::ShowWindowLicense() {
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
         aboutText << R"(
 Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
-Copyright:   CERN / E.S.R.F.   (2023)
+Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
@@ -142,13 +142,14 @@ void ImguiWindow::init() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
+    int oversample = 1;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
     ImFontConfig fontConfig;
     fontConfig.MergeMode = true;
     fontConfig.PixelSnapH = true;
-    fontConfig.OversampleH = 0;
-    fontConfig.OversampleV = 0;
-    fontConfig.RasterizerMultiply = 0;
+    fontConfig.OversampleH = oversample;
+    fontConfig.OversampleV = oversample;
+    //fontConfig.RasterizerMultiply = 0;
     //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
@@ -158,6 +159,9 @@ void ImguiWindow::init() {
     ImFontConfig icons_config;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
@@ -189,7 +193,7 @@ void ImguiWindow::init() {
     popup = ImIOWrappers::ImPopup();
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
-    progress.Hide();
+    progress.Init(mApp);
     sideBar = ImGuiSidebar();
     shortcutMan = ShortcutManager();
     // selection
@@ -242,6 +246,7 @@ void ImguiWindow::init() {
 
     start_time = ImGui::GetTime();
     didIinit = true;
+    renderSingle();
 }
 
 // Gracefully clears and shutsdown Dear ImGui context

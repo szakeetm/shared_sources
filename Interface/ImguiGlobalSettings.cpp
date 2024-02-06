@@ -23,6 +23,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
 #include <sstream>
+#include "Helper/StringHelper.h"
+#include "ImguiWindow.h"
+#include "ImguiPopup.h"
 
 #include "Interface/AppUpdater.h"
 #include "../../src/Interface/GlobalSettings.h"
@@ -53,22 +56,25 @@ void ImGlobalSettings::ProcessControlTable() {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        ProcComm procInfo;
-        mApp->worker.GetProcStatus(procInfo);
+        int time = SDL_GetTicks();
+        if (time - lastUpdate >= 500) {
+            mApp->worker.GetProcStatus(procInfo);
 
-        ImGui::TableNextRow();
 
-        double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
-        //Interface
+            byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+            //Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
-        double memDenominator_sys = (1024.0 * 1024.0);
+            currPid = GetCurrentProcessId();
+            memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
-        double memDenominator_sys = (1024.0);
+            size_t currPid = getpid();
+            memDenominator_sys = (1024.0);
 #endif
-        PROCESS_INFO parentInfo{};
-        GetProcInfo(currPid, &parentInfo);
+            PROCESS_INFO parentInfo{};
+            GetProcInfo(currPid, &parentInfo);
+            lastUpdate = SDL_GetTicks();
+        }
+        ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("Interface");
         ImGui::TableSetColumnIndex(1);
@@ -173,9 +179,13 @@ void ImGlobalSettings::Draw() {
         appSettingsChanged |= ImGui::Checkbox(
             "White Background",
             &mApp->whiteBg); // Edit bools storing our window open/close state
-        appSettingsChanged |= ImGui::Checkbox("Left-handed coord. system",
-            &mApp->leftHandedView); // Edit bools storing our
-        // window open/close state
+        if (ImGui::Checkbox("Left-handed coord. system", &mApp->leftHandedView)) {
+            appSettingsChanged |= true;
+            for (auto& i : mApp->viewers) {
+                i->UpdateMatrix();
+                i->UpdateLabelColors();
+            }
+        }
         ImGui::Checkbox(
             "Highlight non-planar facets",
             &mApp->highlightNonplanarFacets); // Edit bools storing our window
@@ -326,49 +336,22 @@ void ImGlobalSettings::Draw() {
         updateNbProc = true;
     }
     {
-        ImGui::PlaceAtRegionRight("Change desorption limit", true);
-        if (ImGui::Button("Change desorption limit"))
-            ImGui::OpenPopup("Edit MAX");
+        double maxDes = mApp->worker.model->otfParams.desorptionLimit;
+        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.3g}", maxDes)));
+        ImGui::PlaceAtRegionRight(label.c_str(), true);
+        if (ImGui::Button(label.c_str())) {
+            auto Func = [this](std::string arg) {
+                double inputD = 0;
+                if (!Util::getNumber(&inputD, arg)) {
+                    ImIOWrappers::InfoPopup("Error", "Invalid input");
+                    return;
+                }
+                mApp->worker.model->otfParams.desorptionLimit = inputD;
+                };
+            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func);
+        }
     }
     ImGui::End();
-    // Always center this window when appearing
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                            ImVec2(0.5f, 0.5f));
-
-    if (ImGui::BeginPopupModal("Edit MAX", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        // static bool initMax = false;
-        static double maxDes = mApp->worker.model->otfParams.desorptionLimit;
-        /*if(!initMax) {
-            maxDes = mApp->worker.model->otfParams.desorptionLimit; // use
-        double function to allow exponential format initMax = true;
-        }*/
-        ImGui::InputDouble("Desorption max (0=>endless)", &maxDes, 0.0f, 0.0f,
-                           "%.0f");
-        ImGui::Separator();
-
-        // static int unused_i = 0;
-        // ImGui::Combo("Combo", &unused_i, "Delete\0Delete harder\0");
-
-        /*static bool dont_ask_me_next_time = false;
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::Checkbox("Don't ask me next time", &dont_ask_me_next_time);
-        ImGui::PopStyleVar();*/
-
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
-            mApp->worker.model->otfParams.desorptionLimit = maxDes;
-            // initMax = false;
-            mApp->worker.ChangeSimuParams();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
 }
 
 void ImGlobalSettings::Init(Interface* mApp_)

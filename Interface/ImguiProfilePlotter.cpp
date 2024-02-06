@@ -28,7 +28,6 @@ void ImProfilePlotter::Draw()
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
 	DrawMenuBar();
-	ComputeProfiles();
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
@@ -70,7 +69,7 @@ void ImProfilePlotter::Draw()
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 20);
-	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
+	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
 		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
@@ -115,11 +114,17 @@ void ImProfilePlotter::Refresh()
 	interfGeom = mApp->worker.GetGeometry();
 	if(!loading) data.clear();
 	selectedProfile = -1;
+	if (loading) loading = false;
+	UpdatePlotter();
+}
+
+void ImProfilePlotter::UpdatePlotter()
+{
+	ComputeProfiles();
 }
 
 void ImProfilePlotter::DrawProfileGraph()
 {
-	if (loading) loading = false;
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
@@ -175,6 +180,7 @@ void ImProfilePlotter::AddCurve()
 			return;
 		}
 		data.push_back({ selectedProfile, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
+		ComputeProfiles();
 		return;
 	}
 
@@ -185,6 +191,7 @@ void ImProfilePlotter::AddCurve()
 			data.push_back({ facetId, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 		}
 	}
+	ComputeProfiles();
 }
 
 void ImProfilePlotter::RemoveCurve(int id)
@@ -214,7 +221,7 @@ void ImProfilePlotter::RemoveCurve(int id)
 void ImProfilePlotter::ComputeProfiles()
 {
 	{
-		LockWrapper lW(mApp->imguiRenderLock);
+		//LockWrapper lW(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) return;
 	}
 	
