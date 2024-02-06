@@ -1,4 +1,7 @@
 #pragma once
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include <string>
 #include <vector>
@@ -26,14 +29,14 @@ namespace ImIOWrappers {
 	public:
 		std::string name;
 		int retVal;
-		int key;
-		int key2;
+		ImGuiKey key;
+		ImGuiKey key2;
 		virtual void DoCall() = 0;
 	};
 
 	class ImButtonFunc : public ImButton {
 	public:
-		ImButtonFunc(const std::string& name_, const std::function<void()>& func_, int key_ = -1, int key2_ = -1);
+		ImButtonFunc(const std::string& name_, const std::function<void()>& func_, ImGuiKey key_ = ImGuiKey_None, ImGuiKey key2_ = ImGuiKey_None);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -42,7 +45,7 @@ namespace ImIOWrappers {
 
 	class ImButtonFuncStr : public ImButton {
 	public:
-		ImButtonFuncStr(const std::string& name_, const std::function<void(std::string)>& func_, const std::string& arg_, int key_ = -1, int key2_ = -1);
+		ImButtonFuncStr(const std::string& name_, const std::function<void(std::string)>& func_, const std::string& arg_, ImGuiKey key_ = ImGuiKey_None, ImGuiKey key2_ = ImGuiKey_None);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -52,7 +55,7 @@ namespace ImIOWrappers {
 
 	class ImButtonFuncInt : public ImButton {
 	public:
-		ImButtonFuncInt(const std::string& name_, const std::function<void(int)>& func, int arg, int key_=-1, int key2_=-1);
+		ImButtonFuncInt(const std::string& name_, const std::function<void(int)>& func, int arg, ImGuiKey key_= ImGuiKey_None, ImGuiKey key2_= ImGuiKey_None);
 		void DoCall() override;
 		int retVal = buttonFunction;
 	protected:
@@ -62,7 +65,7 @@ namespace ImIOWrappers {
 
 	class ImButtonInt : public ImButton {
 	public:
-		ImButtonInt(const std::string& name_, int retVal_=0, int key_ = -1, int key2_ = -1);
+		ImButtonInt(const std::string& name_, int retVal_=0, ImGuiKey key_ = ImGuiKey_None, ImGuiKey key2_ = ImGuiKey_None);
 		void DoCall() {};
 	};
 

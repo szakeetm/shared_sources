@@ -71,7 +71,7 @@ void ImFacetCoordinates::Draw()
 	
 	ImGui::HelpMarker("Use the three axis buttons to bulk set coordinates to one value");
 	ImGui::SameLine();
-	float dummyWidth = ImGui::GetContentRegionAvailWidth() - 6 * txtW;
+	float dummyWidth = ImGui::GetContentRegionAvail().x - 6 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidth, 0)); ImGui::SameLine();
 	if (ImGui::Button("Apply")) {
 		ApplyButtonPress();
@@ -139,7 +139,7 @@ void ImFacetCoordinates::ApplyButtonPress()
 		ImIOWrappers::InfoPopup("Not enough vertices", "A facet must have at least 3 vertices");
 		return;
 	}
-	mApp->imWnd->popup.Open("Question", "Apply geometry changes?", { std::make_shared<ImIOWrappers::ImButtonFunc>("Ok",[this]() { Apply(); },SDL_SCANCODE_RETURN, SDL_SCANCODE_RETURN2),
+	mApp->imWnd->popup.Open("Question", "Apply geometry changes?", { std::make_shared<ImIOWrappers::ImButtonFunc>("Ok",([this]() { Apply(); }),ImGuiKey_Enter, ImGuiKey_KeypadEnter),
 		std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", SDL_SCANCODE_ESCAPE)});
 }
 

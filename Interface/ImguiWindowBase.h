@@ -3,7 +3,10 @@
 #include <vector>
 #include "../GLApp/GLFormula.h"
 #include "Geometry_shared.h"
-#include "imgui.h"
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS#include "imgui.h"
+#include "imgui_internal.h"
 #include <memory>
 
 class Interface;
@@ -20,8 +23,8 @@ public:
 protected:
 	bool drawn = false;
 	float txtW=0, txtH=0;
-	Interface* mApp;
-	InterfaceGeometry* interfGeom;
+	Interface* mApp=nullptr;
+	InterfaceGeometry* interfGeom=nullptr;
 };
 
 typedef struct {

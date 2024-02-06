@@ -16,6 +16,7 @@ protected:
 	// functions
 	void DrawTextureTable();
 	void GetData();
+	bool isUpToDate = false;
 	bool IsCellSelected(size_t row, size_t col);
 	void SelectRow(size_t row);
 	void SelectColumn(size_t col);
@@ -23,7 +24,7 @@ protected:
 	ImVec4 SelectionBounds();
 	bool SaveTexturePlotter(bool toFile=true);
 	void DrawMenuBar();
-	typedef struct SelRect { int startRow, startCol, endRow, endCol; };
+	typedef struct { int startRow, startCol, endRow, endCol; } SelRect;
 	std::string Serialize(SelRect bounds = { 0,0,0,0 }, char lineBreak = '\n', std::string rowBreak = "\t");
 
 	// UI variables

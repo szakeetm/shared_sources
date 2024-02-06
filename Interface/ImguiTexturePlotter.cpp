@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiTexturePlotter.h"
 #include "Geometry_shared.h"
@@ -15,6 +18,7 @@ extern MolFlow* mApp;
 void ImTexturePlotter::Draw()
 {
 	if (!drawn) return;
+	GetData();
 
 	// assemble table & columns flags
 	tableFlags = 0;
@@ -24,22 +28,27 @@ void ImTexturePlotter::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
-	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 4.5 * txtH),true);
+	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
-	if (ImGui::Button("FindMax")) {
+	if (ImGui::Button("Find Max")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
-	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvailWidth() - txtW * (31.5+3));
+	if (ImGui::Button("Force Refresh")) {
+		isUpToDate = false;
+	} ImGui::SameLine();
+
+	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvail().x - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
 	if (ImGui::BeginCombo("##View", comboOpts[viewIdx])) {
 		for (short i = 0; i < comboOpts.size(); i++) {
 			if (ImGui::Selectable(comboOpts[i])) {
 				viewIdx = i;
+				isUpToDate = false;
 			}
 		}
 		ImGui::EndCombo();
@@ -139,17 +148,19 @@ void ImTexturePlotter::DrawTextureTable()
 				ImGui::TableSetColumnIndex(0); // move to first column
 				if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
 					SelectRow(i);
+					scrollToSelected = false;
 				}
 				for (int j = 0; j <= width; j++) {
 					if (j != width) {
 						ImGui::TableSetColumnIndex(j+1);
 					}
 					bool isSelected = IsCellSelected(i,j);
-					if (scrollToSelected && selection.size()==0 && isSelected && !ImGui::IsKeyDown(SDL_SCANCODE_LSHIFT)) { // works but not well because ImGui is not redrawn all the time
+					if (scrollToSelected && selection.size()==1 && isSelected) { // works but not well because ImGui is not redrawn all the time
 						ImGui::SetScrollHereX(0.5f);
 						ImGui::SetScrollHereY(0.5f);
 					}
 					if (isDragging) {
+						scrollToSelected = false;
 						ImRect cell(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 						if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
 							if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
@@ -163,6 +174,7 @@ void ImTexturePlotter::DrawTextureTable()
 					if (ImGui::IsItemHovered()) hovered = true;
 					if (j == width) continue;
 					if(ImGui::Selectable(data[i][j]+"###" + std::to_string(i) + "/" + std::to_string(j), isSelected)) {
+						scrollToSelected = false;
 						if (isDragging) continue;
 						if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 							BoxSelect(selection[0], std::pair<int, int>(i, j));
@@ -196,10 +208,10 @@ void ImTexturePlotter::DrawTextureTable()
 			if (key) { anyKeyDown = true; break; }
 		}
 		if (selection.size() == 1 && anyKeyDown) {
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_UP))		selection[0].first--;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_DOWN))		selection[0].first++;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		selection[0].second--;
-			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))	selection[0].second++;
+			if (ImGui::IsKeyPressed(ImGuiKey_UpArrow))		selection[0].first--;
+			if (ImGui::IsKeyPressed(ImGuiKey_DownArrow))		selection[0].first++;
+			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))		selection[0].second--;
+			if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))	selection[0].second++;
 
 			if (selection[0].second < 0) selection[0].second = 0;
 			if (selection[0].second > width-1) selection[0].second = width-1;
@@ -213,7 +225,11 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
-	if (selFacet == nullptr) return;
+	if (isUpToDate) return;
+	if (!selFacet) {
+		data.clear();
+		return;
+	}
 	{
 		//LockWrapper lWrap(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) return;
@@ -486,6 +502,7 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	}
+	isUpToDate = true;
 }
 
 bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
@@ -612,6 +629,15 @@ void ImTexturePlotter::DrawMenuBar()
 			if (ImGui::MenuItem("Autosize to window")) {
 				resizableColumns = false;
 				fitToWindow = true;
+			}
+			ImGui::EndMenu();
+		}
+		if (ImGui::BeginMenu("Data")) {
+			if (data.size() > maxX && data[maxX].size() > maxY) {
+				ImGui::Text(fmt::format("Highest value is {} in row {}, col {}", data[maxX][maxY], maxY+1, maxX+1));
+			}
+			else {
+				ImGui::Text("No Data");
 			}
 			ImGui::EndMenu();
 		}

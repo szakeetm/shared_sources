@@ -1,7 +1,7 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiProfilePlotter.h"
 #include "Facet_shared.h"
-#include "imgui_stdlib/imgui_stdlib.h"
 #include "implot/implot.h"
 #include "implot/implot_internal.h"
 #include "ProfileModes.h"
@@ -76,7 +76,7 @@ void ImProfilePlotter::Draw()
 	}
 	
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (18+3);
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (18+3);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	if (ImGui::Button("Select plotted facets")) {
 		interfGeom->UnselectAll();
@@ -95,7 +95,6 @@ void ImProfilePlotter::Init(Interface* mApp_)
 {
 	ImWindow::Init(mApp_);
 	interfGeom = mApp->worker.GetGeometry();
-	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
 void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -103,7 +102,11 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	loading = true;
 	data.clear();
 	setLog = log;
+	size_t nbFacets = interfGeom->GetNbFacet();
 	for (int id : plotted) {
+		if (id >= nbFacets || id<0) continue;
+		InterfaceFacet* f = interfGeom->GetFacet(id);
+		if (!f->sh.isProfile) continue;
 		if (IsPlotted(id)) continue;
 		data.push_back({ (size_t)id, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 	}
@@ -128,8 +131,8 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotAxisFlags_LogScale : 0))) {
-		if (setLog) setLog = false;
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
+		if (setLog) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
@@ -143,12 +146,14 @@ void ImProfilePlotter::DrawProfileGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	/*
 	if (lockYtoZero) {
 		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##ProfilePlot");
 		thisPlot.YAxis->SetMin(0, true);
 		thisPlot.XAxis.SetMin(0, true);
 		lockYtoZero = false;
 	}
+	*/
 	if (updateHilights) {
 		FacetHiglighting(identProfilesInGeom);
 		updateHilights = false;
@@ -374,6 +379,7 @@ void ImProfilePlotter::DrawMenuBar()
 		}
 		if (ImGui::BeginMenu("View")) {
 			//ImGui::Checkbox("Colorblind mode", &colorBlind);
+			ImGui::Checkbox("Log Y", &setLog);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::Text("Change linewidth:");
 			ImGui::SameLine();

@@ -22,7 +22,7 @@ void ImMovingParts::Draw() {
         if(ImGui::RadioButton("Fixed (same velocity vector everywhere)", mode==Modes::Fixed)) mode = Modes::Fixed;
         {
             if(mode!=Modes::Fixed) ImGui::BeginDisabled();
-            if(ImGui::BeginTable("###MovMartT1",7,ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvailWidth()-txtW*20,0))) {
+            if(ImGui::BeginTable("###MovMartT1",7,ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvail().x-txtW*20,0))) {
                 ImGui::TableNextRow();
                 ImGui::TableSetColumnIndex(0);
                 ImGui::Text("Velocity vector [m/s]");

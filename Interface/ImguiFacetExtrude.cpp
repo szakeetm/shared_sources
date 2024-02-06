@@ -351,7 +351,7 @@ void ImFacetExtrude::PreProcessExtrude() {
 	}
 	if (warning != "") {
 		if (warning[warning.size() - 1] == '\n') warning.erase(warning.end() - 1);
-		mApp->imWnd->popup.Open("Warning", warning, { std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", [this]()->void { DoExtrude(); }, ImGuiKey_Enter, ImGuiKey_KeyPadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
+		mApp->imWnd->popup.Open("Warning", warning, { std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
 		return;
 	}
 	DoExtrude();
@@ -405,7 +405,7 @@ void ImFacetExtrude::ExtrudeButtonPress()
 	}
 	else if (interfGeom->GetNbSelectedFacets() > 1) {
 		mApp->imWnd->popup.Open("Extrusion of more than one facet", fmt::format("Extrude {} facets at once?", interfGeom->GetNbSelectedFacets()),
-			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", [this]()->void { PreProcessExtrude(); }, ImGuiKey_Enter, ImGuiKey_KeyPadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel")});
+			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { PreProcessExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
 		return;
 	}
 	PreProcessExtrude();
