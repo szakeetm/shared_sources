@@ -218,7 +218,7 @@ void ImConvergencePlotter::Draw()
 	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * 3;
 	ImGui::Dummy(ImVec2(dummyWidth,0));
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
+	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu");
 	ImGui::Separator();
 	for (int i = 0; i < nFormulas; i++) {
 		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
