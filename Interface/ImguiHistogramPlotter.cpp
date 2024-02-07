@@ -354,23 +354,23 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	settingsWindow.globalHistSet.recordBounce = mApp->worker.model->sp.globalHistogramParams.recordBounce;
 	settingsWindow.globalRecordBounce = settingsWindow.globalHistSet.recordBounce;
 	settingsWindow.globalHistSet.nbBounceMax = mApp->worker.model->sp.globalHistogramParams.nbBounceMax;
-	settingsWindow.globalBouncesMaxInput = fmt::format("{}", settingsWindow.facetHistSet.nbBounceMax);
+	settingsWindow.globalBouncesMaxInput = fmt::format("{}", settingsWindow.globalHistSet.nbBounceMax);
 	settingsWindow.globalHistSet.nbBounceBinsize = mApp->worker.model->sp.globalHistogramParams.nbBounceBinsize;
-	settingsWindow.globalBouncesBinSizeInput = fmt::format("{}", settingsWindow.facetHistSet.nbBounceBinsize);
+	settingsWindow.globalBouncesBinSizeInput = fmt::format("{}", settingsWindow.globalHistSet.nbBounceBinsize);
 
 	settingsWindow.globalHistSet.recordDistance = mApp->worker.model->sp.globalHistogramParams.recordDistance;
 	settingsWindow.globalRecordDistance = settingsWindow.globalHistSet.recordDistance;
 	settingsWindow.globalHistSet.distanceMax = mApp->worker.model->sp.globalHistogramParams.distanceMax;
-	settingsWindow.globalDistanceMaxInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distanceMax);
+	settingsWindow.globalDistanceMaxInput = fmt::format("{:.6g}", settingsWindow.globalHistSet.distanceMax);
 	settingsWindow.globalHistSet.distanceBinsize = mApp->worker.model->sp.globalHistogramParams.distanceBinsize;
-	settingsWindow.globalDistanceBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.distanceBinsize);
+	settingsWindow.globalDistanceBinSizeInput = fmt::format("{:.6g}", settingsWindow.globalHistSet.distanceBinsize);
 #ifdef MOLFLOW
 	settingsWindow.globalHistSet.recordTime = mApp->worker.model->sp.globalHistogramParams.recordTime;
 	settingsWindow.globalRecordTime = settingsWindow.globalHistSet.recordTime;
 	settingsWindow.globalHistSet.timeMax = mApp->worker.model->sp.globalHistogramParams.timeMax;
-	settingsWindow.globalTimeMaxInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeMax);
+	settingsWindow.globalTimeMaxInput = fmt::format("{:.6g}", settingsWindow.globalHistSet.timeMax);
 	settingsWindow.globalHistSet.timeBinsize = mApp->worker.model->sp.globalHistogramParams.timeBinsize;
-	settingsWindow.globalTimeBinSizeInput = fmt::format("{:.6g}", settingsWindow.facetHistSet.timeBinsize);
+	settingsWindow.globalTimeBinSizeInput = fmt::format("{:.6g}", settingsWindow.globalHistSet.timeBinsize);
 #endif
 	// combo lists
 	size_t n = interfGeom->GetNbFacet();
@@ -604,72 +604,73 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 		}
 #endif
 	}
-
-	// facet
-	if (facetRecordBounce != 2) facetHistSet.recordBounce = facetRecordBounce;
-	if (facetHistSet.recordBounce == 1) {
-		if (facetBouncesMaxInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.nbBounceMax, facetBouncesMaxInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce limit");
-			return false;
+	if (interfGeom->GetNbSelectedFacets() != 0) {
+		// facet
+		if (facetRecordBounce != 2) facetHistSet.recordBounce = facetRecordBounce;
+		if (facetHistSet.recordBounce == 1) {
+			if (facetBouncesMaxInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.nbBounceMax, facetBouncesMaxInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce limit");
+				return false;
+			}
+			else if (facetHistSet.nbBounceMax <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce limit must be a positive integer");
+				return false;
+			}
+			if (facetBouncesBinSizeInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.nbBounceBinsize, facetBouncesBinSizeInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce bin size");
+				return false;
+			}
+			else if (facetHistSet.nbBounceBinsize <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce bin size must be a positive integer");
+				return false;
+			}
 		}
-		else if (facetHistSet.nbBounceMax <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce limit must be a positive integer");
-			return false;
+		if (facetRecordDistance != 2) facetHistSet.recordDistance = facetRecordDistance;
+		if (facetRecordDistance==1) {
+			if (facetDistanceMaxInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.distanceMax, facetDistanceMaxInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance limit");
+				return false;
+			}
+			else if (facetHistSet.distanceMax <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "facet distance limit must be a positive scalar");
+				return false;
+			}
+			if (facetDistanceBinSizeInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.distanceBinsize, facetDistanceBinSizeInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance bin size");
+				return false;
+			}
+			else if (facetHistSet.distanceBinsize <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Facet distance bin size must be a positive scalar");
+				return false;
+			}
 		}
-		if (facetBouncesBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.nbBounceBinsize, facetBouncesBinSizeInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet bounce bin size");
-			return false;
+	#if defined(MOLFLOW)
+		if (facetRecordTime != 2) facetHistSet.recordTime = facetRecordTime;
+		if (facetRecordTime==1) {
+			if (facetTimeMaxInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.timeMax, facetTimeMaxInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time limit");
+				return false;
+			}
+			else if (facetHistSet.timeMax <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time limit must be a positive scalar");
+				return false;
+			}
+			if (facetTimeBinSizeInput == "...") {}
+			else if (!Util::getNumber(&facetHistSet.timeBinsize, facetTimeBinSizeInput)) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time bin size");
+				return false;
+			}
+			else if (facetHistSet.timeBinsize <= 0) {
+				ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time bin size must be a positive scalar");
+				return false;
+			}
+	#endif
 		}
-		else if (facetHistSet.nbBounceBinsize <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet bounce bin size must be a positive integer");
-			return false;
-		}
-	}
-	if (facetRecordDistance != 2) facetHistSet.recordDistance = facetRecordDistance;
-	if (facetRecordDistance==1) {
-		if (facetDistanceMaxInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.distanceMax, facetDistanceMaxInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance limit");
-			return false;
-		}
-		else if (facetHistSet.distanceMax <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "facet distance limit must be a positive scalar");
-			return false;
-		}
-		if (facetDistanceBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.distanceBinsize, facetDistanceBinSizeInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet distance bin size");
-			return false;
-		}
-		else if (facetHistSet.distanceBinsize <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet distance bin size must be a positive scalar");
-			return false;
-		}
-	}
-#if defined(MOLFLOW)
-	if (facetRecordTime != 2) facetHistSet.recordTime = facetRecordTime;
-	if (facetRecordTime==1) {
-		if (facetTimeMaxInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.timeMax, facetTimeMaxInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time limit");
-			return false;
-		}
-		else if (facetHistSet.timeMax <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time limit must be a positive scalar");
-			return false;
-		}
-		if (facetTimeBinSizeInput == "...") {}
-		else if (!Util::getNumber(&facetHistSet.timeBinsize, facetTimeBinSizeInput)) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in facet time bin size");
-			return false;
-		}
-		else if (facetHistSet.timeBinsize <= 0) {
-			ImIOWrappers::InfoPopup("Histogram parameter error", "Facet time bin size must be a positive scalar");
-			return false;
-		}
-#endif
 	}
 
 
