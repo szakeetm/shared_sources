@@ -55,4 +55,11 @@ private:
 	bool showValueOnHover = true;
 	bool setLog = false;
 	bool loading = false;
+	size_t nFacets;
+
+	short aggregateState = 0;
+	bool mixedState = false;
+	std::vector<short> profileDrawToggle;
+	void ApplyAggregateState();
+	void UpdateSidebarMasterToggle();
 };

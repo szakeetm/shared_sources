@@ -23,15 +23,39 @@ void ImProfilePlotter::Draw()
 	}
 	if (!drawn) return;
 	float dummyWidth;
+	nFacets = interfGeom->GetNbFacet();
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 93, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 113, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
 	DrawMenuBar();
+
+	ImGui::BeginChild("Sidebar", ImVec2(txtW * 20, ImGui::GetContentRegionAvail().y), true);
+	if (ImGui::TriState("All", &aggregateState, mixedState)) {
+		ApplyAggregateState();
+	} ImGui::SameLine();
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * 3;
+	ImGui::Dummy(ImVec2(dummyWidth, 0));
+	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu");
+	ImGui::Separator();
+	profileDrawToggle.resize(nFacets, false);
+	for (int i = 0; i < nFacets; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		std::string fName = ("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
+		if (ImGui::Checkbox(fName.c_str(), (bool*)&(profileDrawToggle[i]))) {
+			if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
+			else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+			UpdateSidebarMasterToggle();
+			updateHilights = true;
+		}
+	}
+	ImGui::EndChild();
+	ImGui::SameLine();
+	ImGui::BeginGroup();
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
-	size_t nFacets = interfGeom->GetNbFacet();
 	if (ImGui::BeginCombo("##ProfilePlotterCombo", ((selectedProfile == -1 || f == 0) ? "Select [v] or type->" : ("F#" + std::to_string(selectedProfile + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)f->sh.profileType].second))))) {
 		if (ImGui::Selectable("Select [v] or type->")) selectedProfile = -1;
 		for (size_t i = 0; i < nFacets; i++) {
@@ -87,7 +111,7 @@ void ImProfilePlotter::Draw()
 	}
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
-
+	ImGui::EndGroup();
 	ImGui::End();
 }
 
@@ -110,6 +134,7 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 		if (IsPlotted(id)) continue;
 		data.push_back({ (size_t)id, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 	}
+	UpdateSidebarMasterToggle();
 }
 
 void ImProfilePlotter::Refresh()
@@ -124,6 +149,7 @@ void ImProfilePlotter::Refresh()
 void ImProfilePlotter::UpdatePlotter()
 {
 	ComputeProfiles();
+	UpdateSidebarMasterToggle();
 }
 
 void ImProfilePlotter::DrawProfileGraph()
@@ -197,6 +223,7 @@ void ImProfilePlotter::AddCurve()
 		}
 	}
 	ComputeProfiles();
+	UpdateSidebarMasterToggle();
 }
 
 void ImProfilePlotter::RemoveCurve(int id)
@@ -221,6 +248,7 @@ void ImProfilePlotter::RemoveCurve(int id)
 			data.erase(data.begin() + i);
 			return;
 		}
+	UpdateSidebarMasterToggle();
 }
 
 void ImProfilePlotter::ComputeProfiles()
@@ -492,4 +520,41 @@ std::vector<size_t> ImProfilePlotter::ParseManualFacetList()
 		ImIOWrappers::InfoPopup("Error", "Unknown exception");
 	}
 	return facetIds;
+}
+
+void ImProfilePlotter::ApplyAggregateState()
+{
+	nFacets = interfGeom->GetNbFacet();
+	profileDrawToggle.resize(nFacets, false);
+	mixedState = false;
+	for (int i = 0; i < nFacets; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		profileDrawToggle[i] = aggregateState;
+		if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
+		else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+	}
+	updateHilights = true;
+}
+
+void ImProfilePlotter::UpdateSidebarMasterToggle()
+{
+	mixedState = false;
+	if (nFacets == 0) {
+		aggregateState = 0;
+		return;
+	}
+	profileDrawToggle.resize(nFacets, false);
+	bool checkedFirst = false;
+	for (int i = 1; i < nFacets; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		if (!checkedFirst) {
+			aggregateState = profileDrawToggle[i];
+			checkedFirst = true;
+		}
+		if (aggregateState != profileDrawToggle[i]) {
+			aggregateState = 2;
+			mixedState = true;
+			return;
+		}
+	}
 }
