@@ -17,7 +17,7 @@ private:
 	void DrawProfileGraph();
 
 	// button actions
-	void ShowFacet();
+	void ShowFacet(int id = -1, bool add = false);
 	void AddCurve();
 	void RemoveCurve(int id);
 	void ComputeProfiles();

@@ -25,29 +25,38 @@ void ImProfilePlotter::Draw()
 	float dummyWidth;
 	nFacets = interfGeom->GetNbFacet();
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 113, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 82, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
 	DrawMenuBar();
 
-	ImGui::BeginChild("Sidebar", ImVec2(txtW * 20, ImGui::GetContentRegionAvail().y), true);
-	if (ImGui::TriState("All", &aggregateState, mixedState)) {
+	ImGui::BeginChild("Sidebar", ImVec2(txtW * 15, ImGui::GetContentRegionAvail().y), true);
+	if (ImGui::TriState("###All", &aggregateState, mixedState)) {
 		ApplyAggregateState();
 	} ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * 3;
-	ImGui::Dummy(ImVec2(dummyWidth, 0));
+	ImGui::AlignTextToFramePadding();
+	if (ImGui::Selectable("All", false, 0, ImVec2(ImGui::GetContentRegionAvail().x - txtW * 3,0))) {
+		for (int i = 0; i < nFacets; i++) {
+			if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+			else ShowFacet(i, true);
+		}
+	}
 	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu");
+	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu\nClick on profile name to select corresponding facet in geometry, hold shift to add to selection");
 	ImGui::Separator();
 	profileDrawToggle.resize(nFacets, false);
 	for (int i = 0; i < nFacets; i++) {
 		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
 		std::string fName = ("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
-		if (ImGui::Checkbox(fName.c_str(), (bool*)&(profileDrawToggle[i]))) {
+		if (ImGui::Checkbox(("##"+fName).c_str(), (bool*)&(profileDrawToggle[i]))) {
 			if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
 			else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
 			UpdateSidebarMasterToggle();
 			updateHilights = true;
+		} ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		if (ImGui::Selectable(fName)) {
+			ShowFacet(i, ImGui::IsKeyDown(ImGuiKey_LeftShift));
 		}
 	}
 	ImGui::EndChild();
@@ -55,62 +64,15 @@ void ImProfilePlotter::Draw()
 	ImGui::BeginGroup();
 	DrawProfileGraph();
 
-	ImGui::SetNextItemWidth(txtW * 30);
-	if (ImGui::BeginCombo("##ProfilePlotterCombo", ((selectedProfile == -1 || f == 0) ? "Select [v] or type->" : ("F#" + std::to_string(selectedProfile + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)f->sh.profileType].second))))) {
-		if (ImGui::Selectable("Select [v] or type->")) selectedProfile = -1;
-		for (size_t i = 0; i < nFacets; i++) {
-			if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
-			if (ImGui::Selectable("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second) + "###profileCombo" + std::to_string(i), selectedProfile == i)) {
-				selectedProfile = i;
-				f = interfGeom->GetFacet(selectedProfile);
-			}
-		}
-		ImGui::EndCombo();
-	} ImGui::SameLine();
-	
-	ImGui::SetNextItemWidth(txtW * 15);
-	if (selectedProfile != -1) ImGui::BeginDisabled();
-	ImGui::InputText("##manualFacetSel", &manualFacetSel);
-	if (selectedProfile != -1) ImGui::EndDisabled();
-	ImGui::SameLine();
-	if(ImGui::Button("Show Facet")) {
-		ShowFacet();
-	} ImGui::SameLine();
-	if(ImGui::Button("Add Curve")) {
-		AddCurve();
-	} ImGui::SameLine();
-	if(ImGui::Button("Remove Curve")) {
-		RemoveCurve(selectedProfile);
-	} ImGui::SameLine();
-	if(ImGui::Button("Remove all")) {
-		data.clear();
-		data.shrink_to_fit();
-		drawManual = false;
-		manualPlot.x = nullptr;
-		manualPlot.y = nullptr;
-		FacetHiglighting(identProfilesInGeom);
-	}
+	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 20);
+	ImGui::SetNextItemWidth(txtW * 27);
 	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
 		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
 	}
-	
-	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (18+3);
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
-	if (ImGui::Button("Select plotted facets")) {
-		interfGeom->UnselectAll();
-		for (const auto& facet : data) {
-			interfGeom->GetFacet(facet.id)->selected = true;
-		}
-		UpdateSelection();
-	}
-	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
 	ImGui::EndGroup();
 	ImGui::End();
 }
@@ -157,7 +119,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
+	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
 		if (setLog) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
@@ -186,11 +148,11 @@ void ImProfilePlotter::DrawProfileGraph()
 	}
 }
 
-void ImProfilePlotter::ShowFacet()
+void ImProfilePlotter::ShowFacet(int id, bool add)
 {
-	interfGeom->UnselectAll();
-	if (selectedProfile != -1) {
-		interfGeom->GetFacet(selectedProfile)->selected = true;
+	if(!add) interfGeom->UnselectAll();
+	if (id != -1) {
+		interfGeom->GetFacet(id)->selected = true;
 	}
 	else {
 		std::vector<size_t> facetIds = ParseManualFacetList();
