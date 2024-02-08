@@ -71,7 +71,9 @@ void ImProfilePlotter::Draw()
 	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
-		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
+		if (ImGui::Checkbox("Surface->Volume conversion", &correctForGas)) {
+			UpdatePlotter();
+		}
 	}
 	ImGui::EndGroup();
 	ImGui::End();
@@ -102,7 +104,15 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 void ImProfilePlotter::Refresh()
 {
 	interfGeom = mApp->worker.GetGeometry();
-	if(!loading) data.clear();
+	int nbFacet = interfGeom->GetNbFacet();
+	for (int i = data.size() - 1; i >= 0; i--) {
+		if (data[i].id >= nbFacet) {
+			RemoveCurve(data[i].id);
+			continue;
+		}
+		InterfaceFacet* f = interfGeom->GetFacet(data[i].id);
+		if (!f->sh.isProfile) RemoveCurve(data[i].id);
+	}
 	if (loading) loading = false;
 	UpdatePlotter();
 }
@@ -475,6 +485,7 @@ void ImProfilePlotter::ApplyAggregateState()
 
 void ImProfilePlotter::UpdateSidebarMasterToggle()
 {
+	nFacets = interfGeom->GetNbFacet();
 	mixedState = false;
 	if (nFacets == 0) {
 		aggregateState = 0;
@@ -482,7 +493,7 @@ void ImProfilePlotter::UpdateSidebarMasterToggle()
 	}
 	profileDrawToggle.resize(nFacets, false);
 	bool checkedFirst = false;
-	for (int i = 1; i < nFacets; i++) {
+	for (int i = 0; i < nFacets; i++) {
 		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
 		if (!checkedFirst) {
 			aggregateState = profileDrawToggle[i];
