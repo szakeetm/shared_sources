@@ -549,6 +549,10 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				return false;
 			}
 		}
+		else {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 		if (globalBouncesBinSizeInput != "...") {
 			if (!Util::getNumber(&globalHistSet.nbBounceBinsize, globalBouncesBinSizeInput)) {
 				ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global bounce bin size");
@@ -559,10 +563,17 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 				return false;
 			}
 		}
+		else {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 	}
 	globalHistSet.recordDistance = globalRecordDistance;
 	if (globalHistSet.recordDistance==1) {
-		if (globalDistanceMaxInput == "...") {}
+		if (globalDistanceMaxInput == "...") {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 		else if (!Util::getNumber(&globalHistSet.distanceMax, globalDistanceMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global distance limit");
 			return false;
@@ -571,7 +582,10 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global distance limit must be a positive scalar");
 			return false;
 		}
-		if (globalDistanceBinSizeInput == "...") {}
+		if (globalDistanceBinSizeInput == "...") {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 		else if (!Util::getNumber(&globalHistSet.distanceBinsize, globalDistanceBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global distance bin size");
 			return false;
@@ -584,7 +598,10 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 #if defined(MOLFLOW)
 	globalHistSet.recordTime = globalRecordTime;
 	if (globalHistSet.recordTime==1) {
-		if (globalTimeMaxInput == "...") {}
+		if (globalTimeMaxInput == "...") {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 		else if (!Util::getNumber(&globalHistSet.timeMax, globalTimeMaxInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global time limit");
 			return false;
@@ -593,7 +610,10 @@ bool ImHistogramPlotter::ImHistogramSettings::Apply()
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Global time limit must be a positive scalar");
 			return false;
 		}
-		if (globalTimeBinSizeInput == "...") {}
+		if (globalTimeBinSizeInput == "...") {
+			ImIOWrappers::InfoPopup("Histogram parameter error", "Global histogram parameters cannot be \"...\"");
+			return false;
+		}
 		else if (!Util::getNumber(&globalHistSet.timeBinsize, globalTimeBinSizeInput)) {
 			ImIOWrappers::InfoPopup("Histogram parameter error", "Invalid input in global time bin size");
 			return false;
@@ -976,18 +996,18 @@ void ImHistogramPlotter::ImHistogramSettings::CalculateMemoryEstimate_New(bool g
 		try {
 			bool mixed = false;
 			if (facetRecordBounce == 2) mixed+=1;
-			else {
+			else if (facetRecordBounce == 1){
 				mixed += (facetBouncesMaxInput == "...");
 				mixed += (facetBouncesBinSizeInput == "...");
 			}
 			if (facetRecordDistance == 2) mixed += 1;
-			else {
+			else if (facetRecordDistance == 1) {
 				mixed += (facetDistanceMaxInput == "...");
 				mixed += (facetDistanceBinSizeInput == "...");
 			}
 #ifdef MOLFLOW
 			if (facetRecordTime == 2) mixed += 1;
-			else {
+			else if (facetRecordTime == 1) {
 				mixed += (facetTimeMaxInput == "...");
 				mixed += (facetTimeBinSizeInput == "...");
 			}
