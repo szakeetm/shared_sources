@@ -114,7 +114,15 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 void ImProfilePlotter::Refresh()
 {
 	interfGeom = mApp->worker.GetGeometry();
-	if(!loading) data.clear();
+	int nbFacet = interfGeom->GetNbFacet();
+	for (int i = data.size() - 1; i >= 0; i--) {
+		if (data[i].id >= nbFacet) {
+			RemoveCurve(data[i].id);
+			continue;
+		}
+		InterfaceFacet* f = interfGeom->GetFacet(data[i].id);
+		if (!f->sh.isProfile) RemoveCurve(data[i].id);
+	}
 	selectedProfile = -1;
 	if (loading) loading = false;
 	UpdatePlotter();
