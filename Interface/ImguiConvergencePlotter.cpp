@@ -123,7 +123,7 @@ void ImConvergencePlotter::MenuBar()
 		if (ImGui::BeginMenu("Custom Plot")) {
 			ImGui::SetNextItemWidth(txtW * 15);
 			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
-			if (ImGui::Button("-> Plot expression")) {
+			if (ImGui::Button("-> Plot expression") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
 				drawManual = ImUtils::ParseExpression(expression, formula);
 				manualxValues.clear();
 				manualyValues.clear();
@@ -135,11 +135,6 @@ void ImConvergencePlotter::MenuBar()
 				if (step < 1e-4) step = 1e-4;
 			}
 			if (endX - startX < 0) ImGui::TextDisabled("Start X cannot be higer than End X");
-			else if (drawManual && ImGui::Button("Apply")) {
-				manualxValues.clear();
-				manualyValues.clear();
-				ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX, startX, step);
-			}
 			if (abs(endX - startX) / step > 1e5) ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("Warning! Number of datapoints\nwill exceed {}!", 1e5).c_str());
 			ImGui::EndMenu();
 		}

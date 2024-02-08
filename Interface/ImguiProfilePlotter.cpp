@@ -128,7 +128,7 @@ void ImProfilePlotter::DrawProfileGraph()
 			profile.color = ImPlot::GetLastItemColor();
 		}
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-		if (drawManual) ImPlot::PlotLine(formula.GetName().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
+		if (drawManual) ImPlot::PlotLine(formula.GetExpression().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
 		if (showValueOnHover) ImUtils::DrawValueOnHover(data, drawManual, manualPlot.x.get(), manualPlot.y.get());
 		ImPlot::EndPlot();
 	}
@@ -386,7 +386,7 @@ void ImProfilePlotter::DrawMenuBar()
 		if (ImGui::BeginMenu("Custom Plot")) {
 			ImGui::SetNextItemWidth(txtW * 15);
 			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
-			if (ImGui::Button("-> Plot expression")) {
+			if (ImGui::Button("-> Plot expression") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
 				drawManual = ImUtils::ParseExpression(expression, formula);
 				if (manualPlot.x.get() == nullptr) manualPlot.x = std::make_shared<std::vector<double>>();
 				if (manualPlot.y.get() == nullptr) manualPlot.y = std::make_shared<std::vector<double>>();
@@ -399,6 +399,7 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::InputDoubleRightSide("Start X", &manualStart);
 			ImGui::InputDoubleRightSide("End X", &manualEnd);
 			ImGui::InputDoubleRightSide("Step:", &manualStep);
+			if (manualEnd - manualStart < 0) ImGui::TextDisabled("Start X cannot be higer than End X");
 			ImGui::EndMenu();
 		}
 		ImGui::EndMenuBar();
