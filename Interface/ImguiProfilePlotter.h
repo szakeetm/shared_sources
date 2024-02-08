@@ -18,7 +18,6 @@ private:
 
 	// button actions
 	void ShowFacet(int id = -1, bool add = false);
-	void AddCurve();
 	void RemoveCurve(int id);
 	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
@@ -40,7 +39,6 @@ private:
 	bool updateHilights = false;
 
 	InterfaceGeometry* interfGeom;
-	size_t selectedProfile = -1;
 	InterfaceFacet* f = 0;
 	int nProfileFacets = 0;
 	std::string manualFacetSel;

@@ -31,8 +31,9 @@ public:
 protected:
 	//functions
 	void DrawPlot();
-	void RemovePlot();
-	void AddPlot();
+	void RemovePlot(int idx);
+	void AddPlot(int idx);
+	bool IsPlotted(int idx);
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
@@ -116,4 +117,11 @@ protected:
 	bool overrange = true;
 	bool logX = false, logY = false;
 	ImHistogramSettings settingsWindow;
+
+	short aggregateState = 0;
+	bool mixedState = false;
+	std::vector<short> histogramDrawToggle[IM_HISTOGRAM_TABS];
+	short globalDrawToggle[IM_HISTOGRAM_TABS];
+	void ApplyAggregateState();
+	void UpdateSidebarMasterToggle();
 };

@@ -10,6 +10,7 @@
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "ImguiExtensions.h"
+#include "ImguiWindow.h"
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
@@ -118,6 +119,9 @@ void ImConvergencePlotter::MenuBar()
 					mApp->appFormulas->removeFirstN(N, formulaId);
 				}
 			}
+			if (ImGui::MenuItem("Show formula editor")) {
+				mApp->imWnd->formulaEdit.Show();
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
@@ -149,7 +153,6 @@ void ImConvergencePlotter::MenuBar()
 }
 
 void ImConvergencePlotter::RemovePlot(int idx) {
-	if (selectedFormula == idx) selectedFormula = -1;
 	for (int i = 0; i < data.size(); i++) if (data[i].id == idx)
 	{
 		data.erase(data.begin() + i);
@@ -160,7 +163,6 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 void ImConvergencePlotter::Reload()
 {
 	data.clear();
-	selectedFormula = -1;
 	UpdateSidebarMasterToggle();
 }
 
@@ -201,7 +203,7 @@ void ImConvergencePlotter::Draw()
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(30*txtW, 40*txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 90, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 82, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Convergence Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	
 	MenuBar();

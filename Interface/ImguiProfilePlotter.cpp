@@ -103,7 +103,6 @@ void ImProfilePlotter::Refresh()
 {
 	interfGeom = mApp->worker.GetGeometry();
 	if(!loading) data.clear();
-	selectedProfile = -1;
 	if (loading) loading = false;
 	UpdatePlotter();
 }
@@ -164,35 +163,10 @@ void ImProfilePlotter::ShowFacet(int id, bool add)
 	UpdateSelection();
 }
 
-void ImProfilePlotter::AddCurve()
-{
-	updateHilights = true;
-	if (selectedProfile != -1) {
-		if (IsPlotted(selectedProfile)) {
-			ImIOWrappers::InfoPopup("Error", "Already Plotted");
-			return;
-		}
-		data.push_back({ selectedProfile, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
-		ComputeProfiles();
-		return;
-	}
-
-	std::vector<size_t> facetIds = ParseManualFacetList();
-
-	for (const auto& facetId : facetIds) {
-		if (!IsPlotted(facetId)&&interfGeom->GetFacet(facetId)->sh.isProfile) {
-			data.push_back({ facetId, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
-		}
-	}
-	ComputeProfiles();
-	UpdateSidebarMasterToggle();
-}
-
 void ImProfilePlotter::RemoveCurve(int id)
 {
 	updateHilights = true;
 	if (data.size() == 0) return;
-	if (id == selectedProfile) selectedProfile = -1;
 	if (id == -1) {
 		std::vector<size_t> facetIds = ParseManualFacetList();
 		long long i = data.size()-1; // has to be signed

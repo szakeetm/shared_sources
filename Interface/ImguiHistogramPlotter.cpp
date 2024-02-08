@@ -22,7 +22,7 @@ void ImHistogramPlotter::Draw()
 {
 	if (!drawn) return;
 	float dummyWidth;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 105, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::SetWindowPos("Histogram Plotter", ImVec2((3 + 40) * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
@@ -57,6 +57,43 @@ void ImHistogramPlotter::Draw()
 		if (globalHist) comboSelection = -1;
 		prevPlotTab = plotTab;
 	}
+	ImGui::BeginChild("Sidebar", ImVec2(txtW*20,ImGui::GetContentRegionAvail().y), ImGuiChildFlags_Border);
+
+	if (ImGui::TriState("###All", &aggregateState, mixedState)) {
+		ApplyAggregateState();
+	} ImGui::SameLine();
+	ImGui::AlignTextToFramePadding();
+	if (ImGui::Selectable("All", false, 0, ImVec2(ImGui::GetContentRegionAvail().x - txtW * 3, 0))) {
+		for (int i = 0; i < comboOpts[plotTab].size(); i++) {
+			// select histogrammed facets
+		}
+	}
+	ImGui::Separator();
+	if (globalHist) {
+		if (ImGui::Checkbox(("##Global"), (bool*)&(globalDrawToggle[plotTab]))) {
+			if (globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) RemovePlot(-1);
+			else if (globalDrawToggle[plotTab] == 1 && !IsPlotted(-1)) AddPlot(-1);
+			UpdateSidebarMasterToggle();
+		}
+	} ImGui::SameLine();
+	ImGui::AlignTextToFramePadding();
+	ImGui::Text("Global");
+	histogramDrawToggle[plotTab].resize(comboOpts[plotTab].size(), 0);
+	for (int i = 0; i < comboOpts[plotTab].size(); i++) {
+		std::string fName = ("Facet #" + std::to_string(i + 1));
+		if (ImGui::Checkbox(("##" + fName).c_str(), (bool*)&(histogramDrawToggle[plotTab][i]))) {
+			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(i)) RemovePlot(i);
+			else if (histogramDrawToggle[plotTab][i] == 1 && !IsPlotted(i)) AddPlot(i);
+			UpdateSidebarMasterToggle();
+		} ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		if (ImGui::Selectable(fName)) {
+			// Select Facet
+		}
+	}
+	ImGui::EndChild();
+	ImGui::SameLine();
+	ImGui::BeginGroup();
 	DrawPlot();
 	if(ImGui::Button("<< Hist settings")) {
 		settingsWindow.Toggle();
@@ -89,10 +126,10 @@ void ImHistogramPlotter::Draw()
 		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Add")) {
-		AddPlot();
+		AddPlot(comboSelection);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove")) {
-		RemovePlot();
+		RemovePlot(comboSelection);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove all")) {
 		data[plotTab].clear();
@@ -102,6 +139,7 @@ void ImHistogramPlotter::Draw()
 	if (settingsWindow.IsVisible()) {
 		if (anchor) ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x - settingsWindow.width - txtW, ImGui::GetWindowPos().y));
 	}
+	ImGui::EndGroup();
 	ImGui::End();
 	settingsWindow.Draw();
 }
@@ -147,35 +185,53 @@ void ImHistogramPlotter::DrawPlot()
 	RefreshPlots();
 }
 
-void ImHistogramPlotter::RemovePlot()
+void ImHistogramPlotter::RemovePlot(int idx)
 {
 	for (size_t i = 0; i < data[plotTab].size(); i++) {
-		if (data[plotTab][i].id == comboSelection) {
+		if (data[plotTab][i].id == idx) {
 			data[plotTab].erase(data[plotTab].begin() + i);
 			return;
 		}
 	}
-	globals[plotTab] = ImPlotData();
+	if (idx == -1) {
+		globals[plotTab] = ImPlotData();
+		return;
+	}
+	// a non-existent id was passed, fails silently here by design
 }
 
-void ImHistogramPlotter::AddPlot()
+void ImHistogramPlotter::AddPlot(int idx)
 {
-	if (comboSelection < -1) return;
-	if (IsPlotted(plotTab, comboSelection)) return;
+	if (idx < -1) return;
+	if (IsPlotted(plotTab, idx)) return;
 	ImPlotData newPlot;
-	if (comboSelection != -1) newPlot.id = comboSelection;
+	if (idx != -1) newPlot.id = idx;
 	else newPlot.id = plotTab;
 	
 	newPlot.x = std::make_shared<std::vector<double>>();
 	newPlot.y = std::make_shared<std::vector<double>>();
 
-	if (comboSelection != -1) {
+	if (idx != -1) {
 		data[plotTab].push_back(newPlot);
 		RefreshPlots();
 		return;
 	}
 	globals[plotTab] = newPlot;
 	RefreshPlots();
+}
+
+bool ImHistogramPlotter::IsPlotted(int idx)
+{
+	if (idx == -1) {
+		return globals[plotTab].x != nullptr;
+	}
+	for (size_t i = 0; i < data[plotTab].size(); i++) {
+		if (data[plotTab][i].id == idx) {
+			data[plotTab].erase(data[plotTab].begin() + i);
+			return true;
+		}
+	}
+	return false;
 }
 
 void ImHistogramPlotter::RefreshPlots()
@@ -284,10 +340,10 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	if (!plottedOnly) {
 		limitPoints = false;
 		comboSelection = -1;
-		AddPlot();
+		AddPlot(comboSelection);
 		for (const auto& id: comboOpts[plotTab]) {
 			comboSelection = id;
-			AddPlot();
+			AddPlot(comboSelection);
 		}
 	}
 	RefreshPlots();
@@ -349,6 +405,14 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	globals[plotTab] = preExportGlobal;
 	comboSelection = preExportSel;
 	limitPoints = preExportLimitPoints;
+}
+
+void ImHistogramPlotter::ApplyAggregateState()
+{
+}
+
+void ImHistogramPlotter::UpdateSidebarMasterToggle()
+{
 }
 
 void ImHistogramPlotter::LoadHistogramSettings()
