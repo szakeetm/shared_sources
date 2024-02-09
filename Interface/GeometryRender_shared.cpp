@@ -1605,10 +1605,8 @@ void InterfaceGeometry::BuildSelectList() {
 		lines.push_back((GLuint)it.second);
 	}
 
-	if (colorHighlighting.empty()) {
-		glColor3f(1.0f, 0.0f, 0.0f); //regular red selection
-	}
-	else {
+	if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
+		
 		//Thin light blue for selected but not plotted facets
 		//glLineWidth(1.5f);
 		GLCOLOR metroLightBlue;
@@ -1618,6 +1616,10 @@ void InterfaceGeometry::BuildSelectList() {
 		metroLightBlue.a = 0.08f; //unused in this context
 		glColor4f(1.0f, 0.0f, 0.0f,0.5f);
 	}
+	else {
+		glColor3f(1.0f, 0.0f, 0.0f); //regular red selection
+	}
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
 	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
