@@ -13,6 +13,7 @@ public:
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
 	void UpdatePlotter();
+	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 private:
 	void OnShow() override;
 	void DrawProfileGraph();

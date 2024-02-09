@@ -1489,6 +1489,7 @@ void InterfaceGeometry::RemoveFacets(const std::vector<size_t> &facetIdList, boo
 	// Delete old resources
 	DeleteGLLists(true, true);
 	BuildGLList();
+	mApp->ImHandleFacetDeletion(facetIdList);
 }
 
 void InterfaceGeometry::AddFacets(std::vector<InterfaceFacet*> facetList) {

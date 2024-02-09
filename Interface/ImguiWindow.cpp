@@ -448,6 +448,12 @@ void ImguiWindow::Reset()
     histPlot.LoadHistogramSettings();
 }
 
+void ImguiWindow::HandleFacetDeletion(const std::vector<size_t>& facetIdList)
+{
+    profPlot.HandleFacetDeletion(facetIdList);
+    histPlot.HandleFacetDeletion(facetIdList);
+}
+
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
 {
     if (interfaceSettings->profilePlotterSettings.hasData) {

@@ -2711,6 +2711,12 @@ void Interface::ImReset()
     imWnd->Reset();
 }
 
+void Interface::ImHandleFacetDeletion(const std::vector<size_t>& facetIdList)
+{
+    if (!imWnd) return;
+    imWnd->HandleFacetDeletion(facetIdList);
+}
+
 void Interface::ResetAutoSaveTimer() {
     UpdateStats(); //updates m_fTime
     if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTimer.Elapsed();

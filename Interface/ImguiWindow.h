@@ -56,6 +56,7 @@ public:
 
     void Refresh();
     void Reset();
+    void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
     void LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 
     GLApplication* app;

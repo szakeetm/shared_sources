@@ -89,7 +89,7 @@ void ImHistogramPlotter::Draw()
 		AddPlot();
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove")) {
-		RemovePlot();
+		RemovePlot(comboSelection, plotTab);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove all")) {
 		data[plotTab].clear();
@@ -149,15 +149,15 @@ void ImHistogramPlotter::DrawPlot()
 	RefreshPlots();
 }
 
-void ImHistogramPlotter::RemovePlot()
+void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
 {
-	for (size_t i = 0; i < data[plotTab].size(); i++) {
-		if (data[plotTab][i].id == comboSelection) {
-			data[plotTab].erase(data[plotTab].begin() + i);
+	for (size_t i = 0; i < data[tab].size(); i++) {
+		if (data[tab][i].id == idx) {
+			data[tab].erase(data[tab].begin() + i);
 			return;
 		}
 	}
-	globals[plotTab] = ImPlotData();
+	globals[tab] = ImPlotData();
 }
 
 void ImHistogramPlotter::AddPlot()
@@ -456,6 +456,20 @@ void ImHistogramPlotter::Reset()
 void ImHistogramPlotter::UpdateOnFacetChange()
 {
 	settingsWindow.UpdateOnFacetChange();
+}
+
+void ImHistogramPlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdList)
+{
+	for (int tab = bounces; tab < IM_HISTOGRAM_TABS; tab++) {
+		for (auto& curve : data[tab]) {
+			int offset = 0;
+			for (const auto& deleted : facetIdList) {
+				if (deleted < curve.id) offset++;
+			}
+			curve.id -= offset;
+		}
+		for (const auto& deleted : facetIdList) RemovePlot(deleted, (plotTabs)tab);
+	}
 }
 
 void ImHistogramPlotter::DrawMenuBar()

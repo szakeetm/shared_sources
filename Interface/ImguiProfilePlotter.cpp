@@ -137,6 +137,18 @@ void ImProfilePlotter::UpdatePlotter()
 	ComputeProfiles();
 }
 
+void ImProfilePlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdList)
+{
+	for (auto& curve : data) {
+		int offset = 0;
+		for (const auto& deleted : facetIdList) {
+			if (deleted < curve.id) offset++;
+		}
+		curve.id -= offset;
+	}
+	for (const auto& deleted : facetIdList) RemoveCurve(deleted);
+}
+
 void ImProfilePlotter::DrawProfileGraph()
 {
 	lockYtoZero = data.size() == 0 && !drawManual;

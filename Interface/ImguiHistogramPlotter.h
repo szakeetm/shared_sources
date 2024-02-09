@@ -24,12 +24,12 @@ public:
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
 	void UpdateOnFacetChange();
-
+	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 protected:
 	//functions
 	void OnShow() override;
 	void DrawPlot();
-	void RemovePlot();
+	void RemovePlot(int idx, plotTabs tab);
 	void AddPlot();
 	void DrawMenuBar();
 	void RefreshPlots();
