@@ -464,7 +464,7 @@ void ImHistogramPlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdL
 		for (auto& curve : data[tab]) {
 			int offset = 0;
 			for (const auto& deleted : facetIdList) {
-				if (deleted < curve.id) offset++;
+				if (deleted <= curve.id) offset++;
 			}
 			curve.id -= offset;
 		}

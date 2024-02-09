@@ -142,7 +142,7 @@ void ImProfilePlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdLis
 	for (auto& curve : data) {
 		int offset = 0;
 		for (const auto& deleted : facetIdList) {
-			if (deleted < curve.id) offset++;
+			if (deleted <= curve.id) offset++;
 		}
 		curve.id -= offset;
 	}
