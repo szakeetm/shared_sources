@@ -517,6 +517,7 @@ public:
 	void UpdateViewerPanel();
 
 	virtual void SelectViewer(int s);
+	virtual void RefreshPlotterCombos();
 
 	void Place3DViewer();
 	void UpdateViewers();
