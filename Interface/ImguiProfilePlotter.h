@@ -14,6 +14,7 @@ public:
 	void Refresh();
 	void UpdatePlotter();
 private:
+	void OnShow() override;
 	void DrawProfileGraph();
 
 	// button actions

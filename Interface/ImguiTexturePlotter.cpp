@@ -83,6 +83,11 @@ void ImTexturePlotter::UpdatePlotter()
 	GetData();
 }
 
+void ImTexturePlotter::OnShow()
+{
+	UpdatePlotter();
+}
+
 void ImTexturePlotter::DrawTextureTable()
 {
 	if (width < 1 || height < 1) return;

@@ -27,6 +27,7 @@ public:
 
 protected:
 	//functions
+	void OnShow() override;
 	void DrawPlot();
 	void RemovePlot();
 	void AddPlot();

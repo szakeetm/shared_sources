@@ -14,6 +14,7 @@ public:
 	void UpdatePlotter();
 protected:
 	// functions
+	void OnShow() override;
 	void DrawTextureTable();
 	void GetData();
 	bool IsCellSelected(size_t row, size_t col);

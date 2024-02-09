@@ -24,6 +24,7 @@ void ImWindow::Show()
 		txtW = ImGui::CalcTextSize("0").x;
 		txtH = ImGui::GetTextLineHeightWithSpacing();
 	}
+	OnShow();
 }
 
 void ImWindow::Hide()
@@ -43,7 +44,12 @@ const bool ImWindow::IsVisible() {
 
 void ImWindow::SetVisible(bool value)
 {
+	if (value) OnShow();
 	drawn = value;
+}
+
+void ImWindow::OnShow()
+{
 }
 
 bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)

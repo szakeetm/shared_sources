@@ -115,6 +115,13 @@ void ImHistogramPlotter::Init(Interface* mApp_)
 	
 }
 
+void ImHistogramPlotter::OnShow()
+{
+	RefreshFacetLists();
+	settingsWindow.UpdateOnFacetChange();
+	RefreshPlots();
+}
+
 void ImHistogramPlotter::DrawPlot()
 {
 	if(plotTab==bounces) xAxisName = "Number of bounces";

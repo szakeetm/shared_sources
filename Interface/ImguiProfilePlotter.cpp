@@ -111,6 +111,10 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	}
 }
 
+void ImProfilePlotter::OnShow() {
+	Refresh();
+}
+
 void ImProfilePlotter::Refresh()
 {
 	interfGeom = mApp->worker.GetGeometry();
@@ -230,11 +234,17 @@ void ImProfilePlotter::RemoveCurve(int id)
 
 void ImProfilePlotter::ComputeProfiles()
 {
-	{
-		if (!mApp->imguiRenderLock) LockWrapper lW(mApp->imguiRenderLock);
-		if (!mApp->worker.ReloadIfNeeded()) return;
+	try {
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded())
+			return;
 	}
-	
+	catch (Error e)
+	{
+		if (e.what() != "LockWrapper: Trying to lock an already locked guard.") return;
+		if (!mApp->worker.ReloadIfNeeded())
+			return;
+	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
 	
