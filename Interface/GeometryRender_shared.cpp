@@ -818,7 +818,7 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	GLCOLOR currentColor;
 
 	for (const auto sel : selectedFacets) {
-		if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+		if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
@@ -1566,7 +1566,7 @@ void InterfaceGeometry::BuildSelectList() {
 #pragma omp for
 		for (int i = 0; i < selectedFacets.size(); ++i) {
 			const auto& f = facets[selectedFacets[i]];
-			if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+			if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
 				auto it = colorHighlighting.find(i);
 				// Check if element exists in map or not
 				if (it != colorHighlighting.end()) {
@@ -1611,7 +1611,7 @@ void InterfaceGeometry::BuildSelectList() {
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last
-	if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+	if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
 		for (auto& sel : selectedFacets) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
