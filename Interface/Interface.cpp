@@ -1575,9 +1575,12 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             GeometryTools::PolygonsToTriangles(interfGeom, selectedFacets, prg);
                         }
                     }
+                    RefreshPlotterCombos();
+                    if (vertexCoordinates) vertexCoordinates->Update();
+                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                    // Send to sub process
                     worker.MarkToReload();
                     UpdateModelParams();
-                    UpdateFacetlistSelected();
                     UpdateViewers();
                     return true;
                 }
