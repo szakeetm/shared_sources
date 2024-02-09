@@ -15,6 +15,8 @@ public:
 	void UpdatePlotter();
 	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 private:
+	std::vector <size_t> comboOpts;
+	void UpdateComboOpts();
 	void OnShow() override;
 	void DrawProfileGraph();
 

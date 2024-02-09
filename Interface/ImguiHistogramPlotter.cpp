@@ -458,20 +458,6 @@ void ImHistogramPlotter::UpdateOnFacetChange()
 	settingsWindow.UpdateOnFacetChange();
 }
 
-void ImHistogramPlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdList)
-{
-	for (int tab = bounces; tab < IM_HISTOGRAM_TABS; tab++) {
-		for (auto& curve : data[tab]) {
-			int offset = 0;
-			for (const auto& deleted : facetIdList) {
-				if (deleted <= curve.id) offset++;
-			}
-			curve.id -= offset;
-		}
-		for (const auto& deleted : facetIdList) RemovePlot(deleted, (plotTabs)tab);
-	}
-}
-
 void ImHistogramPlotter::DrawMenuBar()
 {
 	if (ImGui::BeginMenuBar()) {

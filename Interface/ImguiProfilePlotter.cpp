@@ -31,13 +31,11 @@ void ImProfilePlotter::Draw()
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
-	size_t nFacets = interfGeom->GetNbFacet();
 	if (ImGui::BeginCombo("##ProfilePlotterCombo", ((selectedProfile == -1 || f == 0) ? "Select [v] or type->" : ("F#" + std::to_string(selectedProfile + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)f->sh.profileType].second))))) {
 		if (ImGui::Selectable("Select [v] or type->")) selectedProfile = -1;
-		for (size_t i = 0; i < nFacets; i++) {
-			if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
-			if (ImGui::Selectable("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second) + "###profileCombo" + std::to_string(i), selectedProfile == i)) {
-				selectedProfile = i;
+		for (size_t i = 0; i < comboOpts.size(); i++) {
+			if (ImGui::Selectable("F#" + std::to_string(comboOpts[i] + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(comboOpts[i])->sh.profileType].second) + "###profileCombo" + std::to_string(comboOpts[i]), selectedProfile == comboOpts[i])) {
+				selectedProfile = comboOpts[i];
 				f = interfGeom->GetFacet(selectedProfile);
 			}
 		}
@@ -111,12 +109,23 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	}
 }
 
+void ImProfilePlotter::UpdateComboOpts()
+{
+	comboOpts.clear();
+	size_t nFacet = interfGeom->GetNbFacet();
+	for (int i = 0; i < nFacet; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		comboOpts.push_back(i);
+	}
+}
+
 void ImProfilePlotter::OnShow() {
 	Refresh();
 }
 
 void ImProfilePlotter::Refresh()
 {
+	UpdateComboOpts();
 	interfGeom = mApp->worker.GetGeometry();
 	int nbFacet = interfGeom->GetNbFacet();
 	for (int i = data.size() - 1; i >= 0; i--) {

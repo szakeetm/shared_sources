@@ -24,7 +24,6 @@ public:
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
 	void UpdateOnFacetChange();
-	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 protected:
 	//functions
 	void OnShow() override;
