@@ -2773,7 +2773,6 @@ void Interface::SetDefaultViews() {
 
 void Interface::RefreshPlotterCombos() {
     //Removes non-present views, rebuilds combobox and refreshes plotted data
-    if (imWnd) imWnd->profPlot.Refresh();
     if (histogramPlotter) histogramPlotter->Refresh();
     if (convergencePlotter) convergencePlotter->Refresh();
 }
