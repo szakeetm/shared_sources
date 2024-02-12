@@ -1576,9 +1576,12 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             GeometryTools::PolygonsToTriangles(interfGeom, selectedFacets, prg);
                         }
                     }
+                    RefreshPlotterCombos();
+                    if (vertexCoordinates) vertexCoordinates->Update();
+                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                    // Send to sub process
                     worker.MarkToReload();
                     UpdateModelParams();
-                    UpdateFacetlistSelected();
                     UpdateViewers();
                     return true;
                 }
@@ -2784,4 +2787,10 @@ void Interface::SetDefaultViews() {
     viewers[3]->SetProjection(ProjectionMode::Perspective);
     viewers[3]->ToFrontView();
     SelectViewer(0);
+}
+
+void Interface::RefreshPlotterCombos() {
+    //Removes non-present views, rebuilds combobox and refreshes plotted data
+    if (histogramPlotter) histogramPlotter->Refresh();
+    if (convergencePlotter) convergencePlotter->Refresh();
 }
