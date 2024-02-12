@@ -34,7 +34,6 @@ void ImProgress::SetProgress(const double prg) {
 	int newPrg = static_cast<int>(prg * 100.0);
 	if (progress != newPrg) {
 		progress = newPrg;
-		mApp->imWnd->renderSingle();
 	}
 }
 
@@ -49,17 +48,14 @@ void ImProgress::SetMessage(const std::string& msg, const bool newLine, const bo
 
 	if (forceDraw || newStatus!=status) {
 		status = newStatus;
-		mApp->imWnd->renderSingle();
 	}
 }
 
 void ImProgress::SetTitle(std::string title)
 {
 	this->title = title;
-	mApp->imWnd->renderSingle();
 }
 
 void ImProgress::SetVisible(bool value) {
 	drawn = value;
-	mApp->imWnd->renderSingle();
 }
