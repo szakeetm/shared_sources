@@ -58,7 +58,7 @@ void ImTexturePlotter::Init(Interface* mApp_)
 	interfGeom = mApp->worker.GetGeometry();
 }
 
-void ImTexturePlotter::UpdateOnFacetChange(std::vector<size_t>& selectedFacets)
+void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
 	if (selectedFacets.size() > 0) {
 		if (selectedFacets[0] != selFacetId) {
@@ -66,7 +66,7 @@ void ImTexturePlotter::UpdateOnFacetChange(std::vector<size_t>& selectedFacets)
 			name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
 			selFacet = interfGeom->GetFacet(selFacetId);
 		}
-		if (selectedFacets.size() == 1) GetData();
+		GetData();
 	}
 	else {
 		selFacet = nullptr;
@@ -85,12 +85,17 @@ void ImTexturePlotter::UpdatePlotter()
 
 void ImTexturePlotter::OnShow()
 {
+	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
 	UpdatePlotter();
 }
 
 void ImTexturePlotter::DrawTextureTable()
 {
 	if (width < 1 || height < 1) return;
+	if (width > 63) {
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Unsuported table width");
+		return;
+	}
 
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
@@ -219,9 +224,16 @@ void ImTexturePlotter::DrawTextureTable()
 void ImTexturePlotter::GetData()
 {
 	if (selFacet == nullptr) return;
+	try {
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded())
+			return;
+	}
+	catch (Error e)
 	{
-		//LockWrapper lWrap(mApp->imguiRenderLock);
-		if (!mApp->worker.ReloadIfNeeded()) return;
+		if (e.what() != "LockWrapper: Trying to lock an already locked guard.") return;
+		if (!mApp->worker.ReloadIfNeeded())
+			return;
 	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;

@@ -10,7 +10,7 @@ class ImTexturePlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
-	void UpdateOnFacetChange(std::vector<size_t>& selectedFacets);
+	void UpdateOnFacetChange(const std::vector<size_t>& selectedFacets);
 	void UpdatePlotter();
 protected:
 	// functions
