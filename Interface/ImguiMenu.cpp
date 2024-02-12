@@ -1399,6 +1399,7 @@ static void ShowMenuView() {
         }
         for (int i = 0; i < mApp->views.size(); i++) {
             if (ImGui::MenuItem(mApp->views[i].name)) {
+                LockWrapper lw(mApp->imguiRenderLock);
                 mApp->OverWriteView(i);
             }
         }
