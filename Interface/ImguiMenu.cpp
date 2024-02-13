@@ -437,7 +437,7 @@ static void ShowMenuSelection() {
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F);
+        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F, "1");
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         mApp->imWnd->selFacetByResult.Show();
@@ -479,7 +479,7 @@ static void ShowMenuSelection() {
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F);
+        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F, "1e-05");
     }
     if (ImGui::MenuItem("Select non simple facets")) {
         interfGeom->UnselectAll();
