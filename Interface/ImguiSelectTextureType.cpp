@@ -20,9 +20,6 @@ extern SynRad* mApp;
 #endif
 
 void ImSelectTextureType::Preprocess() {
-	mode = none;
-	if (exactlyCheck) mode = exactly;
-	if (betweenCheck) mode = between;
 	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
@@ -44,6 +41,9 @@ void ImSelectTextureType::Preprocess() {
 				});
 			return;
 		}
+	}
+	else {
+		return;
 	}
 }
 void ImSelectTextureType::Select(int src)
@@ -86,39 +86,23 @@ void ImSelectTextureType::Draw()
 			if (ImGui::BeginTable("##SFBTPtable", 2, ImGuiTableFlags_SizingFixedFit)) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Checkbox("Exactly", &exactlyCheck)) {
-					if (exactlyCheck) betweenCheck = false;
-				}
+				if (ImGui::RadioButton("Exactly", mode==exactly)) mode = exactly;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
-				if (ImGui::InputText("##3", &exactlyInput)) {
-					mode = exactly;
-					exactlyCheck = true;
-					betweenCheck = false;
-				}
+				if (ImGui::InputText("##3", &exactlyInput)) mode = exactly;
 				ImGui::SameLine();
 				ImGui::Text("/cm");
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::Checkbox("Between", &betweenCheck)) {
-					if (betweenCheck) exactlyCheck = false;
-				}
+				if (ImGui::RadioButton("Between", mode == between)) mode = between;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
-				if (ImGui::InputText("##4", &minInput)) {
-					mode = between;
-					betweenCheck = true;
-					exactlyCheck = false;
-				}
+				if (ImGui::InputText("##4", &minInput))	mode = between;
 				ImGui::SameLine();
 				ImGui::Text("and");
 				ImGui::SameLine();
 				ImGui::SetNextItemWidth(txtW * 15);
-				if (ImGui::InputText("##5", &maxInput)) {
-					mode = between;
-					betweenCheck = true;
-					exactlyCheck = false;
-				}
+				if (ImGui::InputText("##5", &maxInput))	mode = between;
 				ImGui::SameLine();
 				ImGui::Text("/cm");
 				ImGui::EndTable();
