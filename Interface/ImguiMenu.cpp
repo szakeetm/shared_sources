@@ -242,7 +242,7 @@ static void ShowMenuFile() {
     }
     else if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
         for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
-            if (ImGui::MenuItem(mApp->recentsList[i])) {
+            if (ImGui::MenuItem(AbbreviateString(mApp->recentsList[i], 128))) {
                 std::string selection = mApp->recentsList[i];
                 auto common = [selection]() { DoLoadSelected(selection); };
                 ImIOWrappers::AskToSaveBeforeDoing(common);

@@ -262,7 +262,6 @@ public:
 
 	void ImRefresh();
 	void ImReset();
-	void ImHandleFacetDeletion(const std::vector<size_t>& facetIdList);
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
