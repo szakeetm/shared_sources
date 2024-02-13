@@ -61,11 +61,9 @@ void ImTexturePlotter::Init(Interface* mApp_)
 void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
 	if (selectedFacets.size() > 0) {
-		if (selectedFacets[0] != selFacetId) {
-			selFacetId = selectedFacets[0];
-			name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
-			selFacet = interfGeom->GetFacet(selFacetId);
-		}
+		selFacetId = selectedFacets[0];
+		name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
+		selFacet = interfGeom->GetFacet(selFacetId);
 		GetData();
 	}
 	else {
