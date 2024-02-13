@@ -423,21 +423,20 @@ static void ShowMenuSelection() {
     }
     if (ImGui::MenuItem("Select large with no hits...")) {
         auto F = [](std::string arg) {
-            double largeAreaThreshold;
-            if (!Util::getNumber(&largeAreaThreshold, arg)) {
+            if (!Util::getNumber(&mApp->largeAreaThreshold, arg)) {
                 mApp->imWnd->popup.Open("Error", "Incorrect value", {std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,SDL_SCANCODE_RETURN)});
             } else {
                 InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
                 interfGeom->UnselectAll();
                 for (int i = 0; i < interfGeom->GetNbFacet(); i++)
                     if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                        interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                        interfGeom->GetFacet(i)->sh.area >= mApp->largeAreaThreshold)
                         interfGeom->SelectFacet(i);
                 interfGeom->UpdateSelection();
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F, "1");
+        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F, fmt::format("{:.3g}",mApp->largeAreaThreshold));
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         mApp->imWnd->selFacetByResult.Show();
@@ -463,8 +462,7 @@ static void ShowMenuSelection() {
     }
     if (ImGui::MenuItem("Select non planar facets")) {
         auto F = [](std::string arg) {
-            double planarityThreshold = 1e-5;
-            if (!Util::getNumber(&planarityThreshold, arg)) {
+            if (!Util::getNumber(&mApp->planarityThreshold, arg)) {
                 mApp->imWnd->popup.Open("Error", "Incorrect value", { 
                     std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,SDL_SCANCODE_RETURN) 
                     });
@@ -472,14 +470,14 @@ static void ShowMenuSelection() {
             else {
                 InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
                 interfGeom->UnselectAll();
-                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(mApp->planarityThreshold);
                 for (const auto& i : nonPlanarFacetids)
                     interfGeom->SelectFacet(i);
                 interfGeom->UpdateSelection();
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F, "1e-05");
+        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F, fmt::format("{:.3g}", mApp->planarityThreshold));
     }
     if (ImGui::MenuItem("Select non simple facets")) {
         interfGeom->UnselectAll();
@@ -1241,7 +1239,7 @@ void VertexCoplanarMenuPress() {
                     }
                 }
             };
-            mApp->imWnd->input.Open("Select Coplanar Vertices", "Tolerance(cm)", F, "1.0");
+            mApp->imWnd->input.Open("Select Coplanar Vertices", "Tolerance(cm)", F, fmt::format("{:.3g}", mApp->coplanarityTolerance));
         }
     }
     else {
