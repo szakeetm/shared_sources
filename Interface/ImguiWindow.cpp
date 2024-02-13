@@ -20,7 +20,6 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
-#include "ImguiMenu.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -221,6 +220,9 @@ void ImguiWindow::init() {
     textScale = ImTextureScaling();
     textScale.Init(mApp);
 
+    expFac = ImExplodeFacet();
+    expFac.Init(mApp);
+
     RegisterShortcuts();
 
     start_time = ImGui::GetTime();
@@ -411,6 +413,8 @@ void ImguiWindow::renderSingle() {
         profPlot.Draw();
         histPlot.Draw();
         textScale.Draw();
+
+        expFac.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -906,43 +906,7 @@ void CollapseMenuPress() {
 }
 
 void ExplodeMenuPress() {
-    auto Y = []() {
-        LockWrapper myLock(mApp->imguiRenderLock);
-        if (mApp->AskToReset()) {
-            int err;
-            try {
-                err = interfGeom->ExplodeSelected();
-            }
-            catch (const std::exception& ) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "Error Exploding", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
-                    });
-            }
-            if (err == -1) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "Empty Selection", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
-                    });
-            }
-            else if (err == -2) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "All selected facets must have a mesh with boudary correction enabled", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
-                    });
-            }
-            else if (err == 0) {
-                mApp->UpdateModelParams();
-                mApp->UpdateFacetParams(true);
-                // Send to sub process
-                mApp->worker.MarkToReload();
-            }
-        }
-    };
-    mApp->imWnd->popup.Open("Explode?","Are you sure you want to explode selected facets?",{
-        std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", Y, SDL_SCANCODE_RETURN),
-        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
-        });
+    mApp->imWnd->expFac.Show();
 }
 
 void RevertMenuPress() {
@@ -1694,5 +1658,48 @@ void ShowAppMainMenuBar() {
         }
 
         ImGui::EndMainMenuBar();
+    }
+}
+
+void ImExplodeFacet::Draw()
+{
+    if (!drawn) return;
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
+    ImGui::Begin("Explode?", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::TextWrapped("Are you sure you want to explode selected facets?");
+    if (ImGui::Button("  Yes  ") || io.KeysDown[SDL_SCANCODE_RETURN] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
+        DoExplode();
+        this->Hide();
+    } ImGui::SameLine();
+    if (ImGui::Button("  Cancel  ") || io.KeysDown[SDL_SCANCODE_ESCAPE]) {
+        this->Hide();
+    }
+    ImGui::End();
+}
+
+void ImExplodeFacet::DoExplode()
+{
+    LockWrapper myLock(mApp->imguiRenderLock);
+    if (mApp->AskToReset()) {
+        int err;
+        try {
+            err = interfGeom->ExplodeSelected();
+        }
+        catch (const std::exception&) {
+            ImIOWrappers::InfoPopup("Error", "Error Exploding");
+        }
+        if (err == -1) {
+            ImIOWrappers::InfoPopup("Error", "Empty Selection");
+        }
+        else if (err == -2) {
+            ImIOWrappers::InfoPopup("Error", "All selected facets must have a mesh with boudary correction enabled");
+        }
+        else if (err == 0) {
+            mApp->UpdateModelParams();
+            mApp->UpdateFacetParams(true);
+            // Send to sub process
+            mApp->worker.MarkToReload();
+        }
     }
 }
