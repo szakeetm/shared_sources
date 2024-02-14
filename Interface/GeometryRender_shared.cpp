@@ -158,7 +158,7 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 }
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
-	bool printDebugInfo = true; //error-prone parallel search, set to true to print
+	bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
@@ -193,14 +193,8 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 			}
 		}
 		else {
-			//ok[i] = false; //can't transform. skip for speedup as ok[] vector's elements are false by default
-			//onScreen[i] = false; //skip for speedup, not checked if ok[] is false
-			
-			if (printDebugInfo) {
-//#pragma omp critical
-				fmt::print("  (Thread {}/{}: can't transform vertex {} coords)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-			}
-			
+			//ok[i] = false; //can't transform. skip this line for speedup as ok[] vector's elements are false by default
+			//onScreen[i] = false; //skip for speedup, not checked if ok[] is false			
 		}
 	}
 
@@ -269,10 +263,6 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 								if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
 									found_local_facetId = i;
 								}
-								else if (false && printDebugInfo) {
-#pragma omp critical
-									fmt::print("  (Thread {}/{}: facet {} not under pointer)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-								}
 
 								if (found_local_facetId >= 0) {
 
@@ -316,28 +306,14 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 										}
 									}
 								}
-							}
-							else if (printDebugInfo) {
-#pragma omp critical
-								fmt::print("  (Thread {}/{}: facet {} already selected or unselect mode)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-							}
-						}
-						else if (printDebugInfo) {
-#pragma omp critical
-							fmt::print("  (Thread {}/{}: facet {} has no selected vertex and CAPS LOCK on)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-						}
-					}
-					else if (printDebugInfo) {
-#pragma omp critical
-						fmt::print("  (Thread {}/{}: facet {} has no vertex on screen)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-					}
-				}
-				else if (printDebugInfo) {
-#pragma omp critical
-					fmt::print("  (Thread {}/{}: facet {} clipped)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-				}
-			}
-		}
+							} //if not already selected or unselect mode
+						} //if CAPS LOCK not on or has selected vertex
+					} //if has at least a vertex on screen
+				} //if doesn't have vertex that couldn't be transformed
+			} //if in current (or all) structure
+		} //parallel for loop on facets
+
+//process results, still in parallel region to keep found_local_facetId
 #pragma omp critical
 		if (!unselect) {
 			if (!assigned) {
@@ -370,7 +346,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 		} else if (printDebugInfo) {
 			fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as unselect mode.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 		}
-	}
+	} //thread results processed, end parallel region
 
 	if (clear && !unselect) UnselectAll();
 
