@@ -253,7 +253,7 @@ bool GLWindow::IsSpaceDown() {
 
 bool GLWindow::IsDkeyDown() {
     const Uint8 *state = SDL_GetKeyboardState(nullptr);
-    return state[SDLK_d];
+    return state[SDL_GetScancodeFromKey(SDLK_d)];
 }
 
 bool GLWindow::IsZkeyDown() {
