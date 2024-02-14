@@ -260,7 +260,7 @@ public:
 #pragma region GeometryRender_Shared.cpp
 protected:
 	void AddToSelectionHist(size_t f);
-	bool AlreadySelected(size_t f);
+	bool InSelectionHistory(size_t f);
 	std::optional<size_t> GetLastSelected();
 	std::optional<size_t> GetFirstSelected();
 	void DrawFacetWireframe(const InterfaceFacet *f, bool offset = false, bool selOffset = false);

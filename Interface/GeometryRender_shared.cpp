@@ -158,13 +158,12 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 }
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
-
+	bool printDebugInfo = true; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
 	// Select a facet on a mouse click in 3D perspective view 
 	// (x,y) are in screen coordinates
-	// TODO: Handle clipped polygon
 
 // Check intersection of the facet and a "perspective ray"
 	std::vector<int> screenXCoords(sh.nbVertex);
@@ -199,29 +198,26 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	bool clipped;
 	bool hasVertexOnScreen;
 	bool hasSelectedVertex;
-	int lastFound = -1;
-	//char tmp[256];
-	//int lastPaintedProgress = -1;
-	//int paintStep = (int)((double)sh.nbFacet / 10.0);
+	int lastFound_facetId = -1;
+
 	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
+	
+	if (printDebugInfo) {
+		//debug
+		fmt::print("\nSelection history before search: {{");
+		for (const auto s : selectHist)
+			fmt::print("{},", s + 1);
+		fmt::print("}}\n");
+	}
+
 	bool assigned=false;
 #pragma omp parallel
 	{
-			bool found_local=false;
-			int lastFound_local=-1;
+			int  found_local_facetId=-1; //-1: not found, otherwise id of facet
 #pragma omp for
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (found_global) continue; //this or an other thread have found a valid facet
+			if (found_global) continue; //this or an other thread have found a valid facet, don't look for more
 
-			/*
-			if (sh.nbFacet > 5000) {
-				if ((i - lastPaintedProgress) > paintStep) {
-					lastPaintedProgress = i;;
-					sprintf(tmp, "Facet search: %d%%", (int)(i * 100.0 / (double)sh.nbFacet));
-					mApp->SetFacetSearchPrg(true, tmp);
-				}
-			}
-			*/
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
 				clipped = false;
@@ -249,13 +245,20 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 				if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex) && (unselect || !facets[i]->selected)) {
 
-					found_local = IsInPoly((double)x, (double)y, facetScreenCoords);
-					if (found_local) {
-						
+					if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
+						found_local_facetId = i;
+					}
+
+					if (found_local_facetId >=0) {
+
 						if (unselect) {
 							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
 								facets[i]->selected = false;
-								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
+								if (printDebugInfo) {
+#pragma omp critical
+									fmt::print("Thread {}/{}: deselecting facet {} and looking for more under the pointer.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+								}
+								found_local_facetId = -1; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
 								double maxAngleDiff;
@@ -264,90 +267,116 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 								} else 
 									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
 								std::vector<size_t> connectedFacets;
-								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
 								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
 								for (auto& ind : connectedFacets)
 									facets[ind]->selected = false;
-								//mApp->SetFacetSearchPrg(false, "");
 							}
 						} //end unselect
-						
-						lastFound_local = i;
-						if (AlreadySelected(i)) {
-							found_local = false; //Continue looking for facets
-						}
 					} //end found
-					if (found_local) { //found a facet that wasn't in the selected history (or we're in unselect mode)
+					if (found_local_facetId>=0) { //found a facet that wasn't in the selected history (or we're in unselect mode)
+						if (InSelectionHistory(i)) {
+							if (printDebugInfo) {
+								#pragma omp critical
+								fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+							}
+						} else {
 #pragma omp critical
-						{
-							found_global = true; //set global found flag to true, all threads will stop
+							{
+								found_global = true; //set global found flag to true, all threads will skip every facet check after this
+								if (printDebugInfo) {
+									fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 #pragma omp critical
-		if (!assigned) {
-			//fmt::print("Thread{} found_local={} lastFound_local={}", omp_get_thread_num(), found_local, lastFound_local);
-			if (found_global) { //There was at least one facet found not yet in the seletion history
-				if (found_local) {
-					lastFound = lastFound_local; //If this thread was one of those that found, assign it to global
-					assigned = true; //Don't process other threads
-					//fmt::print(" assign\n");
+		if (!unselect) {
+			if (!assigned) {
+
+				if (printDebugInfo) fmt::print("Thread {}/{} finished, found_local_facetId={}", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+
+				if (found_global) { //There was at least one facet found not yet in the selection history
+					if (found_local_facetId >= 0) {
+						lastFound_facetId = found_local_facetId; //If this thread was one of those that found, make it the global result
+						assigned = true; //Don't process other threads
+						if (printDebugInfo) fmt::print(" - accept as global result\n");
+					}
+					else {
+						if (printDebugInfo) fmt::print(" - thread had no result\n");
+					}
 				}
-				else {
-					//fmt::print(" skip\n");
+				else { //No threads found new facet
+					if (found_local_facetId >= 0) { //This thread has a facet already in the selection history
+						foundInSelectionHistory.insert(found_local_facetId); //we'll process later
+						if (printDebugInfo) fmt::print(" - no new facet found, add this result to candidates in selection history\n");
+					}
+					else if (printDebugInfo) {
+						fmt::print(" - thread had no result\n");
+					}
 				}
 			}
-			else { //No threads found new facet
-				if (lastFound_local != -1) { //This thread has a facet already in the selection history
-					foundInSelectionHistory.insert(lastFound_local); //we'll process later
-					//fmt::print(" add\n");
-				}
-				else {
-					//fmt::print(" skip\n");
-				}
+			else if (printDebugInfo) {
+				fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as there's already a result.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 			}
-			
+		} else if (printDebugInfo) {
+			fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as unselect mode.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 		}
 	}
 
-	mApp->SetFacetSearchPrg(false, "");
 	if (clear && !unselect) UnselectAll();
 
-	if (!found_global && foundInSelectionHistory.size()>0) { //found one that was already selected previously
-		size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
-		if (!unselect) { //select
-			for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
-				if (foundInSelectionHistory.count(selectHist[s])) {
-					lastIndex = selectHist[s];
-					break;
-				}
+	if (!unselect) {
+		if (!found_global && foundInSelectionHistory.size() > 0) { //found at least one that was already selected previously
+			size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
+
+			if (printDebugInfo) {
+				//debug
+				fmt::print("\nNo new facet found, choosing from candidates already in history: {{");
+				for (const auto s : foundInSelectionHistory)
+					fmt::print("{},", s + 1);
+				fmt::print("}}\n");
 			}
-			selectHist = { (size_t)lastIndex }; //reset
-			TreatNewSelection(lastIndex, unselect);
+
+			if (!unselect) { //select
+				for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
+					if (foundInSelectionHistory.count(selectHist[s])) {
+						lastIndex = selectHist[s];
+						if (printDebugInfo) fmt::print("Choosing facet {} as oldest in the history.\n", lastIndex + 1);
+						break;
+					}
+				}
+				selectHist = { (size_t)lastIndex }; //reset
+				if (printDebugInfo) fmt::print("Resetting selection history to: {{{}}}.\n", lastIndex + 1);
+				TreatNewSelection(lastIndex, unselect);
+			}
+			/*
+			else { //unselect last selected facet
+				for (int s = selectHist.size()-1; s >=0; s--) { //find the newest in the history that's under our pointer
+					if (foundInSelectionHistory.count(selectHist[s]) && facets[selectHist[s]]->selected) {
+						lastIndex = selectHist[s];
+						break;
+					}
+				}
+			}*/
+
+
 		}
-		/*
-		else { //unselect last selected facet
-			for (int s = selectHist.size()-1; s >=0; s--) { //find the newest in the history that's under our pointer
-				if (foundInSelectionHistory.count(selectHist[s]) && facets[selectHist[s]]->selected) {
-					lastIndex = selectHist[s];
-					break;
-				}
-			}
-		}*/
-		
-		
-	}
-	else if (found_global) {
-		if (!unselect) AddToSelectionHist(lastFound);
-		TreatNewSelection(lastFound, unselect);
-	}
-	else { //not found at all
-		selectHist.clear();
+		else if (found_global) {
+			if (!unselect) AddToSelectionHist(lastFound_facetId);
+			if (printDebugInfo) fmt::print("Added facet {} to selection history\n", lastFound_facetId + 1);
+
+			TreatNewSelection(lastFound_facetId, unselect);
+		}
+		else { //not found at all
+			if (printDebugInfo) fmt::print("Nothing found, not even in selection history, cleared selection history.\n");
+			selectHist.clear();
+		}
 	}
 	
-	//fmt::print("Found:{} Lastfound:{} Selection history:", found, lastFound);
+	//fmt::print("Found:{} Lastfound:{} Selection history:", found, lastFound_facetId);
 	//for (auto i : selectHist) fmt::print("{} ", i);
 	//fmt::print("\n\n");
 	UpdateSelection();
@@ -548,7 +577,7 @@ void InterfaceGeometry::AddToSelectionHist(size_t f) {
 	selectHist.push_back(f);
 }
 
-bool InterfaceGeometry::AlreadySelected(size_t f) {
+bool InterfaceGeometry::InSelectionHistory(size_t f) {
 	return std::find(selectHist.begin(), selectHist.end(), f) != selectHist.end();
 }
 
