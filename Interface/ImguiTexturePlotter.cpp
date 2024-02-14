@@ -226,14 +226,21 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
-	if (isUpToDate) return;
-	if (!selFacet) {
-		data.clear();
-		return;
+	if (selFacet == nullptr) return;
+	try {
+		// try to lock
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock
+			return;
 	}
+	catch (Error e)
 	{
-		LockWrapper lWrap(mApp->imguiRenderLock);
-		if (!mApp->worker.ReloadIfNeeded()) return;
+		if (e.what() == "LockWrapper: Trying to lock an already locked guard.") {
+			// if lock failed due to already being locked
+			if (!mApp->worker.ReloadIfNeeded()) { // can be here because the lock was locked further up the call stack
+				return;
+			}
+		}
 	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
@@ -568,7 +575,10 @@ ImVec4 ImTexturePlotter::SelectionBounds() {
 bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 {
 	if (!selFacet) return false;
-
+	if (height < 1 || width < 1) {
+		ImIOWrappers::InfoPopup("Error", "Nothing to export");
+		return false;
+	}
 	// find selection bounds
 	int startRow=height, startCol=width, endRow=0, endCol=0;
 	if (selection.size() == 0) { // no selection, export all
