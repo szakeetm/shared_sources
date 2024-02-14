@@ -47,6 +47,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiFacetRotate.h"
 #include "ImguiFacetAlign.h"
 #include "ImguiFacetExtrude.h"
+#include "ImguiMenu.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -109,6 +110,7 @@ public:
     ImFacetRotate rotFacet;
     ImFacetAlign alignFacet;
     ImFacetExtrude extrudeFacet;
+    ImExplodeFacet expFac;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

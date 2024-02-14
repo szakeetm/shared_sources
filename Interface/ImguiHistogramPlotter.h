@@ -27,11 +27,11 @@ public:
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
 	void UpdateOnFacetChange();
-
 protected:
 	//functions
+	void OnShow() override;
 	void DrawPlot();
-	void RemovePlot(int idx);
+	void RemovePlot(int idx, plotTabs tab);
 	void AddPlot(int idx);
 	bool IsPlotted(int idx);
 	void DrawMenuBar();

@@ -25,8 +25,6 @@ protected:
 	double exactlyValue;
 	double minValue;
 	double maxValue;
-	bool exactlyCheck = false;
-	bool betweenCheck = false;
 	std::string exactlyInput = "";
 	std::string minInput = "";
 	std::string maxInput = "";

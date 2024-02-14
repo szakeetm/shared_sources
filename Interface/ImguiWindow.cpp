@@ -244,6 +244,9 @@ void ImguiWindow::init() {
     extrudeFacet = ImFacetExtrude();
     extrudeFacet.Init(mApp);
 
+    expFac = ImExplodeFacet();
+    expFac.Init(mApp);
+
     RegisterShortcuts();
 
     start_time = ImGui::GetTime();
@@ -443,6 +446,8 @@ void ImguiWindow::renderSingle() {
         rotFacet.Draw();
         alignFacet.Draw();
         extrudeFacet.Draw();
+
+        expFac.Draw();
 
         shortcutMan.DoShortcuts();
 

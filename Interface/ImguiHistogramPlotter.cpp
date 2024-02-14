@@ -71,7 +71,7 @@ void ImHistogramPlotter::Draw()
 	ImGui::Separator();
 	if (globalHist) {
 		if (ImGui::Checkbox(("##Global"), (bool*)&(globalDrawToggle[plotTab]))) {
-			if (globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) RemovePlot(-1);
+			if (globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) RemovePlot(-1, plotTab);
 			else if (globalDrawToggle[plotTab] == 1 && !IsPlotted(-1)) AddPlot(-1);
 			UpdateSidebarMasterToggle();
 		}
@@ -82,7 +82,7 @@ void ImHistogramPlotter::Draw()
 	for (int i = 0; i < comboOpts[plotTab].size(); i++) {
 		std::string fName = ("Facet #" + std::to_string(i + 1));
 		if (ImGui::Checkbox(("##" + fName).c_str(), (bool*)&(histogramDrawToggle[plotTab][i]))) {
-			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(i)) RemovePlot(i);
+			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(i)) RemovePlot(i, plotTab);
 			else if (histogramDrawToggle[plotTab][i] == 1 && !IsPlotted(i)) AddPlot(i);
 			UpdateSidebarMasterToggle();
 		} ImGui::SameLine();
@@ -129,13 +129,16 @@ void ImHistogramPlotter::Draw()
 		AddPlot(comboSelection);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove")) {
-		RemovePlot(comboSelection);
+		RemovePlot(comboSelection, plotTab);
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove all")) {
 		data[plotTab].clear();
 		globals[plotTab] = ImPlotData();
 	} ImGui::SameLine();
 	if (ImGui::Checkbox("Normalize", &normalize)) RefreshPlots();
+	if (ImGui::Checkbox("Log Y", &logY)) RefreshPlots();
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Log X", &logX)) RefreshPlots();
 	if (settingsWindow.IsVisible()) {
 		if (anchor) ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x - settingsWindow.width - txtW, ImGui::GetWindowPos().y));
 	}
@@ -156,6 +159,13 @@ void ImHistogramPlotter::Init(Interface* mApp_)
 	
 }
 
+void ImHistogramPlotter::OnShow()
+{
+	RefreshFacetLists();
+	settingsWindow.UpdateOnFacetChange();
+	RefreshPlots();
+}
+
 void ImHistogramPlotter::DrawPlot()
 {
 	if(plotTab==bounces) xAxisName = "Number of bounces";
@@ -164,7 +174,7 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==time) xAxisName = "Time [s]";
 #endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 7 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logX) ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& plot : data[plotTab]) {
@@ -185,16 +195,16 @@ void ImHistogramPlotter::DrawPlot()
 	RefreshPlots();
 }
 
-void ImHistogramPlotter::RemovePlot(int idx)
+void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
 {
-	for (size_t i = 0; i < data[plotTab].size(); i++) {
-		if (data[plotTab][i].id == idx) {
-			data[plotTab].erase(data[plotTab].begin() + i);
+	for (size_t i = 0; i < data[tab].size(); i++) {
+		if (data[tab][i].id == idx) {
+			data[tab].erase(data[tab].begin() + i);
 			return;
 		}
 	}
 	if (idx == -1) {
-		globals[plotTab] = ImPlotData();
+		globals[tab] = ImPlotData();
 		return;
 	}
 	// a non-existent id was passed, fails silently here by design

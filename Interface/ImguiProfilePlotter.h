@@ -14,6 +14,9 @@ public:
 	void Refresh();
 	void UpdatePlotter();
 private:
+	std::vector <size_t> comboOpts;
+	void UpdateComboOpts();
+	void OnShow() override;
 	void DrawProfileGraph();
 
 	// button actions

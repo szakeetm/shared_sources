@@ -101,8 +101,23 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	UpdateSidebarMasterToggle();
 }
 
+void ImProfilePlotter::UpdateComboOpts()
+{
+	comboOpts.clear();
+	size_t nFacet = interfGeom->GetNbFacet();
+	for (int i = 0; i < nFacet; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		comboOpts.push_back(i);
+	}
+}
+
+void ImProfilePlotter::OnShow() {
+	Refresh();
+}
+
 void ImProfilePlotter::Refresh()
 {
+	UpdateComboOpts();
 	interfGeom = mApp->worker.GetGeometry();
 	int nbFacet = interfGeom->GetNbFacet();
 	for (int i = data.size() - 1; i >= 0; i--) {
@@ -199,11 +214,21 @@ void ImProfilePlotter::RemoveCurve(int id)
 
 void ImProfilePlotter::ComputeProfiles()
 {
-	{
-		if (!mApp->imguiRenderLock) LockWrapper lW(mApp->imguiRenderLock);
-		if (!mApp->worker.ReloadIfNeeded()) return;
+	try {
+		// try to lock
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock
+			return;
 	}
-	
+	catch (Error e)
+	{
+		if (e.what() == "LockWrapper: Trying to lock an already locked guard.") {
+			// if lock failed due to already being locked
+			if (!mApp->worker.ReloadIfNeeded()) { // can be here because the lock was locked further up the call stack
+				return;
+			}
+		}
+	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
 	

@@ -67,15 +67,13 @@ void ImTexturePlotter::Init(Interface* mApp_)
 	interfGeom = mApp->worker.GetGeometry();
 }
 
-void ImTexturePlotter::UpdateOnFacetChange(std::vector<size_t>& selectedFacets)
+void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
 	if (selectedFacets.size() > 0) {
-		if (selectedFacets[0] != selFacetId) {
-			selFacetId = selectedFacets[0];
-			name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
-			selFacet = interfGeom->GetFacet(selFacetId);
-		}
-		if (selectedFacets.size() == 1) GetData();
+		selFacetId = selectedFacets[0];
+		name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
+		selFacet = interfGeom->GetFacet(selFacetId);
+		GetData();
 	}
 	else {
 		selFacet = nullptr;
@@ -92,9 +90,19 @@ void ImTexturePlotter::UpdatePlotter()
 	GetData();
 }
 
+void ImTexturePlotter::OnShow()
+{
+	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
+	UpdatePlotter();
+}
+
 void ImTexturePlotter::DrawTextureTable()
 {
 	if (width < 1 || height < 1) return;
+	if (width > 511) {
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Unsuported table width");
+		return;
+	}
 
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
@@ -217,7 +225,7 @@ void ImTexturePlotter::DrawTextureTable()
 			if (selection[0].second > width-1) selection[0].second = width-1;
 			if (selection[0].first < 0) selection[0].first = 0;
 			if (selection[0].first > height-1) selection[0].first = height-1;
-			scrollToSelected = true;
+			//scrollToSelected = true;
 		}
 		if (io.MouseDown[0]) scrollToSelected = false;
 	}
@@ -225,14 +233,21 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
-	if (isUpToDate) return;
-	if (!selFacet) {
-		data.clear();
-		return;
+	if (selFacet == nullptr) return;
+	try {
+		// try to lock
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock
+			return;
 	}
+	catch (Error e)
 	{
-		//LockWrapper lWrap(mApp->imguiRenderLock);
-		if (!mApp->worker.ReloadIfNeeded()) return;
+		if (e.what() == "LockWrapper: Trying to lock an already locked guard.") {
+			// if lock failed due to already being locked
+			if (!mApp->worker.ReloadIfNeeded()) { // can be here because the lock was locked further up the call stack
+				return;
+			}
+		}
 	}
 	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
 	if (!lock) return;
@@ -567,7 +582,10 @@ ImVec4 ImTexturePlotter::SelectionBounds() {
 bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 {
 	if (!selFacet) return false;
-
+	if (height < 1 || width < 1) {
+		ImIOWrappers::InfoPopup("Error", "Nothing to export");
+		return false;
+	}
 	// find selection bounds
 	int startRow=height, startCol=width, endRow=0, endCol=0;
 	if (selection.size() == 0) { // no selection, export all

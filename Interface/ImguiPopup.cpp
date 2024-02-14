@@ -176,6 +176,7 @@ namespace ImIOWrappers {
 			this->drawn = true;
 			this->returnValue = drawnNoResponse;
 			this->function = func_;
+			this->value = deafultArg_;
 			this->Draw();
 			return;
 		}

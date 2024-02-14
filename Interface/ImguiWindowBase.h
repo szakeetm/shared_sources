@@ -21,6 +21,7 @@ public:
 	const bool IsVisible();
 	void SetVisible(bool value);
 protected:
+	virtual void OnShow();
 	bool drawn = false;
 	float txtW=0, txtH=0;
 	Interface* mApp=nullptr;

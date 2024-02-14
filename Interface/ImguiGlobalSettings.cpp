@@ -348,7 +348,7 @@ void ImGlobalSettings::Draw() {
                 }
                 mApp->worker.model->otfParams.desorptionLimit = inputD;
                 };
-            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func);
+            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.3g}", maxDes));
         }
     }
     ImGui::End();
