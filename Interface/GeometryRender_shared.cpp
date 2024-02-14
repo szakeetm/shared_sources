@@ -158,7 +158,7 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 }
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
-	bool printDebugInfo = false; //error-prone parallel search, set to true to print
+	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
