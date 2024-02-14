@@ -23,10 +23,12 @@ namespace ImIOWrappers {
 		std::string fn = mApp->worker.GetCurrentFileName();
 		if (!fn.empty()) {
 			try {
-				mApp->imWnd->progress.Show();
+				//mApp->imWnd->progress.Show();
 				LockWrapper myLock(mApp->imguiRenderLock);
-				mApp->worker.SaveGeometry(fn, mApp->imWnd->progress);
-				mApp->imWnd->progress.Hide();
+				auto prg = GLProgress_GUI("Saving file...", "Please wait");
+				prg.SetVisible(true);
+				mApp->worker.SaveGeometry(fn, prg);
+				//mApp->imWnd->progress.Hide();
 				mApp->changedSinceSave = false;
 				mApp->UpdateTitle();
 				mApp->AddRecent(fn);
@@ -174,6 +176,7 @@ namespace ImIOWrappers {
 			this->drawn = true;
 			this->returnValue = drawnNoResponse;
 			this->function = func_;
+			this->value = deafultArg_;
 			this->Draw();
 			return;
 		}

@@ -253,13 +253,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					if (found_local) {
 						
 						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
 							else { //Smart selection
 								double maxAngleDiff;
-								if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+								if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 								} else 
 									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
@@ -356,12 +356,12 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection())&& (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled())) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
 		double maxAngleDiff;
-		if (mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+		if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
 			maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
 		}
 		else
@@ -818,12 +818,13 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	GLCOLOR currentColor;
 
 	for (const auto sel : selectedFacets) {
-		if (!colorHighlighting.empty() && (mApp->imWnd->profPlot.IsVisible() || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+		if (!colorHighlighting.empty() && ((mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) || (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()))) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
 			ArrowToDraw arrow;
 			if (it != colorHighlighting.end()) {
+				//Plotted
 				float r = static_cast<float>(it->second.r) / 255.0f;
 				float g = static_cast<float>(it->second.g) / 255.0f;
 				float b = static_cast<float>(it->second.b) / 255.0f;
@@ -833,33 +834,37 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 				newColor.b = b;
 				newColor.a = .5f;
 				currentColor = newColor;
-				arrow.color = { r, g, b, 0.3f };
+				arrow.color = { r, g, b, 1.0f };
+				if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
+					//Profiled, add arrow
+					Vector3d& center = facets[sel]->sh.center;
+					Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
+					arrow.startPoint = center - .5 * dir;
+					arrow.endPoint = center + .5 * dir;
+					arrow.parallel = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
+					arrowsToDraw.push_back(arrow);
+				}
 			}
 			else {
-				GLCOLOR newColor;
-				newColor.r = 0.937f;
-				newColor.g = 0.957f;
-				newColor.b = 1.0f;
-				newColor.a = 0.08f;
-				currentColor = newColor;
-				arrow.color = { 0.937f,0.957f,1.0f, 0.08f };//metro light blue
+				//Not plotted
+				GLCOLOR metroRedLight;
+				metroRedLight.r = 0.933f;
+				metroRedLight.g = 0.067f;
+				metroRedLight.b = 0.067f;
+				metroRedLight.a = 0.05f;
+				currentColor = metroRedLight;
+				//arrow.color = { 1.0f,1.0f,1.0f, 0.3f };
 			}
-			if (profileMode == PROFILE_U || profileMode == PROFILE_V) {
-				Vector3d& center = facets[sel]->sh.center;
-				Vector3d& dir = profileMode == PROFILE_U ? facets[sel]->sh.U : facets[sel]->sh.V;
-				arrow.startPoint = center - .5 * dir;
-				arrow.endPoint = center + .5 * dir;
-				arrow.parallel = profileMode == PROFILE_U ? facets[sel]->sh.nV : facets[sel]->sh.nU;
-				arrowsToDraw.push_back(arrow);
-			}
+
 		}
 		else {
-			GLCOLOR newColor;
-			newColor.r = 0.933f;
-			newColor.g = 0.067f;
-			newColor.b = 0.067f;
-			newColor.a = 0.15f;
-			currentColor = newColor; //metro red   
+			//No highlighting, regular selected facet
+			GLCOLOR metroRed;
+			metroRed.r = 0.933f;
+			metroRed.g = 0.067f;
+			metroRed.b = 0.067f;
+			metroRed.a = 0.15f;
+			currentColor = metroRed; 
 		}
 		size_t nb = facets[sel]->sh.nbIndex;
 		if (nb == 3) {
@@ -887,14 +892,15 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	AxisAlignedBoundingBox bb = GetBB();
 	double arrowLength = 30.0 / std::max((bb.max.x - bb.min.x), (bb.max.y - bb.min.y));
 
-	glPushAttrib(GL_ENABLE_BIT);
-	glLineStipple(2, 0xAAAA);
-	glEnable(GL_LINE_STIPPLE);
+	//glPushAttrib(GL_ENABLE_BIT);
+	//glLineStipple(2, 0xAAAA);
+	//glEnable(GL_LINE_STIPPLE);
+	//glLineWidth(2.0f);
 	for (const auto& arr : arrowsToDraw) {
 		glColor4f(arr.color[0], arr.color[1], arr.color[2], arr.color[3]);
 		GLToolkit::DrawVector(arr.startPoint, arr.endPoint, arr.parallel);
 	}
-	glPopAttrib();
+	//glPopAttrib();
 	//---end transparent
 }
 
@@ -1566,35 +1572,30 @@ void InterfaceGeometry::BuildSelectList() {
 #pragma omp for
 		for (int i = 0; i < selectedFacets.size(); ++i) {
 			const auto& f = facets[selectedFacets[i]];
-			if (!colorHighlighting.empty() && (mApp->imWnd->profPlot.IsVisible() || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+
+			//If color highlighting is on, skip highlighted facets as they will be drawn last
+			if (!colorHighlighting.empty() && ((mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) || (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()))) {
 				auto it = colorHighlighting.find(i);
 				// Check if element exists in map or not
 				if (it != colorHighlighting.end()) {
-					continue; //highlighted facet, will draw outside of this loop
+					continue; //Selected and plotted, will be drawn later (so drawn over everything else), process next selected facet
 				}
-				else {
-					glLineWidth(1.5f);
-					glColor3f(0.937f, 0.957f, 1.0f);    //metro light blue
-				}
-#pragma omp critical
-				DrawFacetWireframe(f, false, false); //Faster than true true true, without noticeable glitches
 			}
-			else { //regular selected facet, will be drawn later
-				for (size_t j = 0; j < f->indices.size(); ++j) {
-					size_t v1 = f->indices[j];
-					size_t v2 = f->indices[(j + 1) % f->indices.size()];
+			//Color highlighting off or highlighting on but this facet isn't plotted (will change its color later to light blue)
+			for (size_t j = 0; j < f->indices.size(); ++j) {
+				size_t v1 = f->indices[j];
+				size_t v2 = f->indices[(j + 1) % f->indices.size()];
 
-					// Ensure canonical order for edge vertices
-					if (v1 > v2) {
-						std::swap(v1, v2);
-					}
-					Edge newEdge = std::make_pair(v1, v2);
-					edgeSet_local.insert(newEdge);
+				// Ensure canonical order for edge vertices
+				if (v1 > v2) {
+					std::swap(v1, v2);
 				}
+				Edge newEdge = std::make_pair(v1, v2);
+				edgeSet_local.insert(newEdge);
 			}
 		}
 #pragma omp critical
-		edgeSet.insert(edgeSet_local.begin(), edgeSet_local.end());
+			edgeSet.insert(edgeSet_local.begin(), edgeSet_local.end());
 	}
 
 	std::vector<GLuint> lines;
@@ -1604,14 +1605,28 @@ void InterfaceGeometry::BuildSelectList() {
 		lines.push_back((GLuint)it.second);
 	}
 
-	glColor3f(1.0f, 0.0f, 0.0f);
+	if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
+		
+		//Thin light blue for selected but not plotted facets
+		//glLineWidth(1.5f);
+		GLCOLOR metroLightBlue;
+		metroLightBlue.r = 0.937f;
+		metroLightBlue.g = 0.957f;
+		metroLightBlue.b = 1.0f;
+		metroLightBlue.a = 0.08f; //unused in this context
+		glColor4f(1.0f, 0.0f, 0.0f,0.5f);
+	}
+	else {
+		glColor3f(1.0f, 0.0f, 0.0f); //regular red selection
+	}
+
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
 	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last
-	if (!colorHighlighting.empty() && (mApp->imWnd->profPlot.IsVisible() || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
+	if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
 		for (auto& sel : selectedFacets) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not

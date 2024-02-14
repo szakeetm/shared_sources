@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 
 #pragma once
+#include "ImguiWindowBase.h"
 
 class ImguiWindow;
 namespace ImMenu {
@@ -26,3 +27,12 @@ namespace ImMenu {
 };
 void ShowAppMainMenuBar();
 void RegisterShortcuts();
+
+class ImExplodeFacet : public ImWindow {
+public:
+	void Draw();
+private:
+	std::string input;
+	double value;
+	void DoExplode();
+};

@@ -178,7 +178,7 @@ Interface::Interface() : GLApplication(){
     planarityThreshold = 1e-5;
 
     updateRequested = true;
-    prevRunningState = false;
+    //prevRunningState = false;
 }
 
 Interface::~Interface() {
@@ -1576,9 +1576,12 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                             GeometryTools::PolygonsToTriangles(interfGeom, selectedFacets, prg);
                         }
                     }
+                    RefreshPlotterCombos();
+                    if (vertexCoordinates) vertexCoordinates->Update();
+                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                    // Send to sub process
                     worker.MarkToReload();
                     UpdateModelParams();
-                    UpdateFacetlistSelected();
                     UpdateViewers();
                     return true;
                 }
@@ -1723,7 +1726,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
 Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
-Copyright:   CERN / E.S.R.F.   (2023)
+Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
 
 This program is free software; you can redistribute it and/or modify
@@ -2527,60 +2530,64 @@ int Interface::FrameMove() {
     }
 
     auto& hitCache = worker.globalStatCache.globalHits;
-    if ((runningState && m_fTime - lastUpdate >= 1.0f) || (prevRunningState && !runningState)) { //Running and and update is due (each second), or just started
-        {
-            sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
-            sTime->SetText(tmp);
-            wereEvents = true; //Will repaint
 
-            UpdateStats(); //Update m_fTime
-            lastUpdate = m_fTime;
+    bool oneSecSinceLastUpdate = m_fTime - lastUpdate >= 1.0f;
+    bool justStopped = !runningState && worker.simuTimer.isActive;
+    if ((runningState && oneSecSinceLastUpdate) || justStopped) {
+        
+        
+        sprintf(tmp, "Running: %s", Util::formatTime(worker.simuTimer.Elapsed()));
+        sTime->SetText(tmp);
+        wereEvents = true; //Will repaint
 
-            if (updateRequested || autoFrameMove) {
+        UpdateStats(); //Update m_fTime
+        lastUpdate = m_fTime;
 
-                forceFrameMoveButton->SetEnabled(false);
-                forceFrameMoveButton->SetText("Updating...");
-                //forceFrameMoveButton->Paint();
-                //GLWindowManager::Repaint();
+        if (updateRequested || autoFrameMove  || justStopped) {
 
-                updateRequested = false;
+            forceFrameMoveButton->SetEnabled(false);
+            forceFrameMoveButton->SetText("Updating...");
+            //forceFrameMoveButton->Paint();
+            //GLWindowManager::Repaint();
 
-                // Update hits
-                try {
-                    worker.Update(m_fTime);
+            updateRequested = false;
+
+            // Update hits
+            try {
+                worker.Update(m_fTime);
+            }
+            catch (const std::exception &e) {
+                GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
+            }
+            // Simulation monitoring
+            if (appFormulas->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) appFormulas->EvaluateFormulas(hitCache.nbDesorbed);
+            UpdatePlotters();
+
+            // Formulas
+            //if (autoUpdateFormulas) UpdateFormula();
+            if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
+                formulaEditor->UpdateValues();
+            }
+            if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
+            //lastUpdate = GetTick(); //changed from m_fTime: include update duration
+
+            // Update timing measurements
+            if (hitCache.nbMCHit != lastNbHit ||
+                hitCache.nbDesorbed != lastNbDes) {
+                auto dTime = (double) (m_fTime - lastMeasTime);
+                if(dTime > 1e-6) {
+                    hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
+                    dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
+                    //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
+                    //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
                 }
-                catch (const std::exception &e) {
-                    GLMessageBox::Display(e.what(), "Error (Stop)", GLDLG_OK, GLDLG_ICONERROR);
-                }
-                // Simulation monitoring
-                if (appFormulas->recordConvergence || (formulaEditor && formulaEditor->IsVisible()) || (convergencePlotter && convergencePlotter->IsVisible())) appFormulas->EvaluateFormulas(hitCache.nbDesorbed);
-                UpdatePlotters();
 
-                // Formulas
-                //if (autoUpdateFormulas) UpdateFormula();
-                if (autoUpdateFormulas && formulaEditor && formulaEditor->IsVisible()) {
-                    formulaEditor->UpdateValues();
-                }
-                if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
-                //lastUpdate = GetTick(); //changed from m_fTime: include update duration
-
-                // Update timing measurements
-                if (hitCache.nbMCHit != lastNbHit ||
-                    hitCache.nbDesorbed != lastNbDes) {
-                    auto dTime = (double) (m_fTime - lastMeasTime);
-                    if(dTime > 1e-6) {
-                        hps.push(hitCache.nbMCHit - lastNbHit, m_fTime);
-                        dps.push(hitCache.nbDesorbed - lastNbDes, m_fTime);
-                        //hps = (double) (hitCache.nbMCHit - lastNbHit) / dTime;
-                        //dps = (double) (hitCache.nbDesorbed - lastNbDes) / dTime;
-                    }
-
-                    lastNbHit = hitCache.nbMCHit;
-                    lastNbDes = hitCache.nbDesorbed;
-                    lastMeasTime = m_fTime;
-                }
+                lastNbHit = hitCache.nbMCHit;
+                lastNbDes = hitCache.nbDesorbed;
+                lastMeasTime = m_fTime;
             }
         }
+        
 
         forceFrameMoveButton->SetEnabled(!autoFrameMove);
         forceFrameMoveButton->SetText("Update");
@@ -2780,4 +2787,10 @@ void Interface::SetDefaultViews() {
     viewers[3]->SetProjection(ProjectionMode::Perspective);
     viewers[3]->ToFrontView();
     SelectViewer(0);
+}
+
+void Interface::RefreshPlotterCombos() {
+    //Removes non-present views, rebuilds combobox and refreshes plotted data
+    if (histogramPlotter) histogramPlotter->Refresh();
+    if (convergencePlotter) convergencePlotter->Refresh();
 }

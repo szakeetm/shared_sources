@@ -25,26 +25,6 @@ void ImTexturePlotter::Draw()
 	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
 	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
 	
-	std::vector<size_t> facets = interfGeom->GetSelectedFacets();
-	static int lastSel = -1;
-	if (facets.size() > 0) {
-		if (facets[0] != selFacetId) {
-			selFacetId = facets[0];
-			name = "Texture Plotter [Facet #" + std::to_string(facets[0] + 1) + "]###TexturePlotter";
-			selFacet = interfGeom->GetFacet(selFacetId);
-		}
-	} else {
-		selFacet = nullptr;
-		selFacetId = -1;
-		width = 0;
-		height = 0;
-		name = "Texture Plotter []###TexturePlotter";
-		selection.clear();
-	}
-	if (lastSel != selFacetId) {
-		lastSel = selFacetId;
-		isUpToDate = false; // selection changed
-	}
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
@@ -87,15 +67,42 @@ void ImTexturePlotter::Init(Interface* mApp_)
 	interfGeom = mApp->worker.GetGeometry();
 }
 
-void ImTexturePlotter::Update()
+void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
-	isUpToDate = false;
+	if (selectedFacets.size() > 0) {
+		selFacetId = selectedFacets[0];
+		name = "Texture Plotter [Facet #" + std::to_string(selectedFacets[0] + 1) + "]###TexturePlotter";
+		selFacet = interfGeom->GetFacet(selFacetId);
+		GetData();
+	}
+	else {
+		selFacet = nullptr;
+		selFacetId = -1;
+		width = 0;
+		height = 0;
+		name = "Texture Plotter []###TexturePlotter";
+		selection.clear();
+	}
+}
+
+void ImTexturePlotter::UpdatePlotter()
+{
+	GetData();
+}
+
+void ImTexturePlotter::OnShow()
+{
+	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
+	UpdatePlotter();
 }
 
 void ImTexturePlotter::DrawTextureTable()
 {
-	if( selFacet!=nullptr) GetData();
 	if (width < 1 || height < 1) return;
+	if (width > 511) {
+		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Unsuported table width");
+		return;
+	}
 
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
@@ -218,7 +225,7 @@ void ImTexturePlotter::DrawTextureTable()
 			if (selection[0].second > width-1) selection[0].second = width-1;
 			if (selection[0].first < 0) selection[0].first = 0;
 			if (selection[0].first > height-1) selection[0].first = height-1;
-			scrollToSelected = true;
+			//scrollToSelected = true;
 		}
 		if (io.MouseDown[0]) scrollToSelected = false;
 	}
@@ -226,6 +233,22 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
+	if (selFacet == nullptr) return;
+	try {
+		// try to lock
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock
+			return;
+	}
+	catch (Error e)
+	{
+		if (e.what() == "LockWrapper: Trying to lock an already locked guard.") {
+			// if lock failed due to already being locked
+			if (!mApp->worker.ReloadIfNeeded()) { // can be here because the lock was locked further up the call stack
+				return;
+			}
+		}
+	}
 	if (selFacet == nullptr) return;
 	try {
 		// try to lock

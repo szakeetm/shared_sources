@@ -352,7 +352,7 @@ public:
 	std::string autosaveFilename; //only delete files that this instance saved
 	bool     autoFrameMove; //Refresh scene every 1 second
 	bool     updateRequested; //Force frame move
-	bool     prevRunningState; //Previous state to react for state change
+	//bool     prevRunningState; //Previous state to react for state change
 
 	std::shared_ptr<Formulas> appFormulas;
 
@@ -520,6 +520,7 @@ public:
 	void UpdateViewerPanel();
 
 	virtual void SelectViewer(int s);
+	virtual void RefreshPlotterCombos();
 
 	void Place3DViewer();
 	void UpdateViewers();

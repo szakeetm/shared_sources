@@ -28,17 +28,14 @@ void ImProfilePlotter::Draw()
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 
 	DrawMenuBar();
-	ComputeProfiles();
 	DrawProfileGraph();
 
 	ImGui::SetNextItemWidth(txtW * 30);
-	size_t nFacets = interfGeom->GetNbFacet();
 	if (ImGui::BeginCombo("##ProfilePlotterCombo", ((selectedProfile == -1 || f == 0) ? "Select [v] or type->" : ("F#" + std::to_string(selectedProfile + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)f->sh.profileType].second))))) {
 		if (ImGui::Selectable("Select [v] or type->")) selectedProfile = -1;
-		for (size_t i = 0; i < nFacets; i++) {
-			if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
-			if (ImGui::Selectable("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second) + "###profileCombo" + std::to_string(i), selectedProfile == i)) {
-				selectedProfile = i;
+		for (size_t i = 0; i < comboOpts.size(); i++) {
+			if (ImGui::Selectable("F#" + std::to_string(comboOpts[i] + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(comboOpts[i])->sh.profileType].second) + "###profileCombo" + std::to_string(comboOpts[i]), selectedProfile == comboOpts[i])) {
+				selectedProfile = comboOpts[i];
 				f = interfGeom->GetFacet(selectedProfile);
 			}
 		}
@@ -70,10 +67,12 @@ void ImProfilePlotter::Draw()
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 20);
-	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1");
+	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
-		ImGui::Checkbox("Surface->Volume conversion", &correctForGas);
+		if (ImGui::Checkbox("Surface->Volume conversion", &correctForGas)) {
+			UpdatePlotter();
+		}
 	}
 	
 	ImGui::SameLine();
@@ -113,16 +112,57 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	}
 }
 
+void ImProfilePlotter::UpdateComboOpts()
+{
+	comboOpts.clear();
+	size_t nFacet = interfGeom->GetNbFacet();
+	for (int i = 0; i < nFacet; i++) {
+		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+		comboOpts.push_back(i);
+	}
+}
+
+void ImProfilePlotter::OnShow() {
+	Refresh();
+}
+
 void ImProfilePlotter::Refresh()
 {
+	UpdateComboOpts();
 	interfGeom = mApp->worker.GetGeometry();
-	if(!loading) data.clear();
+	int nbFacet = interfGeom->GetNbFacet();
+	for (int i = data.size() - 1; i >= 0; i--) {
+		if (data[i].id >= nbFacet) {
+			RemoveCurve(data[i].id);
+			continue;
+		}
+		InterfaceFacet* f = interfGeom->GetFacet(data[i].id);
+		if (!f->sh.isProfile) RemoveCurve(data[i].id);
+	}
 	selectedProfile = -1;
+	if (loading) loading = false;
+	UpdatePlotter();
+}
+
+void ImProfilePlotter::UpdatePlotter()
+{
+	ComputeProfiles();
+}
+
+void ImProfilePlotter::HandleFacetDeletion(const std::vector<size_t>& facetIdList)
+{
+	for (auto& curve : data) {
+		int offset = 0;
+		for (const auto& deleted : facetIdList) {
+			if (deleted <= curve.id) offset++;
+		}
+		curve.id -= offset;
+	}
+	for (const auto& deleted : facetIdList) RemoveCurve(deleted);
 }
 
 void ImProfilePlotter::DrawProfileGraph()
 {
-	if (loading) loading = false;
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
@@ -180,6 +220,7 @@ void ImProfilePlotter::AddCurve()
 			return;
 		}
 		data.push_back({ selectedProfile, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
+		ComputeProfiles();
 		return;
 	}
 
@@ -190,6 +231,7 @@ void ImProfilePlotter::AddCurve()
 			data.push_back({ facetId, std::make_shared<std::vector<double>>(), std::make_shared<std::vector<double>>() });
 		}
 	}
+	ComputeProfiles();
 }
 
 void ImProfilePlotter::RemoveCurve(int id)

@@ -97,7 +97,6 @@ void ImTextureScaling::Draw()
 	}
 	if (ImGui::Button("Apply min/max")) ApplyButtonPress();
 	ImGui::SameLine();
-	UpdateSize();
 	ImGui::Text("Swap: "+swapText);
 	ImGui::EndChild();
 	ImGui::SameLine();

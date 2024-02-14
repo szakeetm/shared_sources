@@ -10,9 +10,11 @@ class ImTexturePlotter : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
-	void Update();
+	void UpdateOnFacetChange(const std::vector<size_t>& selectedFacets);
+	void UpdatePlotter();
 protected:
 	// functions
+	void OnShow() override;
 	void DrawTextureTable();
 	void GetData();
 	bool isUpToDate = false;

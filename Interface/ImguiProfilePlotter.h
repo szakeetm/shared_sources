@@ -12,7 +12,12 @@ public:
 	void Init(Interface* mApp_);
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
+	void UpdatePlotter();
+	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 private:
+	std::vector <size_t> comboOpts;
+	void UpdateComboOpts();
+	void OnShow() override;
 	void DrawProfileGraph();
 
 	// button actions

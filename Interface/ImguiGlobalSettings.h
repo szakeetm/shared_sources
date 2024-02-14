@@ -19,6 +19,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 #include "ImguiWindowBase.h"
+#include <ProcessControl.h>
 
 class Interface;
 class ImGlobalSettings : public ImWindow {
@@ -28,6 +29,12 @@ public:
 protected:
 	Interface* mApp;
 	int nbProc;
+	ProcComm procInfo;
+	size_t currPid;
+	double memDenominator_sys;
+	int lastUpdate;
+	double byte_to_mbyte;
+	PROCESS_INFO parentInfo;
 	bool updateNbProc = true;
 	void ProcessControlTable();
 	void RecalculateOutgassing();

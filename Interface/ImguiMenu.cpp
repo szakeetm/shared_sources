@@ -208,9 +208,9 @@ void ImportDesorptionFromSYNFileMenuPress() {
 #endif // MOLFLOW
 
 void NewGeometry() {
+    LockWrapper myLock(mApp->imguiRenderLock);
     if (mApp->worker.IsRunning())
         mApp->worker.Stop_Public();
-    LockWrapper myLock(mApp->imguiRenderLock);
     mApp->EmptyGeometry();
 }
 
@@ -244,7 +244,7 @@ static void ShowMenuFile() {
     }
     else if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
         for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
-            if (ImGui::MenuItem(mApp->recentsList[i])) {
+            if (ImGui::MenuItem(AbbreviateString(mApp->recentsList[i], 128))) {
                 std::string selection = mApp->recentsList[i];
                 auto common = [selection]() { DoLoadSelected(selection); };
                 ImIOWrappers::AskToSaveBeforeDoing(common);
@@ -425,21 +425,20 @@ static void ShowMenuSelection() {
     }
     if (ImGui::MenuItem("Select large with no hits...")) {
         auto F = [](std::string arg) {
-            double largeAreaThreshold;
-            if (!Util::getNumber(&largeAreaThreshold, arg)) {
-                mApp->imWnd->popup.Open("Error", "Incorrect value", {std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter)});
+            if (!Util::getNumber(&mApp->largeAreaThreshold, arg)) {
+                mApp->imWnd->popup.Open("Error", "Incorrect value", {std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, ImGuiKey_Enter)});
             } else {
                 InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
                 interfGeom->UnselectAll();
                 for (int i = 0; i < interfGeom->GetNbFacet(); i++)
                     if (interfGeom->GetFacet(i)->facetHitCache.nbMCHit == 0 &&
-                        interfGeom->GetFacet(i)->sh.area >= largeAreaThreshold)
+                        interfGeom->GetFacet(i)->sh.area >= mApp->largeAreaThreshold)
                         interfGeom->SelectFacet(i);
                 interfGeom->UpdateSelection();
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F);
+        mApp->imWnd->input.Open("Select large facets without hits", u8"Min.area (cm\u00b2)", F, fmt::format("{:.3g}",mApp->largeAreaThreshold));
     }
     if (ImGui::MenuItem("Select by facet result...")) {
         mApp->imWnd->selFacetByResult.Show();
@@ -465,8 +464,7 @@ static void ShowMenuSelection() {
     }
     if (ImGui::MenuItem("Select non planar facets")) {
         auto F = [](std::string arg) {
-            double planarityThreshold = 1e-5;
-            if (!Util::getNumber(&planarityThreshold, arg)) {
+            if (!Util::getNumber(&mApp->planarityThreshold, arg)) {
                 mApp->imWnd->popup.Open("Error", "Incorrect value", { 
                     std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
                     });
@@ -474,14 +472,14 @@ static void ShowMenuSelection() {
             else {
                 InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
                 interfGeom->UnselectAll();
-                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(planarityThreshold);
+                std::vector<size_t> nonPlanarFacetids = interfGeom->GetNonPlanarFacetIds(mApp->planarityThreshold);
                 for (const auto& i : nonPlanarFacetids)
                     interfGeom->SelectFacet(i);
                 interfGeom->UpdateSelection();
                 mApp->UpdateFacetParams(true);
             }
         };
-        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F);
+        mApp->imWnd->input.Open("Select non planar facets", "Planarity larger than", F, fmt::format("{:.3g}", mApp->planarityThreshold));
     }
     if (ImGui::MenuItem("Select non simple facets")) {
         interfGeom->UnselectAll();
@@ -910,43 +908,7 @@ void CollapseMenuPress() {
 }
 
 void ExplodeMenuPress() {
-    auto Y = []() {
-        LockWrapper myLock(mApp->imguiRenderLock);
-        if (mApp->AskToReset()) {
-            int err;
-            try {
-                err = interfGeom->ExplodeSelected();
-            }
-            catch (const std::exception& ) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "Error Exploding", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, ImGuiKey_Enter)
-                    });
-            }
-            if (err == -1) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "Empty Selection", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, ImGuiKey_Enter)
-                    });
-            }
-            else if (err == -2) {
-                mApp->imWnd->popup.Close();
-                mApp->imWnd->popup.Open("Error", "All selected facets must have a mesh with boudary correction enabled", {
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, ImGuiKey_Enter)
-                    });
-            }
-            else if (err == 0) {
-                mApp->UpdateModelParams();
-                mApp->UpdateFacetParams(true);
-                // Send to sub process
-                mApp->worker.MarkToReload();
-            }
-        }
-    };
-    mApp->imWnd->popup.Open("Explode?","Are you sure you want to explode selected facets?",{
-        std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", Y, ImGuiKey_Enter),
-        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, ImGuiKey_Escape)
-        });
+    mApp->imWnd->expFac.Show();
 }
 
 void RevertMenuPress() {
@@ -1243,7 +1205,7 @@ void VertexCoplanarMenuPress() {
                     }
                 }
             };
-            mApp->imWnd->input.Open("Select Coplanar Vertices", "Tolerance(cm)", F, "1.0");
+            mApp->imWnd->input.Open("Select Coplanar Vertices", "Tolerance(cm)", F, fmt::format("{:.3g}", mApp->coplanarityTolerance));
         }
     }
     else {
@@ -1401,6 +1363,7 @@ static void ShowMenuView() {
         }
         for (int i = 0; i < mApp->views.size(); i++) {
             if (ImGui::MenuItem(mApp->views[i].name)) {
+                LockWrapper lw(mApp->imguiRenderLock);
                 mApp->OverWriteView(i);
             }
         }
@@ -1697,5 +1660,48 @@ void ShowAppMainMenuBar() {
         }
 
         ImGui::EndMainMenuBar();
+    }
+}
+
+void ImExplodeFacet::Draw()
+{
+    if (!drawn) return;
+    ImGuiIO& io = ImGui::GetIO();
+    ImGui::SetNextWindowSize(ImVec2(ImGui::CalcTextSize(" ").x * 70, 0));
+    ImGui::Begin("Explode?", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    ImGui::TextWrapped("Are you sure you want to explode selected facets?");
+    if (ImGui::Button("  Yes  ") || io.KeysDown[SDL_SCANCODE_RETURN] || io.KeysDown[SDL_SCANCODE_KP_ENTER]) {
+        DoExplode();
+        this->Hide();
+    } ImGui::SameLine();
+    if (ImGui::Button("  Cancel  ") || io.KeysDown[SDL_SCANCODE_ESCAPE]) {
+        this->Hide();
+    }
+    ImGui::End();
+}
+
+void ImExplodeFacet::DoExplode()
+{
+    LockWrapper myLock(mApp->imguiRenderLock);
+    if (mApp->AskToReset()) {
+        int err;
+        try {
+            err = interfGeom->ExplodeSelected();
+        }
+        catch (const std::exception&) {
+            ImIOWrappers::InfoPopup("Error", "Error Exploding");
+        }
+        if (err == -1) {
+            ImIOWrappers::InfoPopup("Error", "Empty Selection");
+        }
+        else if (err == -2) {
+            ImIOWrappers::InfoPopup("Error", "All selected facets must have a mesh with boudary correction enabled");
+        }
+        else if (err == 0) {
+            mApp->UpdateModelParams();
+            mApp->UpdateFacetParams(true);
+            // Send to sub process
+            mApp->worker.MarkToReload();
+        }
     }
 }

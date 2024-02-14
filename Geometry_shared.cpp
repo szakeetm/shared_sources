@@ -1491,6 +1491,7 @@ void InterfaceGeometry::RemoveFacets(const std::vector<size_t> &facetIdList, boo
 	BuildGLList();
 }
 
+
 void InterfaceGeometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
 	//Adds to end
 	std::vector<DeletedFacet> toRestore(facetList.size());
@@ -1783,8 +1784,8 @@ std::vector<UndoPoint> InterfaceGeometry::MirrorProjectSelectedFacets(Vector3d P
 	}
 
 	if (nbSelFacet == 0) return undoPoints;
-	if (!project) SwapNormal();
 	InitializeGeometry();
+	if (!project) SwapNormal();
     
 	//update textures
 	/*try {

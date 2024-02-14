@@ -212,7 +212,7 @@ private:
   void ThrowSubProcError(const char *message = nullptr);
   void Start();
   void Stop();
-  void InnerStop(float appTime);
+  void InnerStop();
 
   // Geometry handle
 #if defined(MOLFLOW)
