@@ -6,9 +6,9 @@ LockWrapper::LockWrapper(size_t& _flag) : flag(_flag) {
     flag++;
 }
 LockWrapper::~LockWrapper() {
-    if (flag == 0) throw std::exception("LockWrapper: Tried to unlock unlocked lock");
+    if (flag == 0) throw Error("LockWrapper: Tried to unlock unlocked lock");
     flag--;
-};
+}
 bool LockWrapper::IsLocked() {
     return flag>0;
 }
