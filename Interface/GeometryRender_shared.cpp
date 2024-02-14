@@ -177,27 +177,45 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	GLVIEWPORT viewPort;
 	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
+	Chronometer timer;
+	timer.Start();
+
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (coords.has_value()) {
-			ok[i] = true;
-			auto [x, y] = *coords;
-			screenXCoords[i] = x;
-			screenYCoords[i] = y;
-			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
+			{
+				ok[i] = true;
+				auto [x, y] = *coords;
+				screenXCoords[i] = x;
+				screenYCoords[i] = y;
+				onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
+			}
 		}
 		else {
-			ok[i] = false;
-			//onScreen[i] = false; //redundant
+			//ok[i] = false; //can't transform. skip for speedup as ok[] vector's elements are false by default
+			//onScreen[i] = false; //skip for speedup, not checked if ok[] is false
+			
+			if (printDebugInfo) {
+//#pragma omp critical
+				fmt::print("  (Thread {}/{}: can't transform vertex {} coords)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+			}
+			
 		}
+	}
+
+	timer.Stop();
+
+	if (printDebugInfo) {
+		fmt::print("\nTransformed {} vertices in {:.1f} ms.\n", sh.nbVertex, timer.ElapsedMs());
+		fmt::print("Transformation not ok for vertices: {{");
+		for (int i=0;i<ok.size(); i++)
+			if (!ok[i]) fmt::print("{},", ok[i]+1);
+		fmt::print("}}\n");
 	}
 
 	// Check facets
 	bool found_global = false;
-	bool clipped;
-	bool hasVertexOnScreen;
-	bool hasSelectedVertex;
 	int lastFound_facetId = -1;
 
 	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
@@ -220,9 +238,9 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
-				clipped = false;
-				hasVertexOnScreen = false;
-				hasSelectedVertex = false;
+				bool clipped = false;
+				bool hasVertexOnScreen = false;
+				bool hasSelectedVertex = false;
 				// Build array of 2D points
 				std::vector<Vector2d> facetScreenCoords(facets[i]->indices.size());
 
@@ -243,52 +261,80 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					}
 				}
 
-				if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex) && (unselect || !facets[i]->selected)) {
+				if (!clipped) {
+					if (hasVertexOnScreen) {
+						if (!vertexBound || hasSelectedVertex) {
+							if (unselect || !facets[i]->selected) {
 
-					if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
-						found_local_facetId = i;
-					}
-
-					if (found_local_facetId >=0) {
-
-						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
-								facets[i]->selected = false;
-								if (printDebugInfo) {
-#pragma omp critical
-									fmt::print("Thread {}/{}: deselecting facet {} and looking for more under the pointer.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+								if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
+									found_local_facetId = i;
 								}
-								found_local_facetId = -1; //Continue looking for facets, we want to deselect everything under the pointer
-							}
-							else { //Smart selection
-								double maxAngleDiff;
-								if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
-									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
-								} else 
-									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-								std::vector<size_t> connectedFacets;
-								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-								for (auto& ind : connectedFacets)
-									facets[ind]->selected = false;
-							}
-						} //end unselect
-					} //end found
-					if (found_local_facetId>=0) { //found a facet that wasn't in the selected history (or we're in unselect mode)
-						if (InSelectionHistory(i)) {
-							if (printDebugInfo) {
-								#pragma omp critical
-								fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-							}
-						} else {
+								else if (false && printDebugInfo) {
 #pragma omp critical
-							{
-								found_global = true; //set global found flag to true, all threads will skip every facet check after this
-								if (printDebugInfo) {
-									fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+									fmt::print("  (Thread {}/{}: facet {} not under pointer)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
 								}
+
+								if (found_local_facetId >= 0) {
+
+									if (unselect) {
+										if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
+											facets[i]->selected = false;
+											if (printDebugInfo) {
+#pragma omp critical
+												fmt::print("Thread {}/{}: deselecting facet {} and looking for more under the pointer.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+											}
+											found_local_facetId = -1; //Continue looking for facets, we want to deselect everything under the pointer
+										}
+										else { //Smart selection
+											double maxAngleDiff;
+											if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+												maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+											}
+											else
+												maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+											std::vector<size_t> connectedFacets;
+											if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
+											for (auto& ind : connectedFacets)
+												facets[ind]->selected = false;
+										}
+									} //end unselect
+								} //end found
+								if (found_local_facetId >= 0) { //found a facet that wasn't in the selected history (or we're in unselect mode)
+									if (InSelectionHistory(i)) {
+										if (printDebugInfo) {
+#pragma omp critical
+											fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+										}
+									}
+									else {
+#pragma omp critical
+										{
+											found_global = true; //set global found flag to true, all threads will skip every facet check after this
+											if (printDebugInfo) {
+												fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+											}
+										}
+									}
+								}
+							}
+							else if (printDebugInfo) {
+#pragma omp critical
+								fmt::print("  (Thread {}/{}: facet {} already selected or unselect mode)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
 							}
 						}
+						else if (printDebugInfo) {
+#pragma omp critical
+							fmt::print("  (Thread {}/{}: facet {} has no selected vertex and CAPS LOCK on)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+						}
 					}
+					else if (printDebugInfo) {
+#pragma omp critical
+						fmt::print("  (Thread {}/{}: facet {} has no vertex on screen)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+					}
+				}
+				else if (printDebugInfo) {
+#pragma omp critical
+					fmt::print("  (Thread {}/{}: facet {} clipped)\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
 				}
 			}
 		}
