@@ -285,3 +285,8 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 	return u * U + v * V + n * N;
 }
 
+double GeneratePoissonRnd(const double lambda, const double rnd) {
+	//Transforms a uniform 0..1 random variable rnd to a Poisson-distributed one (P(x)=lambda * exp(-lambda*x))
+	//Used to get the free path, when mean free path is lambda = 1/(density * cross_section_sigma)
+	return -lambda * log(1 - rnd);
+}
