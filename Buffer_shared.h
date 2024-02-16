@@ -321,6 +321,13 @@ struct SimuParams { //Plain old data
 
     AccelType accel_type = AccelType::BVH;
 #if defined(MOLFLOW)
+	struct ScatterParams {
+		bool enabled = false;
+		bool meanFreePath = false;
+		bool massRatio = 1.0;
+		bool rho = 1.0;
+	};	
+	
 	double latestMoment=1E-10;
 	double timeWindowSize = 1E-10;
 	double totalDesorbedMolecules=0.0; //Number of molecules desorbed between t=0 and latest_moment
@@ -328,7 +335,9 @@ struct SimuParams { //Plain old data
 	double finalOutgassingRate_Pa_m3_sec=0.0;
 	double gasMass=28.0;
 	bool enableDecay = false;
-	double halfLife = 1;
+	double halfLife = 1.0;
+	ScatterParams scattering;
+
 	bool useMaxwellDistribution = true; //true: Maxwell-Boltzmann distribution, false: All molecules have the same (V_avg) speed
 	bool calcConstantFlow = true;
 
