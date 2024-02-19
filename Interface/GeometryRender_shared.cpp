@@ -151,7 +151,7 @@ void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, con
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
 	// Select a facet on a mouse click in 3D perspective view 
-	constexpr bool printDebugInfo = true; //error-prone parallel search, set to true to print
+	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
