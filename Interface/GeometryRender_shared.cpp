@@ -204,7 +204,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 		fmt::print("\nTransformed {} vertices in {:.1f} ms.\n", sh.nbVertex, timer.ElapsedMs());
 		fmt::print("Transformation not ok for vertices: {{");
 		for (int i=0;i<ok.size(); i++)
-			if (!ok[i]) fmt::print("{},", ok[i]+1);
+			if (!ok[i]) fmt::print("{},", i+1);
 		fmt::print("}}\n");
 	}
 
