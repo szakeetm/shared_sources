@@ -286,10 +286,10 @@ public:
 	void AddToSelectedVertexList(size_t vertexId);
 	void EmptySelectedVertexList();
 	void RemoveFromSelectedVertexList(size_t vertexId);
-	void SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection);
-	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
+	void SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, const bool unselect, const bool vertexBound, const  bool circularSelection);
+	void Select(const int x, const int y, const int width, const int height, const bool clear, const bool unselect, const bool vertexBound);
 	void TreatNewSelection(int lastFound, bool unselect);
-	void SelectFacet(size_t facetId);
+	void SelectFacet(const size_t facetId);
 	void SelectAllVertex();
 	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound);
 	void SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound);

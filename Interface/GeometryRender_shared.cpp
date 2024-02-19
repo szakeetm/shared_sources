@@ -56,7 +56,7 @@ extern MolFlow* mApp;
 extern SynRad* mApp;
 #endif
 
-void InterfaceGeometry::SelectFacet(size_t facetId) {
+void InterfaceGeometry::SelectFacet(const size_t facetId) {
 	if (!isLoaded) return;
 	InterfaceFacet* f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
@@ -64,7 +64,7 @@ void InterfaceGeometry::SelectFacet(size_t facetId) {
 	selectHist = { facetId }; //reset with only this facet id
 }
 
-void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
+void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, const bool clear, const bool unselect, const bool vertexBound, const bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -149,7 +149,7 @@ void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, con
 	UpdateSelection();
 }
 
-void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
+void InterfaceGeometry::Select(const int x, const int y, const int width, const int height, const bool clear, const bool unselect, const bool vertexBound) {
 	// Select a facet on a mouse click in 3D perspective view 
 	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
@@ -358,7 +358,7 @@ void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper
 	if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
 }
 
-void InterfaceGeometry::SelectVertex(int vertexId) {
+void InterfaceGeometry::SelectVertex(const int vertexId) {
 	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->sp.superIdx);
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
@@ -405,12 +405,14 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 
 			bool isInside = false;
 			int idx = i;
-			std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-			if (coords.has_value()) { //otherwise ignore
-				if (!circularSelection)
-					isInside = (coords->x >= _x1) && (coords->x <= _x2) && (coords->y >= _y1) && (coords->y <= _y2);
-				else //circular selection
-					isInside = (pow((float)(coords->x - x1), 2) + pow((float)(coords->y - y1), 2)) <= r2;
+			std::optional<ScreenCoord> screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+			if (screenCoords.has_value()) { //otherwise ignore
+				if (!circularSelection) {
+					isInside = (screenCoords->x >= _x1) && (screenCoords->x <= _x2) && (screenCoords->y >= _y1) && (screenCoords->y <= _y2);
+				}
+				else {//circular selection
+					sInside = (pow((float)(screenCoords->x - x1), 2) + pow((float)(screenCoords->y - y1), 2)) <= r2;
+				}
 			}
 
 			if (isInside) {
@@ -458,10 +460,12 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			if (screenCoords[i].has_value()) {
-				double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
-				if (distanceSqr < minDist_local) {
-					minDist_local = distanceSqr;
-					minId_local = i;
+				if (screenCoords[i]->x >= 0 && screenCoords[i]->x < width && screenCoords[i]->y >= 0 && screenCoords[i]->y < height) { //calculate only for points on screen
+					double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
+					if (distanceSqr < minDist_local) {
+						minDist_local = distanceSqr;
+						minId_local = i;
+					}
 				}
 			}
 		}
