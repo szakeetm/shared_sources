@@ -893,7 +893,7 @@ std::optional<ScreenCoord> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, c
 
     float rx, ry, rz, rw;
     mvp.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
-    if (rw <= 0.0f) return std::nullopt;
+    if (rw <= 0.0f) return std::nullopt; //behind camera
 
     return ScreenCoord((int)(((rx / rw) + 1.0f) * (float)viewPort.width / 2.0f),
         (int)(((-ry / rw) + 1.0f) * (float)viewPort.height / 2.0f));

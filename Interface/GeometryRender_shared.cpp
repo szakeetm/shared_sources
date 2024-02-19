@@ -64,7 +64,7 @@ void InterfaceGeometry::SelectFacet(size_t facetId) {
 	selectHist = { facetId }; //reset with only this facet id
 }
 
-void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, const int screenWidth, const int screenHeight, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
+void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -88,7 +88,7 @@ void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, con
 	int lastPaintedProgress = -1;
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
-	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(screenWidth, screenHeight, false);
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(false);
 
 	//Check facets if all vertices inside
 	std::vector<size_t> facetIds_vect;
@@ -150,14 +150,13 @@ void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, con
 }
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
+	// Select a facet on a mouse click in 3D perspective view 
 	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
-	// Select a facet on a mouse click in 3D perspective view 
-	// (x,y) are in screen coordinates
-
-	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(width,height,printDebugInfo);
+	//Transform all vertex coordinates to screen coordinates
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(printDebugInfo);
 
 	// Check facets
 	bool found_global = false;
@@ -183,22 +182,22 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
-				//bool clipped = false;
+				bool hasVertexBehindCamera = false; //can't do polygon intersection check
 				bool hasVertexOnScreen = false;
 				bool hasSelectedVertex = false;
 				// Build array of 2D points
 				std::vector<Vector2d> facetScreenCoords(facets[i]->indices.size());
 
-				for (int j = 0; j < facets[i]->indices.size()/* && !clipped*/; j++) {
+				for (int j = 0; j < facets[i]->indices.size() && !hasVertexBehindCamera; j++) {
 					size_t idx = facets[i]->indices[j];
 					if (screenCoords[idx].has_value()) {
 						facetScreenCoords[j] = Vector2d((double)screenCoords[idx]->x, (double)screenCoords[idx]->y);
-						hasVertexOnScreen = true;
+						if (screenCoords[idx]->x >= 0 && screenCoords[idx]->x < width && screenCoords[idx]->y >= 0 && screenCoords[idx]->y < height) {
+							hasVertexOnScreen = true;
+						}
+					} else {
+						hasVertexBehindCamera = true;
 					}
-					/*
-					else {
-						clipped = true;
-					}*/
 				}
 				if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
 					for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
@@ -207,17 +206,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					}
 				}
 
-				//if (!clipped) {
-					if (hasVertexOnScreen) {
-						if (!vertexBound || hasSelectedVertex) {
-							if (unselect || !facets[i]->selected) {
+				if (!hasVertexBehindCamera) { //facetScreenCoords all valid
+					if (hasVertexOnScreen) { //at least one vertex visible to user
+						if (!vertexBound || hasSelectedVertex) { //CAPS LOCK off or has selected vertex
+							if (unselect || !facets[i]->selected) { //In "Add" mode, ignore already selected
 
 								if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
 									found_local_facetId = i;
-								}
-
-								if (found_local_facetId >= 0) {
-
 									if (unselect) {
 										if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
 											facets[i]->selected = false;
@@ -240,15 +235,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 												facets[ind]->selected = false;
 										}
 									} //end unselect
-								} //end found
-								if (found_local_facetId >= 0) { //found a facet that wasn't in the selected history (or we're in unselect mode)
 									if (InSelectionHistory(i)) {
 										if (printDebugInfo) {
 #pragma omp critical
 											fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
 										}
 									}
-									else {
+									else { //found a facet that wasn't in the selected history (or we're in unselect mode)
 #pragma omp critical
 										{
 											found_global = true; //set global found flag to true, all threads will skip every facet check after this
@@ -257,11 +250,11 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 											}
 										}
 									}
-								}
+								} //end "in poly"
 							} //if not already selected or unselect mode
 						} //if CAPS LOCK not on or has selected vertex
 					} //if has at least a vertex on screen
-				//} //if doesn't have vertex that couldn't be transformed
+				} //if doesn't have vertex that couldn't be transformed (behind camera)
 			} //if in current (or all) structure
 		} //parallel for loop on facets
 
@@ -464,7 +457,7 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(width,height,false);
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(false);
 
 	//Get Closest Point to click
 	double minDist_global = std::numeric_limits<double>::max();
@@ -479,12 +472,10 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			if (screenCoords[i].has_value()) {
-				if (screenCoords[i]->x >= 0 && screenCoords[i]->x < width && screenCoords[i]->y >= 0 && screenCoords[i]->y < height) { //calculate only for points on screen
-					double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
-					if (distanceSqr < minDist_local) {
-						minDist_local = distanceSqr;
-						minId_local = i;
-					}
+				double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
+				if (distanceSqr < minDist_local) {
+					minDist_local = distanceSqr;
+					minId_local = i;
 				}
 			}
 		}
@@ -1831,8 +1822,11 @@ void InterfaceGeometry::BuildFacetList(InterfaceFacet* f) {
 	}
 }
 
-std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToScreenCoords(const int width, const int height, const bool printDebugInfo) {
+std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToScreenCoords(const bool printDebugInfo) {
 	// Check intersection of the facet and a "perspective ray"
+	// Returns nullopt for vertices behind camera
+	// Does not do viewport clipping (off-screen) test
+
 	std::vector<std::optional<ScreenCoord>> screenCoords(sh.nbVertex);
 
 	GLMatrix view, proj, mvp;
@@ -1844,11 +1838,7 @@ std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToSc
 
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
-		std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (coords.has_value()) {
-			bool onScreen = coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height;
-			if (onScreen) screenCoords[i] = coords;
-		}
+		screenCoords[i] = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 	}
 
 	timer.Stop();

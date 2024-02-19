@@ -240,7 +240,7 @@ public:
 	void    SetCenterNorme(bool enable);
 	bool    GetCenterNorme() const;
 	void    BuildFacetList(InterfaceFacet *f);
-	std::vector<std::optional<ScreenCoord>>    TransformVerticesToScreenCoords(const int width, const int height, const bool printDebugInfo);
+	std::vector<std::optional<ScreenCoord>>    TransformVerticesToScreenCoords(const bool printDebugInfo=false);
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
 	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length);
@@ -286,7 +286,7 @@ public:
 	void AddToSelectedVertexList(size_t vertexId);
 	void EmptySelectedVertexList();
 	void RemoveFromSelectedVertexList(size_t vertexId);
-	void SelectArea(const int x1, const int y1, const int x2, const int y2, const int screenWidth, const int screenHeight, bool clear, bool unselect, bool vertexBound, bool circularSelection);
+	void SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection);
 	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
 	void TreatNewSelection(int lastFound, bool unselect);
 	void SelectFacet(size_t facetId);
