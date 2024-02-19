@@ -151,16 +151,12 @@ void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, con
 
 void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
 	// Select a facet on a mouse click in 3D perspective view 
-	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
+	constexpr bool printDebugInfo = true; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
 	//Transform all vertex coordinates to screen coordinates
 	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(printDebugInfo);
-
-	// Check facets
-	bool found_global = false;
-	int lastFound_facetId = -1;
 
 	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
 	
@@ -172,13 +168,14 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 		fmt::print("}}\n");
 	}
 
-	bool assigned=false;
+	int global_solution_facetId = -1; //facet id that was found and not yet in sel. history
 #pragma omp parallel
 	{
-			int  found_local_facetId=-1; //-1: not found, otherwise id of facet
+			int found_local_facetId = -1; //-1: not found, otherwise id of facet
+			
 #pragma omp for
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (found_global) continue; //this or an other thread have found a valid facet, don't look for more
+			if (global_solution_facetId >= 0) continue; //this or an other thread have found a valid facet, don't look for more
 
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
@@ -220,7 +217,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 #pragma omp critical
 												fmt::print("Thread {}/{}: deselecting facet {} and looking for more under the pointer.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 											}
-											found_local_facetId = -1; //Continue looking for facets, we want to deselect everything under the pointer
+											found_local_facetId = -1; //Skip processing and look for more
 										}
 										else { //Smart selection
 											double maxAngleDiff;
@@ -235,22 +232,24 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 												facets[ind]->selected = false;
 										}
 									} //end unselect
-									if (InSelectionHistory(i)) {
-										if (printDebugInfo) {
-#pragma omp critical
-											fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
-										}
-									}
-									else { //found a facet that wasn't in the selected history (or we're in unselect mode)
-#pragma omp critical
-										{
-											found_global = true; //set global found flag to true, all threads will skip every facet check after this
+									if (found_local_facetId >= 0) { //false if unselect mode without smart selection
+										if (InSelectionHistory(i)) {
 											if (printDebugInfo) {
-												fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+#pragma omp critical
+												fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+											}
+										}
+										else { //found a facet that wasn't in the selected history
+#pragma omp critical
+											{
+												global_solution_facetId = i; //set global found flag to true, all threads will skip every facet check after this. Race condition allowed, accept any thread's result
+												if (printDebugInfo) {
+													fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+												}
 											}
 										}
 									}
-								} //end "in poly"
+								} //end "inPoly"
 							} //if not already selected or unselect mode
 						} //if CAPS LOCK not on or has selected vertex
 					} //if has at least a vertex on screen
@@ -261,32 +260,20 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 //process results, still in parallel region to keep found_local_facetId
 #pragma omp critical
 		if (!unselect) {
-			if (!assigned) {
+			if (global_solution_facetId==-1) {
 
 				if (printDebugInfo) fmt::print("Thread {}/{} finished, found_local_facetId={}", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 
-				if (found_global) { //There was at least one facet found not yet in the selection history
-					if (found_local_facetId >= 0) {
-						lastFound_facetId = found_local_facetId; //If this thread was one of those that found, make it the global result
-						assigned = true; //Don't process other threads
-						if (printDebugInfo) fmt::print(" - accept as global result\n");
-					}
-					else {
-						if (printDebugInfo) fmt::print(" - thread had no result\n");
-					}
-				}
-				else { //No threads found new facet
 					if (found_local_facetId >= 0) { //This thread has a facet already in the selection history
 						foundInSelectionHistory.insert(found_local_facetId); //we'll process later
-						if (printDebugInfo) fmt::print(" - no new facet found, add this result to candidates in selection history\n");
+						if (printDebugInfo) fmt::print(" - no global result, add this result to candidates in selection history\n");
 					}
 					else if (printDebugInfo) {
 						fmt::print(" - thread had no result\n");
 					}
-				}
-			}
-			else if (printDebugInfo) {
-				fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as there's already a result.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+				
+			} else if (printDebugInfo) {
+				fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as there's a global result.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 			}
 		} else if (printDebugInfo) {
 			fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as unselect mode.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
@@ -296,7 +283,13 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	if (clear && !unselect) UnselectAll();
 
 	if (!unselect) {
-		if (!found_global && foundInSelectionHistory.size() > 0) { //found at least one that was already selected previously
+		if (global_solution_facetId >= 0) { //Found a new facet
+			if (!unselect) AddToSelectionHist(global_solution_facetId);
+			if (printDebugInfo) fmt::print("Added facet {} to selection history\n", global_solution_facetId + 1);
+
+			TreatNewSelection(global_solution_facetId, unselect);
+		} else if (global_solution_facetId == -1 && foundInSelectionHistory.size() > 0) { //found at least one that was already selected previously
+			
 			size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
 
 			if (printDebugInfo) {
@@ -330,14 +323,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 			}*/
 
 
-		}
-		else if (found_global) {
-			if (!unselect) AddToSelectionHist(lastFound_facetId);
-			if (printDebugInfo) fmt::print("Added facet {} to selection history\n", lastFound_facetId + 1);
-
-			TreatNewSelection(lastFound_facetId, unselect);
-		}
-		else { //not found at all
+		} else { //not found at all
 			if (printDebugInfo) fmt::print("Nothing found, not even in selection history, cleared selection history.\n");
 			selectHist.clear();
 		}
