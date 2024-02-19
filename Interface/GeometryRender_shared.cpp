@@ -1846,10 +1846,8 @@ std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToSc
 	for (int i = 0; i < sh.nbVertex; i++) {
 		std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
 		if (coords.has_value()) {
-			{
-				bool onScreen = coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height;
-				if (onScreen) screenCoords[i] = coords;
-			}
+			bool onScreen = coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height;
+			if (onScreen) screenCoords[i] = coords;
 		}
 	}
 

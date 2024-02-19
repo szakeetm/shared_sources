@@ -69,7 +69,7 @@ public:
   static void SetViewport(const GLVIEWPORT &v);
   static void SetMaterial(GLMATERIAL *mat);
   static void printGlError(GLenum glError);
-  static std::optional<ScreenCoord> Get2DScreenCoord(const Vector3d& p);
+  static std::optional<ScreenCoord> Get2DScreenCoord_currentMatrix(const Vector3d& p);
   static std::optional<ScreenCoord> Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& mvp, const GLVIEWPORT& viewPort);
   static void LookAt(const Vector3d& Eye, const Vector3d& camPos, const Vector3d& Up, const double handedness);
   static void PerspectiveLH(double fovy,double aspect,double zNear,double zFar);
