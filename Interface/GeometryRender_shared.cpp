@@ -267,7 +267,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 								if (found_local_facetId >= 0) {
 
 									if (unselect) {
-										if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : false) {
+										if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
 											facets[i]->selected = false;
 											if (printDebugInfo) {
 #pragma omp critical
@@ -407,7 +407,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : false) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
