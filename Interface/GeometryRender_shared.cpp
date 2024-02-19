@@ -411,7 +411,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 					isInside = (screenCoords->x >= _x1) && (screenCoords->x <= _x2) && (screenCoords->y >= _y1) && (screenCoords->y <= _y2);
 				}
 				else {//circular selection
-					sInside = (pow((float)(screenCoords->x - x1), 2) + pow((float)(screenCoords->y - y1), 2)) <= r2;
+					isInside = (pow((float)(screenCoords->x - x1), 2) + pow((float)(screenCoords->y - y1), 2)) <= r2;
 				}
 			}
 

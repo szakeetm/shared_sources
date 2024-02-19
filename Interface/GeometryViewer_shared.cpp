@@ -1667,7 +1667,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 				}
 				else {
 					// Select region
-					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY, this->width, this->height,
+					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY, 
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
 				}
 			}
