@@ -1649,7 +1649,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 						screenshotStatus.requested = 2;
 					}
 					else {
-						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY, this->width, this->height,
 							!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
 					}
 					}

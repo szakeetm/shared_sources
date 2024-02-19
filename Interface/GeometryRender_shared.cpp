@@ -64,7 +64,7 @@ void InterfaceGeometry::SelectFacet(size_t facetId) {
 	selectHist = { facetId }; //reset with only this facet id
 }
 
-void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
+void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, const int screenWidth, const int screenHeight, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -81,25 +81,14 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
+
 
 	if (clear && !unselect) UnselectAll();
 	selectHist.clear();
 	int lastPaintedProgress = -1;
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
-	std::vector<std::pair<int, int>> screenCoords(vertices3.size());
-#pragma omp parallel for
-	for (int i = 0; i < vertices3.size(); i++) {
-		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		int xe = -1, ye = -1;
-		if (c) {
-			std::tie(xe, ye) = *c;
-		}
-		screenCoords[i] = std::make_pair(xe, ye);
-	}
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(screenWidth, screenHeight, false);
 
 	//Check facets if all vertices inside
 	std::vector<size_t> facetIds_vect;
@@ -118,16 +107,19 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 				bool hasSelectedVertex = false;
 				while (j < nb && isInside) {
 					size_t idx = f->indices[j];
-					int xe = screenCoords[idx].first;
-					int ye = screenCoords[idx].second;
-					if (!circularSelection) {
-						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
+					if (!screenCoords[idx].has_value()) {
+						isInside = false;
 					}
-					else { //circular selection
-						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
+					else {
+						if (!circularSelection) {
+							isInside = (screenCoords[idx]->x >= _x1) && (screenCoords[idx]->x <= _x2) && (screenCoords[idx]->y >= _y1) && (screenCoords[idx]->y <= _y2);
+						}
+						else { //circular selection
+							isInside = (pow((float)(screenCoords[idx]->x - x1), 2) + pow((float)(screenCoords[idx]->y - y1), 2)) <= r2;
+						}
+						if (vertices3[idx].selected) hasSelectedVertex = true;
+						j++;
 					}
-					if (vertices3[idx].selected) hasSelectedVertex = true;
-					j++;
 				}
 				if (isInside && (!vertexBound || hasSelectedVertex)) {
 					facetIds_local.insert(i);
@@ -165,48 +157,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 	// Select a facet on a mouse click in 3D perspective view 
 	// (x,y) are in screen coordinates
 
-// Check intersection of the facet and a "perspective ray"
-	std::vector<int> screenXCoords(sh.nbVertex);
-	std::vector<int> screenYCoords(sh.nbVertex);
-
-	// Transform points to screen coordinates
-	std::vector<bool> ok(sh.nbVertex);
-	std::vector<bool> onScreen(sh.nbVertex);
-
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
-
-	Chronometer timer;
-	timer.Start();
-
-#pragma omp parallel for
-	for (int i = 0; i < sh.nbVertex; i++) {
-		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (coords.has_value()) {
-			{
-				ok[i] = true;
-				auto [x, y] = *coords;
-				screenXCoords[i] = x;
-				screenYCoords[i] = y;
-				onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
-			}
-		}
-		else {
-			//ok[i] = false; //can't transform. skip this line for speedup as ok[] vector's elements are false by default
-			//onScreen[i] = false; //skip for speedup, not checked if ok[] is false			
-		}
-	}
-
-	timer.Stop();
-
-	if (printDebugInfo) {
-		fmt::print("\nTransformed {} vertices in {:.1f} ms.\n", sh.nbVertex, timer.ElapsedMs());
-		fmt::print("Transformation not ok for vertices: {{");
-		for (int i=0;i<ok.size(); i++)
-			if (!ok[i]) fmt::print("{},", i+1);
-		fmt::print("}}\n");
-	}
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(width,height,printDebugInfo);
 
 	// Check facets
 	bool found_global = false;
@@ -232,21 +183,22 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
-				bool clipped = false;
+				//bool clipped = false;
 				bool hasVertexOnScreen = false;
 				bool hasSelectedVertex = false;
 				// Build array of 2D points
 				std::vector<Vector2d> facetScreenCoords(facets[i]->indices.size());
 
-				for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
+				for (int j = 0; j < facets[i]->indices.size()/* && !clipped*/; j++) {
 					size_t idx = facets[i]->indices[j];
-					if (ok[idx]) {
-						facetScreenCoords[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
-						if (onScreen[idx]) hasVertexOnScreen = true;
+					if (screenCoords[idx].has_value()) {
+						facetScreenCoords[j] = Vector2d((double)screenCoords[idx]->x, (double)screenCoords[idx]->y);
+						hasVertexOnScreen = true;
 					}
+					/*
 					else {
 						clipped = true;
-					}
+					}*/
 				}
 				if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
 					for (size_t j = 0; j < facets[i]->indices.size() && (!hasSelectedVertex); j++) {
@@ -255,7 +207,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					}
 				}
 
-				if (!clipped) {
+				//if (!clipped) {
 					if (hasVertexOnScreen) {
 						if (!vertexBound || hasSelectedVertex) {
 							if (unselect || !facets[i]->selected) {
@@ -309,7 +261,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 							} //if not already selected or unselect mode
 						} //if CAPS LOCK not on or has selected vertex
 					} //if has at least a vertex on screen
-				} //if doesn't have vertex that couldn't be transformed
+				//} //if doesn't have vertex that couldn't be transformed
 			} //if in current (or all) structure
 		} //parallel for loop on facets
 
@@ -452,7 +404,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLMatrix view,proj,mvp;
+	GLMatrix view, proj, mvp;
 	GLVIEWPORT viewPort;
 	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
@@ -471,32 +423,25 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			Vector3d* v = GetVertex(i);
-			//if(viewStruct==-1 || f->sp.superIdx==viewStruct) {
-			if (true) {
 
-				bool isInside = false;
-				int idx = i;
+			bool isInside = false;
+			int idx = i;
+			std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+			if (coords.has_value()) { //otherwise ignore
+				if (!circularSelection)
+					isInside = (coords->x >= _x1) && (coords->x <= _x2) && (coords->y >= _y1) && (coords->y <= _y2);
+				else //circular selection
+					isInside = (pow((float)(coords->x - x1), 2) + pow((float)(coords->y - y1), 2)) <= r2;
+			}
 
-				int xe, ye;
-				std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (c)
-				{
-					std::tie(xe, ye) = *c;
-
-					if (!circularSelection)
-						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
-					else //circular selection
-						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
-				}
-
-				if (isInside) {
-					vertices_local.insert(i);
-				}
+			if (isInside) {
+				vertices_local.insert(i);
 			}
 		}
 #pragma omp critical
 		vertices_global.insert(vertices_local.begin(), vertices_local.end());
-	}
+	} //end parallel region
+
 	for (auto index : vertices_global) {
 		vertices3[index].selected = !ctrlDown;
 		if (ctrlDown) RemoveFromSelectedVertexList(index);
@@ -506,7 +451,6 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		}
 	}
 
-	//UpdateSelectionVertex();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
@@ -516,34 +460,11 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 
 	// Select a vertex on a mouse click in 3D perspectivce view 
 	// (x,y) are in screen coordinates
-	// TODO: Handle clipped polygon
-
-	// Check intersection of the facet and a "perspective ray"
-	std::vector<int> allXe(sh.nbVertex);
-	std::vector<int> allYe(sh.nbVertex);
-	std::vector<bool> ok(sh.nbVertex);
 
 	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
-
-	// Transform points to screen coordinates
-#pragma omp parallel for
-	for (int i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		
-		if (c) {
-			ok[i] = true;
-			std::tie(allXe[i], allYe[i]) = *c;
-		}
-		else {
-			ok[i] = false;
-		}
-	}
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(width,height,false);
 
 	//Get Closest Point to click
 	double minDist_global = std::numeric_limits<double>::max();
@@ -557,11 +478,13 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 #pragma omp for
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-			if (ok[i] && allXe[i] >= 0 && allXe[i] < width && allYe[i] >= 0 && allYe[i] < height) { //calculate only for points on screen
-				double distanceSqr = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
-				if (distanceSqr < minDist_local) {
-					minDist_local = distanceSqr;
-					minId_local = i;
+			if (screenCoords[i].has_value()) {
+				if (screenCoords[i]->x >= 0 && screenCoords[i]->x < width && screenCoords[i]->y >= 0 && screenCoords[i]->y < height) { //calculate only for points on screen
+					double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
+					if (distanceSqr < minDist_local) {
+						minDist_local = distanceSqr;
+						minId_local = i;
+					}
 				}
 			}
 		}
@@ -1906,4 +1829,39 @@ void InterfaceGeometry::BuildFacetList(InterfaceFacet* f) {
 
 		glEndList();
 	}
+}
+
+std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToScreenCoords(const int width, const int height, const bool printDebugInfo) {
+	// Check intersection of the facet and a "perspective ray"
+	std::vector<std::optional<ScreenCoord>> screenCoords(sh.nbVertex);
+
+	GLMatrix view, proj, mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
+
+	Chronometer timer;
+	timer.Start();
+
+#pragma omp parallel for
+	for (int i = 0; i < sh.nbVertex; i++) {
+		std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+		if (coords.has_value()) {
+			{
+				bool onScreen = coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height;
+				if (onScreen) screenCoords[i] = coords;
+			}
+		}
+	}
+
+	timer.Stop();
+
+	if (printDebugInfo) {
+		fmt::print("\nTransformed {} vertices in {:.1f} ms.\n", sh.nbVertex, timer.ElapsedMs());
+		fmt::print("Not on screens: {{");
+		for (int i = 0; i < screenCoords.size(); i++)
+			if (!screenCoords[i].has_value()) fmt::print("{},", i + 1);
+		fmt::print("}}\n");
+	}
+
+	return screenCoords;
 }
