@@ -323,7 +323,7 @@ struct SimuParams { //Plain old data
 #if defined(MOLFLOW)
 	struct ScatterParams {
 		bool enabled = false;
-		double meanFreePath = 1e100;
+		double meanFreePath_cm = 10;
 		bool massRatio = 1.0;
 		bool rho = 2.0;
 		double velocityCutoffRatio = 0.01; //destroy particle if reaches Brownian motion
