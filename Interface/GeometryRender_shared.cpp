@@ -253,7 +253,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					if (found_local) {
 						
 						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
+							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
 								facets[i]->selected = false;
 								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
 							}
@@ -356,7 +356,7 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 
 void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper to avoid duplicate code
 {
-	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true) {
+	if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
 		facets[lastFound]->selected = !unselect;
 	}
 	else { //Smart selection
