@@ -324,8 +324,8 @@ struct SimuParams { //Plain old data
 	struct ScatterParams {
 		bool enabled = false;
 		double meanFreePath_cm = 10;
-		bool massRatio = 1.0;
-		bool rho = 2.0;
+		double massRatio = 1.0;
+		double rho = 2.0;
 		double velocityCutoffRatio = 0.01; //destroy particle if reaches Brownian motion
 	};	
 	
