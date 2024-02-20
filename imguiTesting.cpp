@@ -108,4 +108,26 @@ void ImTest::RegisterTests()
         // close window
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Test");
+        ctx->MenuClick("Test/Quick Pipe");
+        IM_CHECK_EQ(interfGeom->GetNbFacet(), 7);
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select All");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select All Facets");
+        IM_CHECK_EQ(interfGeom->GetNbFacet(), interfGeom->GetNbSelectedFacets());
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select by Number");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select by Facet Number...");
+        ctx->SetRef("Select facet(s) by number");
+        ctx->ItemClick("#CLOSE");
+        };
 }
