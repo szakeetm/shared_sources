@@ -21,6 +21,10 @@ extern SynRad* mApp;
 
 void ImSmartSelection::Func() {
 	if (!isRunning) {
+		if (!Util::getNumber(&planeDiff, planeDiffInput)) {
+			ImIOWrappers::InfoPopup("Error", "Invalid input");
+			return;
+		}
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 		if (!interfGeom->IsLoaded()) {
 			mApp->imWnd->popup.Open("Error", "No geometry", { 
@@ -45,14 +49,14 @@ void ImSmartSelection::Draw()
 {
 	if (drawn) {
 		ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
-		ImGui::Begin("Smart Selection", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize);
+		ImGui::Begin("Smart Selection", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 		ImGui::PlaceAtRegionCenter(!isRunning ? "  Analyze  " : "  Stop Analyzing  ");
-		if (ImGui::Button(!isRunning ? "  Analyze  " : "  Stop Analyzing  ")) {
+		if (ImGui::Button(!isRunning ? "  Analyze  ###Analyze" : "  Stop Analyzing  ")) {
 			Func();
 		}
 		ImGui::Text("Max plane diff. between neighbors (deg):"); ImGui::SameLine();
 		ImGui::SetNextItemWidth(ImGui::CalcTextSize("000000").x);
-		ImGui::InputText("##1", &planeDiffInput);
+		ImGui::InputText("##planeDiff", &planeDiffInput);
 		ImGui::Text(result);
 		if (!isAnalyzed) {
 			ImGui::BeginDisabled();
