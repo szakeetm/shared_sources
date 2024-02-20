@@ -1,13 +1,19 @@
 #include "GLTypes.h"
+#include "GLTypes.h"
 
-LockWrapper::LockWrapper(bool& _flag) : flag(_flag) {
-    if (flag) throw Error("LockWrapper: Trying to lock an already locked guard."); //Exposes hard to debug race condition
-    flag = true;
-
+LockWrapper::LockWrapper(size_t& _flag) : flag(_flag) {
+    owner = flag == 0;
+    flag++;
 }
 LockWrapper::~LockWrapper() {
-    flag = false;
-};
+    if (flag == 0) throw Error("LockWrapper: Tried to unlock unlocked lock");
+    flag--;
+}
 bool LockWrapper::IsLocked() {
-    return flag;
+    return flag>0;
+}
+
+bool LockWrapper::IsOwner()
+{
+    return owner;
 }
