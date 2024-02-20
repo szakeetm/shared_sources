@@ -1630,7 +1630,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 					// Simple click, select/unselect facet
 					//SetCursor(CURSOR_BUSY);
 					GLToolkit::SetCursor(CURSOR_BUSY);
-					interfGeom->Select(mX - posX, mY - posY, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), this->width, this->height);
+					interfGeom->Select(mX - posX, mY - posY, this->width, this->height, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//UpdateMouseCursor(cursorMode);
 				}
 				else {
