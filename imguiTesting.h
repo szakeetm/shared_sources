@@ -13,8 +13,7 @@ public:
 	bool DestroyContext();
 	void PostSwap();
 	
-	bool showTestEngine = false;
 private:
-	ImGuiTestEngine* engine;
 	void RegisterTests();
+	ImGuiTestEngine* engine;
 };

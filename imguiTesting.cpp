@@ -33,10 +33,10 @@ bool ImTest::DestroyContext()
 
 void ImTest::Draw()
 {
-    if (!showTestEngine) return;
+    if (!drawn) return;
     mApp->imWnd->forceDrawNextFrame=true;
     ImGui::StyleColorsDark(); // on light background the log is not readable
-    ImGuiTestEngine_ShowTestEngineWindows(engine, &showTestEngine);
+    ImGuiTestEngine_ShowTestEngineWindows(engine, &drawn);
     ImGui::StyleColorsLight();
 }
 
@@ -48,9 +48,64 @@ void ImTest::PostSwap()
 void ImTest::RegisterTests()
 {
     ImGuiTest* t = NULL;
-    t = IM_REGISTER_TEST(engine, "Group", "Title");
+    t = IM_REGISTER_TEST(engine, "MainMenu", "All Submenues");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###File");
         ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Tools");
+        ctx->MenuClick("Facet");
+        ctx->MenuClick("Vertex");
+        ctx->MenuClick("View");
+        ctx->MenuClick("Test");
+        ctx->MenuClick("Time");
+        ctx->MenuClick("About");
+        };
+    t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###File");
+        ctx->MenuClick("###File/###NewGeom");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Smart Selection");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        // set start state
+        mApp->imWnd->smartSelect.planeDiff = 30;
+        mApp->imWnd->smartSelect.planeDiffInput = "30";
+        mApp->imWnd->smartSelect.enabledToggle = false;
+        // navigate to window
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Smart Select facets...");
+        ctx->SetRef("Smart Selection");
+        // input invalid value
+        ctx->ItemClick("##planeDiff");
+        ctx->KeyCharsReplaceEnter("abc");
+        ctx->ItemClick("###Analyze");
+        // assert bahaviour
+        IM_CHECK_EQ(false, mApp->imWnd->smartSelect.enabledToggle);
+        IM_CHECK_EQ(30, mApp->imWnd->smartSelect.planeDiff);
+        // deal with info popup
+        ctx->MouseMoveToPos(ImVec2(100,100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Smart Selection");
+        // sci notation
+        ctx->ItemClick("##planeDiff");
+        ctx->KeyCharsReplaceEnter("2e1");
+        ctx->ItemClick("###Analyze");
+        IM_CHECK_EQ(true, mApp->imWnd->smartSelect.enabledToggle);
+        IM_CHECK_EQ(20, mApp->imWnd->smartSelect.planeDiff);
+        // input valid value
+        ctx->ItemClick("##planeDiff");
+        ctx->KeyCharsReplaceEnter("30");
+        ctx->ItemClick("###Analyze");
+        IM_CHECK_EQ(true, mApp->imWnd->smartSelect.enabledToggle);
+        IM_CHECK_EQ(30, mApp->imWnd->smartSelect.planeDiff);
+        // toggle checkbox
+        ctx->ItemClick("Enable smart selection");
+        IM_CHECK_EQ(false, mApp->imWnd->smartSelect.enabledToggle);
+        // close window
+        ctx->ItemClick("#CLOSE");
         };
 }

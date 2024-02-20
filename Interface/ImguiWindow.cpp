@@ -355,7 +355,10 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
 #ifdef DEBUG
-            ImGui::Checkbox("Test Engine",&testEngine.showTestEngine);
+            bool testEngineVis = testEngine.IsVisible();
+            if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
+                testEngine.SetVisible(testEngineVis);
+            }
 #endif
 
             static int response;

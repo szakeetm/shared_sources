@@ -229,7 +229,7 @@ void QuitMenuPress() {
 }
 
 static void ShowMenuFile() {
-    if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
+    if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry###NewGeom")) {
         auto common = []() { NewGeometry(); };
         ImIOWrappers::AskToSaveBeforeDoing(common);
     }
@@ -1456,7 +1456,7 @@ static void ShowMenuTest() {
     }
 #ifdef DEBUG
     if (ImGui::MenuItem("ImGui Test Engine", "Ctrl+T")) {
-        mApp->imWnd->testEngine.showTestEngine = true;
+        mApp->imWnd->testEngine.Show();
     }
 #endif
 
