@@ -1456,7 +1456,7 @@ static void ShowMenuTest() {
     }
 #ifdef DEBUG
     if (ImGui::MenuItem("ImGui Test Engine", "Ctrl+T")) {
-        mApp->imWnd->showTestEngine = true;
+        mApp->imWnd->testEngine.showTestEngine = true;
     }
 #endif
 

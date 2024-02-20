@@ -47,7 +47,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #endif
 
 #ifdef DEBUG
-#include "imgui_test_engine/imgui_te_engine.h"
+#include "../imguiTesting.h"
 #endif
 
 /*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
@@ -65,6 +65,10 @@ public:
 
     GLApplication* app;
 
+#ifdef DEBUG
+    ImTest testEngine;
+#endif
+
     bool ToggleMainHub();
     bool ToggleMainMenu();
     bool ToggleSimSidebar();
@@ -76,11 +80,6 @@ public:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_perfo{false}; //!< Plot showing history of simulation performance
     bool show_window_license{false};
-
-#ifdef DEBUG
-    bool showTestEngine = false;
-    ImGuiTestEngine* engine;
-#endif
 
     void ShowWindowLicense();
     ImIOWrappers::ImPopup popup;
