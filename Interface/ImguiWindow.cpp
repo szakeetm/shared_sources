@@ -47,6 +47,10 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <Helper/FormatHelper.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 
+#ifdef DEBUG
+#include "imgui_test_engine/imgui_te_engine.h"
+#include "imgui_test_engine/imgui_te_ui.h"
+#endif
 // Varius toggle functions for individual window components
 bool ImguiWindow::ToggleMainHub(){
     show_main_hub = !show_main_hub;
@@ -110,6 +114,15 @@ void ImguiWindow::init() {
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 
+#ifdef DEBUG
+    engine = ImGuiTestEngine_CreateContext();
+    ImGuiTestEngineIO& test_io = ImGuiTestEngine_GetIO(engine);
+    test_io.ConfigVerboseLevel = ImGuiTestVerboseLevel_Info;
+    test_io.ConfigVerboseLevelOnError = ImGuiTestVerboseLevel_Debug;
+    ImGuiTestEngine_Start(engine, ImGui::GetCurrentContext());
+    ImGuiTestEngine_InstallDefaultCrashHandler();
+    // register tests here
+#endif
 
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
@@ -238,8 +251,14 @@ void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+#ifdef DEBUG
+    ImGuiTestEngine_Stop(engine);
+#endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
+#ifdef DEBUG
+    ImGuiTestEngine_DestroyContext(engine);
+#endif
 }
 
 // TODO: When Imgui will be the main window/main GUI, use a full render cycle instead of a single frame rendering call
@@ -346,6 +365,9 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+#ifdef DEBUG
+            ImGui::Checkbox("Test Engine",&showTestEngine);
+#endif
 
             static int response;
             if (ImGui::CollapsingHeader("Popups")) {
@@ -390,7 +412,10 @@ void ImguiWindow::renderSingle() {
                         ImGui::GetTime(), difftime(now_time, start_time));
             ImGui::End();
         }
-
+#ifdef DEBUG
+        if(showTestEngine)
+            ImGuiTestEngine_ShowTestEngineWindows(engine, &showTestEngine);
+#endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
             ShowPerfoPlot(&show_perfo, mApp);
@@ -438,6 +463,9 @@ void ImguiWindow::renderSingle() {
         {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         }*/
+#ifdef DEBUG
+        ImGuiTestEngine_PostSwap(engine);
+#endif
     }
 }
 

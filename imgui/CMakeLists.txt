@@ -26,6 +26,11 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# ImGui Test Engine
+file(GLOB IMGUI_TEST_ENGINE_SOURCES 
+		../imgui_test_engine/imgui*.cpp
+	)
+
 add_library( imgui STATIC
   imconfig.h
   imgui.cpp
@@ -42,11 +47,14 @@ add_library( imgui STATIC
   imstb_rectpack.h
   imstb_textedit.h
   imstb_truetype.h
+  ${IMGUI_TEST_ENGINE_SOURCES}
   )
 
 target_include_directories( imgui
   INTERFACE ..
   PRIVATE . )
+
+target_include_directories(imgui PRIVATE ../imgui_test_engine)
 
 if(MSVC)
     find_package(OpenGL REQUIRED)

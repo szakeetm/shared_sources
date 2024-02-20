@@ -1454,6 +1454,12 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
+#ifdef DEBUG
+    if (ImGui::MenuItem("ImGui Test Engine", "Ctrl+T")) {
+        mApp->imWnd->showTestEngine = true;
+    }
+#endif
+
     if (ImGui::MenuItem("Shortcut Test", "Ctrl+T")) {
         ImIOWrappers::InfoPopup("Menu Shortcut", "Menu Shortcut");
     }

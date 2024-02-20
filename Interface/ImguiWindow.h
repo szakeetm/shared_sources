@@ -46,12 +46,16 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../src/SynRad.h"
 #endif
 
+#ifdef DEBUG
+#include "imgui_test_engine/imgui_te_engine.h"
+#endif
+
 /*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
 class ImguiWindow {
 public:
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
-    static void destruct();
+    void destruct();
     //void render();
     void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
@@ -72,6 +76,11 @@ public:
     bool show_demo_window{false}; //!< Debug only: ImGui Demo Window to test all ImGui functionalities
     bool show_perfo{false}; //!< Plot showing history of simulation performance
     bool show_window_license{false};
+
+#ifdef DEBUG
+    bool showTestEngine = false;
+    ImGuiTestEngine* engine;
+#endif
 
     void ShowWindowLicense();
     ImIOWrappers::ImPopup popup;
