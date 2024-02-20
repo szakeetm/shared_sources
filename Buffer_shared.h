@@ -325,7 +325,7 @@ struct SimuParams { //Plain old data
 		bool enabled = false;
 		double meanFreePath_cm = 10;
 		double massRatio = 1.0;
-		double rho = 2.0;
+		double rho = 2.0; //no effect currently
 		//double velocityCutoffRatio = 0.01; //destroy particle if reaches Brownian motion
 	};	
 	
