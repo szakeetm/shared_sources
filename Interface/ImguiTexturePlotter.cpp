@@ -221,6 +221,7 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
+	if (selFacet == nullptr) return;
 	{
 		LockWrapper lW(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock
