@@ -53,6 +53,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 /*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
 class ImguiWindow {
 public:
+    bool forceDrawNextFrame = false;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();

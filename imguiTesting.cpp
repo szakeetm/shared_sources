@@ -4,6 +4,7 @@
 #else
 #include "../../src/SynRad.h"
 #endif
+#include "ImguiWindow.h"
 
 void ImTest::Init(Interface* mApp_)
 {
@@ -33,6 +34,7 @@ bool ImTest::DestroyContext()
 void ImTest::Draw()
 {
     if (!showTestEngine) return;
+    mApp->imWnd->forceDrawNextFrame=true;
     ImGui::StyleColorsDark(); // on light background the log is not readable
     ImGuiTestEngine_ShowTestEngineWindows(engine, &showTestEngine);
     ImGui::StyleColorsLight();
@@ -48,6 +50,7 @@ void ImTest::RegisterTests()
     ImGuiTest* t = NULL;
     t = IM_REGISTER_TEST(engine, "Group", "Title");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
-
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
         };
 }

@@ -441,16 +441,20 @@ void GLApplication::Run() {
   {
         
      //While there are events to handle
-     while( !quit && SDL_PollEvent( &sdlEvent ) )
+      while (!quit && (SDL_PollEvent(&sdlEvent) || (imWnd && imWnd->forceDrawNextFrame)))
      {
          bool forceSkipEvents = false;
+         bool activeImGuiEvent = false;
          if(imWnd) {
-             auto ctx = ImGui::GetCurrentContext();
-             bool activeImGuiEvent = (ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)
-                                     || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1)
-                                     || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1)
-                                     || ImGui::IsAnyItemHovered();
-             if (!activeImGuiEvent) {
+             if (imWnd->forceDrawNextFrame) {
+                 imWnd->forceDrawNextFrame = false;
+             }
+            auto ctx = ImGui::GetCurrentContext();
+            activeImGuiEvent = (ImGui::GetIO().WantCaptureKeyboard || ctx->WantCaptureKeyboardNextFrame != -1)
+                                    || (ImGui::GetIO().WantCaptureMouse || ctx->WantCaptureMouseNextFrame != -1)
+                                    || (ImGui::GetIO().WantTextInput || ctx->WantTextInputNextFrame != -1)
+                                    || ImGui::IsAnyItemHovered();
+            if (!activeImGuiEvent) {
                 // workaround for some mouse events getting triggered on old implementation first, results e.g. in selection-rectangle when clicking on ImGui window
                 // ImGui_ImplSDL2_NewFrame updates the mouse position, but is only called on ImGui render cycle
                 // Check for mouse events in imgui windows manually
@@ -472,16 +476,14 @@ void GLApplication::Run() {
                         }
                     }
                 }
-             }
-
-
-             if (activeImGuiEvent) {
-                 wereEvents_imgui = 3;
-                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
-                     //Handle input events caught by ImGui
-                 }
-                 continue;
-             }
+            }
+            if (activeImGuiEvent) {
+                wereEvents_imgui = 3;
+                if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
+                    //Handle input events caught by ImGui
+                }
+                continue;
+            }
          }
 		//if (sdlEvent.type!=SDL_MOUSEMOTION || sdlEvent.motion.state!=0) {
             wereEvents = true;

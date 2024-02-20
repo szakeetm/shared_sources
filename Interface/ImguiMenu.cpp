@@ -1626,15 +1626,15 @@ void ShowAppMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         ImGui::PopStyleVar(2);
         ImGui::AlignTextToFramePadding();
-        if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
+        if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File###File")) {
             ImMenu::ShowMenuFile();
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
+        if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection###Selection")) {
             ImMenu::ShowMenuSelection();
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
+        if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools###Tools")) {
             ImMenu::ShowMenuTools();
             ImGui::EndMenu();
         }

@@ -451,9 +451,6 @@ void ImguiWindow::renderSingle() {
         {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         }*/
-#ifdef DEBUG
-        testEngine.PostSwap();
-#endif
     }
 }
 
