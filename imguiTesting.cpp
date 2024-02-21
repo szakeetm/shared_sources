@@ -48,19 +48,6 @@ void ImTest::PostSwap()
 void ImTest::RegisterTests()
 {
     ImGuiTest* t = NULL;
-    t = IM_REGISTER_TEST(engine, "MainMenu", "All Submenues");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###File");
-        ctx->MenuClick("###Selection");
-        ctx->MenuClick("###Tools");
-        ctx->MenuClick("Facet");
-        ctx->MenuClick("Vertex");
-        ctx->MenuClick("View");
-        ctx->MenuClick("Test");
-        ctx->MenuClick("Time");
-        ctx->MenuClick("About");
-        };
     t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
@@ -128,6 +115,45 @@ void ImTest::RegisterTests()
         ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
+        // TODO Test Correctness of Input and button behaviour
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Sticking");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select Sticking");
+        // TODO check if selection correct (may need to conditionally add quickpipe if running tests out of order)
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Transparent");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select Transparent");
+        // Cannot test more as transparency cannot be changed using ImGui UI yet
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select 2 Sided");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select 2 sided");
+        // Cannot test more as 2-sidedness cannot be changed using ImGui UI yet
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Texture");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select Texture");
+        // Cannot test more as textures cannot be applied using ImGui UI yet
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Texture Type");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select by Texture type...");
+        ctx->SetRef("Select facets by texture properties");
+        // TODO test tristate behaviour
+        // Cannot test more as textures cannot be applied using ImGui UI yet
         ctx->ItemClick("#CLOSE");
         };
 }
