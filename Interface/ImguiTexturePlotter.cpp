@@ -40,6 +40,7 @@ void ImTexturePlotter::Draw()
 		for (short i = 0; i < comboOpts.size(); i++) {
 			if (ImGui::Selectable(comboOpts[i])) {
 				viewIdx = i;
+				UpdatePlotter();
 			}
 		}
 		ImGui::EndCombo();
