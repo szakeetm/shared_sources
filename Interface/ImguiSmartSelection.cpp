@@ -33,7 +33,13 @@ void ImSmartSelection::Func() {
 			return;
 		}
 		isRunning = true;
-		size_t nbAnalyzed = interfGeom->AnalyzeNeigbors(&mApp->worker, mApp->imWnd->progress);
+		size_t nbAnalyzed;
+		{
+			LockWrapper lW(mApp->imguiRenderLock);
+			auto prg = GLProgress_GUI("Analyzing facets...", "Please wait");
+			prg.SetVisible(true);
+			nbAnalyzed = interfGeom->AnalyzeNeigbors(&mApp->worker, prg);
+		}
 		isRunning = false;
 		result = "Analyzed "+std::to_string(nbAnalyzed)+" facets.";
 		enabledToggle = true;
