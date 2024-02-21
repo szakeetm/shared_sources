@@ -27,36 +27,35 @@ void ImSelectDialog::Draw()
 	ImGui::InputText("##1", &this->numText);
 	ImGui::Text("You can enter a list and/or range(s), examples: 1,2,3 or 1-10 or 1-10,20-30");
 	if (ImGui::Button("  Select  ")) {
-		Preprocess();
 		Func(select);
 	} ImGui::SameLine();
 	if (ImGui::Button("  Add to selection  ")) {
-		Preprocess();
 		Func(addSelect);
 	} ImGui::SameLine();
 	if (ImGui::Button("  Remove from selection  ")) {
-		Preprocess();
 		Func(rmvSelect);
 	}
 
 	ImGui::End();
 }
 
-void ImSelectDialog::Preprocess() {
+bool ImSelectDialog::Preprocess() {
 	std::vector<size_t>().swap(facetIds);
 	try {
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 		splitFacetList(facetIds, numText, interfGeom->GetNbFacet());
+		return true;
 	}
 	catch (const std::exception& e) {
 		mApp->imWnd->popup.Open("Error", e.what(), { 
 			std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
 			});
-		return;
+		return false;
 	}
 }
 
 void ImSelectDialog::Func(const int mode) {
+	if (!Preprocess()) return;
 	InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 	if (mode == select) {
 		interfGeom->UnselectAll();
