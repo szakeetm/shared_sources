@@ -156,4 +156,13 @@ void ImTest::RegisterTests()
         // Cannot test more as textures cannot be applied using ImGui UI yet
         ctx->ItemClick("#CLOSE");
         };
+    // VIEW
+    t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("View");
+        ctx->MenuClick("View/###Full Screen");
+        ctx->MouseMoveToPos(ImVec2(100,100));
+        ctx->MenuClick("View/###Full Screen");
+        };
 }

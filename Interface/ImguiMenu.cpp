@@ -1345,7 +1345,7 @@ static void ShowMenuView() {
         }
         ImGui::EndMenu();
     }
-    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {
+    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen###Full Screen")) {
         LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->Get_m_bWindowed()) {
             mApp->ToggleFullscreen();
