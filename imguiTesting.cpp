@@ -156,6 +156,27 @@ void ImTest::RegisterTests()
         // Cannot test more as textures cannot be applied using ImGui UI yet
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Facet Result");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection");
+        ctx->MenuClick("###Selection/Select by facet result...");
+        ctx->SetRef("Select facets by simulation result");
+        ctx->ItemClick("Select");
+        ctx->ItemClick("Add to sel.");
+        ctx->ItemClick("Remove from sel.");
+        ctx->ItemClick("##SFBSR/##minHits");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Select");
+        ctx->ItemClick("##SFBSR/##minHits");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Select");
+        ctx->MouseMoveToPos(ImVec2(100,100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Select facets by simulation result");
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
