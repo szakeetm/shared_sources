@@ -48,7 +48,7 @@ void ImTexturePlotter::Draw()
 		for (short i = 0; i < comboOpts.size(); i++) {
 			if (ImGui::Selectable(comboOpts[i])) {
 				viewIdx = i;
-				isUpToDate = false;
+				UpdatePlotter();
 			}
 		}
 		ImGui::EndCombo();
@@ -233,6 +233,7 @@ void ImTexturePlotter::DrawTextureTable()
 
 void ImTexturePlotter::GetData()
 {
+	if (selFacet == nullptr) return;
 	{
 		LockWrapper lW(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded()) // has to be in the same scope as the lock

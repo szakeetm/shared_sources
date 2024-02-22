@@ -23,7 +23,7 @@ extern SynRad* mApp;
 #endif
 
 void ImSelectTextureType::Preprocess() {
-	if (mode == exactly) {
+	if (mode == exactly && squareTextrueCheck!=2) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
@@ -31,7 +31,7 @@ void ImSelectTextureType::Preprocess() {
 			return;
 		}
 	}
-	else if (mode == between) {
+	else if (mode == between && squareTextrueCheck != 2) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
 			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
@@ -89,7 +89,7 @@ void ImSelectTextureType::Draw()
 			if (ImGui::BeginTable("##SFBTPtable", 2, ImGuiTableFlags_SizingFixedFit)) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::RadioButton("Exactly", mode==exactly)) mode = exactly;
+				if (ImGui::RadioButton("Exactly", mode==exactly)) mode==exactly ? mode = none : mode = exactly;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##3", &exactlyInput)) mode = exactly;
@@ -97,7 +97,7 @@ void ImSelectTextureType::Draw()
 				ImGui::Text("/cm");
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::RadioButton("Between", mode == between)) mode = between;
+				if (ImGui::RadioButton("Between", mode == between)) mode==between ? mode = none : mode = between;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##4", &minInput))	mode = between;
