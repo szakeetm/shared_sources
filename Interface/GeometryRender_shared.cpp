@@ -739,12 +739,6 @@ void InterfaceGeometry::DrawPolys() {
 	{
 		std::vector<double> vertexCoords_local, normalCoords_local;
 		std::vector<float> textureCoords_local, colorValues_local;
-		// Triangulate polygon
-#pragma omp for
-		for (int i = 0; i < fp.size(); i++) {
-			int j = fp[i];
-			TriangulateForRender(facets[j], vertexCoords_local, normalCoords_local, textureCoords_local, colorValues_local, currentColor, false);
-		}
 #pragma omp critical
 		{
 			vertexCoords.insert(vertexCoords.end(), vertexCoords_local.begin(), vertexCoords_local.end());

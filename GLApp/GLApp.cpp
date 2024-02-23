@@ -163,6 +163,7 @@ int GLApplication::ToggleFullscreen() {
   m_bWindowed = !m_bWindowed;
 
   Uint32 flags = SDL_GetWindowFlags(mainScreen);
+  int returnValue;
   if (flags & SDL_WINDOW_FULLSCREEN_DESKTOP)
   {
       //Restore windowed size
@@ -170,7 +171,7 @@ int GLApplication::ToggleFullscreen() {
       m_screenHeight = m_windowedScreenHeight;
       //Set to windowed mode
       SDL_SetWindowFullscreen(mainScreen, 0); 
-      Resize(m_screenWidth, m_screenHeight);
+      returnValue=Resize(m_screenWidth, m_screenHeight);
   }
   else
   {
@@ -182,10 +183,10 @@ int GLApplication::ToggleFullscreen() {
       m_screenHeight = m_fullScreenHeight;
       //Set to fullscreen mode
       SDL_SetWindowFullscreen(mainScreen, SDL_WINDOW_FULLSCREEN_DESKTOP);
-      Resize(m_screenWidth, m_screenHeight);
+      returnValue=Resize(m_screenWidth, m_screenHeight);
   }
 
-  return setUpSDL();
+  return returnValue;
 }
 
 void GLApplication::SetTitle(std::string title) {
