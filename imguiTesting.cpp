@@ -213,6 +213,29 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Cancel  ");
         IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
         };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select non simple");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select non simple facets");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Invert");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Invert selection");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Selection Memory");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Clear memorized/Clear All");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Clear all?");
+        ctx->KeyDown(ImGuiKey_Enter);
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Memorize selection to/Add new...");
+
+        ctx->SetRef("Enter selection name");
+        IM_CHECK_EQ(mApp->imWnd->input.value, "Selection #1");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
