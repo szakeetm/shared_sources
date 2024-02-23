@@ -51,7 +51,6 @@ void ImTest::RegisterTests()
     t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###File");
         ctx->MenuClick("###File/###NewGeom");
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Smart Selection");
@@ -62,7 +61,6 @@ void ImTest::RegisterTests()
         mApp->imWnd->smartSelect.enabledToggle = false;
         // navigate to window
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Smart Select facets...");
         ctx->SetRef("Smart Selection");
         // input invalid value
@@ -98,21 +96,18 @@ void ImTest::RegisterTests()
     t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("Test");
         ctx->MenuClick("Test/Quick Pipe");
         IM_CHECK_EQ(interfGeom->GetNbFacet(), 7);
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select All");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select All Facets");
         IM_CHECK_EQ(interfGeom->GetNbFacet(), interfGeom->GetNbSelectedFacets());
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select by Number");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
         // TODO Test Correctness of Input and button behaviour
@@ -121,35 +116,30 @@ void ImTest::RegisterTests()
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Sticking");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select Sticking");
         // TODO check if selection correct (may need to conditionally add quickpipe if running tests out of order)
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Transparent");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select Transparent");
         // Cannot test more as transparency cannot be changed using ImGui UI yet
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select 2 Sided");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select 2 sided");
         // Cannot test more as 2-sidedness cannot be changed using ImGui UI yet
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Texture");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select Texture");
         // Cannot test more as textures cannot be applied using ImGui UI yet
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Texture Type");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select by Texture type...");
         ctx->SetRef("Select facets by texture properties");
         // TODO test tristate behaviour
@@ -159,7 +149,6 @@ void ImTest::RegisterTests()
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Facet Result");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Selection");
         ctx->MenuClick("###Selection/Select by facet result...");
         ctx->SetRef("Select facets by simulation result");
         ctx->ItemClick("Select");
@@ -177,11 +166,57 @@ void ImTest::RegisterTests()
         ctx->SetRef("Select facets by simulation result");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Link facets");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select link facets");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select teleport facets");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select teleport facets");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select non planar facets");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select non planar facets");
+        ctx->SetRef("Select non planar facets");
+        ctx->ItemClick("Planarity larger than");
+        ctx->KeyCharsReplace("0.001");
+        ctx->ItemClick("  OK  ");
+        IM_CHECK_EQ(mApp->planarityThreshold, 0.001);
+
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select non planar facets");
+        ctx->SetRef("Select non planar facets");
+        ctx->ItemClick("Planarity larger than");
+        ctx->KeyCharsReplace("1e-3");
+        ctx->ItemClick("  OK  ");
+        IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
+
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select non planar facets");
+        ctx->SetRef("Select non planar facets");
+        ctx->ItemClick("Planarity larger than");
+        ctx->KeyCharsReplace("abc");
+        ctx->ItemClick("  OK  ");
+        IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select non planar facets");
+        ctx->SetRef("Select non planar facets");
+        ctx->ItemClick("Planarity larger than");
+        ctx->KeyCharsReplace("10");
+        ctx->ItemClick("  Cancel  ");
+        IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("View");
         ctx->MenuClick("View/###Full Screen");
         ctx->MouseMoveToPos(ImVec2(100,100));
         ctx->MenuClick("View/###Full Screen");

@@ -18,7 +18,6 @@ extern MolFlow* mApp;
 void ImTexturePlotter::Draw()
 {
 	if (!drawn) return;
-	GetData();
 
 	// assemble table & columns flags
 	tableFlags = 0;
@@ -35,10 +34,6 @@ void ImTexturePlotter::Draw()
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
 		scrollToSelected = true;
-	} ImGui::SameLine();
-
-	if (ImGui::Button("Force Refresh")) {
-		isUpToDate = false;
 	} ImGui::SameLine();
 
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvail().x - txtW * (31.5+3));
@@ -508,7 +503,6 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	}
-	isUpToDate = true;
 }
 
 bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
