@@ -230,11 +230,20 @@ void ImTest::RegisterTests()
         ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Clear all?");
         ctx->KeyDown(ImGuiKey_Enter);
+        IM_CHECK_EQ(mApp->selections.size(), 0);
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Memorize selection to/Add new...");
 
         ctx->SetRef("Enter selection name");
-        IM_CHECK_EQ(mApp->imWnd->input.value, "Selection #1");
+        ctx->KeyDown(ImGuiKey_Enter);
+        IM_CHECK_EQ(mApp->selections.size(), 1);
+
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Clear memorized/Clear All");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Clear all?");
+        ctx->KeyDown(ImGuiKey_Enter);
+        IM_CHECK_EQ(mApp->selections.size(), 0);
         };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
