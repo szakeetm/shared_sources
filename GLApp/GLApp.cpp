@@ -155,10 +155,10 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 }
 
 int GLApplication::ToggleFullscreen() {
-
-  GLToolkit::InvalidateDeviceObjects();
-  GLWindowManager::InvalidateDeviceObjects();
-  InvalidateDeviceObjects();
+    // Resize() already does those:
+  //GLToolkit::InvalidateDeviceObjects();
+  //GLWindowManager::InvalidateDeviceObjects();
+  //InvalidateDeviceObjects();
 
   m_bWindowed = !m_bWindowed;
 
@@ -235,7 +235,7 @@ int GLApplication::Resize( size_t nWidth, size_t nHeight, bool forceWindowed ) {
   
   GLToolkit::InvalidateDeviceObjects();
   GLWindowManager::InvalidateDeviceObjects();
-  InvalidateDeviceObjects();
+  //InvalidateDeviceObjects();
   
   if( forceWindowed ) m_bWindowed = true;
 
