@@ -88,9 +88,9 @@ namespace ImIOWrappers {
 	public:
 		void Open(const std::string& title_,const std::string& message_, const std::function<void(std::string)> func_, const std::string& deafultArg_ = "");
 		void Draw();
-	friend class ImTest;
 	protected:
 		std::function<void(std::string)> function;
 		std::string value;
+		friend class ImTest;
 	};
 }
