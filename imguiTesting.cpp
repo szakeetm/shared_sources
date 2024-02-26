@@ -245,6 +245,29 @@ void ImTest::RegisterTests()
         ctx->KeyDown(ImGuiKey_Enter);
         IM_CHECK_EQ(mApp->selections.size(), 0);
         };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Desorption");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select Desorption");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Outgassing Map");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select Outgassing Map");
+        };
+    t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Reflective");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Selection/Select Reflective");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/###Formula editor");
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("#CLOSE");
+        // TODO Expand this test beyond just opening and closing the window
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
