@@ -264,7 +264,20 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
+        // For some reason cannot click on the input inside a table cell
+        //ctx->ItemClick(ctx->GetID("/Formula editor/###Formula list/##FL/##NE"));
+        //ctx->KeyCharsReplace("10");
         ctx->SetRef("Formula editor");
+        ctx->ItemClick("Recalculate now");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
+        ctx->ItemClick("Syntax help");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Formula Editor Syntax Help");
+        ctx->ItemClick("Close");
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
         ctx->ItemClick("#CLOSE");
         // TODO Expand this test beyond just opening and closing the window
         };
