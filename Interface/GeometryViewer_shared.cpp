@@ -1630,7 +1630,7 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 					// Simple click, select/unselect facet
 					//SetCursor(CURSOR_BUSY);
 					GLToolkit::SetCursor(CURSOR_BUSY);
-					interfGeom->Select(mX - posX, mY - posY, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), this->width, this->height);
+					interfGeom->Select(mX - posX, mY - posY, this->width, this->height, !GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn());
 					//UpdateMouseCursor(cursorMode);
 				}
 				else {
@@ -1647,13 +1647,12 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 						screenshotStatus.w = sw;
 						screenshotStatus.h = sh;
 						screenshotStatus.requested = 2;
-					}
-					else {
-						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+					} else {
+						interfGeom->SelectArea(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY, 
 							!GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsCapsLockOn(), GetWindow()->IsAltDown());
 					}
-					}
 				}
+			}
 			else if ((cursorMode == CursorMode::CursorSelectVertex && !GetWindow()->IsTabDown()) || (cursorMode == CursorMode::CursorSelectFacet && GetWindow()->IsTabDown())) {
 				GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
 				glMatrixMode(GL_PROJECTION);
@@ -1668,9 +1667,9 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 				}
 				else {
 					// Select region
-					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY,
+					interfGeom->SelectVertex(selX1 - posX, selY1 - posY, selX2 - posX, selY2 - posY, 
 						GetWindow()->IsShiftDown(), GetWindow()->IsCtrlDown(), GetWindow()->IsAltDown(), GetWindow()->IsCapsLockOn());
-			}
+				}
 			}
 #if defined(SYNRAD)
 			else if (cursorMode == CursorMode::CSelectTrajectory) {
