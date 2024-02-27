@@ -34,4 +34,5 @@ protected:
 	int maxDatapoints = 1000;
 	int actualNbValues = 0;
 	bool showValueOnHover = true;
+	friend class ImTest;
 };
