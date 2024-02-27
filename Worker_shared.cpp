@@ -526,7 +526,9 @@ void Worker::Update(float appTime) {
 	// End of simulation reached (Stop GUI)
 	bool runningNow = IsRunning();
 	bool justStopped = !runningNow && simuTimer.isActive;
-	if (justStopped) InnerStop();
+	if (justStopped) {
+		InnerStop();
+	}
 	//simManager.UpdateLimitReachedAndErrorStates();
 	bool stoppedBySimManager = (simManager.allProcsReachedLimit || simManager.hasErrorStatus && ( runningNow || justStopped) && (appTime != 0.0f)); //Not by user through Pause click
 	if (stoppedBySimManager) {
