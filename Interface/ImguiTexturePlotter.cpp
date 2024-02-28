@@ -560,8 +560,7 @@ ImVec4 ImTexturePlotter::SelectionBounds() {
 
 bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 {
-	if (!selFacet) return false;
-	if (height < 1 || width < 1) {
+	if (!selFacet || height < 1 || width < 1) {
 		ImIOWrappers::InfoPopup("Error", "Nothing to export");
 		return false;
 	}
