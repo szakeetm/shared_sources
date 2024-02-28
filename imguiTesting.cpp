@@ -71,7 +71,6 @@ void ImTest::RegisterTests()
         IM_CHECK_EQ(false, mApp->imWnd->smartSelect.enabledToggle);
         IM_CHECK_EQ(30, mApp->imWnd->smartSelect.planeDiff);
         // deal with info popup
-        ctx->MouseMoveToPos(ImVec2(100,100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Smart Selection");
@@ -160,10 +159,11 @@ void ImTest::RegisterTests()
         ctx->ItemClick("##SFBSR/##minHits");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("Select");
-        ctx->MouseMoveToPos(ImVec2(100,100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Select facets by simulation result");
+        ctx->ItemClick("##SFBSR/##minHits");
+        ctx->KeyCharsReplaceEnter("");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Link facets");
@@ -201,7 +201,6 @@ void ImTest::RegisterTests()
         ctx->KeyCharsReplace("abc");
         ctx->ItemClick("  OK  ");
         IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
 
@@ -227,7 +226,6 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Clear memorized/Clear All");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Clear all?");
         ctx->KeyDown(ImGuiKey_Enter);
         IM_CHECK_EQ(mApp->selections.size(), 0);
@@ -240,7 +238,6 @@ void ImTest::RegisterTests()
 
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Clear memorized/Clear All");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Clear all?");
         ctx->KeyDown(ImGuiKey_Enter);
         IM_CHECK_EQ(mApp->selections.size(), 0);
@@ -272,7 +269,6 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Record values for convergence");
         ctx->ItemClick("Auto-update formulas");
         ctx->ItemClick("Syntax help");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Formula Editor Syntax Help");
         ctx->ItemClick("Close");
         ctx->SetRef("Formula editor");
@@ -292,7 +288,6 @@ void ImTest::RegisterTests()
         ctx->SetRef("Convergence Plotter");
         ctx->ItemClick("Add curve");
         ctx->ItemClick("Remove curve");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
@@ -300,22 +295,18 @@ void ImTest::RegisterTests()
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
         ctx->MenuClick("Export/All to file");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
         ctx->MenuClick("Export/Plotted to clipboard");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
         ctx->MenuClick("Export/Plotted to file");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
@@ -329,13 +320,13 @@ void ImTest::RegisterTests()
         ctx->MenuClick("View/Datapoints");
         IM_CHECK_EQ(mApp->imWnd->convPlot.showDatapoints, false);
         ctx->MenuClick("View/##lineWidth");
-        ctx->KeyCharsReplace("abc");
+        ctx->KeyCharsReplaceEnter("abc");
         ctx->MenuClick("View/##lineWidth");
-        ctx->KeyCharsReplace("-1");
+        ctx->KeyCharsReplaceEnter("-1");
         ctx->MenuClick("View/##plotMax");
-        ctx->KeyCharsReplace("abc");
+        ctx->KeyCharsReplaceEnter("abc");
         ctx->MenuClick("View/##plotMax");
-        ctx->KeyCharsReplace("-1");
+        ctx->KeyCharsReplaceEnter("-1");
         ctx->MenuClick("View/Display hovered value");
         ctx->MenuClick("View/Display hovered value");
         ctx->MenuClick("Custom Plot/##expressionInput");
@@ -352,12 +343,20 @@ void ImTest::RegisterTests()
         ctx->MenuClick("###Tools/Texture Plotter ...");
         ctx->SetRef("###TexturePlotter");
         ctx->MenuClick("Export/To clipboard");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("###TexturePlotter");
         ctx->MenuClick("Export/To file");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("###TexturePlotter");
         ctx->MenuClick("View/Resizable columns");
         ctx->MenuClick("View/Fit to window");
         ctx->MenuClick("View/Autosize to window");
         IM_CHECK_EQ(mApp->imWnd->textPlot.resizableColumns, false);
         IM_CHECK_EQ(mApp->imWnd->textPlot.fitToWindow, true);
+        ctx->SetRef("###TexturePlotter");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->MenuClick("View/Autosize to data");
         IM_CHECK_EQ(mApp->imWnd->textPlot.resizableColumns, false);
         IM_CHECK_EQ(mApp->imWnd->textPlot.fitToWindow, false);
@@ -366,6 +365,7 @@ void ImTest::RegisterTests()
         for (int i = 0; i < mApp->imWnd->textPlot.comboOpts.size(); i++) {
             ctx->ComboClick(("##View/###" + std::to_string(i)).c_str());
         }
+        ctx->ItemClick("#CLOSE");
         // TODO test with a texture selected
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Profile plotter");
@@ -375,12 +375,10 @@ void ImTest::RegisterTests()
         ctx->SetRef("Profile Plotter");
 
         ctx->MenuClick("Export/To clipboard");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Profile Plotter");
         ctx->MenuClick("Export/To file");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Profile Plotter");
@@ -394,9 +392,9 @@ void ImTest::RegisterTests()
         ctx->MenuClick("View/Datapoints");
         IM_CHECK_EQ(mApp->imWnd->profPlot.showDatapoints, false);
         ctx->MenuClick("View/##lineWidth");
-        ctx->KeyCharsReplace("abc");
+        ctx->KeyCharsReplaceEnter("abc");
         ctx->MenuClick("View/##lineWidth");
-        ctx->KeyCharsReplace("-1");
+        ctx->KeyCharsReplaceEnter("-1");
         ctx->MenuClick("View/Display hovered value");
         ctx->MenuClick("View/Display hovered value");
         ctx->MenuClick("View/Identify profiles in geometry");
@@ -405,15 +403,13 @@ void ImTest::RegisterTests()
         ctx->KeyCharsReplace("x");
         ctx->MenuClick("Custom Plot/-> Plot expression");
         ctx->MenuClick("Custom Plot/##expressionInput");
-        ctx->KeyCharsReplace("");
+        ctx->KeyCharsReplaceEnter("");
         ctx->MenuClick("Custom Plot/-> Plot expression");
         ctx->ItemClick("Show Facet");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Profile Plotter");
         ctx->ItemClick("Add Curve");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Profile Plotter");
@@ -421,13 +417,14 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Remove all");
         ctx->ItemClick("Select plotted facets");
         ctx->ComboClickAll("##View");
+        ctx->ItemClick("#CLOSE");
         };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("View/###Full Screen");
-        ctx->MouseMoveToPos(ImVec2(100,100));
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->MenuClick("View/###Full Screen");
         };
 }
