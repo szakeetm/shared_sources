@@ -31,7 +31,7 @@ protected:
 	bool isDragging = false;
 	float dummyWidth = 0;
 	std::string name = "Texture Plotter []###TexturePlotter";
-	std::vector<std::string> comboOpts = { u8"Cell Area [cm\u00B2]", "# of MC hits", u8"Impingement rate [1 / m\u00B2 / sec]]", u8"Particle density [1 / m\u00B3]", u8"Gas density [kg / m\u00B3]", "Pressure [mBar]", "Avg.speed estimate [m / s]", "Incident velocity vector [m / s]", "# of velocity vectors" };
+	std::vector<std::string> comboOpts = { u8"Cell Area [cm\u00B2]###0", "# of MC hits###1", u8"Impingement rate [1 / m\u00B2 / sec]]###2", u8"Particle density [1 / m\u00B3]###3", u8"Gas density [kg / m\u00B3]###4", "Pressure [mBar]###5", "Avg.speed estimate [m / s]###6", "Incident velocity vector [m / s]###7", "# of velocity vectors###8" };
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
 	bool resizableColumns = false;
@@ -49,4 +49,5 @@ protected:
 	int columnWidth; // column width (is multiplied by character width)
 	bool scrollToSelected = false;
 	size_t profSize = 0;
+	friend class ImTest;
 };

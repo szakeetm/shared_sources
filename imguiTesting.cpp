@@ -346,6 +346,28 @@ void ImTest::RegisterTests()
         ctx->MenuClick("Custom Plot/-> Plot expression");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Texture Plotter ...");
+        ctx->SetRef("###TexturePlotter");
+        ctx->MenuClick("Export/To clipboard");
+        ctx->MenuClick("Export/To file");
+        ctx->MenuClick("View/Resizable columns");
+        ctx->MenuClick("View/Fit to window");
+        ctx->MenuClick("View/Autosize to window");
+        IM_CHECK_EQ(mApp->imWnd->textPlot.resizableColumns, false);
+        IM_CHECK_EQ(mApp->imWnd->textPlot.fitToWindow, true);
+        ctx->MenuClick("View/Autosize to data");
+        IM_CHECK_EQ(mApp->imWnd->textPlot.resizableColumns, false);
+        IM_CHECK_EQ(mApp->imWnd->textPlot.fitToWindow, false);
+        ctx->MenuClick("Data");
+        ctx->ItemClick("Find Max");
+        for (int i = 0; i < mApp->imWnd->textPlot.comboOpts.size(); i++) {
+            ctx->ComboClick(("##View/###" + std::to_string(i)).c_str());
+        }
+        // TODO test with a texture selected
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
