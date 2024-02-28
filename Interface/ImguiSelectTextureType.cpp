@@ -59,7 +59,7 @@ void ImSelectTextureType::Select(int src)
 		if (mApp->imWnd->selByTex.mode == exactly) match = match && (IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioU) || IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioV));
 		if (mApp->imWnd->selByTex.mode == between) match = match && (((mApp->imWnd->selByTex.minValue <= f->tRatioU) && (f->tRatioU <= mApp->imWnd->selByTex.maxValue)) || ((mApp->imWnd->selByTex.minValue <= f->tRatioV) && (f->tRatioV <= mApp->imWnd->selByTex.maxValue)));
 #if defined(MOLFLOW)
-		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && f->sh.countDes;
+		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && (desorbtionCheck == 1) == f->sh.countDes;
 #endif
 		if (mApp->imWnd->selByTex.absorbtionCheck != 2) match = match && (mApp->imWnd->selByTex.absorbtionCheck == 1) == f->sh.countAbs;
 		if (mApp->imWnd->selByTex.reflectionCheck != 2) match = match && (mApp->imWnd->selByTex.reflectionCheck == 1) == f->sh.countRefl;
