@@ -500,11 +500,11 @@ static void ShowMenuSelection() {
         ImGui::Separator();
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (ImGui::MenuItem(mApp->selections[i].name.c_str())) {
-                auto F = [i, interfGeom]() {mApp->selections[i].facetIds = interfGeom->GetSelectedFacets(); };
-                mApp->imWnd->popup.Open("Overwrite?", "Are you sure you want to overwrite" + mApp->selections[i].name + "?", {
-                    std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", F, SDL_SCANCODE_RETURN),
-                    std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
-                    });
+                auto F = [i, interfGeom](std::string str) {
+                    mApp->selections[i].facetIds = interfGeom->GetSelectedFacets();
+                    mApp->selections[i].name=str;
+                    };
+                mApp->imWnd->input.Open("Overwrite "+ mApp->selections[i].name + "?", "Enter new name", F, mApp->selections[i].name);
             }
         }
         ImGui::EndMenu();
