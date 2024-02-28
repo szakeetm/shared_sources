@@ -225,18 +225,18 @@ void ImGlobalSettings::Draw() {
         ImGui::SameLine();
         ImGui::HelpMarker(
             "Low flux mode helps to gain more statistics on low pressure "
-            "parts of the system, at the expense\n"
+            "parts of the system, at the expense"
             "of higher pressure parts. If a traced particle reflects from a "
-            "high sticking factor surface, regardless of that probability,\n"
+            "high sticking factor surface, regardless of that probability,"
             "a reflected test particle representing a reduced flux will "
             "still be traced. Therefore test particles can reach low flux "
-            "areas more easily, but\n"
+            "areas more easily, but"
             "at the same time tracing a test particle takes longer. The "
             "cutoff ratio defines what ratio of the originally generated "
-            "flux\n"
+            "flux"
             "can be neglected. If, for example, it is 0.001, then, when "
             "after subsequent reflections the test particle carries less "
-            "than 0.1%\n"
+            "than 0.1%"
             "of the original flux, it will be eliminated. A good advice is "
             "that if you'd like to see pressure across N orders of "
             "magnitude, set it to 1E-N");
@@ -257,12 +257,29 @@ void ImGlobalSettings::Draw() {
                 ImGui::BeginDisabled();
             }
             if (ImGui::Button("Apply above settings")) {
-                simChanged = false;
-                mApp->worker.model->sp.gasMass = gasMass;
-                mApp->worker.model->sp.enableDecay = enableDecay;
-                mApp->worker.model->sp.halfLife = halfLife;
+                bool changedMass = mApp->worker.model->sp.gasMass != gasMass;
+                simChanged |= mApp->worker.model->sp.halfLife != halfLife || mApp->worker.model->sp.enableDecay != enableDecay;
+                simChanged |= changedMass;
+                
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
+                
+                if (simChanged) {
+                    LockWrapper myLock(mApp->imguiRenderLock);
+                    if (mApp->AskToReset()) {
+                        mApp->worker.model->sp.gasMass = gasMass;
+                        mApp->worker.model->sp.halfLife = halfLife;
+                        mApp->worker.model->sp.enableDecay = enableDecay;
+                        mApp->worker.MarkToReload();
+                        mApp->changedSinceSave = true;
+                        mApp->UpdateFacetlistSelected();
+                        mApp->UpdateViewers();
+                        simChanged = false;
+                        if (changedMass) {
+                            ImIOWrappers::InfoPopup("You have changed the gas mass.", "Don't forget the pumps: update pumping speeds and/or recalculate sticking factors.");
+                        }
+                    }
+                }
 
             }
             if (wasDisabled) {
