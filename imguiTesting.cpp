@@ -368,6 +368,60 @@ void ImTest::RegisterTests()
         }
         // TODO test with a texture selected
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Profile plotter");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Profile Plotter ...");
+        ctx->SetRef("Profile Plotter");
+
+        ctx->MenuClick("Export/To clipboard");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Profile Plotter");
+        ctx->MenuClick("Export/To file");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Profile Plotter");
+
+        ctx->MenuClick("View/Log Y");
+        IM_CHECK_EQ(mApp->imWnd->profPlot.setLog, true);
+        ctx->MenuClick("View/Log Y");
+        IM_CHECK_EQ(mApp->imWnd->profPlot.setLog, false);
+        ctx->MenuClick("View/Datapoints");
+        IM_CHECK_EQ(mApp->imWnd->profPlot.showDatapoints, true);
+        ctx->MenuClick("View/Datapoints");
+        IM_CHECK_EQ(mApp->imWnd->profPlot.showDatapoints, false);
+        ctx->MenuClick("View/##lineWidth");
+        ctx->KeyCharsReplace("abc");
+        ctx->MenuClick("View/##lineWidth");
+        ctx->KeyCharsReplace("-1");
+        ctx->MenuClick("View/Display hovered value");
+        ctx->MenuClick("View/Display hovered value");
+        ctx->MenuClick("View/Identify profiles in geometry");
+        ctx->MenuClick("View/Identify profiles in geometry");
+        ctx->MenuClick("Custom Plot/##expressionInput");
+        ctx->KeyCharsReplace("x");
+        ctx->MenuClick("Custom Plot/-> Plot expression");
+        ctx->MenuClick("Custom Plot/##expressionInput");
+        ctx->KeyCharsReplace("");
+        ctx->MenuClick("Custom Plot/-> Plot expression");
+        ctx->ItemClick("Show Facet");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Profile Plotter");
+        ctx->ItemClick("Add Curve");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Profile Plotter");
+        ctx->ItemClick("Remove Curve");
+        ctx->ItemClick("Remove all");
+        ctx->ItemClick("Select plotted facets");
+        ctx->ComboClickAll("##View");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
