@@ -4631,10 +4631,13 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 
 GLListWrapper::GLListWrapper() {
 	listId = glGenLists(1);
+	//std::cout << "Allocated OpenGL list " << listId << std::endl;
 }
 
 GLListWrapper::~GLListWrapper() {
+	//std::cout << "Deleting OpenGL list " << listId  << std::flush;
 	glDeleteLists(listId,1);
+	//std::cout << " success." << std::endl;
 }
 
 GLTextureWrapper::GLTextureWrapper() {

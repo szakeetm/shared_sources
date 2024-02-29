@@ -553,10 +553,19 @@ size_t InterfaceGeometry::GetNbSelectedVertex() {
 }
 
 void InterfaceGeometry::UnselectAll() {
+std::set<size_t> facetsWithSelElem;
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbFacet; i++) {
-		facets[i]->selected = false;
-		facets[i]->UnselectElem();
+		if (facets[i]->selected) {
+			facets[i]->selected = false;
+			if (facets[i]->glSelElem) {
+				#pragma omp critical
+				facetsWithSelElem.insert(i); //normally only one facet
+			}
+		}
+	}
+	for (const size_t facetId : facetsWithSelElem) {
+		facets[facetId]->UnselectElem(); //OpenGL shouldn't be called from an OpenMP thread
 	}
 	UpdateSelection();
 }
@@ -565,7 +574,6 @@ void InterfaceGeometry::UnselectAllVertex() {
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		vertices3[i].selected = false;
-		//facets[i]->UnselectElem(); //what is this?
 	}
 	//UpdateSelectionVertex();
 }
