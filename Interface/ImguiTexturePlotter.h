@@ -24,7 +24,7 @@ protected:
 	ImVec4 SelectionBounds();
 	bool SaveTexturePlotter(bool toFile=true);
 	void DrawMenuBar();
-	typedef struct SelRect { int startRow, startCol, endRow, endCol; };
+	struct SelRect { int startRow, startCol, endRow, endCol; };
 	std::string Serialize(SelRect bounds = { 0,0,0,0 }, char lineBreak = '\n', std::string rowBreak = "\t");
 
 	// UI variables
@@ -34,6 +34,7 @@ protected:
 	std::vector<std::string> comboOpts = { u8"Cell Area [cm\u00B2]", "# of MC hits", u8"Impingement rate [1 / m\u00B2 / sec]]", u8"Particle density [1 / m\u00B3]", u8"Gas density [kg / m\u00B3]", "Pressure [mBar]", "Avg.speed estimate [m / s]", "Incident velocity vector [m / s]", "# of velocity vectors" };
 	int viewIdx = 5;
 	std::vector<std::pair<int,int>> selection;
+	bool selectionChanged = false;
 	bool resizableColumns = false;
 	bool fitToWindow = false;
 
