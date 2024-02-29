@@ -200,26 +200,25 @@ void ImGlobalSettings::Draw() {
         ImGui::PushItemWidth(100);
 
         /* --- Simu settings ---*/
-        static bool simChanged = false;
 #if defined(MOLFLOW)
         static double gasMass = mApp->worker.model->sp.gasMass;
         static bool enableDecay = mApp->worker.model->sp.enableDecay;
         static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
-        simChanged |= ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
-        simChanged |= ImGui::Checkbox("", &enableDecay);
+        ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+        ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
             ImGui::BeginDisabled();
         }
         ImGui::SameLine();
-        simChanged |= ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
+        ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
             ImGui::EndDisabled();
         }
 
-        simChanged |= ImGui::Checkbox(
+        ImGui::Checkbox(
             "Enable low flux mode",
             &lowFluxMode);
         ImGui::SameLine();
@@ -243,7 +242,7 @@ void ImGlobalSettings::Draw() {
         if (!lowFluxMode) {
             ImGui::BeginDisabled();
         }
-        simChanged |= ImGui::InputDoubleRightSide(
+        ImGui::InputDoubleRightSide(
             "Cutoff ratio", &lowFluxCutoff,
             "%.2e");
         if (!lowFluxMode) {
@@ -251,15 +250,22 @@ void ImGlobalSettings::Draw() {
         }
 
         {
-            bool wasDisabled = !simChanged;
+            bool settingsChanged = false, simChanged = false, changedMass = false;
+            simChanged |= mApp->worker.model->sp.gasMass != gasMass;
+            changedMass = simChanged;
+            simChanged |= mApp->worker.model->sp.halfLife != halfLife;
+            simChanged |= mApp->worker.model->sp.enableDecay != enableDecay;
+
+            settingsChanged |= simChanged;
+
+            settingsChanged |= mApp->worker.model->otfParams.lowFluxMode != lowFluxMode;
+            settingsChanged |= mApp->worker.model->otfParams.lowFluxCutoff != lowFluxCutoff;
+            bool wasDisabled = settingsChanged;
             ImGui::PlaceAtRegionCenter("Apply above settings");
-            if (wasDisabled) {
+            if (!settingsChanged) {
                 ImGui::BeginDisabled();
             }
             if (ImGui::Button("Apply above settings")) {
-                bool changedMass = mApp->worker.model->sp.gasMass != gasMass;
-                simChanged |= mApp->worker.model->sp.halfLife != halfLife || mApp->worker.model->sp.enableDecay != enableDecay;
-                simChanged |= changedMass;
                 
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
@@ -274,7 +280,6 @@ void ImGlobalSettings::Draw() {
                         mApp->changedSinceSave = true;
                         mApp->UpdateFacetlistSelected();
                         mApp->UpdateViewers();
-                        simChanged = false;
                         if (changedMass) {
                             ImIOWrappers::InfoPopup("You have changed the gas mass.", "Don't forget the pumps: update pumping speeds and/or recalculate sticking factors.");
                         }
@@ -282,7 +287,7 @@ void ImGlobalSettings::Draw() {
                 }
 
             }
-            if (wasDisabled) {
+            if (!settingsChanged) {
                 ImGui::EndDisabled();
             }
         }
