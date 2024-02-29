@@ -290,29 +290,32 @@ void ImTextureScaling::DrawGradient()
 		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), mApp->whiteBg || !photoMode ? colorMap[0] : ImGui::GetColorU32(IM_COL32(255, 255, 255, 255)), text.c_str());
 		drawList->AddRectFilled(ImVec2(tick, (midpoint.y + BRcorner.y) / 2), ImVec2(tick + 1, BRcorner.y), colorMap[0]);
 	}
-	// handle hovering
-	ImVec2 mousePos = ImGui::GetMousePos();
-	static ImVec2 hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint);
-	if (mousePos.x < TLcorner.x) mousePos.x = TLcorner.x;
-	else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
+	if (!photoMode) {
+		// handle hovering
+		ImVec2 mousePos = ImGui::GetMousePos();
+		static ImVec2 hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint);
+		if (mousePos.x < TLcorner.x) mousePos.x = TLcorner.x;
+		else if (mousePos.x > BRcorner.x) mousePos.x = BRcorner.x;
 
-	if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
-		double linX = MathHelper::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
-		if(!logScale)
-			hoveredVal = fmt::format("{:.3g}", linX);
-		else {
-			double val = logScaleInterpolate(linX, gradientMinScale, gradientMaxScale);
-			hoveredVal = fmt::format("{:.3g}", val);
+		if (ImGui::IsWindowHovered() && ImMath::IsInsideVec2(TLcorner, BRcorner, mousePos)) {
+			double linX = MathHelper::mapRange(mousePos.x, TLcorner.x, BRcorner.x, gradientMinScale, gradientMaxScale);
+			if(!logScale)
+				hoveredVal = fmt::format("{:.3g}", linX);
+			else {
+				double val = logScaleInterpolate(linX, gradientMinScale, gradientMaxScale);
+				hoveredVal = fmt::format("{:.3g}", val);
+			}
+			hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
+			//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
 		}
-		hoverMarkPos = ImMath::SubstractVec2(mousePos, midpoint); // get mousePos relative to midpoint
-		//this is needed so when not hovered and window is moved the marker stays in the same place relative to the gradient
+		// draws a vertical line under the mouse cursors position
+		ImVec2 posTmp = ImMath::AddVec2(hoverMarkPos, midpoint); // get absolute position of marker
+		drawList->AddRectFilled(ImVec2(posTmp.x,TLcorner.y-5), ImVec2(posTmp.x+1,BRcorner.y+5), colorMap[0]);
 	}
-	// draws a vertical line under the mouse cursors position
-	ImVec2 posTmp = ImMath::AddVec2(hoverMarkPos, midpoint); // get absolute position of marker
-	drawList->AddRectFilled(ImVec2(posTmp.x,TLcorner.y-5), ImVec2(posTmp.x+1,BRcorner.y+5), colorMap[0]);
 
 	ImGui::EndChild();
-	ImGui::Text(hoveredVal);
+	if (!photoMode) ImGui::Text(hoveredVal);
+	else ImGui::Text("");
 }
 
 void ImTextureScaling::GetCurrentRange()
