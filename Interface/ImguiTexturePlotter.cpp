@@ -14,7 +14,13 @@ extern MolFlow* mApp;
 
 void ImTexturePlotter::Draw()
 {
-	if (!drawn) return;
+	if (wasDrawn && !drawn) {
+		Hide();
+	}
+	wasDrawn = drawn;
+	if (!drawn) { 
+		return; 
+	}
 
 	// assemble table & columns flags
 	tableFlags = 0;
@@ -54,6 +60,12 @@ void ImTexturePlotter::Draw()
 
 }
 
+void ImTexturePlotter::Hide()
+{
+	drawn = false;
+	selFacet->UnselectElem();
+}
+
 void ImTexturePlotter::Init(Interface* mApp_)
 {
 	mApp = mApp_;
@@ -74,9 +86,9 @@ void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFa
 		width = 0;
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
-		selection.clear();
-		selectionChanged = true;
 	}
+	selection.clear();
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::UpdatePlotter()
@@ -88,6 +100,7 @@ void ImTexturePlotter::OnShow()
 {
 	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
 	UpdatePlotter();
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::DrawTextureTable()

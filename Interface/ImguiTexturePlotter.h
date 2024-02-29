@@ -9,6 +9,7 @@
 class ImTexturePlotter : public ImWindow {
 public:
 	void Draw();
+	void Hide();
 	void Init(Interface* mApp_);
 	void UpdateOnFacetChange(const std::vector<size_t>& selectedFacets);
 	void UpdatePlotter();
@@ -50,4 +51,5 @@ protected:
 	int columnWidth; // column width (is multiplied by character width)
 	bool scrollToSelected = false;
 	size_t profSize = 0;
+	bool wasDrawn = false;
 };
