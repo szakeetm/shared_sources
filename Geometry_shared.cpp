@@ -688,10 +688,9 @@ void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance) 
 
 	for (int i = 0; i < sh.nbVertex; i++) {
 		Vector3d *v = GetVertex(i);
-		std::optional<std::tuple<int, int>> c = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
-		if (c) { //To improve
-			auto[outX, outY] = *c;
-			if (outX >= 0 && outY >= 0 && outX <= width && outY <= height) {
+		std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
+		if (coords.has_value()) {
+			if (coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height) {
 				distance = std::abs(A*v->x + B * v->y + C * v->z + D);
 				if (distance < tolerance) { //vertex is on the plane
 					vertices3[i].selected = true;
@@ -4633,10 +4632,13 @@ RawSTLfile LoadRawSTL(const std::string& filePath, GLProgress_Abstract& prg)
 
 GLListWrapper::GLListWrapper() {
 	listId = glGenLists(1);
+	//std::cout << "Allocated OpenGL list " << listId << std::endl;
 }
 
 GLListWrapper::~GLListWrapper() {
+	//std::cout << "Deleting OpenGL list " << listId  << std::flush;
 	glDeleteLists(listId,1);
+	//std::cout << " success." << std::endl;
 }
 
 GLTextureWrapper::GLTextureWrapper() {
