@@ -23,17 +23,17 @@ extern SynRad* mApp;
 #endif
 
 void ImSelectTextureType::Preprocess() {
-	if (mode == exactly && squareTextrueCheck!=2) {
+	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+			mApp->imWnd->popup.Open("Error", "Invalid ratio", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
 		}
 	}
-	else if (mode == between && squareTextrueCheck != 2) {
+	else if (mode == between) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+			mApp->imWnd->popup.Open("Error", "Invalid ratio", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
@@ -59,10 +59,10 @@ void ImSelectTextureType::Select(int src)
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 		bool match = f->sh.isTextured;
 		if (mApp->imWnd->selByTex.squareTextrueCheck != 2) match = match && ((mApp->imWnd->selByTex.squareTextrueCheck == 1) == IsEqual(f->tRatioU, f->tRatioV));
-		if (mApp->imWnd->selByTex.mode == exactly) match = match && IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioU) || IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioV);
-		if (mApp->imWnd->selByTex.mode == between) match = match && ((mApp->imWnd->selByTex.minValue <= f->tRatioU) && (f->tRatioU <= mApp->imWnd->selByTex.maxValue)) || ((mApp->imWnd->selByTex.minValue <= f->tRatioV) && (f->tRatioV <= mApp->imWnd->selByTex.maxValue));
+		if (mApp->imWnd->selByTex.mode == exactly) match = match && (IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioU) || IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioV));
+		if (mApp->imWnd->selByTex.mode == between) match = match && (((mApp->imWnd->selByTex.minValue <= f->tRatioU) && (f->tRatioU <= mApp->imWnd->selByTex.maxValue)) || ((mApp->imWnd->selByTex.minValue <= f->tRatioV) && (f->tRatioV <= mApp->imWnd->selByTex.maxValue)));
 #if defined(MOLFLOW)
-		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && f->sh.countDes;
+		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && (desorbtionCheck == 1) == f->sh.countDes;
 #endif
 		if (mApp->imWnd->selByTex.absorbtionCheck != 2) match = match && (mApp->imWnd->selByTex.absorbtionCheck == 1) == f->sh.countAbs;
 		if (mApp->imWnd->selByTex.reflectionCheck != 2) match = match && (mApp->imWnd->selByTex.reflectionCheck == 1) == f->sh.countRefl;

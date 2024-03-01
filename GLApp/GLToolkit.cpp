@@ -861,37 +861,41 @@ void GLToolkit::DrawPoly(int lineWidth, int dashStyle, int r, int g, int b, int 
 
 }
 
-std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord(const Vector3d& p){
+std::optional<ScreenCoord> GLToolkit::Get2DScreenCoord_currentMatrix(const Vector3d& p){
 
   GLfloat mProj[16];
   GLfloat mView[16];
-  GLVIEWPORT g;
+  GLVIEWPORT viewPort;
 
   // Compute location on screen
   glGetFloatv(GL_PROJECTION_MATRIX , mProj);
   glGetFloatv(GL_MODELVIEW_MATRIX , mView);
-  glGetIntegerv(GL_VIEWPORT,(GLint *)&g);
+  glGetIntegerv(GL_VIEWPORT,(GLint *)&viewPort);
 
   GLMatrix proj; proj.LoadGL(mProj);
   GLMatrix view; view.LoadGL(mView);
   GLMatrix mvp; mvp.Multiply(&proj,&view);
 
+  return Get2DScreenCoord_fast(p, mvp, viewPort);
+
+  /*
   float rx,ry,rz,rw;
   mvp.TransformVec((float)p.x, (float)p.y, (float)p.z,1.0f,&rx,&ry,&rz,&rw);
   if(rw<=0.0f) return std::nullopt;
 
-  return std::tuple( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
+  return ScreenCoord( (int)(((rx / rw) + 1.0f)  * (float)g.width / 2.0f),
   (int)(((-ry / rw) + 1.0f) * (float)g.height / 2.0f) );
+  */
 
 }
 
-std::optional<std::tuple<int, int>> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& mvp, const GLVIEWPORT& viewPort) {
+std::optional<ScreenCoord> GLToolkit::Get2DScreenCoord_fast(const Vector3d& p, const GLMatrix& mvp, const GLVIEWPORT& viewPort) {
 
     float rx, ry, rz, rw;
     mvp.TransformVec((float)p.x, (float)p.y, (float)p.z, 1.0f, &rx, &ry, &rz, &rw);
-    if (rw <= 0.0f) return std::nullopt;
+    if (rw <= 0.0f) return std::nullopt; //behind camera
 
-    return std::tuple((int)(((rx / rw) + 1.0f) * (float)viewPort.width / 2.0f),
+    return ScreenCoord((int)(((rx / rw) + 1.0f) * (float)viewPort.width / 2.0f),
         (int)(((-ry / rw) + 1.0f) * (float)viewPort.height / 2.0f));
 
 }

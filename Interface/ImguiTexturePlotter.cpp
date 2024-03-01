@@ -17,7 +17,13 @@ extern MolFlow* mApp;
 
 void ImTexturePlotter::Draw()
 {
-	if (!drawn) return;
+	if (wasDrawn && !drawn) {
+		Hide();
+	}
+	wasDrawn = drawn;
+	if (!drawn) { 
+		return; 
+	}
 
 	// assemble table & columns flags
 	tableFlags = 0;
@@ -33,6 +39,7 @@ void ImTexturePlotter::Draw()
 	if (ImGui::Button("Find Max")) {
 		selection.clear();
 		selection.push_back(std::pair<int, int>(maxY, maxX));
+		selectionChanged = true;
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
@@ -56,6 +63,12 @@ void ImTexturePlotter::Draw()
 
 }
 
+void ImTexturePlotter::Hide()
+{
+	drawn = false;
+	selFacet->UnselectElem();
+}
+
 void ImTexturePlotter::Init(Interface* mApp_)
 {
 	mApp = mApp_;
@@ -76,8 +89,9 @@ void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFa
 		width = 0;
 		height = 0;
 		name = "Texture Plotter []###TexturePlotter";
-		selection.clear();
 	}
+	selection.clear();
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::UpdatePlotter()
@@ -89,6 +103,7 @@ void ImTexturePlotter::OnShow()
 {
 	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
 	UpdatePlotter();
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::DrawTextureTable()
@@ -111,6 +126,7 @@ void ImTexturePlotter::DrawTextureTable()
 			selectionStart = ImGui::GetMousePos();
 			isDragging = true;
 			selection.clear();
+			selectionChanged = true;
 		}
 
 		if (isDragging) {
@@ -168,10 +184,12 @@ void ImTexturePlotter::DrawTextureTable()
 						if (cell.Overlaps(selectionRect) || selectionRect.Overlaps(cell)) {
 							if (!Contains(selection, std::pair<int, int>(i, j - 1))) {
 								selection.push_back(std::pair<int, int>(i, j - 1));
+								selectionChanged = true;
 							}
 						}
 						else if (Contains(selection, std::pair<int, int>(i, j - 1))) {
 							selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int, int>(i, j-1)), selection.end());
+							selectionChanged = true;
 						}
 					}
 					if (ImGui::IsItemHovered()) hovered = true;
@@ -181,6 +199,7 @@ void ImTexturePlotter::DrawTextureTable()
 						if (isDragging) continue;
 						if (selection.size()==1 && io.KeysDown[SDL_SCANCODE_LSHIFT]) { // shift - box select
 							BoxSelect(selection[0], std::pair<int, int>(i, j));
+							selectionChanged = true;
 							continue;
 						}
 
@@ -188,9 +207,11 @@ void ImTexturePlotter::DrawTextureTable()
 
 						if (isSelected) { // deselect if was selected
 							selection.erase(std::remove(selection.begin(), selection.end(), std::pair<int,int>(i,j)), selection.end());
+							selectionChanged = true;
 							continue;
 						}
 						selection.push_back(std::pair<int, int>(i, j)); // regular select
+						selectionChanged = true;
 					}
 				}
 			}
@@ -198,13 +219,17 @@ void ImTexturePlotter::DrawTextureTable()
 		ImGui::EndTable();
 		if (!ImGui::IsMouseDown(0)) isDragging = false; // end drag
 		if(isDragging) ImGui::GetWindowDrawList()->AddRectFilled(selectionStart, selectionEnd, IM_COL32(64, 128, 255, 64));
-		if (selection.size()!=0)
+		if (selectionChanged)
 		{
-			ImVec4 bounds = SelectionBounds();
-			selFacet->SelectElem(bounds.y, bounds.x, bounds.w - bounds.y + 1, bounds.z-bounds.x+1);
-		}
-		else {
-			selFacet->UnselectElem();
+			if (selection.size()==0) {
+				selFacet->UnselectElem();
+				selectionChanged = false;
+			}
+			else {
+				ImVec4 bounds = SelectionBounds();
+				selFacet->SelectElem(bounds.y, bounds.x, bounds.w - bounds.y + 1, bounds.z-bounds.x+1);
+				selectionChanged = false;
+			}
 		}
 		bool anyKeyDown = false;
 		for (const bool& key : io.KeysDown) {
@@ -220,6 +245,7 @@ void ImTexturePlotter::DrawTextureTable()
 			if (selection[0].second > width-1) selection[0].second = width-1;
 			if (selection[0].first < 0) selection[0].first = 0;
 			if (selection[0].first > height-1) selection[0].first = height-1;
+			selectionChanged = true;
 			//scrollToSelected = true;
 		}
 		if (io.MouseDown[0]) scrollToSelected = false;
@@ -521,6 +547,7 @@ void ImTexturePlotter::SelectRow(size_t row)
 	for (size_t i = 0; i < width; i++) {
 		selection.push_back(std::pair<int, int>(row,i));
 	}
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::SelectColumn(size_t col)
@@ -529,6 +556,7 @@ void ImTexturePlotter::SelectColumn(size_t col)
 	for (size_t i = 0; i < width; i++) {
 		selection.push_back(std::pair<int, int>(i, col));
 	}
+	selectionChanged = true;
 }
 
 void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pair<int, int>& end)
@@ -546,6 +574,7 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 			selection.push_back(std::pair<int, int>(row, col));
 		}
 	}
+	selectionChanged = true;
 }
 
 ImVec4 ImTexturePlotter::SelectionBounds() {
@@ -566,8 +595,7 @@ ImVec4 ImTexturePlotter::SelectionBounds() {
 
 bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 {
-	if (!selFacet) return false;
-	if (height < 1 || width < 1) {
+	if (!selFacet || height < 1 || width < 1) {
 		ImIOWrappers::InfoPopup("Error", "Nothing to export");
 		return false;
 	}

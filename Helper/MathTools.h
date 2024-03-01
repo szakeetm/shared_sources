@@ -210,6 +210,8 @@ Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
                  const bool reverse); //sets sHandle->currentParticleTracer.direction
 
+double GeneratePoissonRnd(const double lambda, const double rnd);
+
 //Elementwise addition of two vectors:
 #include <algorithm>
 #include <functional>
@@ -257,6 +259,8 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 namespace MathHelper {
 	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
 }
+
+
 
 #ifdef _WIN32
 #define DEBUG_BREAK __debugbreak()
