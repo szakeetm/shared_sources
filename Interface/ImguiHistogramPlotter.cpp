@@ -349,8 +349,10 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	bool preExportLimitPoints = limitPoints;
 	if (!plottedOnly) {
 		limitPoints = false;
-		comboSelection = -1;
-		AddPlot(comboSelection);
+		if (globals[plotTab].x.get()!=nullptr) {
+			comboSelection = -1;
+			AddPlot(comboSelection);
+		}
 		for (const auto& id: comboOpts[plotTab]) {
 			comboSelection = id;
 			AddPlot(comboSelection);

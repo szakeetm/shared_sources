@@ -188,7 +188,7 @@ void SelectTextureType::ProcessMessage(GLComponent *src, int message) {
 			if (exactRatio) match = match && IsEqual(ratio, f->tRatioU) || IsEqual(ratio, f->tRatioV);
 			if (minmaxRatio) match = match && ((minRatio <= f->tRatioU) && (f->tRatioU <= maxRatio)) || ((minRatio <= f->tRatioV) && (f->tRatioV <= maxRatio));
 #if defined(MOLFLOW)
-			if (desorbToggle->GetState() != 2) match = match && f->sh.countDes;
+			if (desorbToggle->GetState() != 2) match = match && (desorbToggle->GetState()==1) == f->sh.countDes;
 #endif
 			if (absorbToggle->GetState() != 2) match = match && (absorbToggle->GetState()==1) == f->sh.countAbs;
 			if (reflectToggle->GetState() != 2) match = match && (reflectToggle->GetState()==1) == f->sh.countRefl;

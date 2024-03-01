@@ -21,8 +21,6 @@ void ImFacetMove::Init(Interface* mApp_, InterfaceGeometry* interfGeom_) {
 void ImFacetMove::Draw()
 {
     if (!drawn) return;
-    int txtW = ImGui::CalcTextSize(" ").x;
-    int txtH = ImGui::GetTextLineHeightWithSpacing();
     float width = 0, cursorY = 0;
     ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
     ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);

@@ -25,7 +25,7 @@ extern SynRad* mApp;
 void ImSelectTextureType::Preprocess() {
 	if (mode == exactly) {
 		if (!Util::getNumber(&exactlyValue, exactlyInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+			mApp->imWnd->popup.Open("Error", "Invalid ratio", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
@@ -33,7 +33,7 @@ void ImSelectTextureType::Preprocess() {
 	}
 	else if (mode == between) {
 		if (!Util::getNumber(&minValue, minInput) || !Util::getNumber(&maxValue, maxInput)) {
-			mApp->imWnd->popup.Open("Error", "Invaluid value in input field", { 
+			mApp->imWnd->popup.Open("Error", "Invalid ratio", { 
 				std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk,ImGuiKey_Enter) 
 				});
 			return;
@@ -59,10 +59,10 @@ void ImSelectTextureType::Select(int src)
 		InterfaceFacet* f = interfGeom->GetFacet(i);
 		bool match = f->sh.isTextured;
 		if (mApp->imWnd->selByTex.squareTextrueCheck != 2) match = match && ((mApp->imWnd->selByTex.squareTextrueCheck == 1) == IsEqual(f->tRatioU, f->tRatioV));
-		if (mApp->imWnd->selByTex.mode == exactly) match = match && IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioU) || IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioV);
-		if (mApp->imWnd->selByTex.mode == between) match = match && ((mApp->imWnd->selByTex.minValue <= f->tRatioU) && (f->tRatioU <= mApp->imWnd->selByTex.maxValue)) || ((mApp->imWnd->selByTex.minValue <= f->tRatioV) && (f->tRatioV <= mApp->imWnd->selByTex.maxValue));
+		if (mApp->imWnd->selByTex.mode == exactly) match = match && (IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioU) || IsEqual(mApp->imWnd->selByTex.exactlyValue, f->tRatioV));
+		if (mApp->imWnd->selByTex.mode == between) match = match && (((mApp->imWnd->selByTex.minValue <= f->tRatioU) && (f->tRatioU <= mApp->imWnd->selByTex.maxValue)) || ((mApp->imWnd->selByTex.minValue <= f->tRatioV) && (f->tRatioV <= mApp->imWnd->selByTex.maxValue)));
 #if defined(MOLFLOW)
-		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && f->sh.countDes;
+		if (mApp->imWnd->selByTex.desorbtionCheck != 2) match = match && (desorbtionCheck == 1) == f->sh.countDes;
 #endif
 		if (mApp->imWnd->selByTex.absorbtionCheck != 2) match = match && (mApp->imWnd->selByTex.absorbtionCheck == 1) == f->sh.countAbs;
 		if (mApp->imWnd->selByTex.reflectionCheck != 2) match = match && (mApp->imWnd->selByTex.reflectionCheck == 1) == f->sh.countRefl;
@@ -89,7 +89,7 @@ void ImSelectTextureType::Draw()
 			if (ImGui::BeginTable("##SFBTPtable", 2, ImGuiTableFlags_SizingFixedFit)) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::RadioButton("Exactly", mode==exactly)) mode = exactly;
+				if (ImGui::RadioButton("Exactly", mode==exactly)) mode==exactly ? mode = none : mode = exactly;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##3", &exactlyInput)) mode = exactly;
@@ -97,7 +97,7 @@ void ImSelectTextureType::Draw()
 				ImGui::Text("/cm");
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0);
-				if (ImGui::RadioButton("Between", mode == between)) mode = between;
+				if (ImGui::RadioButton("Between", mode == between)) mode==between ? mode = none : mode = between;
 				ImGui::TableSetColumnIndex(1);
 				ImGui::SetNextItemWidth(txtW * 15);
 				if (ImGui::InputText("##4", &minInput))	mode = between;

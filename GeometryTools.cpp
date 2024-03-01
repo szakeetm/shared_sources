@@ -766,8 +766,8 @@ int GeometryTools::GetCommonEdgesMap(InterfaceGeometry *geometry, std::vector<Co
             continue;
         auto rEdge = hashMap.find((p12 << 16) | (p11)); // look for reverse edge
         if(rEdge != hashMap.end()) {
-            for(auto fac1 : entry.second) {
-                for (auto fac2: rEdge->second) {
+            for(auto& fac1 : entry.second) {
+                for (auto& fac2: rEdge->second) {
                     if(fac1 > fac2)
                         edges.emplace_back(CommonEdge(fac2, fac1, p11, p12));
                     else if(fac1 < fac2)

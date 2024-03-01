@@ -56,7 +56,7 @@ extern MolFlow* mApp;
 extern SynRad* mApp;
 #endif
 
-void InterfaceGeometry::SelectFacet(size_t facetId) {
+void InterfaceGeometry::SelectFacet(const size_t facetId) {
 	if (!isLoaded) return;
 	InterfaceFacet* f = facets[facetId];
 	f->selected = (viewStruct == -1) || (viewStruct == f->sh.superIdx) || (f->sh.superIdx == -1);
@@ -64,7 +64,7 @@ void InterfaceGeometry::SelectFacet(size_t facetId) {
 	selectHist = { facetId }; //reset with only this facet id
 }
 
-void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection) {
+void InterfaceGeometry::SelectArea(const int x1, const int y1, const int x2, const int y2, const bool clear, const bool unselect, const bool vertexBound, const bool circularSelection) {
 
 	// Select a set of facet according to a 2D bounding rectangle
 	// (x1,y1) and (x2,y2) are in viewport coordinates
@@ -81,25 +81,14 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
+
 
 	if (clear && !unselect) UnselectAll();
 	selectHist.clear();
 	int lastPaintedProgress = -1;
 	int paintStep = (int)((double)sh.nbFacet / 10.0);
 
-	std::vector<std::pair<int, int>> screenCoords(vertices3.size());
-#pragma omp parallel for
-	for (int i = 0; i < vertices3.size(); i++) {
-		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		int xe = -1, ye = -1;
-		if (c) {
-			std::tie(xe, ye) = *c;
-		}
-		screenCoords[i] = std::make_pair(xe, ye);
-	}
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(false);
 
 	//Check facets if all vertices inside
 	std::vector<size_t> facetIds_vect;
@@ -118,16 +107,19 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 				bool hasSelectedVertex = false;
 				while (j < nb && isInside) {
 					size_t idx = f->indices[j];
-					int xe = screenCoords[idx].first;
-					int ye = screenCoords[idx].second;
-					if (!circularSelection) {
-						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
+					if (!screenCoords[idx].has_value()) {
+						isInside = false;
 					}
-					else { //circular selection
-						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
+					else {
+						if (!circularSelection) {
+							isInside = (screenCoords[idx]->x >= _x1) && (screenCoords[idx]->x <= _x2) && (screenCoords[idx]->y >= _y1) && (screenCoords[idx]->y <= _y2);
+						}
+						else { //circular selection
+							isInside = (pow((float)(screenCoords[idx]->x - x1), 2) + pow((float)(screenCoords[idx]->y - y1), 2)) <= r2;
+						}
+						if (vertices3[idx].selected) hasSelectedVertex = true;
+						j++;
 					}
-					if (vertices3[idx].selected) hasSelectedVertex = true;
-					j++;
 				}
 				if (isInside && (!vertexBound || hasSelectedVertex)) {
 					facetIds_local.insert(i);
@@ -157,87 +149,51 @@ void InterfaceGeometry::SelectArea(int x1, int y1, int x2, int y2, bool clear, b
 	UpdateSelection();
 }
 
-void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height) {
-
+void InterfaceGeometry::Select(const int x, const int y, const int width, const int height, const bool clear, const bool unselect, const bool vertexBound) {
+	// Select a facet on a mouse click in 3D perspective view 
+	constexpr bool printDebugInfo = false; //error-prone parallel search, set to true to print
 
 	if (!isLoaded) return;
 
-	// Select a facet on a mouse click in 3D perspective view 
-	// (x,y) are in screen coordinates
-	// TODO: Handle clipped polygon
+	//Transform all vertex coordinates to screen coordinates
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(printDebugInfo);
 
-// Check intersection of the facet and a "perspective ray"
-	std::vector<int> screenXCoords(sh.nbVertex);
-	std::vector<int> screenYCoords(sh.nbVertex);
-
-	// Transform points to screen coordinates
-	std::vector<bool> ok(sh.nbVertex);
-	std::vector<bool> onScreen(sh.nbVertex);
-
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
-
-#pragma omp parallel for
-	for (int i = 0; i < sh.nbVertex; i++) {
-		std::optional<std::tuple<int,int>> coords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (coords.has_value()) {
-			ok[i] = true;
-			auto [x, y] = *coords;
-			screenXCoords[i] = x;
-			screenYCoords[i] = y;
-			onScreen[i] = screenXCoords[i] >= 0 && screenYCoords[i] >= 0 && screenXCoords[i] <= width && screenYCoords[i] <= height;
-		}
-		else {
-			ok[i] = false;
-			//onScreen[i] = false; //redundant
-		}
+	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
+	
+	if (printDebugInfo) {
+		//debug
+		fmt::print("\nSelection history before search: {{");
+		for (const auto s : selectHist)
+			fmt::print("{},", s + 1);
+		fmt::print("}}\n");
 	}
 
-	// Check facets
-	bool found_global = false;
-	bool clipped;
-	bool hasVertexOnScreen;
-	bool hasSelectedVertex;
-	int lastFound = -1;
-	//char tmp[256];
-	//int lastPaintedProgress = -1;
-	//int paintStep = (int)((double)sh.nbFacet / 10.0);
-	std::set<size_t> foundInSelectionHistory; //facets that are under the mouse pointer but have been selected before
-	bool assigned=false;
+	int global_solution_facetId = -1; //facet id that was found and not yet in sel. history
 #pragma omp parallel
 	{
-			bool found_local=false;
-			int lastFound_local=-1;
+			int found_local_facetId = -1; //-1: not found, otherwise id of facet
+			
 #pragma omp for
 		for (int i = 0; i < sh.nbFacet; i++) {
-			if (found_global) continue; //this or an other thread have found a valid facet
+			if (global_solution_facetId >= 0) continue; //this or an other thread have found a valid facet, don't look for more
 
-			/*
-			if (sh.nbFacet > 5000) {
-				if ((i - lastPaintedProgress) > paintStep) {
-					lastPaintedProgress = i;;
-					sprintf(tmp, "Facet search: %d%%", (int)(i * 100.0 / (double)sh.nbFacet));
-					mApp->SetFacetSearchPrg(true, tmp);
-				}
-			}
-			*/
 			if (viewStruct == -1 || facets[i]->sh.superIdx == viewStruct || facets[i]->sh.superIdx == -1) {
 
-				clipped = false;
-				hasVertexOnScreen = false;
-				hasSelectedVertex = false;
+				bool hasVertexBehindCamera = false; //can't do polygon intersection check
+				bool hasVertexOnScreen = false;
+				bool hasSelectedVertex = false;
 				// Build array of 2D points
 				std::vector<Vector2d> facetScreenCoords(facets[i]->indices.size());
 
-				for (int j = 0; j < facets[i]->indices.size() && !clipped; j++) {
+				for (int j = 0; j < facets[i]->indices.size() && !hasVertexBehindCamera; j++) {
 					size_t idx = facets[i]->indices[j];
-					if (ok[idx]) {
-						facetScreenCoords[j] = Vector2d((double)screenXCoords[idx], (double)screenYCoords[idx]);
-						if (onScreen[idx]) hasVertexOnScreen = true;
-					}
-					else {
-						clipped = true;
+					if (screenCoords[idx].has_value()) {
+						facetScreenCoords[j] = Vector2d((double)screenCoords[idx]->x, (double)screenCoords[idx]->y);
+						if (screenCoords[idx]->x >= 0 && screenCoords[idx]->x < width && screenCoords[idx]->y >= 0 && screenCoords[idx]->y < height) {
+							hasVertexOnScreen = true;
+						}
+					} else {
+						hasVertexBehindCamera = true;
 					}
 				}
 				if (vertexBound) { //CAPS LOCK on, select facets only with at least one seleted vertex
@@ -247,107 +203,133 @@ void InterfaceGeometry::Select(int x, int y, bool clear, bool unselect, bool ver
 					}
 				}
 
-				if (!clipped && hasVertexOnScreen && (!vertexBound || hasSelectedVertex) && (unselect || !facets[i]->selected)) {
+				if (!hasVertexBehindCamera) { //facetScreenCoords all valid
+					if (hasVertexOnScreen) { //at least one vertex visible to user
+						if (!vertexBound || hasSelectedVertex) { //CAPS LOCK off or has selected vertex
+							if (unselect || !facets[i]->selected) { //In "Add" mode, ignore already selected
 
-					found_local = IsInPoly((double)x, (double)y, facetScreenCoords);
-					if (found_local) {
-						
-						if (unselect) {
-							if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
-								facets[i]->selected = false;
-								found_local = false; //Continue looking for facets, we want to deselect everything under the pointer
-							}
-							else { //Smart selection
-								double maxAngleDiff;
-								if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
-									maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
-								} else 
-									maxAngleDiff = mApp->smartSelection->GetMaxAngle();
-								std::vector<size_t> connectedFacets;
-								//mApp->SetFacetSearchPrg(true, "Smart selecting...");
-								if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
-								for (auto& ind : connectedFacets)
-									facets[ind]->selected = false;
-								//mApp->SetFacetSearchPrg(false, "");
-							}
-						} //end unselect
-						
-						lastFound_local = i;
-						if (AlreadySelected(i)) {
-							found_local = false; //Continue looking for facets
-						}
-					} //end found
-					if (found_local) { //found a facet that wasn't in the selected history (or we're in unselect mode)
+								if (IsInPoly((double)x, (double)y, facetScreenCoords)) {
+									found_local_facetId = i;
+									if (unselect) {
+										if ((!mApp->smartSelection || !mApp->smartSelection->IsSmartSelection()) && (mApp->imWnd ? (!mApp->imWnd->smartSelect.IsVisible() || !mApp->imWnd->smartSelect.IsEnabled()) : true)) {
+											facets[i]->selected = false;
+											if (printDebugInfo) {
 #pragma omp critical
-						{
-							found_global = true; //set global found flag to true, all threads will stop
-						}
+												fmt::print("Thread {}/{}: deselecting facet {} and looking for more under the pointer.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+											}
+											found_local_facetId = -1; //Skip processing and look for more
+										}
+										else { //Smart selection
+											double maxAngleDiff;
+											if (mApp->imWnd && mApp->imWnd->smartSelect.IsEnabled() && mApp->imWnd->smartSelect.IsVisible()) {
+												maxAngleDiff = mApp->imWnd->smartSelect.GetMaxAngle();
+											}
+											else
+												maxAngleDiff = mApp->smartSelection->GetMaxAngle();
+											std::vector<size_t> connectedFacets;
+											if (maxAngleDiff >= 0.0) connectedFacets = GetConnectedFacets(i, maxAngleDiff);
+											for (auto& ind : connectedFacets)
+												facets[ind]->selected = false;
+										}
+									} //end unselect
+									if (found_local_facetId >= 0) { //false if unselect mode without smart selection
+										if (InSelectionHistory(i)) {
+											if (printDebugInfo) {
+#pragma omp critical
+												fmt::print("Thread {}/{}: found facet {} already in sel.history, looking for better candidate.\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+											}
+										}
+										else { //found a facet that wasn't in the selected history
+#pragma omp critical
+											{
+												global_solution_facetId = i; //set global found flag to true, all threads will skip every facet check after this. Race condition allowed, accept any thread's result
+												if (printDebugInfo) {
+													fmt::print("Thread {}/{}: found facet {} not in history, setting global found flag to true, others will skip\n", omp_get_thread_num() + 1, omp_get_num_threads(), i + 1);
+												}
+											}
+										}
+									}
+								} //end "inPoly"
+							} //if not already selected or unselect mode
+						} //if CAPS LOCK not on or has selected vertex
+					} //if has at least a vertex on screen
+				} //if doesn't have vertex that couldn't be transformed (behind camera)
+			} //if in current (or all) structure
+		} //parallel for loop on facets
+
+//process results, still in parallel region to keep found_local_facetId
+#pragma omp critical
+		if (!unselect) {
+			if (global_solution_facetId==-1) {
+
+				if (printDebugInfo) fmt::print("Thread {}/{} finished, found_local_facetId={}", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
+
+					if (found_local_facetId >= 0) { //This thread has a facet already in the selection history
+						foundInSelectionHistory.insert(found_local_facetId); //we'll process later
+						if (printDebugInfo) fmt::print(" - no global result, add this result to candidates in selection history\n");
 					}
-				}
+					else if (printDebugInfo) {
+						fmt::print(" - thread had no result\n");
+					}
+				
+			} else if (printDebugInfo) {
+				fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as there's a global result.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 			}
+		} else if (printDebugInfo) {
+			fmt::print("Thread {}/{} finished, found_local_facetId={}, not processing as unselect mode.\n", omp_get_thread_num() + 1, omp_get_num_threads(), found_local_facetId + 1);
 		}
-#pragma omp critical
-		if (!assigned) {
-			//fmt::print("Thread{} found_local={} lastFound_local={}", omp_get_thread_num(), found_local, lastFound_local);
-			if (found_global) { //There was at least one facet found not yet in the seletion history
-				if (found_local) {
-					lastFound = lastFound_local; //If this thread was one of those that found, assign it to global
-					assigned = true; //Don't process other threads
-					//fmt::print(" assign\n");
-				}
-				else {
-					//fmt::print(" skip\n");
-				}
-			}
-			else { //No threads found new facet
-				if (lastFound_local != -1) { //This thread has a facet already in the selection history
-					foundInSelectionHistory.insert(lastFound_local); //we'll process later
-					//fmt::print(" add\n");
-				}
-				else {
-					//fmt::print(" skip\n");
-				}
-			}
-			
-		}
-	}
+	} //thread results processed, end parallel region
 
-	mApp->SetFacetSearchPrg(false, "");
 	if (clear && !unselect) UnselectAll();
 
-	if (!found_global && foundInSelectionHistory.size()>0) { //found one that was already selected previously
-		size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
-		if (!unselect) { //select
-			for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
-				if (foundInSelectionHistory.count(selectHist[s])) {
-					lastIndex = selectHist[s];
-					break;
-				}
+	if (!unselect) {
+		if (global_solution_facetId >= 0) { //Found a new facet
+			if (!unselect) AddToSelectionHist(global_solution_facetId);
+			if (printDebugInfo) fmt::print("Added facet {} to selection history\n", global_solution_facetId + 1);
+
+			TreatNewSelection(global_solution_facetId, unselect);
+		} else if (global_solution_facetId == -1 && foundInSelectionHistory.size() > 0) { //found at least one that was already selected previously
+			
+			size_t lastIndex; //selection: oldest in the history. Unselection: newest in the history
+
+			if (printDebugInfo) {
+				//debug
+				fmt::print("\nNo new facet found, choosing from candidates already in history: {{");
+				for (const auto s : foundInSelectionHistory)
+					fmt::print("{},", s + 1);
+				fmt::print("}}\n");
 			}
-			selectHist = { (size_t)lastIndex }; //reset
-			TreatNewSelection(lastIndex, unselect);
+
+			if (!unselect) { //select
+				for (int s = 0; s < selectHist.size(); s++) { //find the oldest in the history that's under our pointer
+					if (foundInSelectionHistory.count(selectHist[s])) {
+						lastIndex = selectHist[s];
+						if (printDebugInfo) fmt::print("Choosing facet {} as oldest in the history.\n", lastIndex + 1);
+						break;
+					}
+				}
+				selectHist = { (size_t)lastIndex }; //reset
+				if (printDebugInfo) fmt::print("Resetting selection history to: {{{}}}.\n", lastIndex + 1);
+				TreatNewSelection(lastIndex, unselect);
+			}
+			/*
+			else { //unselect last selected facet
+				for (int s = selectHist.size()-1; s >=0; s--) { //find the newest in the history that's under our pointer
+					if (foundInSelectionHistory.count(selectHist[s]) && facets[selectHist[s]]->selected) {
+						lastIndex = selectHist[s];
+						break;
+					}
+				}
+			}*/
+
+
+		} else { //not found at all
+			if (printDebugInfo) fmt::print("Nothing found, not even in selection history, cleared selection history.\n");
+			selectHist.clear();
 		}
-		/*
-		else { //unselect last selected facet
-			for (int s = selectHist.size()-1; s >=0; s--) { //find the newest in the history that's under our pointer
-				if (foundInSelectionHistory.count(selectHist[s]) && facets[selectHist[s]]->selected) {
-					lastIndex = selectHist[s];
-					break;
-				}
-			}
-		}*/
-		
-		
-	}
-	else if (found_global) {
-		if (!unselect) AddToSelectionHist(lastFound);
-		TreatNewSelection(lastFound, unselect);
-	}
-	else { //not found at all
-		selectHist.clear();
 	}
 	
-	//fmt::print("Found:{} Lastfound:{} Selection history:", found, lastFound);
+	//fmt::print("Found:{} Lastfound:{} Selection history:", found, lastFound_facetId);
 	//for (auto i : selectHist) fmt::print("{} ", i);
 	//fmt::print("\n\n");
 	UpdateSelection();
@@ -376,7 +358,7 @@ void InterfaceGeometry::TreatNewSelection(int lastFound, bool unselect) //helper
 	if (!unselect) mApp->facetList->ScrollToVisible(lastFound, 0, true); //scroll to selected facet
 }
 
-void InterfaceGeometry::SelectVertex(int vertexId) {
+void InterfaceGeometry::SelectVertex(const int vertexId) {
 	//isVertexSelected[vertexId] = (viewStruct==-1) || (viewStruct==f->sp.superIdx);
 	//here we should look through facets if vertex is member of any
 	//if( !f->selected ) f->UnselectElem();
@@ -401,7 +383,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		r2 = pow((float)(x1 - x2), 2) + pow((float)(y1 - y2), 2);
 	}
 
-	GLMatrix view,proj,mvp;
+	GLMatrix view, proj, mvp;
 	GLVIEWPORT viewPort;
 	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
 
@@ -420,32 +402,27 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
 			Vector3d* v = GetVertex(i);
-			//if(viewStruct==-1 || f->sp.superIdx==viewStruct) {
-			if (true) {
 
-				bool isInside = false;
-				int idx = i;
-
-				int xe, ye;
-				std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		if (c)
-				{
-					std::tie(xe, ye) = *c;
-
-					if (!circularSelection)
-						isInside = (xe >= _x1) && (xe <= _x2) && (ye >= _y1) && (ye <= _y2);
-					else //circular selection
-						isInside = (pow((float)(xe - x1), 2) + pow((float)(ye - y1), 2)) <= r2;
+			bool isInside = false;
+			int idx = i;
+			std::optional<ScreenCoord> screenCoords = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+			if (screenCoords.has_value()) { //otherwise ignore
+				if (!circularSelection) {
+					isInside = (screenCoords->x >= _x1) && (screenCoords->x <= _x2) && (screenCoords->y >= _y1) && (screenCoords->y <= _y2);
 				}
-
-				if (isInside) {
-					vertices_local.insert(i);
+				else {//circular selection
+					isInside = (pow((float)(screenCoords->x - x1), 2) + pow((float)(screenCoords->y - y1), 2)) <= r2;
 				}
+			}
+
+			if (isInside) {
+				vertices_local.insert(i);
 			}
 		}
 #pragma omp critical
 		vertices_global.insert(vertices_local.begin(), vertices_local.end());
-	}
+	} //end parallel region
+
 	for (auto index : vertices_global) {
 		vertices3[index].selected = !ctrlDown;
 		if (ctrlDown) RemoveFromSelectedVertexList(index);
@@ -455,7 +432,6 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 		}
 	}
 
-	//UpdateSelectionVertex();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
@@ -465,34 +441,11 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 
 	// Select a vertex on a mouse click in 3D perspectivce view 
 	// (x,y) are in screen coordinates
-	// TODO: Handle clipped polygon
-
-	// Check intersection of the facet and a "perspective ray"
-	std::vector<int> allXe(sh.nbVertex);
-	std::vector<int> allYe(sh.nbVertex);
-	std::vector<bool> ok(sh.nbVertex);
 
 	std::unordered_set<int> selectedFacetsVertices;
 	if (facetBound) selectedFacetsVertices = GetVertexBelongsToSelectedFacet();
 
-	GLMatrix view,proj,mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
-
-	// Transform points to screen coordinates
-#pragma omp parallel for
-	for (int i = 0; i < sh.nbVertex; i++) {
-		if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-		std::optional<std::tuple<int,int>> c = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
-		
-		if (c) {
-			ok[i] = true;
-			std::tie(allXe[i], allYe[i]) = *c;
-		}
-		else {
-			ok[i] = false;
-		}
-	}
+	std::vector<std::optional<ScreenCoord>> screenCoords = TransformVerticesToScreenCoords(false);
 
 	//Get Closest Point to click
 	double minDist_global = std::numeric_limits<double>::max();
@@ -506,11 +459,13 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 #pragma omp for
 		for (int i = 0; i < sh.nbVertex; i++) {
 			if (facetBound && selectedFacetsVertices.count(i) == 0) continue; //doesn't belong to selected facet
-			if (ok[i] && allXe[i] >= 0 && allXe[i] < width && allYe[i] >= 0 && allYe[i] < height) { //calculate only for points on screen
-				double distanceSqr = pow((double)(allXe[i] - x), 2) + pow((double)(allYe[i] - y), 2);
-				if (distanceSqr < minDist_local) {
-					minDist_local = distanceSqr;
-					minId_local = i;
+			if (screenCoords[i].has_value()) {
+				if (screenCoords[i]->x >= 0 && screenCoords[i]->x < width && screenCoords[i]->y >= 0 && screenCoords[i]->y < height) { //calculate only for points on screen
+					double distanceSqr = pow((double)(screenCoords[i]->x - x), 2) + pow((double)(screenCoords[i]->y - y), 2);
+					if (distanceSqr < minDist_local) {
+						minDist_local = distanceSqr;
+						minId_local = i;
+					}
 				}
 			}
 		}
@@ -548,7 +503,7 @@ void InterfaceGeometry::AddToSelectionHist(size_t f) {
 	selectHist.push_back(f);
 }
 
-bool InterfaceGeometry::AlreadySelected(size_t f) {
+bool InterfaceGeometry::InSelectionHistory(size_t f) {
 	return std::find(selectHist.begin(), selectHist.end(), f) != selectHist.end();
 }
 
@@ -598,10 +553,19 @@ size_t InterfaceGeometry::GetNbSelectedVertex() {
 }
 
 void InterfaceGeometry::UnselectAll() {
+std::set<size_t> facetsWithSelElem;
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbFacet; i++) {
-		facets[i]->selected = false;
-		facets[i]->UnselectElem();
+		if (facets[i]->selected) {
+			facets[i]->selected = false;
+			if (facets[i]->glSelElem) {
+				#pragma omp critical
+				facetsWithSelElem.insert(i); //normally only one facet
+			}
+		}
+	}
+	for (const size_t facetId : facetsWithSelElem) {
+		facets[facetId]->UnselectElem(); //OpenGL shouldn't be called from an OpenMP thread
 	}
 	UpdateSelection();
 }
@@ -610,7 +574,6 @@ void InterfaceGeometry::UnselectAllVertex() {
 #pragma omp parallel for
 	for (int i = 0; i < sh.nbVertex; i++) {
 		vertices3[i].selected = false;
-		//facets[i]->UnselectElem(); //what is this?
 	}
 	//UpdateSelectionVertex();
 }
@@ -1855,4 +1818,36 @@ void InterfaceGeometry::BuildFacetList(InterfaceFacet* f) {
 
 		glEndList();
 	}
+}
+
+std::vector<std::optional<ScreenCoord>> InterfaceGeometry::TransformVerticesToScreenCoords(const bool printDebugInfo) {
+	// Check intersection of the facet and a "perspective ray"
+	// Returns nullopt for vertices behind camera
+	// Does not do viewport clipping (off-screen) test
+
+	std::vector<std::optional<ScreenCoord>> screenCoords(sh.nbVertex);
+
+	GLMatrix view, proj, mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
+
+	Chronometer timer;
+	timer.Start();
+
+#pragma omp parallel for
+	for (int i = 0; i < sh.nbVertex; i++) {
+		screenCoords[i] = GLToolkit::Get2DScreenCoord_fast(vertices3[i], mvp, viewPort);
+	}
+
+	timer.Stop();
+
+	if (printDebugInfo) {
+		fmt::print("\nTransformed {} vertices in {:.1f} ms.\n", sh.nbVertex, timer.ElapsedMs());
+		fmt::print("Not on screens: {{");
+		for (int i = 0; i < screenCoords.size(); i++)
+			if (!screenCoords[i].has_value()) fmt::print("{},", i + 1);
+		fmt::print("}}\n");
+	}
+
+	return screenCoords;
 }

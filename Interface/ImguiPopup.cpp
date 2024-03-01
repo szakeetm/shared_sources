@@ -34,7 +34,7 @@ namespace ImIOWrappers {
 				mApp->AddRecent(fn);
 			}
 			catch (const std::exception& e) {
-				std::string errMsg = ("%s\nFile:%s", e.what(), fn.c_str());
+				std::string errMsg = fmt::format("{}\nFile: {}", e.what(), fn);
 				mApp->imWnd->popup.Open("Error", errMsg, { std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk) });
 				mApp->RemoveRecent(fn.c_str());
 			}

@@ -68,7 +68,9 @@ void ImProfilePlotter::Draw()
 	ImGui::Text("Display as:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 27);
-	ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0");
+	if (ImGui::Combo("##View", &viewIdx, u8"Raw\0Pressure [mBar]\0Impingement rate [1/m\u00B2/sec]]\0Density [1/m3]\0Speed [m/s]\0Angle [deg]\0Normalize to 1\0")) {
+		UpdatePlotter();
+	}
 	if (viewIdx == int(ProfileDisplayModes::Speed) || viewIdx == int(ProfileDisplayModes::Angle)) {
 		ImGui::SameLine();
 		if (ImGui::Checkbox("Surface->Volume conversion", &correctForGas)) {

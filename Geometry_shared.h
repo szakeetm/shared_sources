@@ -42,6 +42,7 @@ class DeletedFacet;
 class Worker;
 class FileReader;
 class FileWriter;
+struct ScreenCoord;
 
 union PhysicalValue{
 	//Unified return value that can return size_t, double or vector
@@ -78,7 +79,7 @@ public:
 };
 bool operator<(const std::list<ClippingVertex>::iterator& a, const std::list<ClippingVertex>::iterator& b);
 
-class ProjectedPoint {
+struct ProjectedPoint {
 public:
 	Vector2d vertex2d;
 	size_t globalId;
@@ -239,6 +240,7 @@ public:
 	void    SetCenterNorme(bool enable);
 	bool    GetCenterNorme() const;
 	void    BuildFacetList(InterfaceFacet *f);
+	std::vector<std::optional<ScreenCoord>>    TransformVerticesToScreenCoords(const bool printDebugInfo=false);
 	int		ExplodeSelected(bool toMap = false, int desType = 1, double exponent = 0.0, const double *values = NULL);
 
 	void CreateRectangle(const Vector3d & rec_center, const Vector3d & axis1Dir, const Vector3d & normalDir, const double  axis1Length, const double  axis2Length);
@@ -260,7 +262,7 @@ public:
 #pragma region GeometryRender_Shared.cpp
 protected:
 	void AddToSelectionHist(size_t f);
-	bool AlreadySelected(size_t f);
+	bool InSelectionHistory(size_t f);
 	std::optional<size_t> GetLastSelected();
 	std::optional<size_t> GetFirstSelected();
 	void DrawFacetWireframe(const InterfaceFacet *f, bool offset = false, bool selOffset = false);
@@ -284,10 +286,10 @@ public:
 	void AddToSelectedVertexList(size_t vertexId);
 	void EmptySelectedVertexList();
 	void RemoveFromSelectedVertexList(size_t vertexId);
-	void SelectArea(int x1, int y1, int x2, int y2, bool clear, bool unselect, bool vertexBound, bool circularSelection);
-	void Select(int x, int y, bool clear, bool unselect, bool vertexBound, int width, int height);
+	void SelectArea(const int x1, const int y1, const int x2, const int y2, bool clear, const bool unselect, const bool vertexBound, const  bool circularSelection);
+	void Select(const int x, const int y, const int width, const int height, const bool clear, const bool unselect, const bool vertexBound);
 	void TreatNewSelection(int lastFound, bool unselect);
-	void SelectFacet(size_t facetId);
+	void SelectFacet(const size_t facetId);
 	void SelectAllVertex();
 	void SelectVertex(int x1, int y1, int x2, int y2, bool shiftDown, bool ctrlDown, bool circularSelection, bool facetBound);
 	void SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound);
