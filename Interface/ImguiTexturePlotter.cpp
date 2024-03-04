@@ -63,7 +63,7 @@ void ImTexturePlotter::Draw()
 void ImTexturePlotter::Hide()
 {
 	drawn = false;
-	selFacet->UnselectElem();
+	if (selFacet != nullptr) selFacet->UnselectElem();
 }
 
 void ImTexturePlotter::Init(Interface* mApp_)
