@@ -419,6 +419,47 @@ void ImTest::RegisterTests()
         ctx->ComboClickAll("##View");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Histogram plotter");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Histogram Plotter...");
+        ctx->SetRef("Histogram Plotter");
+        ctx->ItemClick("Histogram types/Flight distance before absorption");
+        ctx->ItemClick("Histogram types/Flight time before absorption");
+        ctx->ItemClick("Histogram types/Bounces before absorption");
+        ctx->ItemClick("<- Show Facet");
+        ctx->ItemClick("Add");
+        ctx->ItemClick("Remove");
+        ctx->ItemClick("Remove all");
+        ctx->ItemClick("Normalize");
+        ctx->ItemClick("Normalize");
+        ctx->ItemClick("Log Y");
+        ctx->ItemClick("Log Y");
+        ctx->ItemClick("Log X");
+        ctx->ItemClick("Log X");
+        ctx->MenuClick("Export/All to clipboard");
+        ctx->MenuClick("Export/Plotted to clipboard");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Histogram Plotter");
+        ctx->ItemClick("<< Hist settings");
+        /* Cannot automate clicking items inside child windows for unknown reason, TODO: find a solution
+        ctx->SetRef("Histogram Settings/Global histogram");
+        ctx->ItemClick("Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Histogram Plotter");
+        ctx->ComboClick("Global");
+        ctx->ItemClick("Add");
+        ctx->ItemClick("Remove");
+        ctx->ItemClick("Add");
+        ctx->SetRef("Histogram Settings/Global histogram");
+        ctx->ItemClick("Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Histogram Plotter");
+        */
+        ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
