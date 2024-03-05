@@ -13,12 +13,12 @@ add_library(${PROJECT_NAME} STATIC
         ${HELPER_FILES}
          )
 
-target_include_directories(${PROJECT_NAME} PRIVATE
+target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
-        ${HEADER_DIR_ZIP}
+        ${HEADER_DIR_EXTERNAL}
         )
 
 
@@ -63,7 +63,10 @@ endif(NOT MSVC)
 
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
+find_package(cereal CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
+find_package(pugixml CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::shared pugixml::pugixml)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2)
 

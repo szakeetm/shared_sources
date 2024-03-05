@@ -26,8 +26,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 
 // zip
 #include <File.h>
-#include <ZipLib/ZipArchive.h>
-#include <ZipLib/ZipFile.h>
+#include <ziplib/Source/ZipLib/ZipArchive.h>
+#include <ziplib/Source/ZipLib/ZipFile.h>
 
 // Input Output related settings and handy functions for the CLI application
 namespace SettingsIO {

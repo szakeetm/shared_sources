@@ -32,7 +32,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "Vector.h"
 
 #include "Geometry_shared.h"
-#include "SDL_SavePNG/savepng.h"
+#include <SDL_SavePNG/savepng.h>
 
 #include <math.h>
 #include <cstdlib>

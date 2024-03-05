@@ -19,9 +19,9 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #include "AppUpdater.h"
 #include "AppUpdaterRemoteFeed.hpp"
-#include <ZipLib/ZipArchive.h>
-#include <ZipLib/ZipArchiveEntry.h>
-#include <ZipLib/ZipFile.h>
+#include <ziplib/Source/ZipLib/ZipArchive.h>
+#include <ziplib/Source/ZipLib/ZipArchiveEntry.h>
+#include <ziplib/Source/ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
 #include <sstream>

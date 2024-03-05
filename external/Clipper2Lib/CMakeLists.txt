@@ -7,8 +7,8 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME clipper2)
 
 # Folders files
-set(CPP_DIR_1 src)
 set(HEADER_DIR_1 include/clipper2)
+set(CPP_DIR_1 src)
 
 ############## CMake Project ################
 #        The main options of project        #

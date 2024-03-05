@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #pragma once
 #include "Polygon.h"
 #include "GLApp/GLProgress_GUI.hpp"
-#include "Clipper2Lib/include/clipper2/clipper.h"
+#include <Clipper2Lib/include/clipper2/clipper.h>
 
 #include <vector>
 #include <set>

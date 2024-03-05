@@ -31,7 +31,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include <GLApp/GLFormula.h>
 
 #define USINGZ //Allows clipper library to store user data (globalId)
-#include "Clipper2Lib/include/clipper2/clipper.h"
+#include <Clipper2Lib/include/clipper2/clipper.h>
 
 class GLTextField;
 class GLToggle;

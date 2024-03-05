@@ -37,22 +37,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         )
 
-if(MSVC)
-    set(LINK_DIR_1 "${CMAKE_SOURCE_DIR}/lib_external/win/${MY_BUILD_TYPE}")
-    message(${LINK_DIR_1})
 
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC
-            #"../../include/windows_only"
-            "../../../include/windows_only"
-            )
-    target_link_libraries(${PROJECT_NAME}
-            ${LINK_DIR_1}/libgsl.lib
-            ${LINK_DIR_1}/libgslcblas.lib
-            )
-endif(MSVC)
-if(NOT MSVC)
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${GSL_INCLUDE_DIRS})
-
     target_link_libraries(${PROJECT_NAME} ${GSL_LIBRARIES})
-endif(NOT MSVC)

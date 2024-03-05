@@ -19,11 +19,9 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
-#set(HEADER_DIR_EXT ../src/)
-#set(EXTERNAL_1 ./external)
-#set(EXTERNAL_2 ./external)
 
-set(HEADER_DIR_ZIP ./external/ziplib/Source)
+set(HEADER_DIR_EXTERNAL ../src_shared/external)
+
 set(IMGUI_DIR ./imgui)
 
 #set(COPY_DIR ../copy_to_build/)
@@ -234,7 +232,6 @@ set(GL_FILES
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
     find_package(CURL CONFIG REQUIRED)
-    include_directories(${CURL_INCLUDE_DIRS})
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
 

@@ -13,7 +13,6 @@ add_library(${PROJECT_NAME} STATIC
         ${GL_FILES}
          )
 
-
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         ${HEADER_DIR_2}
@@ -26,8 +25,11 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_6}
         ${HEADER_DIR_7}
         ${IMGUI_DIR}
-        ${HEADER_DIR_ZIP}
+        ${HEADER_DIR_EXTERNAL}
         )
+
+
+
 
 if(MSVC)
     find_package(OpenGL REQUIRED)
@@ -102,7 +104,6 @@ ELSE() #not MSVC
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${FMT_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     #target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
@@ -131,11 +132,11 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog-extended-molflow-wrapped)
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal) #header only
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog-extended-molflow-wrapped)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
+target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
-target_link_libraries(${PROJECT_NAME}  PUBLIC imgui implot)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui implot)
 
 #Suppress warnings for external libraries
 if(MSVC)
@@ -143,7 +144,7 @@ if(MSVC)
 else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
-target_compile_options(pugixml PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+
 target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
