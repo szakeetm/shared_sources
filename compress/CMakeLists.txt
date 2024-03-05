@@ -55,8 +55,8 @@ target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+    find_package(fmt CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

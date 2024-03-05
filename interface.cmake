@@ -95,13 +95,15 @@ ELSE() #not MSVC
     find_package(CURL REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
 
+    find_package(fmt CONFIG REQUIRED)
+
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
-
+    target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
@@ -131,7 +133,6 @@ endif() #NOT MSVC
 #External libraries
 
 target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header only
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal) #header only
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
@@ -148,9 +149,6 @@ target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(nativefiledialog PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-#target_compile_options(fmtlib_src PRIVATE ${SUPPRESS_WARNINGS_FLAG}) #header only
-target_compile_options(fmt PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-#target_compile_options(cereal PRIVATE ${SUPPRESS_WARNINGS_FLAG}) #header only
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})

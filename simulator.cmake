@@ -61,8 +61,8 @@ if(NOT MSVC)
 
 endif(NOT MSVC)
 
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2)
