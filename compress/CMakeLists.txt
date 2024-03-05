@@ -55,8 +55,8 @@ target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         )
 
-    find_package(fmt CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

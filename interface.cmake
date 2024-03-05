@@ -34,7 +34,6 @@ if(MSVC)
     # 1. link against external libs
     target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
-            libcurl.lib
             SDL2.lib
             SDL2main.lib
             lzma.lib
@@ -92,7 +91,7 @@ ELSE() #not MSVC
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
-    find_package(CURL REQUIRED)
+    find_package(CURL CONFIG REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
 
     find_package(fmt CONFIG REQUIRED)
@@ -103,7 +102,7 @@ ELSE() #not MSVC
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
-    target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${FMT_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})

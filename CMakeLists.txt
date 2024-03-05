@@ -233,7 +233,11 @@ set(GL_FILES
 
 if(NOT NO_INTERFACE)
     include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
+    find_package(CURL CONFIG REQUIRED)
+    include_directories(${CURL_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
+
 include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
 include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
