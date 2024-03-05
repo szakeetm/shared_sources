@@ -1449,7 +1449,7 @@ static void ShowMenuTest() {
         mApp->imWnd->ToggleMainHub();
     }
 #ifdef DEBUG
-    if (ImGui::MenuItem("ImGui Test Engine", "Ctrl+T")) {
+    if (ImGui::MenuItem("ImGui Test Engine")) {
         mApp->imWnd->testEngine.Show();
     }
 #endif

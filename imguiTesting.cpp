@@ -443,21 +443,42 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Histogram Plotter");
         ctx->ItemClick("<< Hist settings");
-        /* Cannot automate clicking items inside child windows for unknown reason, TODO: find a solution
-        ctx->SetRef("Histogram Settings/Global histogram");
-        ctx->ItemClick("Record bounces until absorbtion");
-        ctx->ItemClick("Apply");
+        // Cannot automate clicking items inside child windows for unknown reason, TODO: find a solution
+        ImGuiTestItemList items;
+        ctx->GatherItems(&items, "//Histogram Settings/Global histogram", 2);
+        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test settings window");
+        else {
+            ctx->SetRef("Histogram Settings/Global histogram");
+            ctx->ItemClick("Record bounces until absorbtion");
+            ctx->ItemClick("Apply");
+            ctx->SetRef("Histogram Plotter");
+            ctx->ComboClick("Global");
+            ctx->ItemClick("Add");
+            ctx->ItemClick("Remove");
+            ctx->ItemClick("Add");
+            ctx->SetRef("Histogram Settings/Global histogram");
+            ctx->ItemClick("Record bounces until absorbtion");
+            ctx->ItemClick("Apply");
+        }
         ctx->SetRef("Histogram Plotter");
-        ctx->ComboClick("Global");
-        ctx->ItemClick("Add");
-        ctx->ItemClick("Remove");
-        ctx->ItemClick("Add");
-        ctx->SetRef("Histogram Settings/Global histogram");
-        ctx->ItemClick("Record bounces until absorbtion");
-        ctx->ItemClick("Apply");
-        ctx->SetRef("Histogram Plotter");
-        */
         ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture scaling");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Texture scaling...");
+        ctx->SetRef("###TextureScaling/##layoutHelper");
+        // child elements not working
+        ImGuiTestItemList items;
+        ctx->GatherItems(&items, "//###TextureScaling/##layoutHelper", 2);
+        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test subelements");
+        else {
+            ctx->ItemClick("Autoscale");
+
+        }
+        ctx->SetRef("###TextureScaling");
+        ctx->ComboClickAll("##Show");
         ctx->ItemClick("#CLOSE");
         };
     // VIEW
