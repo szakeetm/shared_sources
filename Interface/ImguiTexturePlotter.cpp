@@ -43,10 +43,6 @@ void ImTexturePlotter::Draw()
 		scrollToSelected = true;
 	} ImGui::SameLine();
 
-	if (ImGui::Button("Force Refresh")) {
-		isUpToDate = false;
-	} ImGui::SameLine();
-
 	dummyWidth = static_cast<float>(ImGui::GetContentRegionAvail().x - txtW * (31.5+3));
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 	ImGui::SetNextItemWidth(30 * txtW);
@@ -534,7 +530,6 @@ void ImTexturePlotter::GetData()
 		}
 		break; }
 	}
-	isUpToDate = true;
 }
 
 bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)

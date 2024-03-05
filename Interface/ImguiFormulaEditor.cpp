@@ -231,7 +231,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::Begin("Formula editor", &drawn, ImGuiWindowFlags_NoSavedSettings);
 
 	float formulaListHeight = ImGui::GetWindowHeight() - txtH*8;
-	ImGui::BeginChild("Formula list",ImVec2(0, formulaListHeight),true,0);
+	ImGui::BeginChild("###Formula list",ImVec2(0, formulaListHeight),true,0);
 	ImGui::Text("Formula list");
 	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
 

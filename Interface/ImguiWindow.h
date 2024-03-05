@@ -55,12 +55,17 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "../../src/SynRad.h"
 #endif
 
+#ifdef DEBUG
+#include "../imguiTesting.h"
+#endif
+
 /*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
 class ImguiWindow {
 public:
+    bool forceDrawNextFrame = false;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
-    static void destruct();
+    void destruct();
     //void render();
     void renderSingle(); //!< Main function, calling a frame rendering cycle handling all other Imgui windows
 
@@ -70,6 +75,10 @@ public:
     void LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 
     GLApplication* app;
+
+#ifdef DEBUG
+    ImTest testEngine;
+#endif
 
     bool ToggleMainHub();
     bool ToggleMainMenu();

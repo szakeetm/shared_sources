@@ -145,6 +145,7 @@ set(INTERFACE_FILES
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
+        imguiTesting.cpp
 
 
         File.cpp

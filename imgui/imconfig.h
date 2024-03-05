@@ -129,3 +129,4 @@ namespace ImGui
     void MyFunction(const char* name, MyMatrix44* mtx);
 }
 */
+#include "../imgui_test_engine/imgui_te_imconfig.h"

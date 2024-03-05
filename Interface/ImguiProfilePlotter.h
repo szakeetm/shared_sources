@@ -56,6 +56,7 @@ private:
 	bool showValueOnHover = true;
 	bool setLog = false;
 	bool loading = false;
+	friend class ImTest;
 	size_t nFacets;
 
 	short aggregateState = 0;
