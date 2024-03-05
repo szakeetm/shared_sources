@@ -34,7 +34,7 @@ if(MSVC)
     # 1. link against external libs
     target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
-            libcurl_a_x64.lib
+            libcurl.lib
             SDL2.lib
             SDL2main.lib
             lzma.lib
