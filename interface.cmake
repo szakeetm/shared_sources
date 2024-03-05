@@ -131,7 +131,7 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog-extended-molflow-wrapped)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal) #header only
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
@@ -147,7 +147,6 @@ target_compile_options(pugixml PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(nativefiledialog PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})

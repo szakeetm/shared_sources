@@ -17,6 +17,7 @@ add_subdirectory(Clipper2Lib)
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
     add_subdirectory(NativeFileDialog)
+    target_compile_options(nativefiledialog-extended-molflow-wrapped PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 endif()
 
 #cmake_policy(SET CMP0076 OLD)
