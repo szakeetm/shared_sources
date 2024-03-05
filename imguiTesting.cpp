@@ -463,6 +463,44 @@ void ImTest::RegisterTests()
         ctx->ComboClickAll("##Show");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Particle Logger");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Particle logger...");
+        ctx->SetRef("Particle Logger");
+        // all other elements are inside child windows
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Global Settings");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Global Settings ...");
+        ctx->SetRef("Global settings");
+
+        ctx->ItemClick("split/Autosave frequency (minutes)");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Autosave only when simulation is running");
+        ctx->ItemClick("split/Autosave only when simulation is running");
+        ctx->ItemClick("split/Use .zip as default extension (otherwise .xml)");
+        ctx->ItemClick("split/Use .zip as default extension (otherwise .xml)");
+        ctx->ItemClick("split/Check for updates at startup");
+        ctx->ItemClick("split/Check for updates at startup");
+        ctx->ItemClick("split/Anti-Aliasing");
+        ctx->ItemClick("split/Anti-Aliasing");
+        ctx->ItemClick("split/White Background");
+        ctx->ItemClick("split/White Background");
+        ctx->ItemClick("split/Left-handed coord. system");
+        ctx->ItemClick("split/Left-handed coord. system");
+        ctx->ItemClick("split/Highlight non-planar facets");
+        ctx->ItemClick("split/Highlight non-planar facets");
+        ctx->ItemClick("split/Highlight selected facets");
+        ctx->ItemClick("split/Highlight selected facets");
+        ctx->ItemClick("split/Use old XML format");
+        ctx->ItemClick("split/Use old XML format");
+
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
