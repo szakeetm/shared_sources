@@ -91,8 +91,8 @@ ELSE() #not MSVC
     find_package(GSL REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
-    find_package(CURL CONFIG REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
+    #find_package(CURL CONFIG REQUIRED)
+    #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
 
     find_package(fmt CONFIG REQUIRED)
 
@@ -105,7 +105,7 @@ ELSE() #not MSVC
     target_link_libraries(${PROJECT_NAME} PUBLIC ${FMT_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
+    #target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
     #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
