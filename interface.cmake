@@ -36,8 +36,6 @@ if(MSVC)
     # 1. link against external libs
     target_link_libraries(${PROJECT_NAME} PUBLIC
             bzip2.lib
-            SDL2.lib
-            SDL2main.lib
             lzma.lib
             opengl32#.lib
             user32.lib
@@ -82,19 +80,8 @@ ELSE() #not MSVC
     endif()
 
     find_package(OpenGL REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${OPENGL_INCLUDE_DIRS})
-
     find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${SDL2_INCLUDE_DIRS})
-
     find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PNG_INCLUDE_DIRS})
-
-    find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
-
-    #find_package(CURL CONFIG REQUIRED)
-    #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
 
     find_package(fmt CONFIG REQUIRED)
 
@@ -105,11 +92,8 @@ ELSE() #not MSVC
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
-    #target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
-    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
 
     #for shared memory
     find_library(LIBRT rt)

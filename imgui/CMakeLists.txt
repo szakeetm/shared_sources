@@ -52,8 +52,6 @@ if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
     target_link_libraries(imgui PUBLIC
-            SDL2.lib
-            SDL2main.lib
             opengl32#.lib
             )
     set(SDL_DIR ../../include/windows_only/SDL2)
@@ -81,14 +79,17 @@ if(NOT MSVC)
     find_package(OpenGL REQUIRED)
     target_include_directories(imgui PUBLIC ${OPENGL_INCLUDE_DIRS})
 
-    find_package(SDL2 REQUIRED)
-    target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
-    target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIR})
+
 
     target_link_libraries(imgui PUBLIC ${OPENGL_LIBRARIES})
-    target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
-    target_link_libraries(imgui PUBLIC ${SDL2_LIBRARY})
+
 endif(NOT MSVC)
+
+find_package(SDL2 REQUIRED)
+target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
+target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIR})
+target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
+target_link_libraries(imgui PUBLIC ${SDL2_LIBRARY})
 
 message(¨Inc ${SDL2_INCLUDE_DIR}¨)
 message(¨Incs ${SDL2_INCLUDE_DIRS}¨)

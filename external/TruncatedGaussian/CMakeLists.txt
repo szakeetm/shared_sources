@@ -39,5 +39,4 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 
     find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${GSL_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${GSL_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} GSL::gsl GSL::gslcblas)
