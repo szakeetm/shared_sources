@@ -146,8 +146,8 @@ void ImguiWindow::init() {
     ImFontConfig sym_config;
     sym_config.MergeMode = true;
     sym_config.PixelSnapH = true;
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &sym_config, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &sym_config, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
@@ -156,8 +156,8 @@ void ImguiWindow::init() {
     icons_config.PixelSnapH = true;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &sym_config, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &sym_config, sym_ranges); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     /*io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f);
