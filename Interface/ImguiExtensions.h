@@ -43,7 +43,7 @@ namespace ImGui {
 
     void PlaceAtRegionRight(const char *str, bool sameLine);
 
-    bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f");
+    bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f", const char* ID="");
     bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
     bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width = 0);
     bool TriState(const char* desc, short* v, bool allowManualMixed = true);

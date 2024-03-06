@@ -91,7 +91,7 @@ namespace ImGui {
                         (font_size + ImGui::GetStyle().FramePadding.x * 2));
     }
 
-    bool InputDoubleRightSide(const char *desc, double *val, const char *format) {
+    bool InputDoubleRightSide(const char *desc, double *val, const char *format, const char* ID) {
         double tmp = *val;
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
@@ -99,7 +99,7 @@ namespace ImGui {
             // Move to right side
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
-            ImGui::PushID(desc);
+            ImGui::PushID(ID=="" ? desc : ID);
             ImGui::InputDouble("", val, 0.00f, 0.0f, format);
             ImGui::PopID();
             ImGui::PopItemWidth();

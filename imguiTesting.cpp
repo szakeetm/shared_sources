@@ -498,6 +498,43 @@ void ImTest::RegisterTests()
         ctx->ItemClick("split/Use old XML format");
         ctx->ItemClick("split/Use old XML format");
 
+        ctx->ItemClick("##nbProc/-");
+        ctx->ItemClick("##nbProc");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply and restart processes");
+
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("30");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("You have changed the gas mass.");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("28");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("You have changed the gas mass.");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("split/##EnableDecay");
+        ctx->ItemClick("split/Gas half life (s)");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/##EnableDecay");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Enable low flux mode");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Cutoff ratio");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Enable low flux mode");
+        ctx->ItemClick("split/Apply above settings");
+
+        ctx->ItemClick("split/Recalc. outgassing");
+
         ctx->SetRef("Global settings");
         ctx->ItemClick("#CLOSE");
         };
