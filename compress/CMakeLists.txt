@@ -10,7 +10,6 @@ set(PROJECT_NAME compress)
 set(CPP_DIR_1 ../../src_shared/compress)
 set(CPP_DIR_2 ../../src_shared)
 set(HEADER_DIR_1 ../../src_shared)
-set(HEADER_DIR_2 ../../src_shared/external)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -33,7 +32,7 @@ add_definitions(
 #   --   Add files to project.   --   #
 #######################################
 
-set(SRC_FILES ${CPP_DIR_1}/compress.cpp
+set(SRC_FILES compress.cpp
         ${CPP_DIR_2}/File.cpp
         )
 
@@ -47,12 +46,10 @@ add_executable(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
         )
 
 target_link_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
         )
 
 find_package(fmt CONFIG REQUIRED)
@@ -60,9 +57,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-if(MSVC)
-
-endif(MSVC)
 if(NOT MSVC)
     if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         target_link_libraries(${PROJECT_NAME} PRIVATE stdc++)
