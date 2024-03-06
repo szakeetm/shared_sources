@@ -6,11 +6,11 @@ if (APPLE)
     SET(OpenMP_SEARCH_PATHS
             ~/Library/Frameworks
             /Library/Frameworks
-            /usr/local
             /usr
             /sw # Fink
             /opt/local # DarwinPorts
             /opt/csw # Blastwave
+            /usr/local/opt/libomp #Intel homebrew
             /opt/homebrew/opt/libomp # ARM MacOS homebrew
             /opt
             ${OpenMP_PATH}

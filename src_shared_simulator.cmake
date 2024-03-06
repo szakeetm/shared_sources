@@ -28,7 +28,7 @@ include(SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
-    target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -static OpenMP::OpenMP_CXX)
 endif()
 
 if(NOT MSVC)
