@@ -3,14 +3,15 @@
 ############################################################
 
 #This is a separate project, excluded if NO_INTERFACE cmake option is set
+#Called from src_shared/CMakeLists.txt
 
-set(PROJECT_NAME shared_interface)
+set(PROJECT_NAME src_shared_interface)
 project(${PROJECT_NAME} CXX)
 
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC
         ${INTERFACE_FILES}
-        ${GL_FILES}
+        ${GLAPP_FILES}
          )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
@@ -18,18 +19,11 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
-        )
-
-target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
-        ${HEADER_DIR_6}
         ${HEADER_DIR_7}
         ${IMGUI_DIR}
         ${HEADER_DIR_EXTERNAL}
         )
-
-
-
 
 if(MSVC)
     find_package(OpenGL REQUIRED)

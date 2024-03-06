@@ -19,21 +19,13 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ../include)
 set(HEADER_DIR_5 ./Interface)
-
-set(HEADER_DIR_EXTERNAL ../src_shared/external)
-
+set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_interface.cmake and src_shared_simulator.cmake
 set(IMGUI_DIR ./imgui)
 
 #set(COPY_DIR ../copy_to_build/)
 
-IF (WIN32)
-    # set stuff for windows
-
-    set(HEADER_DIR_6 ../include/windows_only)
-    set(HEADER_DIR_7 ../include/windows_only/png)
-
-    set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
-ELSEIF(APPLE)
+#TODO: All this below should go
+IF(APPLE)
     # set stuff for mac os
     if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
         set(LINK_DIR_1 ../../lib_external/mac_arm)
@@ -66,7 +58,6 @@ add_definitions(
 IF (WIN32)
     add_definitions(
             -DWIN
-            #-D_WINDOWS
             -D_WITHGL
     )
 ENDIF()
@@ -130,7 +121,6 @@ set(INTERFACE_FILES
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
 
-
         File.cpp
         Formulas.cpp
         FormulaEvaluator.cpp
@@ -189,7 +179,7 @@ set(HELPER_FILES
         AppSettings.cpp
         )
 
-set(GL_FILES
+set(GLAPP_FILES
         GLApp/GLApp.cpp
         GLApp/GLButton.cpp
         GLApp/GLColorBox.cpp
@@ -229,13 +219,13 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
+include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_simulator.cmake) #CLI project
+
 if(NOT NO_INTERFACE)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_interface.cmake) #GUI project
     find_package(CURL CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
-
-include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
 
 include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
 find_package(OpenMP REQUIRED)

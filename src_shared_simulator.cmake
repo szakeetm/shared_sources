@@ -3,8 +3,9 @@
 ############################################################
 
 #CMake project file called from src_shared's CMakeLists.txt
+#CLI-GUI common parts of src_shared
 
-set(PROJECT_NAME shared_simulator)
+set(PROJECT_NAME src_shared_simulator)
 project(${PROJECT_NAME} CXX)
 
 # Add library to build.
@@ -18,14 +19,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_2}
         ${HEADER_DIR_3}
         ${HEADER_DIR_4}
-        ${HEADER_DIR_EXTERNAL}
-        )
-
-
-target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_5}
-        ${HEADER_DIR_6}
         ${HEADER_DIR_7}
+        ${HEADER_DIR_EXTERNAL}
         )
 
 include(SetOpenMP.cmake)
@@ -39,8 +35,6 @@ if(NOT MSVC)
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
-
-    
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
 
     #for shared memory
@@ -59,12 +53,15 @@ if(NOT MSVC)
 
 endif(NOT MSVC)
 
+# VCPKG or system package manager libraries
 find_package(fmt CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 find_package(cereal CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 find_package(pugixml CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::shared pugixml::pugixml)
+
+# Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2)
 
