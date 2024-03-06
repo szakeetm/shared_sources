@@ -7,9 +7,9 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME compress)
 
 # Folders files
-set(CPP_DIR_1 ../../src_shared/compress)
-set(CPP_DIR_2 ../../src_shared)
-set(HEADER_DIR_1 ../../src_shared)
+set(CPP_DIR_1 ${CMAKE_HOME_DIRECTORY}/src_shared/compress)
+set(CPP_DIR_2 ${CMAKE_HOME_DIRECTORY}/src_shared)
+set(HEADER_DIR_1 ${CMAKE_HOME_DIRECTORY}/src_shared)
 
 ############## CMake Project ################
 #        The main options of project        #

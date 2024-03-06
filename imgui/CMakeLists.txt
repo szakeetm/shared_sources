@@ -54,7 +54,7 @@ if(MSVC)
     target_link_libraries(imgui PUBLIC
             opengl32#.lib
             )
-    set(SDL_DIR ../../include/windows_only/SDL2)
+    set(SDL_DIR ${CMAKE_HOME_DIRECTORY}/include/windows_only/SDL2)
     target_include_directories(imgui PRIVATE ${SDL_DIR})
 endif(MSVC)
 if(NOT MSVC)

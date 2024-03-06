@@ -136,7 +136,7 @@ target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
+include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")

@@ -11,8 +11,8 @@ set(PROJECT_NAME sdl_savepng)
 set(CPP_DIR_1 .)
 set(HEADER_DIR_1 .)
 IF (WIN32)
-    set(HEADER_DIR_2 ../../../include/windows_only/png)
-    set(HEADER_DIR_3 ../../../include/windows_only)
+    set(HEADER_DIR_2 ${CMAKE_HOME_DIRECTORY}/include/windows_only/png)
+    set(HEADER_DIR_3 ${CMAKE_HOME_DIRECTORY}/include/windows_only)
 ENDIF()
 ############## CMake Project ################
 #        The main options of project        #

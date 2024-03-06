@@ -17,27 +17,22 @@ endif()
 set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
-set(HEADER_DIR_4 ../include)
+set(HEADER_DIR_4 ${CMAKE_HOME_DIRECTORY}/include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_interface.cmake and src_shared_simulator.cmake
 set(IMGUI_DIR ./imgui)
 
 #TODO: All this below should go
 IF(APPLE)
-    # set stuff for mac os
-    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
-        set(LINK_DIR_1 ../../lib_external/mac_arm)
-    else()
-        set(LINK_DIR_1 ../../lib_external/mac)
-    endif()
+
 ELSE()
     # set stuff for other systems
 
     # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
     IF(os_version_suffix MATCHES "\\.el[1-9]")
-        set(LINK_DIR_1 ../lib_external/linux_fedora)
+        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_fedora)
     ELSE()
-        set(LINK_DIR_1 ../lib_external/linux_debian)
+        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_debian)
     ENDIF()
 ENDIF()
 
@@ -225,5 +220,5 @@ if(NOT NO_INTERFACE)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
 
-include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
+include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)

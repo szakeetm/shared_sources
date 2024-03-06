@@ -24,7 +24,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_EXTERNAL}
         )
 
-include(SetOpenMP.cmake)
+include(SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)
 if(OpenMP_CXX_FOUND)
     message(STATUS "Detected OpenMP version: ${OpenMP_CXX_VERSION}")
