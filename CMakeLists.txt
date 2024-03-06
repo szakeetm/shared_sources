@@ -22,8 +22,6 @@ set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_interface.cmake and src_shared_simulator.cmake
 set(IMGUI_DIR ./imgui)
 
-#set(COPY_DIR ../copy_to_build/)
-
 #TODO: All this below should go
 IF(APPLE)
     # set stuff for mac os
