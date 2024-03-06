@@ -1,7 +1,7 @@
 if (APPLE)
     #with homebrew it should resolve to
     #Intel: /usr/local/opt/libomp/include, /usr/local/opt/libomp/lib/libomp.dylib
-    #ARM: /opt/homebrew/lib/
+    #ARM: /opt/homebrew/lib/opt/libomp/include, /opt/homebrew/lib/opt/libomp/lib/libomp.dylib
 
     SET(OpenMP_SEARCH_PATHS
             ~/Library/Frameworks
@@ -11,7 +11,7 @@ if (APPLE)
             /sw # Fink
             /opt/local # DarwinPorts
             /opt/csw # Blastwave
-            /opt/homebrew # ARM MacOS homebrew
+            /opt/homebrew/opt/libomp # ARM MacOS homebrew
             /opt
             ${OpenMP_PATH}
             )
