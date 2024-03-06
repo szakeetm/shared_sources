@@ -538,6 +538,55 @@ void ImTest::RegisterTests()
         ctx->SetRef("Global settings");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Moving parts...");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("**/No moving parts");
+        ctx->ItemClick("Apply");
+        if (mApp->changedSinceSave != true) {
+            ctx->ItemClick("//File not saved/  No  ");
+        }
+        ctx->ItemClick("**/Fixed (same velocity vector everywhere)");
+        ctx->ItemClick("/Define moving parts/**/###MovMartT1/##vx");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("/Define moving parts/**/###MovMartT1/##vx");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Apply");
+        ctx->ItemClick("//File not saved/  No  ");
+
+        ctx->ItemClick("**/Rotation around axis");
+        ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("**/###MovingPartsTable/Base to sel. vertex");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+
+        ctx->ItemClick("**/###MovingPartsTable/##ax");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("**/###MovingPartsTable/##ax");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+
+        ctx->SetRef("Define moving parts");
+
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
