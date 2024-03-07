@@ -174,8 +174,8 @@ namespace ImGui {
         window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), bg_col);
         window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart * value, bb.Max.y), fg_col);
 
-        const float t = g.Time;
-        const float r = size.y / 2;
+        const float t = static_cast<float>(g.Time);
+        const float r = static_cast<float>(size.y / 2);
         const float speed = 1.5f;
 
         const float a = speed * 0;
@@ -214,7 +214,7 @@ namespace ImGui {
         window->DrawList->PathClear();
 
         int num_segments = 30;
-        int start = abs(ImSin(g.Time * 1.8f) * (num_segments - 5));
+        int start = static_cast<int>(abs(ImSin(static_cast<float>(g.Time) * 1.8f) * (num_segments - 5)));
 
         const float a_min = IM_PI * 2.0f * ((float) start) / (float) num_segments;
         const float a_max = IM_PI * 2.0f * ((float) num_segments - 3) / (float) num_segments;
@@ -223,11 +223,11 @@ namespace ImGui {
 
         for (int i = 0; i < num_segments; i++) {
             const float a = a_min + ((float) i / (float) num_segments) * (a_max - a_min);
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + g.Time * 8) * radius,
-                                                centre.y + ImSin(a + g.Time * 8) * radius));
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + static_cast<float>(g.Time) * 8) * radius,
+                                                centre.y + ImSin(a + static_cast<float>(g.Time) * 8) * radius));
         }
 
-        window->DrawList->PathStroke(color, false, thickness);
+        window->DrawList->PathStroke(color, false, static_cast<float>(thickness));
         return true;
     }
 
@@ -247,7 +247,7 @@ namespace ImGui {
         const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
         const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
         const float size = 36.0f;
-        const int thickness = 6.0f;
+        const int thickness = 6;
         const float radius = 0.5f * (size - thickness);
 
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
