@@ -212,10 +212,10 @@ set(GLAPP_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_simulator.cmake) #CLI project
+include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_simulator.cmake) #CLI project, build as library
 
 if(NOT NO_INTERFACE)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_interface.cmake) #GUI project
+    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_interface.cmake) #GUI project, build as library
     find_package(CURL CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
