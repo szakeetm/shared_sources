@@ -59,7 +59,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 find_package(cereal CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 find_package(pugixml CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::shared pugixml::pugixml)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml)
 
 # Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
