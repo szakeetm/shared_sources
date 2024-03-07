@@ -129,11 +129,11 @@ void ImTexturePlotter::DrawTextureTable()
 		if (isDragging) {
 			selectionEnd = ImGui::GetMousePos();
 			double startx, starty, endx, endy;
-			startx = selectionStart.x < selectionEnd.x ? selectionStart.x : selectionEnd.x;
-			starty = selectionStart.y < selectionEnd.y ? selectionStart.y : selectionEnd.y;
+			startx = std::min(selectionStart.x, selectionEnd.x);
+			starty = std::min(selectionStart.y, selectionEnd.y);
 
-			endx = selectionStart.x > selectionEnd.x ? selectionStart.x : selectionEnd.x;
-			endy = selectionStart.y > selectionEnd.y ? selectionStart.y : selectionEnd.y;
+			endx = std::max(selectionStart.x, selectionEnd.x);
+			endy = std::max(selectionStart.y, selectionEnd.y);
 
 			selectionRect = ImRect(startx,starty,endx,endy); // in case the selection starts further down the table than it ends
 		}
@@ -235,10 +235,11 @@ void ImTexturePlotter::DrawTextureTable()
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_LEFT))		selection[0].second--;
 			if (ImGui::IsKeyPressed(SDL_SCANCODE_RIGHT))	selection[0].second++;
 
-			if (selection[0].second < 0) selection[0].second = 0;
-			if (selection[0].second > width-1) selection[0].second = width-1;
-			if (selection[0].first < 0) selection[0].first = 0;
-			if (selection[0].first > height-1) selection[0].first = height-1;
+			selection[0].second = std::max(selection[0].second, 0);
+			selection[0].second = std::min(selection[0].second, width - 1);
+			selection[0].first = std::max(selection[0].first, 0);
+			selection[0].first = std::min(selection[0].first, height - 1);
+
 			selectionChanged = true;
 			scrollToSelected = true;
 		}
@@ -557,11 +558,11 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 {
 	int startRow, startCol, endRow, endCol;
 	
-	startRow = start.first < end.first ? start.first : end.first;
-	startCol = start.second < end.second ? start.second : end.second;
+	startRow = std::min(start.first, end.first);
+	startCol = std::min(start.second, end.second);
 
-	endRow = start.first > end.first ? start.first : end.first;
-	endCol = start.second > end.second ? start.second : end.second;
+	endRow = std::max(start.first, end.first);
+	endCol = std::max(start.second, end.second);
 
 	for (size_t row = startRow; row <= endRow; row++) {
 		for (size_t col = startCol; col <= endCol; col++) {
@@ -573,14 +574,14 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 
 ImVec4 ImTexturePlotter::SelectionBounds() {
 	int startRow = height, startCol = width, endRow = 0, endCol = 0;
-	for (size_t y = 0; y < height; y++) {
-		for (size_t x = 0; x < width; x++) {
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
 			bool isSel = IsCellSelected(y, x);
 			if (isSel) {
-				if (y < startRow) startRow = y;
-				if (x < startCol) startCol = x;
-				if (y > endRow) endRow = y;
-				if (x > endCol) endCol = x;
+				startRow = std::min(startRow, y);
+				startCol = std::min(startCol, x);
+				endRow = std::max(endRow, y);
+				endCol = std::max(endCol, x);
 			}
 		}
 	}
