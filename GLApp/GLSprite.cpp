@@ -4,7 +4,7 @@
 #include "GLApp.h"
 #define cimg_display 0
 #define cimg_use_png 1
-#include <CImg/CImg.h>
+#include <CImg.h>
 using namespace cimg_library;
 //#include <malloc.h>
 #include <stdio.h>
