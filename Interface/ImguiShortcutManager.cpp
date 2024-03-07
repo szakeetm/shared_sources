@@ -9,7 +9,7 @@ void ShortcutManager::RegisterShortcut(const std::vector<int>& keys_, const std:
 
 void ShortcutManager::UnregisterShortcut(const short id_)
 {
-	for (short i = shortcuts.size()-1; i >= 0; --i) {
+	for (size_t i = shortcuts.size()-1; i >= 0; --i) {
 		if (shortcuts[i].id == id_) {
 			shortcuts.erase(shortcuts.begin()+i);
 		}

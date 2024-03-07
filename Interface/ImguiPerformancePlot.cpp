@@ -52,7 +52,7 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
         if (!true || refresh_time == 0.0) // force
             refresh_time = ImGui::GetTime();
         auto now_time = ImGui::GetTime();
-        if (mApp->worker.IsRunning() && difftime(now_time, refresh_time) > 1.0 &&
+        if (mApp->worker.IsRunning() && difftime(static_cast<time_t>(now_time), static_cast<time_t>(refresh_time)) > 1.0 &&
             mApp->hps.eventsAtTime.size() >= 2)
         {
             //static float phase = 0.0f;
