@@ -363,7 +363,6 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Auto-update formulas");
         ctx->SetRef("Formula editor");
         ctx->ItemClick("#CLOSE");
-        // TODO Expand this test beyond just opening and closing the window
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -471,23 +470,19 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Histogram Plotter");
         ctx->ItemClick("<< Hist settings");
-        // Cannot automate clicking items inside child windows for unknown reason, TODO: find a solution
-        ImGuiTestItemList items;
-        ctx->GatherItems(&items, "//Histogram Settings/Global histogram", 2);
-        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test settings window");
-        else {
-            ctx->SetRef("Histogram Settings/Global histogram");
-            ctx->ItemClick("Record bounces until absorbtion");
-            ctx->ItemClick("Apply");
-            ctx->SetRef("Histogram Plotter");
-            ctx->ComboClick("Global");
-            ctx->ItemClick("Add");
-            ctx->ItemClick("Remove");
-            ctx->ItemClick("Add");
-            ctx->SetRef("Histogram Settings/Global histogram");
-            ctx->ItemClick("Record bounces until absorbtion");
-            ctx->ItemClick("Apply");
-        }
+        /* // cannot target items because of name conflicts (limitation of ImGui Test Engine)
+        ctx->SetRef("Histogram Settings");
+        ctx->ItemClick("Global Settings/Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Histogram Plotter");
+        ctx->ComboClick("Global");
+        ctx->ItemClick("Add");
+        ctx->ItemClick("Remove");
+        ctx->ItemClick("Add");
+        ctx->SetRef("Histogram Settings");
+        ctx->ItemClick("Facet Settings/Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        */
         ctx->SetRef("Histogram Plotter");
         ctx->ItemClick("<< Hist settings");
         ctx->ItemClick("#CLOSE");
