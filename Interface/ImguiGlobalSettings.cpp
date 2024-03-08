@@ -357,7 +357,7 @@ void ImGlobalSettings::Draw() {
     }
     {
         size_t maxDes = mApp->worker.model->otfParams.desorptionLimit;
-        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.3g}", maxDes)));
+        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.2e}", static_cast<float>(maxDes))));
         ImGui::PlaceAtRegionRight(label.c_str(), true);
         if (ImGui::Button(label.c_str())) {
             auto Func = [this](std::string arg) {
@@ -368,7 +368,7 @@ void ImGlobalSettings::Draw() {
                 }
                 mApp->worker.model->otfParams.desorptionLimit = inputD;
                 };
-            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.3g}", maxDes));
+            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.2e}", static_cast<float>(maxDes)));
         }
     }
     ImGui::End();
