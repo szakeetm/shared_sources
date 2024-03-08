@@ -32,7 +32,7 @@ protected:
 	bool IsPlotted(size_t idx);
 	bool lockYtoZero = false;
 	int maxDatapoints = 1000;
-	int actualNbValues = 0;
+	size_t actualNbValues = 0;
 	bool showValueOnHover = true;
 	friend class ImTest;
 };

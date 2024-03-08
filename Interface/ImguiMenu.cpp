@@ -243,7 +243,7 @@ static void ShowMenuFile() {
         ImGui::EndDisabled();
     }
     else if(ImGui::BeginMenu(ICON_FA_ARROW_CIRCLE_LEFT "  Load recent")){
-        for (int i = mApp->recentsList.size() - 1; i >= 0; i--) {
+        for (int i = static_cast<int>(mApp->recentsList.size()) - 1; i >= 0; i--) {
             if (ImGui::MenuItem(AbbreviateString(mApp->recentsList[i], 128))) {
                 std::string selection = mApp->recentsList[i];
                 auto common = [selection]() { DoLoadSelected(selection); };
@@ -1183,7 +1183,6 @@ void VertexAddNewMenuPress() {
 }
 
 void VertexCoplanarMenuPress() {
-    char* input;
     if (interfGeom->IsLoaded()) {
         if (interfGeom->GetNbSelectedVertex() != 3) {
             mApp->imWnd->popup.Open("Error", "Can't define plane, Select exactly 3 vertices", { 
@@ -1268,7 +1267,7 @@ static void ShowMenuVertex() {
 }
 
 void ShowPreviousStructureMenuPress() {
-    if (interfGeom->viewStruct == -1) interfGeom->viewStruct = interfGeom->GetNbStructure() - 1;
+    if (interfGeom->viewStruct == -1) interfGeom->viewStruct = static_cast<int>(interfGeom->GetNbStructure() - 1);
     else
         interfGeom->viewStruct = (int)Previous(interfGeom->viewStruct, interfGeom->GetNbStructure());
     interfGeom->UnselectAll();

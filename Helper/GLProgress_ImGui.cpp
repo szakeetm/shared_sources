@@ -20,7 +20,7 @@ void ImProgress::Draw() {
 	ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 	if(ImGui::Begin(this->title.c_str(), NULL, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove)) {
 		ImGui::TextWrapped(this->status.c_str());
-		ImGui::ProgressBar((static_cast<float>(progress) / 100.0));
+		ImGui::ProgressBar((static_cast<float>(progress) / 100.0f));
 		ImGui::End();
 	}
 }

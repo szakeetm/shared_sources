@@ -67,7 +67,7 @@ bool ImUtils::ParseExpression(const std::string& expression, GLFormula& formula)
 		ImIOWrappers::InfoPopup("Error", formula.GetParseErrorMsg());
 		return false;
 	}
-	int nbVar = formula.GetNbVariable();
+	size_t nbVar = formula.GetNbVariable();
 	if (nbVar == 0) {
 		return true;
 	}
@@ -157,8 +157,8 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 					double newDist = std::sqrt(std::pow(pltPoint.x - mousePos.x, 2) + std::pow(pltPoint.y - mousePos.y, 2));
 					if (newDist < minDiff) {
 						minDiff = newDist;
-						plotIdx = p;
-						idxX = i;
+						plotIdx = static_cast<int>(p);
+						idxX = static_cast<int>(i);
 					}
 				}
 			}
@@ -170,7 +170,7 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 					if (newDist < minDiff) {
 						minDiff = newDist;
 						plotIdx = -1;
-						idxX = i;
+						idxX = static_cast<int>(i);
 					}
 				}
 			}
@@ -178,14 +178,14 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 			if ((plotIdx == -1 && idxX != -1) || (plotIdx >= 0 && plotIdx < data.size() && idxX >= 0 && idxX < data[plotIdx].x->size())) {
 				double X = plotIdx == -1 ? manualxValues->at(idxX) : data[plotIdx].x->at(idxX);
 				double Y = plotIdx == -1 ? manualyValues->at(idxX) : data[plotIdx].y->at(idxX);
-				ImPlot::PushStyleColor(0, ImVec4(1, 0.5, 0.5, 0.8));
+				ImPlot::PushStyleColor(0, ImVec4(1.f, 0.5f, 0.5f, 0.8f));
 				ImPlot::PlotScatter("", &X, &Y, 1);
 				ImPlot::PopStyleColor();
 
 				std::string xVal, yVal;
 				xVal = fmt::format("{:.4}", X);
 				yVal = fmt::format("{:.4}", Y);
-				ImVec4 col(0.5, 0.5, 0.5, 0.8);
+				ImVec4 col(0.5f, 0.5f, 0.5f, 0.8f);
 
 				ImVec2 tooltipPos = ImPlot::PlotToPixels(ImPlotPoint(X, Y));
 				float txtW = ImGui::CalcTextSize("X").x;

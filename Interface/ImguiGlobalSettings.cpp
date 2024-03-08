@@ -71,7 +71,7 @@ void ImGlobalSettings::ProcessControlTable() {
             memDenominator_sys = (1024.0);
 #endif
             PROCESS_INFO parentInfo{};
-            GetProcInfo(currPid, &parentInfo);
+            GetProcInfo(static_cast<DWORD>(currPid), &parentInfo);
             lastUpdate = SDL_GetTicks();
         }
         ImGui::TableNextRow();
@@ -96,7 +96,7 @@ void ImGlobalSettings::ProcessControlTable() {
 
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(procInfo.threadInfos.size());
+        clipper.Begin(static_cast<int>(procInfo.threadInfos.size()));
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 size_t i = row + 2;
@@ -120,13 +120,11 @@ void ImGlobalSettings::ProcessControlTable() {
 
 void ImGlobalSettings::Draw() {
     if (!drawn) return;
-    int txtW = ImGui::CalcTextSize(" ").x;
-    int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
             ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
-    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(20.f, 20.f), ImGuiCond_FirstUseEver);
     ImGui::Begin(
         "Global settings", &drawn,
         ImGuiWindowFlags_NoSavedSettings);  // Pass a pointer to our bool
@@ -135,7 +133,7 @@ void ImGlobalSettings::Draw() {
     // clear the bool when clicked)
     ImGui::PopStyleVar(1);
 
-    float gasMass = 2.4;
+    float gasMass = 2.4f;
     bool appSettingsChanged = false; //To sync old global settings window
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
         ImGui::TableSetupColumn("App settings (applied immediately)");
@@ -340,7 +338,7 @@ void ImGlobalSettings::Draw() {
     ImGui::Text("Number of subprocesses:  ");
     ImGui::SameLine();
     if(updateNbProc)
-        nbProc = (mApp->worker.GetProcNumber());
+        nbProc = (static_cast<int>(mApp->worker.GetProcNumber()));
         updateNbProc = false;
     ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
     ImGui::InputInt("##nbProc", &nbProc, 1, 8);
@@ -358,12 +356,12 @@ void ImGlobalSettings::Draw() {
         updateNbProc = true;
     }
     {
-        double maxDes = mApp->worker.model->otfParams.desorptionLimit;
+        size_t maxDes = mApp->worker.model->otfParams.desorptionLimit;
         std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.3g}", maxDes)));
         ImGui::PlaceAtRegionRight(label.c_str(), true);
         if (ImGui::Button(label.c_str())) {
             auto Func = [this](std::string arg) {
-                double inputD = 0;
+                size_t inputD = 0;
                 if (!Util::getNumber(&inputD, arg)) {
                     ImIOWrappers::InfoPopup("Error", "Invalid input");
                     return;

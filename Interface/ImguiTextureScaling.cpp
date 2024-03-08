@@ -39,7 +39,7 @@ void ImTextureScaling::Draw()
 
 	ImGui::Begin("Texture Scaling###TextureScaling", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	
-	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 16 * txtW, 5.75 * txtH), true);
+	ImGui::BeginChild("Range", ImVec2(ImGui::GetContentRegionAvail().x - 16.f * txtW, 5.75f * txtH), true);
 	ImGui::TextDisabled("Texture Range");
 	if (ImGui::BeginTable("##layoutHelper", 4, ImGuiTableFlags_SizingStretchProp))
 	{
@@ -100,7 +100,7 @@ void ImTextureScaling::Draw()
 	ImGui::Text("Swap: "+swapText);
 	ImGui::EndChild();
 	ImGui::SameLine();
-	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 5.75 * txtH), true);
+	ImGui::BeginChild("Geometry", ImVec2(ImGui::GetContentRegionAvail().x, 5.75f * txtH), true);
 	ImGui::TextDisabled("Geometry"); ImGui::SameLine();
 	ImGui::HelpMarker("These are the values obtained from geometry\nthey are used by autoscale");
 	GetCurrentRange();
@@ -109,7 +109,7 @@ void ImTextureScaling::Draw()
 	if (ImGui::Button("Copy to manual")) SetCurrentButtonPress();
 	ImGui::EndChild();
 
-	ImGui::BeginChild("Gradient", ImVec2(0, ImGui::GetContentRegionAvail().y-1.5*txtH), true);
+	ImGui::BeginChild("Gradient", ImVec2(0.f, ImGui::GetContentRegionAvail().y-1.5f*txtH), true);
 	ImGui::TextDisabled("Gradient");
 	DrawGradient();
 	ImGui::EndChild();
@@ -241,9 +241,9 @@ void ImTextureScaling::DrawGradient()
 	ImVec2 availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(0, 0));
 	ImVec2 availableTLcorner = ImGui::GetWindowPos();
 
-	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8, 1.5*txtH);
+	ImVec2 gradientSize = ImVec2(availableSpace.x*0.8f, 1.5f*txtH);
 
-	ImVec2 midpoint = ImMath::AddVec2(availableTLcorner, ImVec2(availableSpace.x*0.5, availableSpace.y*0.4));
+	ImVec2 midpoint = ImMath::AddVec2(availableTLcorner, ImVec2(availableSpace.x*0.5f, availableSpace.y*0.4f));
 	ImVec2 TLcorner = ImMath::SubstractVec2(midpoint, ImMath::ScaleVec2(gradientSize, 0.5));
 	ImVec2 BRcorner = ImMath::AddVec2(midpoint, ImMath::ScaleVec2(gradientSize, 0.5));
 
@@ -290,8 +290,8 @@ void ImTextureScaling::DrawGradient()
 
 		std::string text = fmt::format("{:.2e}", val);
 		ImVec2 textSize = font->CalcTextSizeA(font->FontSize, FLT_MAX, 0, text.c_str());
-		drawList->AddText(ImVec2(tick -textSize.x/2,BRcorner.y), mApp->whiteBg || !photoMode ? colorMap[0] : ImGui::GetColorU32(IM_COL32(255, 255, 255, 255)), text.c_str());
-		drawList->AddRectFilled(ImVec2(tick, (midpoint.y + BRcorner.y) / 2), ImVec2(tick + 1, BRcorner.y), colorMap[0]);
+		drawList->AddText(ImVec2(static_cast<float>(tick) - textSize.x / 2.f, BRcorner.y), mApp->whiteBg || !photoMode ? colorMap[0] : ImGui::GetColorU32(IM_COL32(255, 255, 255, 255)), text.c_str());
+		drawList->AddRectFilled(ImVec2(static_cast<float>(tick), (midpoint.y + BRcorner.y) / 2.f), ImVec2(static_cast<float>(tick + 1), BRcorner.y), colorMap[0]);
 	}
 	if (!photoMode) {
 		// handle hovering
