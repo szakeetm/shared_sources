@@ -261,10 +261,36 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
-        // For some reason cannot click on the input inside a table cell
-        //ctx->ItemClick(ctx->GetID("/Formula editor/###Formula list/##FL/##NE"));
-        //ctx->KeyCharsReplace("10");
         ctx->SetRef("Formula editor");
+        // -----
+        ctx->ItemClick("**/##FL/##NE");
+        ctx->KeyCharsReplace("10");
+        ctx->ItemClick("**/##FL/##NN");
+        ctx->KeyCharsReplace("A");
+        ctx->ItemClick("**/##FL/ Add ");
+        ctx->ItemClick("**/##FL/##NE");
+        ctx->KeyCharsReplace("20");
+        ctx->ItemClick("**/##FL/##NN");
+        ctx->KeyCharsReplace("B");
+        ctx->ItemClick("**/##FL/ Add ");
+        ctx->ItemClick("Move Up");
+        ctx->ItemClick("Move Down");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        // -----
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table");
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table (for all time moments)");
+        // -----
         ctx->ItemClick("Recalculate now");
         ctx->ItemClick("Record values for convergence");
         ctx->ItemClick("Auto-update formulas");
