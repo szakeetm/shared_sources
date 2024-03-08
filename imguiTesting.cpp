@@ -257,7 +257,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Reflective");
         };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor");
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor + Convergence Plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
@@ -275,42 +275,8 @@ void ImTest::RegisterTests()
         ctx->ItemClick("**/##FL/ Add ");
         ctx->ItemClick("Move Up");
         ctx->ItemClick("Move Down");
-        ctx->ItemClick("**/##FL/1");
-        ctx->ItemClick("**/##FL/##changeExp");
-        ctx->KeyCharsReplace("");
-        ctx->ItemClick("**/##FL/##changeNam");
-        ctx->KeyCharsReplaceEnter("");
-        ctx->ItemClick("**/##FL/1");
-        ctx->ItemClick("**/##FL/##changeExp");
-        ctx->KeyCharsReplace("");
-        ctx->ItemClick("**/##FL/##changeNam");
-        ctx->KeyCharsReplaceEnter("");
-        // -----
-        ctx->MouseClick(1);
-        ctx->ItemClick("/**/Copy table");
-        ctx->MouseClick(1);
-        ctx->ItemClick("/**/Copy table (for all time moments)");
-        // -----
-        ctx->ItemClick("Recalculate now");
-        ctx->ItemClick("Record values for convergence");
-        ctx->ItemClick("Auto-update formulas");
-        ctx->ItemClick("Syntax help");
-        ctx->SetRef("Formula Editor Syntax Help");
-        ctx->ItemClick("Close");
-        ctx->SetRef("Formula editor");
-        ctx->ItemClick("Record values for convergence");
-        ctx->ItemClick("Auto-update formulas");
         ctx->ItemClick("Open convergence plotter >>");
-        ctx->SetRef("Convergence Plotter");
-        ctx->ItemClick("#CLOSE");
-        ctx->SetRef("Formula editor");
-        ctx->ItemClick("#CLOSE");
-        // TODO Expand this test beyond just opening and closing the window
-        };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Convergence plotter");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Tools/Convergence Plotter ...");
+        // ----- CONVERGENCE PLOTTER
         ctx->SetRef("Convergence Plotter");
         ctx->ItemClick("Add curve");
         ctx->ItemClick("Remove curve");
@@ -321,10 +287,6 @@ void ImTest::RegisterTests()
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
-        ctx->SetRef("Error");
-        ctx->ItemClick("  Ok  ");
-        ctx->SetRef("Convergence Plotter");
-        ctx->MenuClick("Export/All to file");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
@@ -361,7 +323,47 @@ void ImTest::RegisterTests()
         ctx->MenuClick("Custom Plot/##expressionInput");
         ctx->KeyCharsReplace("");
         ctx->MenuClick("Custom Plot/-> Plot expression");
+
+        ctx->ComboClick("##Formula Picker/[A]10");
+        ctx->ItemClick("Add curve");
+        ctx->ComboClick("##Formula Picker/[B]20");
+        ctx->ItemClick("Add curve");
+        ctx->MenuClick("Export/Plotted to clipboard");
+        ctx->MenuClick("Export/All to clipboard");
+        ctx->ItemClick("Remove curve");
+        ctx->ItemClick("Remove all");
+
         ctx->ItemClick("#CLOSE");
+        // -----
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        // -----
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table");
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table (for all time moments)");
+        // -----
+        ctx->ItemClick("Recalculate now");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
+        ctx->ItemClick("Syntax help");
+        ctx->SetRef("Formula Editor Syntax Help");
+        ctx->ItemClick("Close");
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("#CLOSE");
+        // TODO Expand this test beyond just opening and closing the window
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
