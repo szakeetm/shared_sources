@@ -122,7 +122,7 @@ void ImGlobalSettings::Draw() {
     if (!drawn) return;
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
+            ImVec2(85 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
     ImGui::SetNextWindowPos(ImVec2(20.f, 20.f), ImGuiCond_FirstUseEver);
     ImGui::Begin(
