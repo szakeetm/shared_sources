@@ -31,6 +31,10 @@ class GLLabel;
 class GLCombo;
 class GLOverlayLabel;
 
+class GLMatrix;
+struct GLVIEWPORT;
+struct ScreenCoord;
+
 enum DragMode : int {
 	DragNone,
 	DragSelectFacet,
@@ -102,6 +106,8 @@ public:
   void SelectCoplanar(double tolerance); //launcher function to get viewport parameters
   void UpdateMatrix();
   Plane GetCameraPlane();
+  std::tuple<GLMatrix, GLMatrix, GLMatrix, GLVIEWPORT> GetViewMatrices();
+  std::vector<std::optional<ScreenCoord>> GeometryViewer::GetVertexScreenCoords();
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   void AutoScale(bool reUpdateMouseCursor = true);

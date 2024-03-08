@@ -159,7 +159,7 @@ public:
 	void ClipPolygon(size_t id1, std::vector<std::vector<size_t>> clippingPaths, Clipper2Lib::ClipType type);
 	size_t ExecuteClip(size_t& id1,std::vector<std::vector<size_t>>& clippingPaths, std::vector<ProjectedPoint>& projectedPoints, Clipper2Lib::PolyTreeD & solution, Clipper2Lib::ClipType& type);
 	void RegisterVertex(InterfaceFacet *f, const Clipper2Lib::PointD& p, size_t id1, const std::vector<ProjectedPoint> &projectedPoints, std::vector<InterfaceVertex> &newVertices, size_t registerLocation);
-	void SelectCoplanar(int width, int height, double tolerance);
+	void SelectCoplanar(int width, int height, double tolerance, const std::vector < std::optional<ScreenCoord>>& screenCoords);
 	InterfaceFacet    *GetFacet(size_t facet);
 	InterfaceVertex *GetVertex(size_t idx);
 	AxisAlignedBoundingBox     GetBB();

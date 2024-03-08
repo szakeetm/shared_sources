@@ -1808,15 +1808,9 @@ void GeometryViewer::ManageEvent(SDL_Event* evt)
 void GeometryViewer::SelectCoplanar(double tolerance) {
 	if (!work) return;
 	InterfaceGeometry* interfGeom = work->GetGeometry();
-	/*
-	GetWindow()->Clip(this, 0, 0, 0, DOWN_MARGIN);
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(matProj);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(matView);
-	*/
+	std::vector<std::optional<ScreenCoord>> screenCoords = GetVertexScreenCoords();
 	selectionChange = true;
-	interfGeom->SelectCoplanar(this->width, this->height, tolerance);
+	interfGeom->SelectCoplanar(this->width, this->height, tolerance, screenCoords);
 }
 
 void GeometryViewer::ProcessMessage(GLComponent* src, int message) {
@@ -2052,4 +2046,37 @@ void GeometryViewer::RequestScreenshot(std::string fileName, int x, int y, int w
 	screenshotStatus.h = h;
 	screenshotStatus.fileName = fileName;
 	if (screenshotStatus.requested < 2) screenshotStatus.requested++;
+}
+
+std::tuple<GLMatrix, GLMatrix, GLMatrix, GLVIEWPORT> GeometryViewer::GetViewMatrices() {
+
+	GLVIEWPORT viewPort;
+	
+	viewPort.x = 0;
+	viewPort.y = 0;
+	viewPort.width = this->width;
+	viewPort.height = this->height;
+
+	GLMatrix proj; proj.LoadGL(this->matProj);
+	GLMatrix view; view.LoadGL(this->matView);
+	GLMatrix mvp; mvp.Multiply(&proj, &view);
+	return { proj,view,mvp,viewPort };
+}
+
+std::vector<std::optional<ScreenCoord>> GeometryViewer::GetVertexScreenCoords() {
+	InterfaceGeometry* interfGeom = work->GetGeometry();
+	size_t nbVertex = interfGeom->GetNbVertex();
+	std::vector<std::optional<ScreenCoord>> screenCoords(nbVertex);
+
+	GLMatrix view, proj, mvp;
+	GLVIEWPORT viewPort;
+	std::tie(view, proj, mvp, viewPort) = GetViewMatrices();
+
+
+#pragma omp parallel for
+	for (int i = 0; i < nbVertex; i++) {
+		screenCoords[i] = GLToolkit::Get2DScreenCoord_fast(*(interfGeom->GetVertex(i)), mvp, viewPort);
+	}
+
+	return screenCoords;
 }
