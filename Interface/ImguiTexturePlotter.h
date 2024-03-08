@@ -43,7 +43,7 @@ protected:
 	// app + data variables
 	InterfaceGeometry* interfGeom;
 	InterfaceFacet* selFacet;
-	size_t width = 0, height = 0; // table size
+	int width = 0, height = 0; // table size
 	std::vector<std::vector<std::string>> data; // 2d vector for values
 	size_t selFacetId;
 	double maxValue; // value of max value

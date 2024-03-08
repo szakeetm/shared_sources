@@ -303,7 +303,7 @@ void ImguiWindow::renderSingle() {
     if (mApp) {
         bool redrawAabb = false;
         bool rebuildAabb = false;
-        static int nbProc = mApp->worker.GetProcNumber();
+        static int nbProc = static_cast<int>(mApp->worker.GetProcNumber());
 
 
         // Start the Dear ImGui frame
@@ -387,7 +387,7 @@ void ImguiWindow::renderSingle() {
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             auto now_time = ImGui::GetTime();
             ImGui::Text("Application time %.3f s [%.3f s]",
-                        ImGui::GetTime(), difftime(now_time, start_time));
+                        ImGui::GetTime(), difftime(static_cast<time_t>(now_time), static_cast<time_t>(start_time)));
             ImGui::End();
         }
 

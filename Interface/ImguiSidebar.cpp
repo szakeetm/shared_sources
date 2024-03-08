@@ -139,7 +139,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     static bool use_work_area = true; // experiment with work area vs normal area
 
-    static int width = TEXT_BASE_WIDTH * 30;
+    static float width = TEXT_BASE_WIDTH * 30;
 
     ImGui::SetNextWindowPos(use_work_area ?
                             ImVec2(viewport->Size.x - width, viewport->WorkPos.y)
@@ -270,8 +270,8 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             auto sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
 
             bool updateFacetInterfaceValues = (lastNbFacets != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
-            lastNbFacets = nbSelectedFacets;
-            lastFacetId = selected_facet_id;
+            lastNbFacets = static_cast<int>(nbSelectedFacets);
+            lastFacetId = static_cast<int>(selected_facet_id);
             if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -616,7 +616,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 // Create item list that is sortable etc.
                 static ImVector<FacetData> items;
                 if (items.Size != interfGeom->GetNbFacet()) {
-                    items.resize(interfGeom->GetNbFacet(), FacetData());
+                    items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
                     for (int n = 0; n < items.Size; n++) {
                         InterfaceFacet *f = interfGeom->GetFacet(n);
                         FacetData &item = items[n];
