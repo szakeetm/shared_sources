@@ -107,7 +107,7 @@ public:
   void UpdateMatrix();
   Plane GetCameraPlane();
   std::tuple<GLMatrix, GLMatrix, GLMatrix, GLVIEWPORT> GetViewMatrices();
-  std::vector<std::optional<ScreenCoord>> GeometryViewer::GetVertexScreenCoords();
+  std::vector<std::optional<ScreenCoord>> GetVertexScreenCoords();
   void RequestScreenshot(std::string fileName, int x,int y,int w,int h);
 
   void AutoScale(bool reUpdateMouseCursor = true);
