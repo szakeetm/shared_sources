@@ -1,10 +1,11 @@
 #include "imguiTesting.h"
 #if defined(MOLFLOW)
-#include "../../src/MolFlow.h"
+#include "../src/MolFlow.h"
 #else
-#include "../../src/SynRad.h"
+#include "../src/SynRad.h"
 #endif
 #include "ImguiWindow.h"
+#include "ImguiMenu.h"
 
 void ImTest::Init(Interface* mApp_)
 {
@@ -43,6 +44,35 @@ void ImTest::Draw()
 void ImTest::PostSwap()
 {
     ImGuiTestEngine_PostSwap(engine);
+}
+
+bool ImTest::ConfigureGeometry(Configuration index)
+{
+    switch (index) {
+    case empty:
+        if (static_cast<MolFlow*>(mApp)->worker.GetGeometry()->GetNbFacet() == 0) break; // don't do if geometry already is empty
+        ImMenu::NewGeometry();
+        break;
+    case qPipe:
+    {
+        LockWrapper myLock(mApp->imguiRenderLock);
+        static_cast<MolFlow*>(mApp)->BuildPipe(5, 5);
+    }
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+
+void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
+{
+    interfGeom->SetSelection({ idx }, shift, ctrl);
+}
+
+void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
+{
+    interfGeom->SetSelection(idxs, shift, ctrl);
 }
 
 void ImTest::RegisterTests()
@@ -491,16 +521,15 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Texture scaling...");
-        ctx->SetRef("###TextureScaling/##layoutHelper");
-        // child elements not working
-        ImGuiTestItemList items;
-        ctx->GatherItems(&items, "//###TextureScaling/##layoutHelper", 2);
-        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test subelements");
-        else {
-            ctx->ItemClick("Autoscale");
-
-        }
         ctx->SetRef("###TextureScaling");
+
+        ctx->ItemClick("**/Autoscale");
+        ctx->ItemClick("**/Autoscale");
+        ctx->ItemClick("**/Use colors");
+        ctx->ItemClick("**/Use colors");
+        ctx->ItemClick("**/Logarithmic scale");
+        ctx->ItemClick("**/Logarithmic scale");
+
         ctx->ComboClickAll("##Show");
         ctx->ItemClick("#CLOSE");
         };
