@@ -20,7 +20,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #ifndef _RANDOMH_
 #define _RANDOMH_
 
-#include "TruncatedGaussian/rtnorm.hpp"
+//#include "TruncatedGaussian/rtnorm.hpp"
 
 /* Maximum generated random value */
 #define RK_STATE_LEN 624
@@ -67,6 +67,7 @@ private:
     double rk_double();
 };
 
+/*
 class TruncatedGaussian {
 public:
     TruncatedGaussian(){
@@ -85,5 +86,6 @@ private:
     gsl_rng *gen;
 
 };
+*/
 
 #endif /* _RANDOMH_ */
