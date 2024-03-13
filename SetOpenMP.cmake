@@ -6,7 +6,7 @@ if (APPLE)
     SET(OpenMP_SEARCH_PATHS
             ~/Library/Frameworks
             /Library/Frameworks
-            /usr/local
+            /usr/localopt/libomp
             /usr
             /sw # Fink
             /opt/local # DarwinPorts
