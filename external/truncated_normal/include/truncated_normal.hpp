@@ -1,3 +1,5 @@
+#include <string>
+
 int i4_uniform_ab(int a, int b, int& seed);
 
 double normal_01_cdf(double x);
