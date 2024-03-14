@@ -65,24 +65,3 @@ private:
 
     double rk_double();
 };
-
-/*
-class TruncatedGaussian {
-public:
-    TruncatedGaussian(){
-        //--- GSL random init ---
-        gsl_rng_env_setup();                          // Read variable environnement
-        const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
-        this->gen=gsl_rng_alloc (type);;
-        gsl_rng_set(this->gen, GenerateSeed(0));
-    }
-    ~TruncatedGaussian(){
-        gsl_rng_free(this->gen);
-    };
-
-    double GetGaussian(const double mean, const double sigma, const double lowerBound, const double upperBound);
-private:
-    gsl_rng *gen;
-
-};
-*/
