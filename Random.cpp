@@ -77,7 +77,7 @@ unsigned long MersenneTwister::GetSeed() {
     return seed;
 }
 
-unsigned long GenerateSeed() {
+int GenerateSeed() {
     size_t ms = GetSysTimeMs();
     int processId;
 #if defined(WIN32) || defined(_WIN32) || defined(WIN64) || defined(_WIN64)
@@ -87,7 +87,7 @@ unsigned long GenerateSeed() {
 #endif //  WIN
 
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<size_t>()(ms*(std::hash<int>()(processId))));
+    return (int)(std::hash<size_t>()(ms*(std::hash<int>()(processId))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
@@ -142,9 +142,11 @@ MersenneTwister::MersenneTwister() {
 #endif
 }
 
+/*
 double TruncatedGaussian::GetGaussian(const double & mean, const double & sigma, const double & lowerBound, const double & upperBound) //inline
 {
     std::pair<double, double> s;  // Output argument of rtnorm
     s = rtnorm(this->gen, lowerBound, upperBound, mean, sigma);
     return s.first;
 }
+*/
