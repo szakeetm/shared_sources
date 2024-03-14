@@ -130,7 +130,7 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml clipper2 sdl_savepng nativefiledialog)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header only
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal) #header only
