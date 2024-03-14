@@ -14,6 +14,7 @@ add_subdirectory(PugiXML)
 add_subdirectory(ziplib)
 add_subdirectory(fmt)
 add_subdirectory(Clipper2Lib)
+add_subdirectory(truncated_normal)
 
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
