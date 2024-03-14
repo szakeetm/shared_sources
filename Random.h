@@ -19,6 +19,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
 #pragma once
 
+#include <cstddef>
+
 /* Maximum generated random value */
 #define RK_STATE_LEN 624
 #define RK_MAX 0xFFFFFFFFUL
