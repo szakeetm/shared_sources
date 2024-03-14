@@ -89,8 +89,8 @@ ELSE() #not MSVC
     find_package(PNG REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${PNG_INCLUDE_DIRS})
 
-    find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
+    #find_package(GSL REQUIRED)
+    #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
     find_package(CURL REQUIRED)
     target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${CURL_INCLUDE_DIRS})
@@ -146,7 +146,7 @@ endif()
 target_compile_options(pugixml PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+#target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(nativefiledialog PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 #target_compile_options(fmtlib_src PRIVATE ${SUPPRESS_WARNINGS_FLAG}) #header only
 target_compile_options(fmt PRIVATE ${SUPPRESS_WARNINGS_FLAG})

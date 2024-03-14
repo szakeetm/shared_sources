@@ -36,8 +36,8 @@ if(OpenMP_CXX_FOUND)
 endif()
 
 if(NOT MSVC)
-    find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
+    #find_package(GSL REQUIRED)
+    #target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${GSL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
