@@ -237,7 +237,7 @@ if(MSVC)
             shell32.lib
             ole32.lib
             )
-
+    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncated_normal)    
 endif(MSVC)
 if(NOT MSVC)
 
@@ -339,10 +339,12 @@ if(NOT MSVC)
     endif()
 
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
+    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncated_normal)
 endif(NOT MSVC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC truncated_normal_src) #headers
+
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
