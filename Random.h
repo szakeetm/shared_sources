@@ -17,10 +17,9 @@ GNU General Public License for more details.
 
 Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 */
-#ifndef _RANDOMH_
-#define _RANDOMH_
+#pragma once
 
-#include "TruncatedGaussian/rtnorm.hpp"
+#include <truncated_normal.hpp>
 
 /* Maximum generated random value */
 #define RK_STATE_LEN 624
@@ -66,24 +65,3 @@ private:
 
     double rk_double();
 };
-
-class TruncatedGaussian {
-public:
-    TruncatedGaussian(){
-        //--- GSL random init ---
-        gsl_rng_env_setup();                          // Read variable environnement
-        const gsl_rng_type* type = gsl_rng_default;   // Default algorithm 'twister'
-        this->gen=gsl_rng_alloc (type);;
-        gsl_rng_set(this->gen,GenerateSeed());
-    }
-    ~TruncatedGaussian(){
-        gsl_rng_free(this->gen);
-    };
-
-    double GetGaussian(const double &mean, const double &sigma, const double &lowerBound, const double &upperBound);
-private:
-    gsl_rng *gen;
-
-};
-
-#endif /* _RANDOMH_ */

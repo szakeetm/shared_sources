@@ -10,7 +10,6 @@ add_subdirectory(SDL_SavePNG)
 add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
-add_subdirectory(TruncatedGaussian)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
 # Project
@@ -231,8 +230,6 @@ if(MSVC)
             libcurl_a_x64.lib
             SDL2.lib
             SDL2main.lib
-            #libgsl.lib
-            #libgslcblas.lib
             lzma.lib
             #zlib.lib
             opengl32#.lib
@@ -241,7 +238,6 @@ if(MSVC)
             ole32.lib
             )
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
 endif(MSVC)
 if(NOT MSVC)
 
@@ -294,8 +290,6 @@ if(NOT MSVC)
     find_package(PNG REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
 
-    find_package(GSL REQUIRED)
-    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
 
     find_package(CURL REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
@@ -303,9 +297,6 @@ if(NOT MSVC)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    #GSLCBLAS or BLAS?
-    #find_package(GSLCBLAS REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${GSLCBLAS_INCLUDE_DIRS})
 
     #find_package(stdc++fs REQUIRED)
     #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
@@ -315,11 +306,9 @@ if(NOT MSVC)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
-    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
 
     #for shared memory
     find_library(LIBRT rt)
@@ -349,11 +338,11 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
     endif()
 
-    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
+target_link_libraries(${PROJECT_NAME} PUBLIC truncated_normal_src) #headers
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

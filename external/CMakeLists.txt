@@ -11,5 +11,6 @@ endif()
 
 add_subdirectory(ziplib)
 add_subdirectory(fmt)
+add_subdirectory(truncated_normal)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BAK}")

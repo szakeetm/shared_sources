@@ -141,10 +141,3 @@ MersenneTwister::MersenneTwister() {
     SetSeed(GenerateSeed());
 #endif
 }
-
-double TruncatedGaussian::GetGaussian(const double & mean, const double & sigma, const double & lowerBound, const double & upperBound) //inline
-{
-    std::pair<double, double> s;  // Output argument of rtnorm
-    s = rtnorm(this->gen, lowerBound, upperBound, mean, sigma);
-    return s.first;
-}
