@@ -10,7 +10,7 @@ if(NOT MSVC)
 endif()
 
 add_subdirectory(PugiXML)
-add_subdirectory(TruncatedGaussian)
+add_subdirectory(truncated_normal)
 add_subdirectory(ziplib)
 add_subdirectory(fmt)
 

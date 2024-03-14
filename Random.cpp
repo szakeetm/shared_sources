@@ -80,7 +80,7 @@ unsigned long MersenneTwister::GetSeed() {
     return seed;
 }
 
-unsigned long GenerateSeed(size_t offsetIndex) {
+int GenerateSeed(size_t offsetIndex) {
     double time = omp_get_wtime();
     size_t ms = *(reinterpret_cast<size_t *>(&time)); // just use the bits for hashing
     int processId;
@@ -91,7 +91,7 @@ unsigned long GenerateSeed(size_t offsetIndex) {
 #endif //  WIN
     //printf("Random from thread %d\n", index);
     //return (unsigned long)(std::hash<size_t>()(ms*(std::hash<std::thread::id>()(std::this_thread::get_id()))));
-    return (unsigned long)(std::hash<unsigned long>()(ms*(std::hash<unsigned long>()(processId+offsetIndex))));
+    return (int)(std::hash<size_t>()(ms*(std::hash<int>()(processId+offsetIndex))));
 }
 
 /* Slightly optimised reference implementation of the Mersenne Twister */
@@ -144,11 +144,4 @@ MersenneTwister::MersenneTwister() {
 #else
     SetSeed(GenerateSeed(0));
 #endif
-}
-
-double TruncatedGaussian::GetGaussian(const double & mean, const double & sigma, const double & lowerBound, const double & upperBound) //inline
-{
-    std::pair<double, double> s;  // Output argument of rtnorm
-    s = rtnorm(this->gen, lowerBound, upperBound, mean, sigma);
-    return s.first;
 }
