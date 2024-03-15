@@ -122,7 +122,7 @@ void ImGlobalSettings::Draw() {
     if (!drawn) return;
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
+            ImVec2(85 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
     ImGui::SetNextWindowPos(ImVec2(20.f, 20.f), ImGuiCond_FirstUseEver);
     ImGui::Begin(
@@ -357,7 +357,7 @@ void ImGlobalSettings::Draw() {
     }
     {
         size_t maxDes = mApp->worker.model->otfParams.desorptionLimit;
-        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.3g}", maxDes)));
+        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.2e}", static_cast<float>(maxDes))));
         ImGui::PlaceAtRegionRight(label.c_str(), true);
         if (ImGui::Button(label.c_str())) {
             auto Func = [this](std::string arg) {
@@ -368,7 +368,7 @@ void ImGlobalSettings::Draw() {
                 }
                 mApp->worker.model->otfParams.desorptionLimit = inputD;
                 };
-            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.3g}", maxDes));
+            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.2e}", static_cast<float>(maxDes)));
         }
     }
     ImGui::End();
