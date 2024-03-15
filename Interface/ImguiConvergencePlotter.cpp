@@ -31,7 +31,7 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	}
 	out[out.size() - 1] = '\n';
 	// rows
-	for (int i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
+	for (size_t i = (onlyVisible && data[0].x->size() > maxDatapoints) ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
 		if (drawManual) {
 			if (formula.GetNbVariable() != 0) {
@@ -42,7 +42,8 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 			out.append(fmt::format("{}\t", yvar));
 		}
 		for (const auto& formula : data) {
-			out.append(fmt::format("{}", formula.y->at(i)) + "\t");
+			if (formula.y->size() > i) out.append(fmt::format("{}", formula.y->at(i)) + "\t");
+			else (out.append("\t"));
 		}
 		out[out.size() - 1] = '\n';
 	}
@@ -89,8 +90,8 @@ void ImConvergencePlotter::MenuBar()
 			ImGui::Text("Linewidth:");
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(txtW * 12);
-			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
-				if (lineWidth < 0.5) lineWidth = 0.5;
+			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1f, 1.f, "%.2f")) {
+				if (lineWidth < 0.5f) lineWidth = 0.5f;
 			}
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Limit"); ImGui::SameLine();
@@ -158,6 +159,11 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 		data.erase(data.begin() + i);
 		break;
 	}
+}
+
+void ImConvergencePlotter::OnShow()
+{
+	Refresh();
 }
 
 void ImConvergencePlotter::Reload()
@@ -237,29 +243,29 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
 	ImPlot::SetNextAxesLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5f*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() <= data[i].id) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 			actualNbValues = values.size();
-			int count = values.size()>maxDatapoints ? maxDatapoints : values.size();
+			size_t count = values.size()>maxDatapoints ? maxDatapoints : values.size();
 			data[i].x->clear();
 			data[i].y->clear();
 			for (int j = 0; j < values.size(); j++) {
-				data[i].x->push_back(values[j].nbDes);
+				data[i].x->push_back(static_cast<double>(values[j].nbDes));
 				data[i].y->push_back(values[j].value);
 			}
 			if (data[i].x->size() == 0) continue;
 			std::string name = mApp->appFormulas->formulas[data[i].id].GetName();
 			if(name=="") name = mApp->appFormulas->formulas[data[i].id].GetExpression();
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-			ImPlot::PlotLine(name.c_str(), data[i].x->data(), data[i].y->data(),count);
+			ImPlot::PlotLine(name.c_str(), data[i].x->data(), data[i].y->data(), static_cast<int>(count));
 		}
 
 		//draw manual
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-		if (drawManual)	ImPlot::PlotLine(formula.GetName().c_str(), manualxValues.data(), manualyValues.data(), manualxValues.size());
+		if (drawManual)	ImPlot::PlotLine(formula.GetName().c_str(), manualxValues.data(), manualyValues.data(), static_cast<int>(manualxValues.size()));
 		// value tooltip
 		if(showValueOnHover) ImUtils::DrawValueOnHover(data, drawManual, &manualxValues, &manualyValues);
 		ImPlot::EndPlot();

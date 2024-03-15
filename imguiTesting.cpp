@@ -1,10 +1,13 @@
 #include "imguiTesting.h"
 #if defined(MOLFLOW)
-#include "../../src/MolFlow.h"
+#include "../src/MolFlow.h"
 #else
-#include "../../src/SynRad.h"
+#include "../src/SynRad.h"
 #endif
 #include "ImguiWindow.h"
+#include "ImguiMenu.h"
+#include "ImguiExtensions.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 
 void ImTest::Init(Interface* mApp_)
 {
@@ -37,12 +40,94 @@ void ImTest::Draw()
     mApp->imWnd->forceDrawNextFrame=true;
     ImGui::StyleColorsDark(); // on light background the log is not readable
     ImGuiTestEngine_ShowTestEngineWindows(engine, &drawn);
+    DrawPresetControl();
     ImGui::StyleColorsLight();
 }
 
 void ImTest::PostSwap()
 {
     ImGuiTestEngine_PostSwap(engine);
+}
+
+bool ImTest::ConfigureGeometry(Configuration index)
+{
+    switch (index) {
+    case empty:
+        if (static_cast<MolFlow*>(mApp)->worker.GetGeometry()->GetNbFacet() == 0) break; // don't do if geometry already is empty
+        ImMenu::NewGeometry();
+        currentConfig = index;
+        break;
+    case qPipe:
+    {
+        LockWrapper myLock(mApp->imguiRenderLock);
+        static_cast<MolFlow*>(mApp)->BuildPipe(5, 5);
+    }
+        currentConfig = index;
+    break;
+    case profile:
+        ConfigureGeometry(qPipe);
+        SetFacetProfile(2, 1);
+        SetFacetProfile(4, 3);
+        SetFacetProfile(6, 5);
+        currentConfig = index;
+        break;
+    default:
+        return false;
+    }
+    return true;
+}
+
+void ImTest::DrawPresetControl()
+{
+    ImGui::Begin("Test preset control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+    ImGui::AlignTextToFramePadding();
+    ImGui::HelpMarker("Select preset in the combo and press apply");
+    ImGui::SameLine();
+    static std::string previewVal = "Empty";
+    static Configuration selection = empty;
+    if (ImGui::BeginCombo("###PresetSelector", previewVal)) {
+        if (ImGui::Selectable("Empty", selection == empty)) {
+            previewVal = "Empty";
+            selection = empty;
+        }
+        if (ImGui::Selectable("Quick Pipe", selection == qPipe)) {
+            previewVal = "Quick Pipe";
+            selection = qPipe;
+        }
+        if (ImGui::Selectable("Profile", selection == profile)) {
+            previewVal = "Profile";
+            selection = profile;
+        }
+        ImGui::EndCombo();
+    } ImGui::SameLine();
+    if (ImGui::Button("Apply")) {
+        ConfigureGeometry(selection);
+    }
+    ImGui::End();
+}
+
+void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
+{
+    interfGeom->SetSelection({ idx }, shift, ctrl);
+}
+
+void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
+{
+    interfGeom->SetSelection(idxs, shift, ctrl);
+}
+
+bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
+{
+    InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
+    if (f == nullptr) return false;
+    f->sh.profileType = profile;
+    f->sh.isProfile = true;
+    {
+        LockWrapper lW(mApp->imguiRenderLock);
+        mApp->worker.MarkToReload();
+        mApp->UpdateFacetParams(false);
+        if (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) mApp->imWnd->profPlot.Refresh();
+    }
 }
 
 void ImTest::RegisterTests()
@@ -52,6 +137,7 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###File/###NewGeom");
+        currentConfig = empty;
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Smart Selection");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -97,6 +183,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Test/Quick Pipe");
         IM_CHECK_EQ(interfGeom->GetNbFacet(), 7);
+        currentConfig = qPipe;
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select All");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -116,33 +203,49 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Sticking");
-        // TODO check if selection correct (may need to conditionally add quickpipe if running tests out of order)
+        if (currentConfig == empty) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
+        else if (currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(2, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Transparent");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Transparent");
-        // Cannot test more as transparency cannot be changed using ImGui UI yet
+        // TODO - Test Configuration with transparent facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select 2 Sided");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select 2 sided");
-        // Cannot test more as 2-sidedness cannot be changed using ImGui UI yet
+        // TODO - Test Configuration with 2-sided facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Texture");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Texture");
-        // Cannot test more as textures cannot be applied using ImGui UI yet
+        // TODO - Test Configuration with textured facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Texture Type");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Texture type...");
         ctx->SetRef("Select facets by texture properties");
-        // TODO test tristate behaviour
-        // Cannot test more as textures cannot be applied using ImGui UI yet
+        // TODO test tristate behaviour & test configuration with different texture types
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Facet Result");
@@ -170,11 +273,19 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select link facets");
+        // TODO test configuration with link facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select teleport facets");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select teleport facets");
+        // TODO test configuration with teleport facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select non planar facets");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -185,6 +296,10 @@ void ImTest::RegisterTests()
         ctx->KeyCharsReplace("0.001");
         ctx->ItemClick("  OK  ");
         IM_CHECK_EQ(mApp->planarityThreshold, 0.001);
+        // TODO test configuration with non-planar facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
 
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select non planar facets");
@@ -193,6 +308,9 @@ void ImTest::RegisterTests()
         ctx->KeyCharsReplace("1e-3");
         ctx->ItemClick("  OK  ");
         IM_CHECK_EQ(mApp->planarityThreshold, 1e-3);
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
 
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select non planar facets");
@@ -216,11 +334,18 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select non simple facets");
+        // TODO test configuration with non-simple facets
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Invert");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        int nSelected = interfGeom->GetNbSelectedFacets();
+        int expected = interfGeom->GetNbFacet() - nSelected;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Invert selection");
+        IM_CHECK_EQ(expected, interfGeom->GetNbSelectedFacets());
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Selection Memory");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -246,52 +371,57 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Desorption");
+        if (currentConfig == empty) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
+        if (currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(1, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Outgassing Map");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Outgassing Map");
+        if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Reflective");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Reflective");
+        if (currentConfig == empty) {
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
+        if (currentConfig == qPipe || currentConfig == profile) {
+            IM_CHECK_EQ(5, interfGeom->GetNbSelectedFacets());
+        }
         };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor");
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor + Convergence Plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
-        // For some reason cannot click on the input inside a table cell
-        //ctx->ItemClick(ctx->GetID("/Formula editor/###Formula list/##FL/##NE"));
-        //ctx->KeyCharsReplace("10");
         ctx->SetRef("Formula editor");
-        ctx->ItemClick("Recalculate now");
-        ctx->ItemClick("Record values for convergence");
-        ctx->ItemClick("Auto-update formulas");
-        ctx->ItemClick("Syntax help");
-        ctx->SetRef("Formula Editor Syntax Help");
-        ctx->ItemClick("Close");
-        ctx->SetRef("Formula editor");
-        ctx->ItemClick("Record values for convergence");
-        ctx->ItemClick("Auto-update formulas");
+        // -----
+        ctx->ItemClick("**/##FL/##NE");
+        ctx->KeyCharsReplace("10");
+        ctx->ItemClick("**/##FL/##NN");
+        ctx->KeyCharsReplace("A");
+        ctx->ItemClick("**/##FL/ Add ");
+        ctx->ItemClick("**/##FL/##NE");
+        ctx->KeyCharsReplace("20");
+        ctx->ItemClick("**/##FL/##NN");
+        ctx->KeyCharsReplace("B");
+        ctx->ItemClick("**/##FL/ Add ");
+        ctx->ItemClick("Move Up");
+        ctx->ItemClick("Move Down");
         ctx->ItemClick("Open convergence plotter >>");
+        // ----- CONVERGENCE PLOTTER
+        // TODO test sidebar
         ctx->SetRef("Convergence Plotter");
-        ctx->ItemClick("#CLOSE");
-        ctx->SetRef("Formula editor");
-        ctx->ItemClick("#CLOSE");
-        // TODO Expand this test beyond just opening and closing the window
-        };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Convergence plotter");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Tools/Convergence Plotter ...");
-        ctx->SetRef("Convergence Plotter");
+        IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
-        ctx->SetRef("Error");
-        ctx->ItemClick("  Ok  ");
-        ctx->SetRef("Convergence Plotter");
-        ctx->MenuClick("Export/All to file");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
@@ -328,6 +458,36 @@ void ImTest::RegisterTests()
         ctx->MenuClick("Custom Plot/##expressionInput");
         ctx->KeyCharsReplace("");
         ctx->MenuClick("Custom Plot/-> Plot expression");
+
+        ctx->ItemClick("#CLOSE");
+        // -----
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        ctx->ItemClick("**/##FL/1");
+        ctx->ItemClick("**/##FL/##changeExp");
+        ctx->KeyCharsReplace("");
+        ctx->ItemClick("**/##FL/##changeNam");
+        ctx->KeyCharsReplaceEnter("");
+        // -----
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table");
+        ctx->MouseClick(1);
+        ctx->ItemClick("/**/Copy table (for all time moments)");
+        // -----
+        ctx->ItemClick("Recalculate now");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
+        ctx->ItemClick("Syntax help");
+        ctx->SetRef("Formula Editor Syntax Help");
+        ctx->ItemClick("Close");
+        ctx->SetRef("Formula editor");
+        ctx->ItemClick("Record values for convergence");
+        ctx->ItemClick("Auto-update formulas");
+        ctx->SetRef("Formula editor");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
@@ -366,7 +526,6 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Profile Plotter ...");
         ctx->SetRef("Profile Plotter");
-
         ctx->MenuClick("Export/To clipboard");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
@@ -375,6 +534,10 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Profile Plotter");
+
+        if (currentConfig == profile) {
+            // todo test sidebar
+        }
 
         ctx->MenuClick("View/Log Y");
         IM_CHECK_EQ(mApp->imWnd->profPlot.setLog, true);
@@ -425,23 +588,19 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Histogram Plotter");
         ctx->ItemClick("<< Hist settings");
-        // Cannot automate clicking items inside child windows for unknown reason, TODO: find a solution
-        ImGuiTestItemList items;
-        ctx->GatherItems(&items, "//Histogram Settings/Global histogram", 2);
-        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test settings window");
-        else {
-            ctx->SetRef("Histogram Settings/Global histogram");
-            ctx->ItemClick("Record bounces until absorbtion");
-            ctx->ItemClick("Apply");
-            ctx->SetRef("Histogram Plotter");
-            ctx->ComboClick("Global");
-            ctx->ItemClick("Add");
-            ctx->ItemClick("Remove");
-            ctx->ItemClick("Add");
-            ctx->SetRef("Histogram Settings/Global histogram");
-            ctx->ItemClick("Record bounces until absorbtion");
-            ctx->ItemClick("Apply");
-        }
+        /* // cannot target items because of name conflicts (limitation of ImGui Test Engine)
+        ctx->SetRef("Histogram Settings");
+        ctx->ItemClick("Global Settings/Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        ctx->SetRef("Histogram Plotter");
+        ctx->ComboClick("Global");
+        ctx->ItemClick("Add");
+        ctx->ItemClick("Remove");
+        ctx->ItemClick("Add");
+        ctx->SetRef("Histogram Settings");
+        ctx->ItemClick("Facet Settings/Record bounces until absorbtion");
+        ctx->ItemClick("Apply");
+        */
         ctx->SetRef("Histogram Plotter");
         ctx->ItemClick("<< Hist settings");
         ctx->ItemClick("#CLOSE");
@@ -450,16 +609,15 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Texture scaling...");
-        ctx->SetRef("###TextureScaling/##layoutHelper");
-        // child elements not working
-        ImGuiTestItemList items;
-        ctx->GatherItems(&items, "//###TextureScaling/##layoutHelper", 2);
-        if (items.GetSize() == 0) ctx->LogError("child item list empty, cannot test subelements");
-        else {
-            ctx->ItemClick("Autoscale");
-
-        }
         ctx->SetRef("###TextureScaling");
+
+        ctx->ItemClick("**/Autoscale");
+        ctx->ItemClick("**/Autoscale");
+        ctx->ItemClick("**/Use colors");
+        ctx->ItemClick("**/Use colors");
+        ctx->ItemClick("**/Logarithmic scale");
+        ctx->ItemClick("**/Logarithmic scale");
+
         ctx->ComboClickAll("##Show");
         ctx->ItemClick("#CLOSE");
         };
@@ -548,14 +706,14 @@ void ImTest::RegisterTests()
         if (mApp->changedSinceSave != true) {
             ctx->ItemClick("//File not saved/  No  ");
         }
-        ctx->ItemClick("**/Fixed (same velocity vector everywhere)");
-        ctx->ItemClick("/Define moving parts/**/###MovMartT1/##vx");
+        ctx->ItemClick("//Define moving parts/**/Fixed (same velocity vector everywhere)");
+        ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("Apply");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
-        ctx->ItemClick("/Define moving parts/**/###MovMartT1/##vx");
+        ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Apply");
         ctx->ItemClick("//File not saved/  No  ");
@@ -565,25 +723,24 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
-        ctx->ItemClick("**/###MovingPartsTable/Base to sel. vertex");
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/Base to sel. vertex");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
 
-        ctx->ItemClick("**/###MovingPartsTable/##ax");
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("Apply");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
-        ctx->ItemClick("**/###MovingPartsTable/##ax");
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Apply");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
 
-        ctx->SetRef("Define moving parts");
 
         ctx->ItemClick("#CLOSE");
         };

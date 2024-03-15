@@ -121,14 +121,14 @@ void ImProfilePlotter::Refresh()
 {
 	UpdateComboOpts();
 	interfGeom = mApp->worker.GetGeometry();
-	int nbFacet = interfGeom->GetNbFacet();
-	for (int i = data.size() - 1; i >= 0; i--) {
+	int nbFacet = static_cast<int>(interfGeom->GetNbFacet());
+	for (int i = static_cast<int>(data.size()) - 1; i >= 0; i--) {
 		if (data[i].id >= nbFacet) {
-			RemoveCurve(data[i].id);
+			RemoveCurve(static_cast<int>(data[i].id));
 			continue;
 		}
 		InterfaceFacet* f = interfGeom->GetFacet(data[i].id);
-		if (!f->sh.isProfile) RemoveCurve(data[i].id);
+		if (!f->sh.isProfile) RemoveCurve(static_cast<int>(data[i].id));
 	}
 	if (loading) loading = false;
 	UpdatePlotter();
@@ -150,11 +150,11 @@ void ImProfilePlotter::DrawProfileGraph()
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(),profile.x->size());
+			ImPlot::PlotLine(name.c_str(), profile.x->data(), profile.y->data(), static_cast<int>(profile.x->size()));
 			profile.color = ImPlot::GetLastItemColor();
 		}
 		if (showDatapoints && drawManual) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-		if (drawManual) ImPlot::PlotLine(formula.GetExpression().c_str(), manualPlot.x->data(), manualPlot.y->data(), manualPlot.x->size());
+		if (drawManual) ImPlot::PlotLine(formula.GetExpression().c_str(), manualPlot.x->data(), manualPlot.y->data(), static_cast<int>(manualPlot.x->size()));
 		if (showValueOnHover) ImUtils::DrawValueOnHover(data, drawManual, manualPlot.x.get(), manualPlot.y.get());
 		ImPlot::EndPlot();
 	}
@@ -197,7 +197,7 @@ void ImProfilePlotter::RemoveCurve(int id)
 	if (id == -1) {
 		std::vector<size_t> facetIds = ParseManualFacetList();
 		long long i = data.size()-1; // has to be signed
-		for (; i >= 0 && i<data.size(); i--) {
+		for (; i >= 0 && i< static_cast<long long>(data.size()); i--) {
 			for (const auto& facetId : facetIds) {
 				if (data[i].id == facetId) {
 					data.erase(data.begin() + i);
@@ -228,7 +228,7 @@ void ImProfilePlotter::ComputeProfiles()
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
 	for (auto& plot : data) {
 		if (plot.id > interfGeom->GetNbFacet()) {
-			RemoveCurve(plot.id);
+			RemoveCurve(static_cast<int>(plot.id));
 			return;
 		}
 		plot.y->clear();
@@ -327,7 +327,7 @@ void ImProfilePlotter::ComputeProfiles()
 		}
 		if (plot.x->size() != profileSize) {
 			plot.x->clear();
-			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(i);
+			for (size_t i = 0; i < profileSize; i++) plot.x->push_back(static_cast<double>(i));
 		}
 	}
 }
@@ -353,8 +353,8 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 	std::map<int, GLColor> colormap;
 	for (const auto& plot : data) {
 		std::pair<int, GLColor> pair;
-		pair.first = plot.id;
-		pair.second = GLColor(plot.color.x*255, plot.color.y*255, plot.color.z*255);
+		pair.first = static_cast<int>(plot.id);
+		pair.second = GLColor(static_cast<int>(plot.color.x)*255, static_cast<int>(plot.color.y)*255, static_cast<int>(plot.color.z)*255);
 		colormap.emplace(pair);
 	}
 	interfGeom->SetPlottedFacets(colormap);
@@ -376,8 +376,8 @@ void ImProfilePlotter::DrawMenuBar()
 			ImGui::Text("Change linewidth:");
 			ImGui::SameLine();
 			ImGui::SetNextItemWidth(txtW * 12);
-			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1, 1, "%.2f")) {
-				if (lineWidth < 0.5) lineWidth = 0.5;
+			if (ImGui::InputFloat("##lineWidth", &lineWidth, 0.1f, 1.f, "%.2f")) {
+				if (lineWidth < 0.5f) lineWidth = 0.5f;
 			}
 			if (ImGui::Checkbox("Identify profiles in geometry", &identProfilesInGeom)) {
 				FacetHiglighting(identProfilesInGeom);

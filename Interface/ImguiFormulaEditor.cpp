@@ -44,7 +44,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 	float columnW;
 	blue = mApp->worker.displayedMoment != 0; // control wether to color values blue or not
-	formulasSize = appFormulas->formulas.size(); // very frequently used value so it is stored
+	formulasSize = static_cast<int>(appFormulas->formulas.size()); // very frequently used value so it is stored
 	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
 		// Headers
 		ImGui::TableSetupColumn("##ID",ImGuiTableColumnFlags_WidthFixed,txtW*4);
@@ -94,7 +94,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			if (mApp->autoUpdateFormulas) {
 				valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
 			}
-			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), valuesBuffer[i].c_str());
+			ImGui::TextColored(ImVec4(0.f, 0.f, blue?1.f:0.f, 1.f), valuesBuffer[i].c_str());
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
@@ -132,7 +132,7 @@ void ImFormulaEditor::DrawFormulaList() {
 										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
 			// add new formula when button is pressed or row is selected and enter is pressed
 			appFormulas->AddFormula(newName, newExpression);
-			formulasSize = appFormulas->formulas.size();
+			formulasSize = static_cast<int>(appFormulas->formulas.size());
 			appFormulas->formulas[formulasSize-1].Parse();
 			if (mApp->autoUpdateFormulas) { // formula was added, if autoUpdate is true update all values
 				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
@@ -223,7 +223,7 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 
 void ImFormulaEditor::Draw() {
 	if (!drawn) return;
-	formulasSize = appFormulas->formulas.size();
+	formulasSize = static_cast<int>(appFormulas->formulas.size());
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	// ImGui has no min size constraint so we set both min and max, with max absurdly high
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 55, txtH*10), ImVec2(txtW*1000,txtH*1000));
@@ -259,7 +259,7 @@ void ImFormulaEditor::Draw() {
 		}
 	}
 	ImGui::SameLine();
-	float dummyWidthA = ImGui::GetContentRegionAvail().x - txtW*20.5;
+	float dummyWidthA = ImGui::GetContentRegionAvail().x - txtW*20.5f;
 	ImGui::Dummy(ImVec2(dummyWidthA,txtH));
 	ImGui::SameLine();
 	
@@ -316,7 +316,7 @@ void ImFormulaEditor::ImFormattingHelp::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*80, txtH*10), ImVec2(txtW*100,txtH*35));
 	ImGui::SetNextWindowSize(ImVec2(txtW*80, txtH*35),ImGuiCond_FirstUseEver);
 	ImGui::Begin("Formula Editor Syntax Help", &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH));
+	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5f*txtH));
 	ImGui::TextWrapped(formulaSyntax);
 	ImGui::EndChild();
 	ImGui::PlaceAtRegionCenter("Close");

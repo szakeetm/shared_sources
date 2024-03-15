@@ -53,7 +53,7 @@ void ImHistogramPlotter::Draw()
 	if (prevPlotTab != plotTab) {
 		// tab changed
 		comboSelection = -2;
-		if(comboOpts[plotTab].size()!=0) comboSelection = comboOpts[plotTab][0];
+		if (comboOpts[plotTab].size() != 0) comboSelection = static_cast<long>(comboOpts[plotTab][0]);
 		if (globalHist) comboSelection = -1;
 		prevPlotTab = plotTab;
 	}
@@ -105,7 +105,7 @@ void ImHistogramPlotter::Draw()
 		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
 
 		for (const auto facetId : comboOpts[plotTab]) {
-			if (ImGui::Selectable("Facet #" + std::to_string(facetId+1))) comboSelection = facetId;
+			if (ImGui::Selectable("Facet #" + std::to_string(facetId + 1))) comboSelection = static_cast<long>(facetId);
 		}
 
 		ImGui::EndCombo();
@@ -180,12 +180,12 @@ void ImHistogramPlotter::DrawPlot()
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));
-			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), plot.x->size());
+			ImPlot::PlotScatter(name.c_str(), plot.x->data(), plot.y->data(), static_cast<int>(plot.x->size()));
 			plot.color = ImPlot::GetLastItemColor();
 		}
 		bool isGlobal = (globals[plotTab].x.get() != nullptr && globals[plotTab].y.get() != nullptr);
 		if (isGlobal) {
-			ImPlot::PlotScatter("Global", globals[plotTab].x->data(), globals[plotTab].y->data(), globals[plotTab].x->size());
+			ImPlot::PlotScatter("Global", globals[plotTab].x->data(), globals[plotTab].y->data(), static_cast<int>(globals[plotTab].x->size()));
 			globals[plotTab].color = ImPlot::GetLastItemColor();
 		}
 		if (showValueOnHover) ImUtils::DrawValueOnHover(data[plotTab], isGlobal, globals[plotTab].x.get(), globals[plotTab].y.get());
@@ -246,8 +246,8 @@ bool ImHistogramPlotter::IsPlotted(int idx)
 
 void ImHistogramPlotter::RefreshPlots()
 {
-	GetHitLock(mApp->worker.globalState.get(), 1000);
-	float xMax = 1;
+	auto lock = GetHitLock(mApp->worker.globalState.get(), 1000);
+	double xMax = 1;
 
 	for (auto& plot : data[plotTab]) { // facet histograms
 		double xSpacing = 1;
@@ -258,8 +258,8 @@ void ImHistogramPlotter::RefreshPlots()
 		case bounces:
 			plot.y = std::make_shared<std::vector<double>>(interfGeom->GetFacet(facetId)->facetHistogramCache.nbHitsHistogram); // yaxis
 			if (plot.y.get() == nullptr) break;
-			xMax = (double)interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax;
-			xSpacing = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize;
+			xMax = static_cast<double>(interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceMax);
+			xSpacing = static_cast<double>(interfGeom->GetFacet(facetId)->sh.facetHistogramParams.nbBounceBinsize);
 			nBins = interfGeom->GetFacet(facetId)->sh.facetHistogramParams.GetBounceHistogramSize();
 			break;
 		case distance:
@@ -354,7 +354,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 			AddPlot(comboSelection);
 		}
 		for (const auto& id: comboOpts[plotTab]) {
-			comboSelection = id;
+			comboSelection = static_cast<long>(id);
 			AddPlot(comboSelection);
 		}
 	}
@@ -374,7 +374,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 		out.append(fmt::format("Facet #{}\t", plot.id + 1));
 	}
 	out[out.size() - 1] = '\n';
-	int n = std::max(exportGlobal ? globals[plotTab].x->size() : 0, data[plotTab].size() == 0 ? 0 : data[plotTab][0].x->size());
+	int n = std::max(exportGlobal ? static_cast<int>(globals[plotTab].x->size()) : 0, data[plotTab].size() == 0 ? 0 : static_cast<int>(data[plotTab][0].x->size()));
 	for (int i = 0; i < n; ++i) {
 		out.append(fmt::format("{}\t", (exportGlobal && i<globals[plotTab].x->size()) ? globals[plotTab].x->at(i) : data[plotTab][0].x->at(i)));// x value
 		
@@ -509,7 +509,7 @@ void ImHistogramPlotter::RefreshFacetLists()
 #endif
 	}
 	for (short tab = 0; tab < IM_HISTOGRAM_TABS; tab++) { // remove deleted facets from plot
-		for (int i = data[tab].size()-1; i >= 0; --i) {
+		for (int i = static_cast<int>(data[tab].size() - 1); i >= 0; --i) {
 			if (!Contains(comboOpts[tab], data[tab][i].id)) {
 				data[tab].erase(data[tab].begin() + i);
 			}
@@ -576,7 +576,7 @@ void ImHistogramPlotter::ImHistogramSettings::Draw()
 	ImGui::SetNextWindowSize(ImVec2(width,34*txtH));
 	ImGui::Begin("Histogram settings", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
-	float childHeight = (ImGui::GetContentRegionAvail().y - 1.5*txtH) * 0.5;
+	float childHeight = (ImGui::GetContentRegionAvail().y - 1.5f*txtH) * 0.5f;
 
 	if (ImGui::BeginChild("Global histogram", ImVec2(0, childHeight), true)) {
 		ImGui::TextDisabled("Global histogram");
@@ -947,10 +947,10 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 	facetTimeBinSizeInput = "";
 #endif
 	std::string tmp;
-	bool toggle;
+	short toggle;
 	for (size_t facetIdx : selected) {
 		InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
-		toggle = f->sh.facetHistogramParams.recordBounce;
+		toggle = static_cast<bool>(f->sh.facetHistogramParams.recordBounce);
 		if (facetRecordBounce == 3) facetRecordBounce = toggle;
 		else if (facetRecordBounce != toggle) facetRecordBounce = 2;
 		facetHistSet.nbBounceMax = f->sh.facetHistogramParams.nbBounceMax;
@@ -970,7 +970,7 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 			facetBouncesBinSizeInput = "...";
 		}
 
-		toggle = f->sh.facetHistogramParams.recordDistance;
+		toggle = static_cast<bool>(f->sh.facetHistogramParams.recordDistance);
 		if (facetRecordDistance == 3) facetRecordDistance = toggle;
 		else if (facetRecordDistance != toggle) facetRecordDistance = 2;
 
@@ -991,7 +991,7 @@ void ImHistogramPlotter::ImHistogramSettings::EvaluateMixedState()
 			facetDistanceBinSizeInput = "...";
 		}
 #ifdef MOLFLOW
-		toggle = f->sh.facetHistogramParams.recordTime;
+		toggle = static_cast<bool>(f->sh.facetHistogramParams.recordTime);
 		if (facetRecordTime == 3) facetRecordTime = toggle;
 		else if (facetRecordTime != toggle) facetRecordTime = 2;
 		facetHistSet.timeMax = f->sh.facetHistogramParams.timeMax;
@@ -1076,21 +1076,21 @@ void ImHistogramPlotter::ImHistogramSettings::CalculateMemoryEstimate_New(bool g
 	else {
 		try {
 			bool mixed = false;
-			if (facetRecordBounce == 2) mixed+=1;
+			if (facetRecordBounce == 2) mixed |= true;
 			else if (facetRecordBounce == 1){
-				mixed += (facetBouncesMaxInput == "...");
-				mixed += (facetBouncesBinSizeInput == "...");
+				mixed |= (facetBouncesMaxInput == "...");
+				mixed |= (facetBouncesBinSizeInput == "...");
 			}
-			if (facetRecordDistance == 2) mixed += 1;
+			if (facetRecordDistance == 2) mixed |= true;
 			else if (facetRecordDistance == 1) {
-				mixed += (facetDistanceMaxInput == "...");
-				mixed += (facetDistanceBinSizeInput == "...");
+				mixed |= (facetDistanceMaxInput == "...");
+				mixed |= (facetDistanceBinSizeInput == "...");
 			}
 #ifdef MOLFLOW
-			if (facetRecordTime == 2) mixed += 1;
+			if (facetRecordTime == 2) mixed |= true;
 			else if (facetRecordTime == 1) {
-				mixed += (facetTimeMaxInput == "...");
-				mixed += (facetTimeBinSizeInput == "...");
+				mixed |= (facetTimeMaxInput == "...");
+				mixed |= (facetTimeBinSizeInput == "...");
 			}
 #endif
 			if (mixed) {

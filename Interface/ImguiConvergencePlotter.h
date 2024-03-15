@@ -9,6 +9,7 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 	void RemovePlot(int idx);
+	void OnShow();
 	void Reload();
 	void Refresh();
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
@@ -33,7 +34,7 @@ protected:
 	bool IsPlotted(size_t idx);
 	bool lockYtoZero = false;
 	int maxDatapoints = 1000;
-	int actualNbValues = 0;
+	size_t actualNbValues = 0;
 	bool showValueOnHover = true;
 	friend class ImTest;
 

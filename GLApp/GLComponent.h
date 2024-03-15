@@ -47,8 +47,8 @@ public:
 
 protected:
 
-	int  width;
-	int  height;
+  int  width;
+  int  height;
   int  posX;
   int  posY;
   bool opaque;

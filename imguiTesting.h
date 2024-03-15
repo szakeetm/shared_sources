@@ -13,7 +13,21 @@ public:
 	bool DestroyContext();
 	void PostSwap();
 	
+	enum Configuration : int {
+		empty = 0,
+		qPipe = 1,
+		profile = 2
+	};
+	Configuration currentConfig = empty;
+	bool ConfigureGeometry(Configuration index = empty);
+
+	void DrawPresetControl();
+
+	void SelectFacet(size_t idx, bool shift = false, bool ctrl = false);
+	void SelectFacet(std::vector<size_t> idxs, bool shift = false , bool ctrl = false);
+	bool SetFacetProfile(size_t facetIdx, int profile);
+
 private:
 	void RegisterTests();
-	ImGuiTestEngine* engine;
+	ImGuiTestEngine* engine = nullptr;
 };

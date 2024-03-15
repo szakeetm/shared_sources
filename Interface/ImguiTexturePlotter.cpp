@@ -33,12 +33,12 @@ void ImTexturePlotter::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
-	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH),true);
+	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5f * txtH),true);
 	DrawTextureTable();
 	ImGui::EndChild();
 	if (ImGui::Button("Find Max")) {
 		selection.clear();
-		selection.push_back(std::pair<int, int>(maxY, maxX));
+		selection.push_back(std::pair<int, int>(static_cast<int>(maxY), static_cast<int>(maxX)));
 		selectionChanged = true;
 		scrollToSelected = true;
 	} ImGui::SameLine();
@@ -66,7 +66,7 @@ void ImTexturePlotter::Draw()
 void ImTexturePlotter::Hide()
 {
 	drawn = false;
-	selFacet->UnselectElem();
+	if (selFacet != nullptr) selFacet->UnselectElem();
 }
 
 void ImTexturePlotter::Init(Interface* mApp_)
@@ -131,12 +131,12 @@ void ImTexturePlotter::DrawTextureTable()
 
 		if (isDragging) {
 			selectionEnd = ImGui::GetMousePos();
-			double startx, starty, endx, endy;
-			startx = selectionStart.x < selectionEnd.x ? selectionStart.x : selectionEnd.x;
-			starty = selectionStart.y < selectionEnd.y ? selectionStart.y : selectionEnd.y;
+			float startx, starty, endx, endy;
+			startx = std::min(selectionStart.x, selectionEnd.x);
+			starty = std::min(selectionStart.y, selectionEnd.y);
 
-			endx = selectionStart.x > selectionEnd.x ? selectionStart.x : selectionEnd.x;
-			endy = selectionStart.y > selectionEnd.y ? selectionStart.y : selectionEnd.y;
+			endx = std::max(selectionStart.x, selectionEnd.x);
+			endy = std::max(selectionStart.y, selectionEnd.y);
 
 			selectionRect = ImRect(startx,starty,endx,endy); // in case the selection starts further down the table than it ends
 		}
@@ -227,7 +227,7 @@ void ImTexturePlotter::DrawTextureTable()
 			}
 			else {
 				ImVec4 bounds = SelectionBounds();
-				selFacet->SelectElem(bounds.y, bounds.x, bounds.w - bounds.y + 1, bounds.z-bounds.x+1);
+				selFacet->SelectElem(static_cast<size_t>(bounds.y), static_cast<size_t>(bounds.x), static_cast<size_t>(bounds.w - bounds.y + 1), static_cast<size_t>(bounds.z-bounds.x+1));
 				selectionChanged = false;
 			}
 		}
@@ -241,10 +241,11 @@ void ImTexturePlotter::DrawTextureTable()
 			if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow))		selection[0].second--;
 			if (ImGui::IsKeyPressed(ImGuiKey_RightArrow))	selection[0].second++;
 
-			if (selection[0].second < 0) selection[0].second = 0;
-			if (selection[0].second > width-1) selection[0].second = width-1;
-			if (selection[0].first < 0) selection[0].first = 0;
-			if (selection[0].first > height-1) selection[0].first = height-1;
+			selection[0].second = std::max(selection[0].second, 0);
+			selection[0].second = std::min(selection[0].second, width - 1);
+			selection[0].first = std::max(selection[0].first, 0);
+			selection[0].first = std::min(selection[0].first, height - 1);
+
 			selectionChanged = true;
 			//scrollToSelected = true;
 		}
@@ -269,8 +270,8 @@ void ImTexturePlotter::GetData()
 	std::vector<std::vector<std::string>>().swap(data); // empty all
 	size_t nbMoments = mApp->worker.interfaceMomentCache.size();
 	maxValue = 0.0f;
-	width = selFacet->sh.texWidth;
-	height = selFacet->sh.texHeight;
+	width = static_cast<int>(selFacet->sh.texWidth);
+	height = static_cast<int>(selFacet->sh.texHeight);
 	while (data.size() < height) data.push_back(std::vector<std::string>());
 
 	if (width == 0 || height == 0) return;
@@ -545,8 +546,8 @@ bool ImTexturePlotter::IsCellSelected(size_t row, size_t col)
 void ImTexturePlotter::SelectRow(size_t row)
 {
 	selection.clear();
-	for (size_t i = 0; i < width; i++) {
-		selection.push_back(std::pair<int, int>(row,i));
+	for (int i = 0; i < width; i++) {
+		selection.push_back(std::pair<int, int>(static_cast<int>(row), i));
 	}
 	selectionChanged = true;
 }
@@ -554,8 +555,8 @@ void ImTexturePlotter::SelectRow(size_t row)
 void ImTexturePlotter::SelectColumn(size_t col)
 {
 	selection.clear();
-	for (size_t i = 0; i < width; i++) {
-		selection.push_back(std::pair<int, int>(i, col));
+	for (int i = 0; i < width; i++) {
+		selection.push_back(std::pair<int, int>(i, static_cast<int>(col)));
 	}
 	selectionChanged = true;
 }
@@ -564,14 +565,14 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 {
 	int startRow, startCol, endRow, endCol;
 	
-	startRow = start.first < end.first ? start.first : end.first;
-	startCol = start.second < end.second ? start.second : end.second;
+	startRow = std::min(start.first, end.first);
+	startCol = std::min(start.second, end.second);
 
-	endRow = start.first > end.first ? start.first : end.first;
-	endCol = start.second > end.second ? start.second : end.second;
+	endRow = std::max(start.first, end.first);
+	endCol = std::max(start.second, end.second);
 
-	for (size_t row = startRow; row <= endRow; row++) {
-		for (size_t col = startCol; col <= endCol; col++) {
+	for (int row = startRow; row <= endRow; row++) {
+		for (int col = startCol; col <= endCol; col++) {
 			selection.push_back(std::pair<int, int>(row, col));
 		}
 	}
@@ -580,18 +581,18 @@ void ImTexturePlotter::BoxSelect(const std::pair<int, int>& start, const std::pa
 
 ImVec4 ImTexturePlotter::SelectionBounds() {
 	int startRow = height, startCol = width, endRow = 0, endCol = 0;
-	for (size_t y = 0; y < height; y++) {
-		for (size_t x = 0; x < width; x++) {
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
 			bool isSel = IsCellSelected(y, x);
 			if (isSel) {
-				if (y < startRow) startRow = y;
-				if (x < startCol) startCol = x;
-				if (y > endRow) endRow = y;
-				if (x > endCol) endCol = x;
+				startRow = std::min(startRow, y);
+				startCol = std::min(startCol, x);
+				endRow = std::max(endRow, y);
+				endCol = std::max(endCol, x);
 			}
 		}
 	}
-	return ImVec4(startRow,startCol,endRow,endCol);
+	return ImVec4(static_cast<float>(startRow), static_cast<float>(startCol), static_cast<float>(endRow), static_cast<float>(endCol));
 }
 
 bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
@@ -610,10 +611,10 @@ bool ImTexturePlotter::SaveTexturePlotter(bool toFile)
 	}
 	else {
 		ImVec4 bounds = SelectionBounds();
-		startRow = bounds.x;
-		startCol = bounds.y;
-		endRow = bounds.z;
-		endCol = bounds.w;
+		startRow = static_cast<int>(bounds.x);
+		startCol = static_cast<int>(bounds.y);
+		endRow = static_cast<int>(bounds.z);
+		endCol = static_cast<int>(bounds.w);
 	}
 	// wrtie to file
 	if (toFile) {
