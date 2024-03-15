@@ -30,7 +30,7 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 	}
 	out[out.size() - 1] = '\n';
 	// rows
-	for (size_t i = onlyVisible && data[0].x->size()>maxDatapoints ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
+	for (size_t i = (onlyVisible && data[0].x->size() > maxDatapoints) ? data[0].x->size() - maxDatapoints : 0; i < data[0].x->size(); i++) {
 		out.append(fmt::format("{}", data[0].x->at(i)) + "\t");
 		if (drawManual) {
 			if (formula.GetNbVariable() != 0) {
@@ -41,7 +41,8 @@ bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 			out.append(fmt::format("{}\t", yvar));
 		}
 		for (const auto& formula : data) {
-			out.append(fmt::format("{}", formula.y->at(i)) + "\t");
+			if (formula.y->size() > i) out.append(fmt::format("{}", formula.y->at(i)) + "\t");
+			else (out.append("\t"));
 		}
 		out[out.size() - 1] = '\n';
 	}

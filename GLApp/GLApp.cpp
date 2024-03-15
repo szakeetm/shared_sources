@@ -203,10 +203,10 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
   m_bWindowed = !bFullScreen;
 
   //Initialize SDL
-  if( SDL_Init( SDL_INIT_EVERYTHING ) < 0 )
-  {
-    GLToolkit::Log("GLApplication::Create SDL_Init() failed.");
-    return GL_FAIL;
+  if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+  { 
+      std::cout << (fmt::format("GLApplication::Create SDL_Init() failed:\n{}" , SDL_GetError()));
+      return GL_FAIL;
   }
 
   //SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);

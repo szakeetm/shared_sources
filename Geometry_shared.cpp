@@ -654,7 +654,7 @@ void InterfaceGeometry::RegisterVertex(InterfaceFacet *f, const Clipper2Lib::Poi
 	}
 }
 
-void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance) {
+void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance, const std::vector<std::optional<ScreenCoord>>& screenCoords) {
 
 	auto selectedVertices = GetSelectedVertices();
 	if (selectedVertices.size() < 3) {
@@ -682,13 +682,9 @@ void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance) 
 	//double denominator=sqrt(pow(A,2)+pow(B,2)+pow(C,2));
 	double distance;
 
-	GLMatrix view, proj, mvp;
-	GLVIEWPORT viewPort;
-	std::tie(view, proj, mvp, viewPort) = GLToolkit::GetCurrentMatrices();
-
 	for (int i = 0; i < sh.nbVertex; i++) {
 		Vector3d *v = GetVertex(i);
-		std::optional<ScreenCoord> coords = GLToolkit::Get2DScreenCoord_fast(*v, mvp, viewPort);
+		const std::optional<ScreenCoord>& coords = screenCoords[i];
 		if (coords.has_value()) {
 			if (coords->x >= 0 && coords->y >= 0 && coords->x <= width && coords->y <= height) {
 				distance = std::abs(A*v->x + B * v->y + C * v->z + D);
