@@ -556,4 +556,7 @@ protected:
 	int InvalidateDeviceObjects_shared();
 	bool ProcessMessage_shared(GLComponent* src, int message);
 	void  BeforeExit() override;
+public:
+	// command-line arguments
+	std::vector<std::string> argv;
 };
