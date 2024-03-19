@@ -186,6 +186,8 @@ void ImMovingParts::ApplyButtonPress()
                 return;
             }
             break;
+        default:
+            return;
     }
     ImIOWrappers::AskToSaveBeforeDoing( [this]() { Apply(); });
 }

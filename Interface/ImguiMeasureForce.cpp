@@ -67,7 +67,7 @@ void ImMeasureForce::SelectedVertexButtonPress()
 {
 	size_t nbs = interfGeom->GetNbSelectedVertex();
 	if (nbs != 1) {
-		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {:.3g}).", nbs));
+		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {}).", nbs));
 		return;
 	}
 	else {
@@ -89,7 +89,7 @@ void ImMeasureForce::FacetCenterButtonPress()
 {
 	size_t nbs = interfGeom->GetNbSelectedFacets();
 	if (nbs != 1) {
-		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one facet\n(You have selected {:.3g}).", nbs));
+		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one facet\n(You have selected {}).", nbs));
 		return;
 	}
 	else {

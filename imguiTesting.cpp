@@ -780,7 +780,9 @@ void ImTest::RegisterTests()
         ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Apply");
-        ctx->ItemClick("//File not saved/  No  ");
+        if (mApp->changedSinceSave) {
+            ctx->ItemClick("//File not saved/  No  ");
+        }
 
         ctx->ItemClick("**/Rotation around axis");
         ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
@@ -809,6 +811,23 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Measure forces");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Measure forces...");
+        ctx->SetRef("Measure forces");
+        ctx->ItemClick("**/Selected vertex");
+        if (interfGeom->GetNbSelectedVertex() != 1) {
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+        }
+        ctx->ItemClick("**/Center of selected facet");
+        if (interfGeom->GetNbSelectedFacets() != 1) {
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+        }
+        ctx->ItemClick("Enable force measurement (has performance impact)");
+        ctx->ItemClick("Apply");
         };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
