@@ -429,14 +429,14 @@ void GLApplication::Run() {
   wereEvents_imgui = 2;
 
   // TODO: Activate imgui directly on launch here
-  
+#ifdef DEBUG
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
       imWnd = new ImguiWindow(this);
       imWnd->init();
       imWnd->show_app_main_menu_bar = true;
       imWnd->testEngine.RunTests();
   }
-
+#endif
   //Wait for user exit
   while( !quit )
   {
