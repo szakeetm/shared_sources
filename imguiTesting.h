@@ -12,12 +12,17 @@ public:
 	bool StopEngine();
 	bool DestroyContext();
 	void PostSwap();
+	void RunTests();
+	bool running = false;
+	int ranScenarios = 0;
+	bool result = false;
 	
 	enum Configuration : int {
 		empty = 0,
 		qPipe = 1,
 		profile = 2
 	};
+	int areScenarios = 3;
 	Configuration currentConfig = empty;
 	bool ConfigureGeometry(Configuration index = empty);
 

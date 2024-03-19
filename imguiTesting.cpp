@@ -1,4 +1,6 @@
 #include "imguiTesting.h"
+#include "imgui_test_engine/imgui_te_ui.h"
+#include "imgui_test_engine/imgui_te_internal.h"
 #if defined(MOLFLOW)
 #include "../src/MolFlow.h"
 #else
@@ -46,7 +48,62 @@ void ImTest::Draw()
 
 void ImTest::PostSwap()
 {
-    ImGuiTestEngine_PostSwap(engine);
+    ImGuiTestEngine_PostSwap(engine); // normal operation
+
+    // Command-line run test
+
+    if (running && ImGuiTestEngine_IsTestQueueEmpty(engine)) { // test run finished
+        int tested, succeeded;
+        ImGuiTestEngine_GetResult(engine, tested, succeeded);
+        if (tested != succeeded) {
+            ImVector<ImGuiTest*> tests;
+            ImGuiTestEngine_GetTestList(engine, &tests);
+            for (const ImGuiTest* test : tests) {
+                bool outputLog = false;
+                if (test->Output.Status == 3) {
+                    std::cout << fmt::format("Test {}, group {} in scenario {} failed:", test->Name, test->Category, ranScenarios) << std::endl;
+                    outputLog = true;
+                }
+                if (test->Output.Status == 4) {
+                    std::cout << fmt::format("Test {}, group {} in scenario {} could not complete:", test->Name, test->Category, ranScenarios) << std::endl;
+                    outputLog = true;
+                }
+                if (outputLog) {
+                    std::string log;
+                    for (int i = 0; i < test->Output.Log.Buffer.Buf.Size; i++) {
+                        log+=(test->Output.Log.Buffer.Buf[i]);
+                    }
+                    std::cout << log << std::endl;
+                }
+            }
+            result = false;
+        }
+        running = false;
+        ranScenarios++;
+        if (ranScenarios >= areScenarios) { // completed all scenarios
+            std::cout << "Stopping" << std::endl;
+            exit(result);
+        }
+        else {
+            RunTests(); // run tests again (changes test scenario at the beginning)
+        }
+    }
+    if (running) {
+        mApp->imWnd->forceDrawNextFrame = true;
+    }
+}
+
+void ImTest::RunTests()
+{
+    //engine->IO.ConfigRunSpeed = ImGuiTestRunSpeed_Normal;
+    ConfigureGeometry(static_cast<Configuration>(ranScenarios));
+    std::cout << "Starting tests in scenario " << ranScenarios << std::endl;
+    for (int n = 0; n < engine->TestsAll.Size; n++)
+    {
+        ImGuiTest* test = engine->TestsAll[n];
+        ImGuiTestEngine_QueueTest(engine, test, ImGuiTestRunSpeed_Normal | ImGuiTestRunFlags_None);
+    }
+    running = true;
 }
 
 bool ImTest::ConfigureGeometry(Configuration index)
@@ -133,12 +190,6 @@ bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
 void ImTest::RegisterTests()
 {
     ImGuiTest* t = NULL;
-    t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###File/###NewGeom");
-        currentConfig = empty;
-        };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Smart Selection");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         // set start state
@@ -177,13 +228,6 @@ void ImTest::RegisterTests()
         IM_CHECK_EQ(false, mApp->imWnd->smartSelect.enabledToggle);
         // close window
         ctx->ItemClick("#CLOSE");
-        };
-    t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("Test/Quick Pipe");
-        IM_CHECK_EQ(interfGeom->GetNbFacet(), 7);
-        currentConfig = qPipe;
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select All");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -397,7 +441,7 @@ void ImTest::RegisterTests()
             IM_CHECK_EQ(5, interfGeom->GetNbSelectedFacets());
         }
         };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor + Convergence Plotter");
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor + Convergence Plotter"); // this test fails in fast mode for unknown reason
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
@@ -462,16 +506,30 @@ void ImTest::RegisterTests()
         ctx->ItemClick("#CLOSE");
         // -----
         ctx->SetRef("Formula editor");
-        ctx->ItemClick("**/##FL/1");
-        ctx->ItemClick("**/##FL/##changeExp");
-        ctx->KeyCharsReplace("");
-        ctx->ItemClick("**/##FL/##changeNam");
-        ctx->KeyCharsReplaceEnter("");
-        ctx->ItemClick("**/##FL/1");
-        ctx->ItemClick("**/##FL/##changeExp");
-        ctx->KeyCharsReplace("");
-        ctx->ItemClick("**/##FL/##changeNam");
-        ctx->KeyCharsReplaceEnter("");
+        if (currentConfig == empty) {
+            ctx->ItemClick("**/##FL/1");
+            ctx->ItemClick("**/##FL/##changeExp");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("**/##FL/##changeNam");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("**/##FL/1");
+            ctx->ItemClick("**/##FL/##changeExp");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("**/##FL/##changeNam");
+            ctx->KeyCharsReplaceEnter("");
+        } else
+        {
+            ctx->ItemClick("**/##FL/2");
+            ctx->ItemClick("**/##FL/##changeExp");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("**/##FL/##changeNam");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("**/##FL/2");
+            ctx->ItemClick("**/##FL/##changeExp");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("**/##FL/##changeNam");
+            ctx->KeyCharsReplaceEnter("");
+        }
         // -----
         ctx->MouseClick(1);
         ctx->ItemClick("/**/Copy table");
@@ -564,7 +622,7 @@ void ImTest::RegisterTests()
         ctx->ComboClickAll("##View");
         ctx->ItemClick("#CLOSE");
         };
-    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Histogram plotter");
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Histogram plotter"); // this test faisl in fast mode for unknown reasons
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Histogram Plotter...");
@@ -583,6 +641,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Log X");
         ctx->ItemClick("Log X");
         ctx->MenuClick("Export/All to clipboard");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->MenuClick("Export/Plotted to clipboard");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
@@ -696,6 +755,11 @@ void ImTest::RegisterTests()
         ctx->SetRef("Global settings");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Screenshot");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Take screenshot");
+        };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
@@ -703,7 +767,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("Define moving parts");
         ctx->ItemClick("**/No moving parts");
         ctx->ItemClick("Apply");
-        if (mApp->changedSinceSave != true) {
+        if (mApp->changedSinceSave) {
             ctx->ItemClick("//File not saved/  No  ");
         }
         ctx->ItemClick("//Define moving parts/**/Fixed (same velocity vector everywhere)");
@@ -741,8 +805,10 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
 
-
         ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Measure forces");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
         };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
@@ -751,5 +817,26 @@ void ImTest::RegisterTests()
         ctx->MenuClick("View/###Full Screen");
         ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->MenuClick("View/###Full Screen");
+        };
+    // geometry altering tests (to be run last)
+    t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Test/Quick Pipe");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+        }
+        IM_CHECK_EQ(interfGeom->GetNbFacet(), 7);
+        };
+    t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###File/###NewGeom");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+        }
+        IM_CHECK_EQ(interfGeom->GetNbFacet(), 0);
         };
 }
