@@ -37,6 +37,7 @@ protected:
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
+	void ShowFacet(int idx, bool add);
 	
 
 	//types
@@ -107,10 +108,9 @@ protected:
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
-	std::vector<size_t> comboOpts[IM_HISTOGRAM_TABS];
+	std::vector<size_t> histogrammedFacets[IM_HISTOGRAM_TABS];
 	std::vector<ImPlotData> data[IM_HISTOGRAM_TABS];
 	ImPlotData globals[IM_HISTOGRAM_TABS];
-	long comboSelection=-2;
 	int maxDisplayed = 1000;
 	bool limitPoints = true;
 	bool showValueOnHover = true;

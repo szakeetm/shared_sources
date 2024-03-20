@@ -21,7 +21,6 @@
 void ImHistogramPlotter::Draw()
 {
 	if (!drawn) return;
-	float dummyWidth;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 105, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::SetWindowPos("Histogram Plotter", ImVec2((3 + 40) * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
@@ -52,10 +51,8 @@ void ImHistogramPlotter::Draw()
 		);
 	if (prevPlotTab != plotTab) {
 		// tab changed
-		comboSelection = -2;
-		if (comboOpts[plotTab].size() != 0) comboSelection = static_cast<long>(comboOpts[plotTab][0]);
-		if (globalHist) comboSelection = -1;
 		prevPlotTab = plotTab;
+		UpdateSidebarMasterToggle();
 	}
 	ImGui::BeginChild("Sidebar", ImVec2(txtW*20,ImGui::GetContentRegionAvail().y), ImGuiChildFlags_Border);
 
@@ -64,8 +61,8 @@ void ImHistogramPlotter::Draw()
 	} ImGui::SameLine();
 	ImGui::AlignTextToFramePadding();
 	if (ImGui::Selectable("All", false, 0, ImVec2(ImGui::GetContentRegionAvail().x - txtW * 3, 0))) {
-		for (int i = 0; i < comboOpts[plotTab].size(); i++) {
-			// select histogrammed facets
+		for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
+			ShowFacet(histogrammedFacets[plotTab][i], true);
 		}
 	}
 	ImGui::Separator();
@@ -75,11 +72,12 @@ void ImHistogramPlotter::Draw()
 			else if (globalDrawToggle[plotTab] == 1 && !IsPlotted(-1)) AddPlot(-1);
 			UpdateSidebarMasterToggle();
 		}
-	} ImGui::SameLine();
-	ImGui::AlignTextToFramePadding();
-	ImGui::Text("Global");
-	histogramDrawToggle[plotTab].resize(comboOpts[plotTab].size(), 0);
-	for (int i = 0; i < comboOpts[plotTab].size(); i++) {
+		ImGui::SameLine();
+		ImGui::AlignTextToFramePadding();
+		ImGui::Text("Global");
+	} 
+	histogramDrawToggle[plotTab].resize(histogrammedFacets[plotTab].size(), 0);
+	for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
 		std::string fName = ("Facet #" + std::to_string(i + 1));
 		if (ImGui::Checkbox(("##" + fName).c_str(), (bool*)&(histogramDrawToggle[plotTab][i]))) {
 			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(i)) RemovePlot(i, plotTab);
@@ -88,7 +86,7 @@ void ImHistogramPlotter::Draw()
 		} ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
 		if (ImGui::Selectable(fName)) {
-			// Select Facet
+			ShowFacet(i, ImGui::IsKeyDown(ImGuiKey_LeftShift));
 		}
 	}
 	ImGui::EndChild();
@@ -98,44 +96,8 @@ void ImHistogramPlotter::Draw()
 	if(ImGui::Button("<< Hist settings")) {
 		settingsWindow.Toggle();
 	} ImGui::SameLine();
-	
-	if(!globalHist && comboSelection == -1) comboSelection = -2; // if global hist was selected but becomes disabled reset selection
-	ImGui::SetNextItemWidth(txtW * 20);
-	if (ImGui::BeginCombo("##HIST", comboSelection == -2 ? "" : (comboSelection == -1 ? "Global" : "Facet #" + std::to_string(comboSelection+1)))) {
-		if (globalHist && ImGui::Selectable("Global")) comboSelection = -1;
-
-		for (const auto facetId : comboOpts[plotTab]) {
-			if (ImGui::Selectable("Facet #" + std::to_string(facetId + 1))) comboSelection = static_cast<long>(facetId);
-		}
-
-		ImGui::EndCombo();
-	} ImGui::SameLine();
-	if (ImGui::Button("<- Show Facet")) {
-		if (comboSelection >= 0) {
-			interfGeom->UnselectAll();
-			try {
-				interfGeom->GetFacet(comboSelection)->selected = true;
-			}
-			catch (const std::exception& e) {
-				ImIOWrappers::InfoPopup("Error", e.what());
-			}
-			LockWrapper lWrap(mApp->imguiRenderLock);
-			interfGeom->UpdateSelection();
-			mApp->UpdateFacetParams(true);
-			mApp->UpdateFacetlistSelected();
-		}
-	} ImGui::SameLine();
-	if (ImGui::Button("Add")) {
-		AddPlot(comboSelection);
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove")) {
-		RemovePlot(comboSelection, plotTab);
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove all")) {
-		data[plotTab].clear();
-		globals[plotTab] = ImPlotData();
-	} ImGui::SameLine();
 	if (ImGui::Checkbox("Normalize", &normalize)) RefreshPlots();
+	ImGui::SameLine();
 	if (ImGui::Checkbox("Log Y", &logY)) RefreshPlots();
 	ImGui::SameLine();
 	if (ImGui::Checkbox("Log X", &logX)) RefreshPlots();
@@ -174,7 +136,7 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==time) xAxisName = "Time [s]";
 #endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 7 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 5.7f * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logX) ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& plot : data[plotTab]) {
@@ -345,17 +307,17 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 {
 	std::vector<ImPlotData> preExportData = data[plotTab];
 	ImPlotData preExportGlobal = globals[plotTab];
-	long preExportSel = comboSelection;
 	bool preExportLimitPoints = limitPoints;
+	size_t idx;
 	if (!plottedOnly) {
 		limitPoints = false;
 		if (globals[plotTab].x.get()!=nullptr) {
-			comboSelection = -1;
-			AddPlot(comboSelection);
+			idx = -1;
+			AddPlot(idx);
 		}
-		for (const auto& id: comboOpts[plotTab]) {
-			comboSelection = static_cast<long>(id);
-			AddPlot(comboSelection);
+		for (const auto& id: histogrammedFacets[plotTab]) {
+			idx = static_cast<long>(id);
+			AddPlot(idx);
 		}
 	}
 	RefreshPlots();
@@ -415,22 +377,65 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	}
 	data[plotTab] = preExportData;
 	globals[plotTab] = preExportGlobal;
-	comboSelection = preExportSel;
 	limitPoints = preExportLimitPoints;
+}
+
+void ImHistogramPlotter::ShowFacet(int idx, bool add)
+{
+	if(!add) interfGeom->UnselectAll();
+	try {
+		interfGeom->GetFacet(idx)->selected = true;
+	}
+	catch (const std::exception& e) {
+		ImIOWrappers::InfoPopup("Error", e.what());
+	}
+	LockWrapper lWrap(mApp->imguiRenderLock);
+	interfGeom->UpdateSelection();
+	mApp->UpdateFacetParams(true);
+	mApp->UpdateFacetlistSelected();
 }
 
 void ImHistogramPlotter::ApplyAggregateState()
 {
+	mixedState = false;
+	globalDrawToggle[plotTab] = aggregateState;
+	if (globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) RemovePlot(-1, plotTab);
+	else if (globalDrawToggle[plotTab] == 1 && !IsPlotted(-1)) AddPlot(-1);
+	for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
+		histogramDrawToggle[plotTab][i] = aggregateState;
+		if (histogramDrawToggle[plotTab][i] == 1) AddPlot(i);
+		else if (histogramDrawToggle[plotTab][i] == 0) RemovePlot(i, plotTab);
+	}
 }
 
 void ImHistogramPlotter::UpdateSidebarMasterToggle()
 {
+	mixedState = false;
+	if (histogrammedFacets[plotTab].size() == 0) {
+		aggregateState = 0;
+		return;
+	}
+	bool checkedFirst = false;
+	for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
+		if (!checkedFirst) {
+			aggregateState = histogramDrawToggle[plotTab][i];
+			checkedFirst = true;
+			continue;
+		}
+		if (aggregateState != histogramDrawToggle[plotTab][i]) {
+			aggregateState = 2;
+			mixedState = true;
+			return;
+		}
+	}
+	if (globalDrawToggle[plotTab] != aggregateState) {
+		aggregateState = 2;
+		mixedState = true;
+	}
 }
 
 void ImHistogramPlotter::LoadHistogramSettings()
 {
-	comboSelection = -1;
-
 	// global settings
 	settingsWindow.globalHistSet.recordBounce = mApp->worker.model->sp.globalHistogramParams.recordBounce;
 	settingsWindow.globalRecordBounce = settingsWindow.globalHistSet.recordBounce;
@@ -457,10 +462,10 @@ void ImHistogramPlotter::LoadHistogramSettings()
 	size_t n = interfGeom->GetNbFacet();
 	for (size_t i = 0; i < n; i++) {
 		const auto& facet = interfGeom->GetFacet(i);
-		if (facet->facetHistogramCache.nbHitsHistogram.size() != 0 && !Contains(comboOpts[bounces],i)) comboOpts[bounces].push_back(i);
-		if (facet->facetHistogramCache.distanceHistogram.size() != 0 && !Contains(comboOpts[distance], i)) comboOpts[distance].push_back(i);
+		if (facet->facetHistogramCache.nbHitsHistogram.size() != 0 && !Contains(histogrammedFacets[bounces],i)) histogrammedFacets[bounces].push_back(i);
+		if (facet->facetHistogramCache.distanceHistogram.size() != 0 && !Contains(histogrammedFacets[distance], i)) histogrammedFacets[distance].push_back(i);
 #ifdef MOLFLOW
-		if (facet->facetHistogramCache.timeHistogram.size() != 0 && !Contains(comboOpts[time], i)) comboOpts[time].push_back(i);
+		if (facet->facetHistogramCache.timeHistogram.size() != 0 && !Contains(histogrammedFacets[time], i)) histogrammedFacets[time].push_back(i);
 #endif
 	}
 	settingsWindow.CalculateMemoryEstimate_New(false);
@@ -481,36 +486,36 @@ void ImHistogramPlotter::RefreshFacetLists()
 	if (!mApp->worker.model->sp.globalHistogramParams.recordBounce) {
 		globals[bounces] = ImPlotData();
 	}
-	comboOpts[bounces].clear();
+	histogrammedFacets[bounces].clear();
 
 	if (!mApp->worker.model->sp.globalHistogramParams.recordDistance) {
 		globals[distance] = ImPlotData();
 	}
-	comboOpts[distance].clear();
+	histogrammedFacets[distance].clear();
 #ifdef MOLFLOW
 	if (!mApp->worker.model->sp.globalHistogramParams.recordTime) {
 		globals[time] = ImPlotData();
 	}
-	comboOpts[time].clear();
+	histogrammedFacets[time].clear();
 #endif
 	std::vector<size_t> facets = interfGeom->GetAllFacetIndices();
 	for (size_t idx : facets) { // get all facets which have histograms
 		InterfaceFacet* f = interfGeom->GetFacet(idx);
 		if (f->sh.facetHistogramParams.recordBounce) {
-			comboOpts[bounces].push_back(idx);
+			histogrammedFacets[bounces].push_back(idx);
 		}
 		if (f->sh.facetHistogramParams.recordDistance) {
-			comboOpts[distance].push_back(idx);
+			histogrammedFacets[distance].push_back(idx);
 		}
 #ifdef MOLFLOW
 		if (f->sh.facetHistogramParams.recordTime) {
-			comboOpts[time].push_back(idx);
+			histogrammedFacets[time].push_back(idx);
 		}
 #endif
 	}
 	for (short tab = 0; tab < IM_HISTOGRAM_TABS; tab++) { // remove deleted facets from plot
 		for (int i = static_cast<int>(data[tab].size() - 1); i >= 0; --i) {
-			if (!Contains(comboOpts[tab], data[tab][i].id)) {
+			if (!Contains(histogrammedFacets[tab], data[tab][i].id)) {
 				data[tab].erase(data[tab].begin() + i);
 			}
 		}

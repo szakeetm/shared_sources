@@ -707,10 +707,6 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Histogram types/Flight distance before absorption");
         ctx->ItemClick("Histogram types/Flight time before absorption");
         ctx->ItemClick("Histogram types/Bounces before absorption");
-        ctx->ItemClick("<- Show Facet");
-        ctx->ItemClick("Add");
-        ctx->ItemClick("Remove");
-        ctx->ItemClick("Remove all");
         ctx->ItemClick("Normalize");
         ctx->ItemClick("Normalize");
         ctx->ItemClick("Log Y");
