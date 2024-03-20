@@ -165,12 +165,30 @@ void ImTest::DrawPresetControl()
 
 void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
 {
+    LockWrapper lW(mApp->imguiRenderLock);
     interfGeom->SetSelection({ idx }, shift, ctrl);
 }
 
 void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
 {
+    LockWrapper lW(mApp->imguiRenderLock);
     interfGeom->SetSelection(idxs, shift, ctrl);
+}
+
+void ImTest::SelectVertex(size_t idx, bool add)
+{
+    LockWrapper lW(mApp->imguiRenderLock);
+    if (!add) interfGeom->EmptySelectedVertexList();
+    interfGeom->AddToSelectedVertexList(idx);
+}
+
+void ImTest::SelectVertex(std::vector<size_t> idxs, bool add)
+{
+    LockWrapper lW(mApp->imguiRenderLock);
+    if (!add) interfGeom->EmptySelectedVertexList();
+    for (const size_t idx : idxs) {
+        SelectVertex(idx, true);
+    }
 }
 
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
@@ -767,9 +785,6 @@ void ImTest::RegisterTests()
         ctx->SetRef("Define moving parts");
         ctx->ItemClick("**/No moving parts");
         ctx->ItemClick("Apply");
-        if (mApp->changedSinceSave) {
-            ctx->ItemClick("//File not saved/  No  ");
-        }
         ctx->ItemClick("//Define moving parts/**/Fixed (same velocity vector everywhere)");
         ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("a");
@@ -780,10 +795,6 @@ void ImTest::RegisterTests()
         ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Apply");
-        if (mApp->changedSinceSave) {
-            ctx->ItemClick("//File not saved/  No  ");
-        }
-
         ctx->ItemClick("**/Rotation around axis");
         ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
         ctx->SetRef("Error");
@@ -814,20 +825,52 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Measure forces...");
         ctx->SetRef("Measure forces");
-        ctx->ItemClick("**/Selected vertex");
-        if (interfGeom->GetNbSelectedVertex() != 1) {
+        if (currentConfig == empty) {
+            ctx->ItemClick("**/Selected vertex");
             ctx->SetRef("Error");
             ctx->ItemClick("  Ok  ");
             ctx->SetRef("Measure forces");
-        }
-        ctx->ItemClick("**/Center of selected facet");
-        if (interfGeom->GetNbSelectedFacets() != 1) {
+            ctx->ItemClick("**/Center of selected facet");
             ctx->SetRef("Error");
             ctx->ItemClick("  Ok  ");
             ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
         }
-        ctx->ItemClick("Enable force measurement (has performance impact)");
-        ctx->ItemClick("Apply");
+        else {
+            //SelectVertex(0);
+            ctx->ItemClick("**/Selected vertex");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            //SelectFacet(0);
+            ctx->ItemClick("**/Center of selected facet");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+
+            //SelectVertex({ 0,1 });
+            ctx->ItemClick("**/Selected vertex");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            //SelectFacet({ 0,1 });
+            ctx->ItemClick("**/Center of selected facet");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+        }
+        ctx->ItemClick("#CLOSE");
         };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");

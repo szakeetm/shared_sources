@@ -189,7 +189,7 @@ void ImMovingParts::ApplyButtonPress()
         default:
             return;
     }
-    ImIOWrappers::AskToSaveBeforeDoing( [this]() { Apply(); });
+    Apply();
 }
 
 void ImMovingParts::Apply(){

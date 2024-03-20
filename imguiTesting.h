@@ -30,6 +30,8 @@ public:
 
 	void SelectFacet(size_t idx, bool shift = false, bool ctrl = false);
 	void SelectFacet(std::vector<size_t> idxs, bool shift = false , bool ctrl = false);
+	void SelectVertex(size_t idx, bool add = false);
+	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	bool SetFacetProfile(size_t facetIdx, int profile);
 
 private:
