@@ -50,6 +50,16 @@ void ImTest::PostSwap()
 {
     ImGuiTestEngine_PostSwap(engine); // normal operation
 
+    // execute queued calls
+    {
+        LockWrapper lW(mApp->imguiRenderLock);
+        while (callQueue.size() > 0) {
+            std::function<void()> f = callQueue.front();
+            f();
+            callQueue.pop();
+        }
+    }
+
     // Command-line run test
 
     if (running && ImGuiTestEngine_IsTestQueueEmpty(engine)) { // test run finished
@@ -165,30 +175,58 @@ void ImTest::DrawPresetControl()
 
 void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
 {
-    LockWrapper lW(mApp->imguiRenderLock);
-    interfGeom->SetSelection({ idx }, shift, ctrl);
+    std::function<void()> f = [this, idx, shift, ctrl]() {
+        interfGeom->SetSelection({ idx }, shift, ctrl);
+    };
+    callQueue.push(f);
 }
 
 void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
 {
-    LockWrapper lW(mApp->imguiRenderLock);
-    interfGeom->SetSelection(idxs, shift, ctrl);
+    std::function<void()> f = [this, idxs, shift, ctrl]() {
+        interfGeom->SetSelection(idxs, shift, ctrl);
+    };
+    callQueue.push(f);
 }
 
 void ImTest::SelectVertex(size_t idx, bool add)
 {
-    LockWrapper lW(mApp->imguiRenderLock);
-    if (!add) interfGeom->EmptySelectedVertexList();
-    interfGeom->AddToSelectedVertexList(idx);
+    std::function<void()> f = [this, idx, add]() {
+        if (!add) interfGeom->EmptySelectedVertexList();
+        interfGeom->SelectVertex(idx);
+        interfGeom->UpdateSelection();
+        };
+    callQueue.push(f);
 }
 
 void ImTest::SelectVertex(std::vector<size_t> idxs, bool add)
 {
-    LockWrapper lW(mApp->imguiRenderLock);
-    if (!add) interfGeom->EmptySelectedVertexList();
+    if (!add) {
+        std::function<void()> f = [this]() {
+            interfGeom->EmptySelectedVertexList();
+        };
+        callQueue.push(f);
+    }
     for (const size_t idx : idxs) {
         SelectVertex(idx, true);
     }
+}
+
+void ImTest::DeselectAll()
+{
+    std::function<void()> f = [this]() {
+        interfGeom->UnselectAll();
+        };
+    callQueue.push(f);
+    DeselectAllVerticies();
+}
+
+void ImTest::DeselectAllVerticies()
+{
+    std::function<void()> f = [this]() {
+        interfGeom->UnselectAllVertex();
+        };
+    callQueue.push(f);
 }
 
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
@@ -258,7 +296,25 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
-        // TODO Test Correctness of Input and button behaviour
+        if (currentConfig != empty) {
+            SelectFacet({0,1,2,3,4,5,6});
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("1-7");
+            ctx->ItemClick("  Remove from selection  ");
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("  Select  ");
+            IM_CHECK_EQ(1, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("2");
+            ctx->ItemClick("  Add to selection  ");
+            IM_CHECK_EQ(2, interfGeom->GetNbSelectedFacets());
+        }
+        ctx->ItemClick("##1");
+        ctx->KeyCharsReplaceEnter("");
+        ctx->ItemClick("  Select  ");
+        ctx->ItemClick("//Error/  Ok  ");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Sticking");
@@ -403,8 +459,11 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Invert");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
-        int nSelected = interfGeom->GetNbSelectedFacets();
-        int expected = interfGeom->GetNbFacet() - nSelected;
+        int expected = 0;
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            expected = 6;
+        }
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Invert selection");
         IM_CHECK_EQ(expected, interfGeom->GetNbSelectedFacets());
@@ -780,6 +839,9 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        if (currentConfig != empty) {
+            DeselectAll();
+        }
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Moving parts...");
         ctx->SetRef("Define moving parts");
@@ -804,6 +866,11 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
+        if (currentConfig != empty) {
+            SelectVertex(1);
+            ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
+            ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/Base to sel. vertex");
+        }
 
         ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
         ctx->KeyCharsReplaceEnter("a");
@@ -813,15 +880,16 @@ void ImTest::RegisterTests()
         ctx->SetRef("Define moving parts");
         ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
         ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/No moving parts");
         ctx->ItemClick("Apply");
-        ctx->SetRef("Error");
-        ctx->ItemClick("  Ok  ");
-        ctx->SetRef("Define moving parts");
 
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Measure forces");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        if (currentConfig != empty) {
+            DeselectAll();
+        }
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Measure forces...");
         ctx->SetRef("Measure forces");
@@ -840,27 +908,22 @@ void ImTest::RegisterTests()
             ctx->ItemClick("Apply");
         }
         else {
-            //SelectVertex(0);
+            SelectVertex(0);
             ctx->ItemClick("**/Selected vertex");
-            ctx->SetRef("Error");
-            ctx->ItemClick("  Ok  ");
-            ctx->SetRef("Measure forces");
-            //SelectFacet(0);
+            SelectFacet(0);
             ctx->ItemClick("**/Center of selected facet");
-            ctx->SetRef("Error");
-            ctx->ItemClick("  Ok  ");
             ctx->SetRef("Measure forces");
             ctx->ItemClick("Enable force measurement (has performance impact)");
             ctx->ItemClick("Apply");
             ctx->ItemClick("Enable force measurement (has performance impact)");
             ctx->ItemClick("Apply");
 
-            //SelectVertex({ 0,1 });
+            SelectVertex({ 0,1 });
             ctx->ItemClick("**/Selected vertex");
             ctx->SetRef("Error");
             ctx->ItemClick("  Ok  ");
             ctx->SetRef("Measure forces");
-            //SelectFacet({ 0,1 });
+            SelectFacet({ 0,1 });
             ctx->ItemClick("**/Center of selected facet");
             ctx->SetRef("Error");
             ctx->ItemClick("  Ok  ");

@@ -23,6 +23,7 @@ void ImSelectDialog::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Select facet(s) by number", &drawn, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Facet number:"); ImGui::SameLine();
 	ImGui::InputText("##1", &this->numText);
 	ImGui::Text("You can enter a list and/or range(s), examples: 1,2,3 or 1-10 or 1-10,20-30");
