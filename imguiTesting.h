@@ -13,7 +13,7 @@ public:
 	bool StopEngine();
 	bool DestroyContext();
 	void PostSwap();
-	
+
 	void DrawPresetControl();
 
 	void RunTests(); // autorun tests (used when running from command line)
@@ -37,7 +37,7 @@ private:
 
 	// wrapper functions for changing selections mid-test (needs to enqueue functions to be executed outside of the test body)
 	void SelectFacet(size_t idx, bool shift = false, bool ctrl = false);
-	void SelectFacet(std::vector<size_t> idxs, bool shift = false , bool ctrl = false);
+	void SelectFacet(std::vector<size_t> idxs, bool shift = false, bool ctrl = false);
 	void SelectVertex(size_t idx, bool add = false);
 	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	void DeselectAll();

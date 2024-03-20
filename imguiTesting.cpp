@@ -39,7 +39,7 @@ bool ImTest::DestroyContext()
 void ImTest::Draw()
 {
     if (!drawn) return;
-    mApp->imWnd->forceDrawNextFrame=true;
+    mApp->imWnd->forceDrawNextFrame = true;
     ImGui::StyleColorsDark(); // on light background the log is not readable
     ImGuiTestEngine_ShowTestEngineWindows(engine, &drawn);
     DrawPresetControl();
@@ -81,7 +81,7 @@ void ImTest::PostSwap()
                 if (outputLog) {
                     std::string log;
                     for (int i = 0; i < test->Output.Log.Buffer.Buf.Size; i++) {
-                        log+=(test->Output.Log.Buffer.Buf[i]);
+                        log += (test->Output.Log.Buffer.Buf[i]);
                     }
                     std::cout << log << std::endl;
                 }
@@ -90,7 +90,7 @@ void ImTest::PostSwap()
         }
         running = false;
         ranScenarios++;
-        if (ranScenarios >= areScenarios) { // completed all scenarios
+        if (ranScenarios >= numberOfScenarios) { // completed all scenarios
             std::cout << "Stopping" << std::endl;
             exit(result);
         }
@@ -129,7 +129,7 @@ bool ImTest::ConfigureGeometry(Configuration index)
         LockWrapper myLock(mApp->imguiRenderLock);
         static_cast<MolFlow*>(mApp)->BuildPipe(5, 5);
     }
-        currentConfig = index;
+    currentConfig = index;
     break;
     case profile:
         ConfigureGeometry(qPipe);
@@ -177,7 +177,7 @@ void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
 {
     std::function<void()> f = [this, idx, shift, ctrl]() {
         interfGeom->SetSelection({ idx }, shift, ctrl);
-    };
+        };
     callQueue.push(f);
 }
 
@@ -185,7 +185,7 @@ void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
 {
     std::function<void()> f = [this, idxs, shift, ctrl]() {
         interfGeom->SetSelection(idxs, shift, ctrl);
-    };
+        };
     callQueue.push(f);
 }
 
@@ -204,7 +204,7 @@ void ImTest::SelectVertex(std::vector<size_t> idxs, bool add)
     if (!add) {
         std::function<void()> f = [this]() {
             interfGeom->EmptySelectedVertexList();
-        };
+            };
         callQueue.push(f);
     }
     for (const size_t idx : idxs) {
@@ -297,7 +297,7 @@ void ImTest::RegisterTests()
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
         if (currentConfig != empty) {
-            SelectFacet({0,1,2,3,4,5,6});
+            SelectFacet({ 0,1,2,3,4,5,6 });
             ctx->ItemClick("##1");
             ctx->KeyCharsReplaceEnter("1-7");
             ctx->ItemClick("  Remove from selection  ");
