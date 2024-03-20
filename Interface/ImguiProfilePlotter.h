@@ -14,8 +14,8 @@ public:
 	void Refresh();
 	void UpdatePlotter();
 private:
-	std::vector <size_t> comboOpts;
-	void UpdateComboOpts();
+	std::vector <size_t> profiledFacets;
+	void UpdateProfiledFacetList();
 	void OnShow() override;
 	void DrawProfileGraph();
 
@@ -31,8 +31,6 @@ private:
 	void UpdateSelection();
 	bool IsPlotted(size_t facetId);
 
-	std::vector<size_t> ParseManualFacetList();
-
 	int viewIdx = 1;
 	std::vector<ImPlotData> data;
 	ImPlotData manualPlot;
@@ -42,9 +40,6 @@ private:
 	bool updateHilights = false;
 
 	InterfaceGeometry* interfGeom;
-	InterfaceFacet* f = 0;
-	int nProfileFacets = 0;
-	std::string manualFacetSel;
 	bool colorBlind = false, identProfilesInGeom = false;
 	float lineWidth = 2;
 	std::string expression;
@@ -57,7 +52,6 @@ private:
 	bool setLog = false;
 	bool loading = false;
 	friend class ImTest;
-	size_t nFacets;
 
 	short aggregateState = 0;
 	bool mixedState = false;

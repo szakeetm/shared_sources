@@ -23,7 +23,6 @@ void ImProfilePlotter::Draw()
 	}
 	if (!drawn) return;
 	float dummyWidth;
-	nFacets = interfGeom->GetNbFacet();
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 82, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
@@ -36,17 +35,14 @@ void ImProfilePlotter::Draw()
 	} ImGui::SameLine();
 	ImGui::AlignTextToFramePadding();
 	if (ImGui::Selectable("All", false, 0, ImVec2(ImGui::GetContentRegionAvail().x - txtW * 3,0))) {
-		for (int i = 0; i < nFacets; i++) {
-			if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
-			else ShowFacet(i, true);
+		for (int i = 0; i < profiledFacets.size(); i++) {
+			ShowFacet(profiledFacets[i], true);
 		}
 	}
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu\nClick on profile name to select corresponding facet in geometry, hold shift to add to selection");
 	ImGui::Separator();
-	profileDrawToggle.resize(nFacets, false);
-	for (int i = 0; i < nFacets; i++) {
-		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+	for (int i = 0; i < profiledFacets.size(); i++) {
 		std::string fName = ("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
 		if (ImGui::Checkbox(("##"+fName).c_str(), (bool*)&(profileDrawToggle[i]))) {
 			if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
@@ -103,14 +99,15 @@ void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 	UpdateSidebarMasterToggle();
 }
 
-void ImProfilePlotter::UpdateComboOpts()
+void ImProfilePlotter::UpdateProfiledFacetList()
 {
-	comboOpts.clear();
+	profiledFacets.clear();
 	size_t nFacet = interfGeom->GetNbFacet();
 	for (int i = 0; i < nFacet; i++) {
 		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
-		comboOpts.push_back(i);
+		profiledFacets.push_back(i);
 	}
+	profileDrawToggle.resize(profiledFacets.size());
 }
 
 void ImProfilePlotter::OnShow() {
@@ -119,7 +116,7 @@ void ImProfilePlotter::OnShow() {
 
 void ImProfilePlotter::Refresh()
 {
-	UpdateComboOpts();
+	UpdateProfiledFacetList();
 	interfGeom = mApp->worker.GetGeometry();
 	int nbFacet = static_cast<int>(interfGeom->GetNbFacet());
 	for (int i = static_cast<int>(data.size()) - 1; i >= 0; i--) {
@@ -180,13 +177,6 @@ void ImProfilePlotter::ShowFacet(int id, bool add)
 	if (id != -1) {
 		interfGeom->GetFacet(id)->selected = true;
 	}
-	else {
-		std::vector<size_t> facetIds = ParseManualFacetList();
-
-		for (const auto facetId : facetIds) {
-			interfGeom->GetFacet(facetId)->selected = true;
-		}
-	}
 	UpdateSelection();
 }
 
@@ -194,19 +184,6 @@ void ImProfilePlotter::RemoveCurve(int id)
 {
 	updateHilights = true;
 	if (data.size() == 0) return;
-	if (id == -1) {
-		std::vector<size_t> facetIds = ParseManualFacetList();
-		long long i = data.size()-1; // has to be signed
-		for (; i >= 0 && i< static_cast<long long>(data.size()); i--) {
-			for (const auto& facetId : facetIds) {
-				if (data[i].id == facetId) {
-					data.erase(data.begin() + i);
-					break;
-				}
-			}
-		}
-		return;
-	}
 	for (size_t i = 0; i < data.size(); i++) if (data[i].id == id) {
 			data.erase(data.begin() + i);
 			return;
@@ -472,28 +449,10 @@ bool ImProfilePlotter::IsPlotted(size_t facetId)
 	return false;
 }
 
-std::vector<size_t> ImProfilePlotter::ParseManualFacetList()
-{
-	std::vector<size_t> facetIds;
-	try {
-		splitFacetList(facetIds, manualFacetSel, interfGeom->GetNbFacet());
-	}
-	catch (const std::exception& e) {
-		ImIOWrappers::InfoPopup("Error", e.what());
-	}
-	catch (...) {
-		ImIOWrappers::InfoPopup("Error", "Unknown exception");
-	}
-	return facetIds;
-}
-
 void ImProfilePlotter::ApplyAggregateState()
 {
-	nFacets = interfGeom->GetNbFacet();
-	profileDrawToggle.resize(nFacets, false);
 	mixedState = false;
-	for (int i = 0; i < nFacets; i++) {
-		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+	for (int i = 0; i < profileDrawToggle.size(); i++) {
 		profileDrawToggle[i] = aggregateState;
 		if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
 		else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
@@ -503,16 +462,13 @@ void ImProfilePlotter::ApplyAggregateState()
 
 void ImProfilePlotter::UpdateSidebarMasterToggle()
 {
-	nFacets = interfGeom->GetNbFacet();
 	mixedState = false;
-	if (nFacets == 0) {
+	if (profileDrawToggle.size()==0) {
 		aggregateState = 0;
 		return;
 	}
-	profileDrawToggle.resize(nFacets, false);
 	bool checkedFirst = false;
-	for (int i = 0; i < nFacets; i++) {
-		if (!interfGeom->GetFacet(i)->sh.isProfile) continue;
+	for (int i = 0; i < profileDrawToggle.size(); i++) {
 		if (!checkedFirst) {
 			aggregateState = profileDrawToggle[i];
 			checkedFirst = true;
