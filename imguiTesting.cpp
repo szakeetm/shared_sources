@@ -50,6 +50,16 @@ void ImTest::PostSwap()
 {
     ImGuiTestEngine_PostSwap(engine); // normal operation
 
+    // execute queued calls
+    {
+        LockWrapper lW(mApp->imguiRenderLock);
+        while (callQueue.size() > 0) {
+            std::function<void()> f = callQueue.front();
+            f();
+            callQueue.pop();
+        }
+    }
+
     // Command-line run test
 
     if (running && ImGuiTestEngine_IsTestQueueEmpty(engine)) { // test run finished
@@ -165,12 +175,40 @@ void ImTest::DrawPresetControl()
 
 void ImTest::SelectFacet(size_t idx, bool shift, bool ctrl)
 {
-    interfGeom->SetSelection({ idx }, shift, ctrl);
+    std::function<void()> f = [this, idx, shift, ctrl]() {
+        interfGeom->SetSelection({ idx }, shift, ctrl);
+    };
+    callQueue.push(f);
 }
 
 void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
 {
-    interfGeom->SetSelection(idxs, shift, ctrl);
+    std::function<void()> f = [this, idxs, shift, ctrl]() {
+        interfGeom->SetSelection(idxs, shift, ctrl);
+    };
+    callQueue.push(f);
+}
+
+void ImTest::SelectVertex(size_t idx, bool add)
+{
+    std::function<void()> f = [this, idx, add]() {
+        if (!add) interfGeom->EmptySelectedVertexList();
+        interfGeom->AddToSelectedVertexList(idx);
+    };
+    callQueue.push(f);
+}
+
+void ImTest::SelectVertex(std::vector<size_t> idxs, bool add)
+{
+    if (!add) {
+        std::function<void()> f = [this]() {
+            interfGeom->EmptySelectedVertexList();
+        };
+        callQueue.push(f);
+    }
+    for (const size_t idx : idxs) {
+        SelectVertex(idx, true);
+    }
 }
 
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
@@ -240,7 +278,25 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
-        // TODO Test Correctness of Input and button behaviour
+        if (currentConfig != empty) {
+            SelectFacet({0,1,2,3,4,5,6});
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("1-7");
+            ctx->ItemClick("  Remove from selection  ");
+            IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("  Select  ");
+            IM_CHECK_EQ(1, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("##1");
+            ctx->KeyCharsReplaceEnter("2");
+            ctx->ItemClick("  Add to selection  ");
+            IM_CHECK_EQ(2, interfGeom->GetNbSelectedFacets());
+        }
+        ctx->ItemClick("##1");
+        ctx->KeyCharsReplaceEnter("");
+        ctx->ItemClick("  Select  ");
+        ctx->ItemClick("//Error/  Ok  ");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Sticking");
@@ -385,8 +441,11 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Invert");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
-        int nSelected = interfGeom->GetNbSelectedFacets();
-        int expected = interfGeom->GetNbFacet() - nSelected;
+        int expected = 0;
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            expected = 6;
+        }
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Invert selection");
         IM_CHECK_EQ(expected, interfGeom->GetNbSelectedFacets());
@@ -467,7 +526,6 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Convergence Plotter");
-        ctx->ItemClick("Remove all");
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
