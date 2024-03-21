@@ -19,6 +19,7 @@ void ImFacetCoordinates::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 60, txtH * 20), ImVec2(txtW * 600, txtH*200));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
+	if (selFacet == nullptr) ImGui::BeginDisabled();
 	DrawTable();
 	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5 * txtH), true);
 	ImGui::TextDisabled("Insert / Remove vertex");
@@ -28,13 +29,19 @@ void ImFacetCoordinates::Draw()
 	if (ImGui::Button("Insert as last vertex")) {
 		Insert(table.size());
 	} ImGui::SameLine();
-	if (ImGui::Button("Insert before sel. row")&&selRow!=-1) {
-		Insert(selRow);
-		selRow--;
+	if (ImGui::Button("Insert before sel. row")) {
+		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		else {
+			Insert(selRow);
+			selRow--;
+		}
 	} ImGui::SameLine();
-	if (ImGui::Button("Remove selected row") && selRow != -1) {
-		table.erase(table.begin() + selRow);
-		selRow--;
+	if (ImGui::Button("Remove selected row")) {
+		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		else {
+			table.erase(table.begin() + selRow);
+			selRow--;
+		}
 	}
 	ImGui::EndChild();
 	
@@ -61,6 +68,7 @@ void ImFacetCoordinates::Draw()
 		ApplyButtonPress();
 	}
 
+	if (selFacet == nullptr) ImGui::EndDisabled();
 	ImGui::End();
 }
 
@@ -185,6 +193,7 @@ void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selected
 		table.push_back(newLine);
 	}
 	name = "Facet coordinates #" + std::to_string(selFacetId + 1) + "###FCoords";
+	if (selRow >= table.size() || selRow<-1) selRow = -1;
 }
 
 void ImFacetCoordinates::UpdateFromSelection()

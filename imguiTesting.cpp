@@ -931,6 +931,45 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet coordiantes");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Facet coordinates ...");
+        ctx->SetRef("###FCoords");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            ctx->ItemClick("/**/##VIID");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("/**/Insert as last vertex");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/Insert before sel. row");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/Remove selected row");
+            ctx->ItemClick("//Error/  Ok  ");
+
+            ctx->ItemClick("X");
+            ctx->ItemClick("//Set all X coordinates to:/New coordinate");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("//Set all X coordinates to:/  OK  ");
+            ctx->ItemClick("//Error/  Ok  ");
+
+            ctx->ItemClick("Z");
+            ctx->ItemClick("//Set all Z coordinates to:/New coordinate");
+            ctx->KeyCharsReplaceEnter("1");
+           
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("//Question/  Ok  ");
+
+            ctx->ItemClick("Z");
+            ctx->ItemClick("//Set all Z coordinates to:/New coordinate");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("//Set all Z coordinates to:/  OK  ");
+
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("//Question/  Ok  ");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
