@@ -970,6 +970,29 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Move");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Move ...");
+        ctx->SetRef("Move Facet");
+        DeselectAll();
+        ctx->ItemClick("/**/Facet normal");
+        ctx->ItemClick("//Error/  Ok  ");
+        
+        ctx->ItemClick("/**/Selected Vertex##0");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("/**/Facet center##0");
+        ctx->ItemClick("//Error/  Ok  ");
+
+        ctx->ItemClick("Move facets");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("Copy facets");
+        ctx->ItemClick("//Error/  Ok  ");
+        if (currentConfig != empty) {
+
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
