@@ -5,6 +5,7 @@
 class ImFacetCoordinates : public ImWindow {
 public:
 	void Draw();
+	void UpdateFromSelection(const std::vector<size_t>& selectedFacets);
 	void UpdateFromSelection();
 protected:
 	void DrawTable();
@@ -18,7 +19,7 @@ protected:
 	std::string insertIdInput = "0";
 	size_t insertID = 0;
 	InterfaceFacet* selFacet = nullptr;
-	size_t selFacetId = 0;
+	long long selFacetId = 0;
 	std::string name = "Facet coordinates###FCoords";
 	int selRow = -1;
 

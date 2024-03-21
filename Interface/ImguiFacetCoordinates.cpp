@@ -17,23 +17,7 @@
 void ImFacetCoordinates::Draw()
 {
 	if (!drawn) return;
-	std::vector<size_t> facets = interfGeom->GetSelectedFacets();
-	if (facets.size() > 0) {
-		if (facets[0] != selFacetId) {
-			// selection changed
-			selFacetId = facets[0];
-			name = "Facet coordinates #" + std::to_string(facets[0] + 1) + "###FCoords";
-			selFacet = interfGeom->GetFacet(selFacetId);
-			UpdateFromSelection();
-		}
-	}
-	else { //deselected
-		table.clear();
-		selFacet = nullptr;
-		selFacetId = -1;
-		name = "Facet coordinates###FCoords";
-	}
-	ImGui::SetNextWindowSize(ImVec2(txtW * 60, txtH * 20), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 60, txtH * 20), ImVec2(txtW * 600, txtH*200));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
 	DrawTable();
 	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5 * txtH), true);
@@ -71,7 +55,7 @@ void ImFacetCoordinates::Draw()
 	
 	ImGui::HelpMarker("Use the three axis buttons to bulk set coordinates to one value");
 	ImGui::SameLine();
-	float dummyWidth = ImGui::GetContentRegionAvail().x - 6 * txtW;
+	float dummyWidth = ImGui::GetContentRegionAvail().x - 7 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidth, 0)); ImGui::SameLine();
 	if (ImGui::Button("Apply")) {
 		ApplyButtonPress();
@@ -86,14 +70,14 @@ void ImFacetCoordinates::DrawTable()
 	bool wasInput = false;
 
 	int i = 0;
-	if (ImGui::BeginTable("##FCT", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders)) {
+	if (ImGui::BeginTable("##FCT", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders, ImVec2(ImGui::GetContentRegionAvail().x - (txtW/2), 0))) {
 		ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, txtW*2);
 		ImGui::TableSetupColumn("Vertex", ImGuiTableColumnFlags_WidthFixed, txtW * 5);
 		ImGui::TableSetupColumn("X");
 		ImGui::TableSetupColumn("Y");
 		ImGui::TableSetupColumn("Z");
 		ImGui::TableHeadersRow();
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 4));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 		for (line& ln : table) {
 			ImGui::TableNextRow();
@@ -107,15 +91,15 @@ void ImFacetCoordinates::DrawTable()
 			ImGui::TableSetColumnIndex(1);
 			ImGui::Text(fmt::format("{}",ln.vertexId+1));
 			ImGui::TableSetColumnIndex(2);
-			ImGui::SetNextItemWidth(txtW*16);
+			ImGui::SetNextItemWidth(txtW * 14);
 			if (selRow != i) ImGui::Text(ln.coordInput[0]);
 			else ImGui::InputText("###FCXI", &ln.coordInput[0]);
 			ImGui::TableSetColumnIndex(3);
-			ImGui::SetNextItemWidth(txtW * 16);
+			ImGui::SetNextItemWidth(txtW * 14);
 			if (selRow != i) ImGui::Text(ln.coordInput[1]);
 			else ImGui::InputText("###FCYI", &ln.coordInput[1]);
 			ImGui::TableSetColumnIndex(4);
-			ImGui::SetNextItemWidth(txtW * 16);
+			ImGui::SetNextItemWidth(txtW * 14);
 			if (selRow != i) ImGui::Text(ln.coordInput[2]);
 			else ImGui::InputText("###FCZI", &ln.coordInput[2]);
 			i++;
@@ -180,10 +164,17 @@ void ImFacetCoordinates::Insert(int pos)
 	selRow = pos;
 }
 
-void ImFacetCoordinates::UpdateFromSelection()
+void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selectedFacets)
 {
-	if (selFacet == nullptr) return;
 	table.clear();
+	if (selectedFacets.size() == 0) {
+		selFacet = nullptr;
+		selFacetId = -1;
+		name = "Facet coordinates###FCoords";
+		return;
+	}
+	selFacetId = selectedFacets[0];
+	selFacet = interfGeom->GetFacet(selFacetId);
 	size_t nbIndex = selFacet->sh.nbIndex;
 	for (size_t i = 0; i < nbIndex; i++) {
 		line newLine;
@@ -193,6 +184,12 @@ void ImFacetCoordinates::UpdateFromSelection()
 		newLine.coordInput[2] = fmt::format("{:.10g}", newLine.coord.z);
 		table.push_back(newLine);
 	}
+	name = "Facet coordinates #" + std::to_string(selFacetId + 1) + "###FCoords";
+}
+
+void ImFacetCoordinates::UpdateFromSelection()
+{
+	UpdateFromSelection(interfGeom->GetSelectedFacets());
 }
 
 bool ImFacetCoordinates::ValidateInputs(int idx)
