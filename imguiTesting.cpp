@@ -229,6 +229,18 @@ void ImTest::DeselectAllVerticies()
     callQueue.push(f);
 }
 
+void ImTest::DeleteFacet(size_t idx)
+{
+    if (idx >= interfGeom->GetNbFacet()) return;
+    std::function<void()> f = [this, idx]() {
+        if (mApp->worker.IsRunning()) mApp->worker.Stop_Public();
+        interfGeom->RemoveFacets({idx});
+        mApp->UpdateModelParams();
+        mApp->worker.MarkToReload();
+        };
+    callQueue.push(f);
+}
+
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
 {
     InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
@@ -989,7 +1001,26 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Copy facets");
         ctx->ItemClick("//Error/  Ok  ");
         if (currentConfig != empty) {
-
+            SelectFacet(0);
+            ctx->ItemClick("cm##X");
+            ctx->KeyCharsReplace("1");
+            ctx->ItemClick("cm##Y");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("cm##Z");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("Move facets");
+            ctx->ItemClick("cm##X");
+            ctx->KeyCharsReplace("-1");
+            ctx->ItemClick("Move facets");
+            ctx->ItemClick("/**/options/Facet center##0");
+            SelectFacet(1);
+            ctx->ItemClick("/**/options/Facet center##1");
+            ctx->ItemClick("Direction and Distance");
+            ctx->ItemClick("/**/cm##D");
+            ctx->KeyCharsReplace("-1");
+            ctx->ItemClick("Copy facets");
+            DeselectAll();
+            DeleteFacet(7);
         }
         ctx->ItemClick("#CLOSE");
         };

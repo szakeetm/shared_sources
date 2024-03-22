@@ -42,6 +42,7 @@ private:
 	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	void DeselectAll();
 	void DeselectAllVerticies();
+	void DeleteFacet(size_t idx);
 	// -----
 	std::queue<std::function<void()>> callQueue; // queue for calls to interface geometry to be executed mid-test but outside of test body
 	void RegisterTests(); // runs on startup, contains test definitions
