@@ -1024,6 +1024,49 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Scale");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Scale ...");
+        ctx->SetRef("Scale selected facets");
+        ctx->ItemClick("Scale facet");
+        ctx->ItemClick("//Nothing to scale/  Ok  ");
+        ctx->ItemClick("Copy facet");
+        ctx->ItemClick("//Nothing to scale/  Ok  ");
+        ctx->ItemClick("/**/###SSF");
+        ctx->ItemClick("/**/Selected vertex");
+        ctx->ItemClick("/**/Center of selected facet #");
+        ctx->ItemClick("/**/<-Get selected");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("/**/Uniform");
+        ctx->ItemClick("/**/Distorted");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            ctx->ItemClick("/**/<-Get selected");
+            SelectFacet(1);
+            ctx->ItemClick("/**/##X:");
+            ctx->KeyCharsReplace("1.1");
+            ctx->ItemClick("/**/##Y:");
+            ctx->KeyCharsReplace("1.1");
+            ctx->ItemClick("/**/##Z:");
+            ctx->KeyCharsReplaceEnter("1.1");
+            ctx->ItemClick("Copy facet");
+            ctx->ItemClick("/**/Uniform");
+            ctx->ItemClick("/**/###1by");
+            ctx->KeyCharsReplaceEnter("1.1");
+            ctx->ItemClick("Scale facet");
+            ctx->ItemClick("/**/###facetN");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("Scale facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/###SSF");
+            ctx->ItemClick("/**/##X=");
+            ctx->KeyCharsReplaceEnter("a");
+            DeleteFacet(7);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {

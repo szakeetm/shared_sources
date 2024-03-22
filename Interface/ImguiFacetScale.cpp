@@ -3,6 +3,7 @@
 #include "ImguiPopup.h"
 #include "Facet_shared.h"
 #include "Helper/StringHelper.h"
+#include "imgui_stdlib/imgui_stdlib.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -21,7 +22,7 @@ void ImFacetScale::Draw()
 
 	ImGui::BeginChild("##FSC1", ImVec2(0, 6 * txtH), true);
 	ImGui::TextDisabled("Invariant point definition mode");
-	if (ImGui::RadioButton("", invPt == Coords)) invPt = Coords;
+	if (ImGui::RadioButton("###SSF", invPt == Coords)) invPt = Coords;
 	if (invPt != Coords) ImGui::BeginDisabled();
 	ImGui::SameLine();
 	ImGui::InputTextLLabel("X=", &invariantPointInput[X], 0, txtW * 6);
@@ -32,14 +33,15 @@ void ImFacetScale::Draw()
 	if (invPt != Coords) ImGui::EndDisabled();
 
 	if (ImGui::RadioButton("Selected vertex", invPt == Vertex)) invPt = Vertex;
-	if (ImGui::RadioButton("Center of selected facet", invPt == Facet)) invPt = Facet;
+	if (ImGui::RadioButton("Center of selected facet #", invPt == Facet)) invPt = Facet;
 	if (invPt != Facet) ImGui::BeginDisabled();
 	ImGui::SameLine();
-	ImGui::InputTextLLabel("#", &facetIdInput);
+	ImGui::SetNextItemWidth(100);
+	ImGui::InputText("###facetN", &facetIdInput);
 	ImGui::SameLine();
 	if (ImGui::Button("<-Get selected")) {
 		if (interfGeom->GetNbSelectedFacets() != 1) {
-			ImIOWrappers::InfoPopup("Error", "Select exactly one vacet.");
+			ImIOWrappers::InfoPopup("Error", "Select exactly one facet.");
 		}
 		else {
 			for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
@@ -64,7 +66,11 @@ void ImFacetScale::Draw()
 		uniformScaleDenominatorInput = fmt::format("{}", uniformScaleDenumerator);
 	}
 	ImGui::SameLine();
-	if (ImGui::InputTextLLabel("(=1/", &uniformScaleDenominatorInput) && Util::getNumber(&uniformScaleDenumerator, uniformScaleDenominatorInput)) {
+	ImGui::AlignTextToFramePadding();
+	ImGui::Text("(=1/");
+	ImGui::SameLine();
+	ImGui::SetNextItemWidth(100);
+	if (ImGui::InputText("###1by", &uniformScaleDenominatorInput) && Util::getNumber(&uniformScaleDenumerator, uniformScaleDenominatorInput)) {
 		uniformScaleNumerator = 1 / uniformScaleDenumerator;
 		uniformScaleNumeratorInput = fmt::format("{}", uniformScaleNumerator);
 	}
