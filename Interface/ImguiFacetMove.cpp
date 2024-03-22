@@ -22,7 +22,7 @@ void ImFacetMove::Draw()
 {
     if (!drawn) return;
     float width = 0, cursorY = 0;
-    ImGui::SetNextWindowSize(ImVec2(80 * txtW,0));
+    ImGui::SetNextWindowSize(ImVec2(40 * txtW,0));
     ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
     ImGui::Begin("Move Facet", &drawn,  0 | ImGuiWindowFlags_NoSavedSettings);
     
