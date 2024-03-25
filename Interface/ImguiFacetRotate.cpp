@@ -94,7 +94,7 @@ void ImFacetRotate::Draw()
 
 			ImGui::TableSetColumnIndex(7);
 			if (ImGui::Button("<-Get base")) {
-
+				GetBaseButtonPress();
 			}
 			ImGui::TableNextRow();
 			// direction row
@@ -121,7 +121,7 @@ void ImFacetRotate::Draw()
 
 			ImGui::TableSetColumnIndex(7);
 			if (ImGui::Button("<-Calc diff")) {
-
+				CalcDiffButtonPress();
 			}
 			ImGui::EndTable();
 		}

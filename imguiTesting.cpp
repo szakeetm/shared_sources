@@ -1112,6 +1112,46 @@ void ImTest::RegisterTests()
         DeselectAll();
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Rotate");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Rotate ...");
+        ctx->SetRef("Rotate selected facets");
+        ctx->ItemClick("##Degrees:");
+        ctx->KeyCharsReplaceEnter("180");
+        ctx->ItemClick("##Radians:");
+        ctx->KeyCharsReplaceEnter("2");
+        ctx->ItemClick("/**/X axis");
+        ctx->ItemClick("/**/Y axis");
+        ctx->ItemClick("/**/Z axis");
+        ctx->ItemClick("/**/U vector");
+        ctx->ItemClick("/**/V vector");
+        ctx->ItemClick("/**/Normal vector");
+        ctx->ItemClick("/**/Define by 2 verticies");
+        ctx->ItemClick("/**/Define by equation:");
+        ctx->ItemClick("Rotate facet");
+        ctx->ItemClick("//Nothing to rotate/  Ok  ");
+        ctx->ItemClick("Copy facet");
+        ctx->ItemClick("//Nothing to rotate/  Ok  ");
+        if (currentConfig != empty) {
+            ctx->ItemClick("/**/###RSFADMEQ/###FPDMa");
+            ctx->KeyCharsReplaceEnter("x");
+            SelectFacet(0);
+            ctx->ItemClick("Copy facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            SelectVertex(0);
+            ctx->ItemClick("/**/<-Get base");
+            DeselectAll();
+            SelectVertex(1);
+            ctx->ItemClick("/**/<-Calc diff");
+            SelectFacet(0);
+            ctx->ItemClick("Copy facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
