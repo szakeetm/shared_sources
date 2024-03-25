@@ -1152,6 +1152,26 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Align");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Align to ...");
+        ctx->SetRef("Align selected facets to an other");
+        if (currentConfig != empty) {
+            SelectFacet(1);
+            ctx->ItemClick("/**/Update from selection");
+            SelectFacet({0,1});
+            SelectVertex(3);
+            SelectVertex(5);
+            SelectVertex(4);
+            SelectVertex(6);
+            ctx->ItemClick("Align");
+            ctx->Sleep(1);
+            ctx->ItemClick("Undo");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
