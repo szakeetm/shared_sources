@@ -988,7 +988,7 @@ static void ShowMenuFacet() {
     if (ImGui::MenuItem("Scale ...")) {
         FacetScaleMenuPress();
     }
-    if (ImGui::MenuItem("Mirror / Project ...")) {
+    if (ImGui::MenuItem("Mirror / Project ...###MPF")) {
         FacetMirrorProjectMenuPress();
     }
     if (ImGui::MenuItem("Rotate ...")) {

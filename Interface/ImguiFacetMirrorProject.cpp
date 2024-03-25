@@ -17,7 +17,7 @@ void ImFacetMirrorProject::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowSize(ImVec2(txtW * 50, txtH * 16));
 	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
-	ImGui::Begin("Mirror/project selected facets", &drawn, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
+	ImGui::Begin("Mirror/project selected facets###MPFW", &drawn, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 	ImGui::BeginChild("###FPDM",ImVec2(0, ImGui::GetContentRegionAvail().y - 3 * txtH), true);
 	ImGui::TextDisabled("Plane definition mode");
 	if (ImGui::RadioButton("XY plane", mode == xy)) mode = xy;

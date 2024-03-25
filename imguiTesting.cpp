@@ -1067,6 +1067,51 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet MirrorProject");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/###MPF");
+        ctx->SetRef("###MPFW");
+        ctx->ItemClick("Mirror facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Copy mirror facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Project facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Copy project facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        if (currentConfig != empty && mApp->imWnd->mirrProjFacet.mode == ImFacetMirrorProject::PlaneDefinition::none) {
+            SelectFacet(2);
+            ctx->ItemClick("Mirror facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Copy mirror facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Project facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Copy project facet");
+            ctx->ItemClick("//Error/  Ok  ");
+        }
+        ctx->ItemClick("/**/Define by plane equation");
+        ctx->ItemClick("/**/Define by 3 selected vertices");
+        ctx->ItemClick("/**/Plane of facet #");
+        ctx->ItemClick("/**/XZ plane");
+        ctx->ItemClick("/**/YZ plane");
+        ctx->ItemClick("/**/XY plane");
+        if (currentConfig != empty) {
+            SelectFacet(2);
+            ctx->ItemClick("/**/YZ plane");
+            ctx->ItemClick("Copy mirror facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+            SelectFacet(2);
+            ctx->ItemClick("Copy project facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+        }
+        DeselectAll();
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {

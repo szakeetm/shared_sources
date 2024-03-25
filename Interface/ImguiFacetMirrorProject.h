@@ -19,4 +19,5 @@ private:
 	std::string facetIdInput, aInput, bInput, cInput, dInput;
 	double a, b, c, d;
 	bool enableUndo = false;
+	friend class ImTest;
 };
