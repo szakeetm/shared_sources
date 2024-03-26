@@ -46,14 +46,6 @@ if(NOT MSVC)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
-    endif()
-
 endif(NOT MSVC)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include

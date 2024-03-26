@@ -59,16 +59,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
-
-if(MSVC)
-
-endif(MSVC)
-if(NOT MSVC)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PRIVATE stdc++)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        # add nothing for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PRIVATE stdc++fs)
-    endif()
-endif(NOT MSVC)
