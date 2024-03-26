@@ -10,6 +10,7 @@ add_subdirectory(SDL_SavePNG)
 add_subdirectory(Clipper)
 add_subdirectory(PugiXML)
 add_subdirectory(NativeFileDialog)
+add_subdirectory(TruncatedGaussian)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
 # Project
@@ -226,11 +227,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_7}
         )
 
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
-target_link_libraries(${PROJECT_NAME} PUBLIC truncated_normal_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC truncated_normal)
-
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
@@ -239,6 +235,8 @@ if(MSVC)
             libcurl_a_x64.lib
             SDL2.lib
             SDL2main.lib
+            #libgsl.lib
+            #libgslcblas.lib
             lzma.lib
             ZipLib.lib
             #zlib.lib
@@ -248,7 +246,7 @@ if(MSVC)
             ole32.lib
             )
 
-    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng)
+    target_link_libraries(${PROJECT_NAME} PRIVATE pugixml clipper sdl_savepng truncatedgaussian)
     #target_link_libraries(${PROJECT_NAME} nativefiledialog)
 endif(MSVC)
 if(NOT MSVC)
@@ -302,23 +300,29 @@ if(NOT MSVC)
     find_package(PNG REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${PNG_INCLUDE_DIRS})
 
+    find_package(GSL REQUIRED)
+    target_include_directories(${PROJECT_NAME} PUBLIC ${GSL_INCLUDE_DIRS})
+
     find_package(CURL REQUIRED)
     target_include_directories(${PROJECT_NAME} PUBLIC ${CURL_INCLUDE_DIRS})
 
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    #find_package(stdc++fs REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
+    #GSLCBLAS or BLAS?
+    #find_package(GSLCBLAS REQUIRED)
+    #target_include_directories(${PROJECT_NAME} PRIVATE ${GSLCBLAS_INCLUDE_DIRS})
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
+    target_link_libraries(${PROJECT_NAME} PUBLIC ${GSL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${CURL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
+    #target_link_libraries(${PROJECT_NAME} ${GSLCBLAS_LIBRARIES})
 
     #for shared memory
     find_library(LIBRT rt)
@@ -333,23 +337,7 @@ if(NOT MSVC)
     # # You can define two import-locations: one for debug and one for release.
     # get_filename_component(ABS_LINK_DIR_1 "${LINK_DIR_1}" REALPATH)
 
-    # # other static libraries need to be built with similar settings for clang (here: libc++)
-    # if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    #     set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
-    # else()
-    #     set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    # endif()
-    # target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
-
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
-    endif()
-
-    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng)
+    target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng truncatedgaussian)
     target_link_libraries(${PROJECT_NAME}  PUBLIC nativefiledialog)
 endif(NOT MSVC)
 
