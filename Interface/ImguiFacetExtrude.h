@@ -35,4 +35,5 @@ protected:
 		curveDXInput, curveDYInput, curveDZInput, radiusInput, angleDegInput, angleRadInput, curveLengthInput, stepsInput, facetInfo;
 	double facetLength=1, pathDX, pathDY, pathDZ, curveX0, curveY0, curveZ0,
 		curveDX, curveDY, curveDZ, radius, angleDeg, angleRad, curveLength, steps;
+	friend class ImTest;
 };

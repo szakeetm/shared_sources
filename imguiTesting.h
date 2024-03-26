@@ -34,7 +34,7 @@ private:
 	bool SetFacetProfile(size_t facetIdx, int profile);
 
 	bool ConfigureGeometry(Configuration index = empty);
-
+	void ConfigureGeometryMidTest(Configuration index = empty);
 	// wrapper functions for changing selections mid-test (needs to enqueue functions to be executed outside of the test body)
 	void SelectFacet(size_t idx, bool shift = false, bool ctrl = false);
 	void SelectFacet(std::vector<size_t> idxs, bool shift = false, bool ctrl = false);

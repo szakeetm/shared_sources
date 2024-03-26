@@ -36,6 +36,7 @@ void ImFacetExtrude::Draw()
 	ImGui::TextDisabled("Along straight path");
 	if (ImGui::RadioButton("Direction vector", mode == directionVector)) mode = directionVector;
 	if (!(mode == directionVector)) ImGui::BeginDisabled();
+	ImGui::AlignTextToFramePadding();
 	ImGui::Text("dX:"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 6);
 	ImGui::InputText("###EF2DX", &pathDXInput); ImGui::SameLine();
@@ -53,15 +54,15 @@ void ImFacetExtrude::Draw()
 	if (ImGui::Button("Get Dir. Vertex")) {
 		GetDirectionButtonPress();
 	}
-	ImGui::Text(fmt::format("Base vert.: {}\tDir. vert.: {}", baseId == -1 ? "none" : std::to_string(baseId), dirId == -1 ? "none" : std::to_string(dirId)));
+	ImGui::Text(fmt::format("Base vert.: {}\tDir. vert.: {}", baseId == -1 ? "none" : std::to_string(baseId+1), dirId == -1 ? "none" : std::to_string(dirId+1)));
 	if (!(mode == directionVector)) ImGui::EndDisabled();
 	ImGui::EndChild();
 
 	ImGui::BeginChild("###EF3", ImVec2(0, txtH * 17), true);
 	ImGui::TextDisabled("Along curve");
-	if (ImGui::RadioButton("Towards normal", mode == curveNormal)) mode = curveNormal;
+	if (ImGui::RadioButton("Towards normal##C", mode == curveNormal)) mode = curveNormal;
 	ImGui::SameLine();
-	if (ImGui::RadioButton("Against normal", mode == curveAntinormal)) mode = curveAntinormal;
+	if (ImGui::RadioButton("Against normal##C", mode == curveAntinormal)) mode = curveAntinormal;
 
 	if (!(mode == curveNormal || mode == curveAntinormal)) ImGui::BeginDisabled();
 	ImGui::Text("Radius base:");
@@ -403,6 +404,10 @@ void ImFacetExtrude::ExtrudeButtonPress()
 		ImIOWrappers::InfoPopup("Nothing to move", "No facets selected");
 		return;
 	}
+	else if (mode == none) {
+		ImIOWrappers::InfoPopup("Error", "No mode selected");
+		return;
+	}
 	else if (interfGeom->GetNbSelectedFacets() > 1) {
 		mApp->imWnd->popup.Open("Extrusion of more than one facet", fmt::format("Extrude {} facets at once?", interfGeom->GetNbSelectedFacets()),
 			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { PreProcessExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
@@ -415,7 +420,7 @@ void ImFacetExtrude::GetBaseButtonPress()
 {
 	if (auto foundId = AssertOneVertexSelected()) {
 		baseId = *foundId;
-		if (dirId > 0 && dirId < interfGeom->GetNbVertex()) {
+		if (dirId >= 0 && dirId < interfGeom->GetNbVertex()) {
 			pathDX=(interfGeom->GetVertex(dirId)->x - interfGeom->GetVertex(baseId)->x);
 			pathDY=(interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ=(interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);
@@ -431,7 +436,7 @@ void ImFacetExtrude::GetDirectionButtonPress()
 {
 	if (auto foundId = AssertOneVertexSelected()) {
 		dirId = *foundId;
-		if (baseId > 0 && baseId < interfGeom->GetNbVertex()) {
+		if (baseId >= 0 && baseId < interfGeom->GetNbVertex()) {
 			pathDX = (interfGeom->GetVertex(dirId)->x - interfGeom->GetVertex(baseId)->x);
 			pathDY = (interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ = (interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);

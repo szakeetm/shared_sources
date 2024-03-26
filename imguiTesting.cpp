@@ -144,6 +144,14 @@ bool ImTest::ConfigureGeometry(Configuration index)
     return true;
 }
 
+void ImTest::ConfigureGeometryMidTest(Configuration index)
+{
+    std::function<void()> f = [this, index]() {
+        ConfigureGeometry(index);
+        };
+    callQueue.push(f);
+}
+
 void ImTest::DrawPresetControl()
 {
     ImGui::Begin("Test preset control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
@@ -1169,6 +1177,68 @@ void ImTest::RegisterTests()
             ctx->ItemClick("Align");
             ctx->Sleep(1);
             ctx->ItemClick("Undo");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Extrude");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Extrude ...");
+        ctx->SetRef("Extrude Facet");
+        ctx->ItemClick("Extrude");
+        ctx->ItemClick("//Nothing to move/  Ok  ");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            if (mApp->imWnd->extrudeFacet.mode == ImFacetExtrude::Mode::none) {
+                ctx->ItemClick("Extrude");
+                ctx->ItemClick("//Error/  Ok  ");
+            }
+            ctx->ItemClick("/**/Towards normal");
+            ctx->ItemClick("/**/Against normal");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("x");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("/**/Direction vector");
+            DeselectAll();
+            SelectVertex(0);
+            ctx->ItemClick("/**/Get Base Vertex");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            DeselectAll();
+            SelectVertex(1);
+            ctx->ItemClick("/**/Get Dir. Vertex");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            DeselectAll();
+            SelectFacet(1);
+            ctx->ItemClick("Extrude");
+            ctx->Sleep(1);
+            // 'Along Curve' section
+            ctx->ItemClick("/**/Towards normal##C");
+            ctx->ItemClick("/**/Against normal##C");
+            SelectFacet(2);
+            ctx->ItemClick("/**/Facet center");
+            ctx->ItemClick("/**/Facet V");
+            ctx->ItemClick("/**/###EF3TR");
+            ctx->KeyCharsReplaceEnter("5");
+            ctx->ItemClick("/**/###EF3TAD");
+            ctx->KeyCharsReplaceEnter("90");
+            ctx->ItemClick("/**/###FE3TS");
+            ctx->KeyCharsReplaceEnter("5");
+            ctx->ItemClick("Extrude");
+            ctx->Sleep(1);
+            ConfigureGeometryMidTest(currentConfig);
         }
         ctx->ItemClick("#CLOSE");
         };
