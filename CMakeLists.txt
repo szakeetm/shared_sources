@@ -308,9 +308,6 @@ if(NOT MSVC)
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
-    #find_package(stdc++fs REQUIRED)
-    #target_include_directories(${PROJECT_NAME} PRIVATE ${stdc++fs_INCLUDE_DIRS})
-
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
@@ -324,29 +321,6 @@ if(NOT MSVC)
     find_library(LIBRT rt)
     if(LIBRT)
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
-    endif()
-
-    # Your-external "mylib", add GLOBAL if the imported library is located in directories above the current.
-    # if (NOT TARGET libzip)
-    #     add_library( libzip STATIC IMPORTED GLOBAL)
-    # endif()
-    # # You can define two import-locations: one for debug and one for release.
-    # get_filename_component(ABS_LINK_DIR_1 "${LINK_DIR_1}" REALPATH)
-
-    # # other static libraries need to be built with similar settings for clang (here: libc++)
-    # if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-    #     set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_clang.a )
-    # else()
-    #     set_target_properties( libzip PROPERTIES IMPORTED_LOCATION ${ABS_LINK_DIR_1}/libzip_gcc.a )
-    # endif()
-    # target_link_libraries(${PROJECT_NAME} PUBLIC libzip) # from ./lib/
-
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
     endif()
 
     target_link_libraries(${PROJECT_NAME}  PUBLIC  pugixml clipper sdl_savepng)

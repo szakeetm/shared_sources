@@ -55,19 +55,6 @@ target_link_directories(${PROJECT_NAME} PRIVATE
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 
-if(MSVC)
-
-endif(MSVC)
-if(NOT MSVC)
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        # add nothing for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} stdc++fs)
-    endif()
-endif(NOT MSVC)
-
 # Preprocessor definitions
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE)
