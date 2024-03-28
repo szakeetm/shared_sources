@@ -388,7 +388,7 @@ void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 */
 void FacetCoordinates::ApplyChanges(){
 	if (!selFacet) {
-		GLMessageBox::Display("A facet must have at least 3 vertices", "Not enough vertices", GLDLG_OK, GLDLG_ICONWARNING);
+		GLMessageBox::Display("No facet selected", "Select a facet", GLDLG_OK, GLDLG_ICONWARNING);
 		return;
 	}
 
