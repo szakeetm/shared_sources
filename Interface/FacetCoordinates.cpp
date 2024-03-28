@@ -97,9 +97,9 @@ FacetCoordinates::FacetCoordinates():GLWindow() {
   removePosButton->SetEnabled(false);
   Add(removePosButton);
   
-  updateButton = new GLButton(0,"Apply");
-  updateButton->SetBounds(wD-195,hD-43,90,19);
-  Add(updateButton);
+  applyButton = new GLButton(0,"Apply");
+  applyButton->SetBounds(wD-195,hD-43,90,19);
+  Add(applyButton);
 
   setXbutton = new GLButton(0, "X");
   setXbutton->SetBounds(5, hD - 43, 16, 19);
@@ -149,10 +149,14 @@ void FacetCoordinates::GetSelected() {
     if(!selFacet) i++;
   }
 
-  char tmp[32];
-  sprintf(tmp,"Facets coordinates #%zd",i+1);
-  SetTitle(tmp);
-
+  std::string title = "Facet coordinates";
+  if (selFacet) {
+	  title += fmt::format(" #{}", i + 1);
+  }
+  else {
+	  title += " (none selected)";
+  }
+  SetTitle(title);
 }
 
 /**
@@ -161,19 +165,23 @@ void FacetCoordinates::GetSelected() {
 void FacetCoordinates::UpdateFromSelection() {
 
   
-  if(!IsVisible()) return;
-  GetSelected();
-  if(!selFacet) return;
+	if (!IsVisible()) return;
+	GetSelected();
+	size_t nbIndex;
+	if (!selFacet) {
+		nbIndex = 0; //clear list
+	}
+	else {
+		nbIndex = selFacet->sh.nbIndex;
+	}
 
   InterfaceGeometry *interfGeom = worker->GetGeometry();
 
-  size_t nbIndex = selFacet->sh.nbIndex;
-
-  lines=std::vector<line>();
+  lines.clear();
 
   for (size_t i=0;i<nbIndex;i++) {
 	  line newLine;
-	  newLine.coord=*interfGeom->GetVertex(newLine.vertexId=selFacet->indices[i]);
+	  newLine.coord=static_cast<Vector3d>(*interfGeom->GetVertex(newLine.vertexId=selFacet->indices[i]));
 	  lines.push_back(newLine);
   }
 
@@ -198,88 +206,96 @@ void FacetCoordinates::Display(Worker *w) {
 * \param src Exact source of the call
 * \param message Type of the source (button)
 */
-void FacetCoordinates::ProcessMessage(GLComponent *src,int message) {
+void FacetCoordinates::ProcessMessage(GLComponent* src, int message) {
 
-  InterfaceGeometry *interfGeom = worker->GetGeometry();
-  switch(message) {
-    case MSG_BUTTON:
-      if(src==dismissButton) {
-        SetVisible(false);
-	  } else if (src==insertLastButton) {
-		  int vertexId;
-		  size_t rowId=facetListC->GetNbRow();
-		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=interfGeom->GetNbVertex())) {
-			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
-			  break;
-		  }
-		  InsertVertex(rowId,vertexId-1);
-	  } else if (src==insertBeforeButton) {
-		  int vertexId;
-		  int rowId=facetListC->GetSelectedRow();
-		  if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId>=1 && vertexId<=interfGeom->GetNbVertex())) {
-			  GLMessageBox::Display("Wrong vertex Id entered","Wrong number",GLDLG_OK,GLDLG_ICONWARNING);
-			  break;
-		  }
-		  InsertVertex(rowId,vertexId-1);
-	  } else if (src==removePosButton) {
-		  RemoveRow(facetListC->GetSelectedRow());
-	  } else if(src==updateButton) {
-		  int rep = GLMessageBox::Display("Apply geometry changes ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
-		  if (rep == GLDLG_OK) {
-			  ApplyChanges();
-		  }
-		  break;
-	  }
-	  else if (src == setXbutton) {
-		  double coordValue;
-		  char *coord = GLInputBox::GetInput("0", "New coordinate:", "Set all X coordinates to:");
-		  if (!coord) return;
-		  if (!sscanf(coord, "%lf", &coordValue)) {
-			  GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  for (int row=0;row<(int)lines.size();row++) {
-			  lines[row].coord.x=coordValue;
-		  }
-		  RebuildList();
-	  }
-	  else if (src == setYbutton) {
-		  double coordValue;
-		  char *coord = GLInputBox::GetInput("0", "New coordinate:", "Set all Y coordinates to:");
-		  if (!coord) return;
-		  if (!sscanf(coord, "%lf", &coordValue)) {
-			  GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  for (int row = 0; row<(int)lines.size(); row++) {
-			  lines[row].coord.y = coordValue;
-		  }
-		  RebuildList();
-	  }
-	  else if (src == setZbutton) {
-		  double coordValue;
-		  char *coord = GLInputBox::GetInput("0", "New coordinate:", "Set all Z coordinates to:");
-		  if (!coord) return;
-		  if (!sscanf(coord, "%lf", &coordValue)) {
-			  GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
-			  return;
-		  }
-		  for (int row = 0; row<(int)lines.size(); row++) {
-			  lines[row].coord.z = coordValue;
-		  }
-		  RebuildList();
-	  }
-    case MSG_LIST:
-      if(src==facetListC) {
-        int selRow=facetListC->GetSelectedRow()+1;
-		insertBeforeButton->SetEnabled(selRow);
-		removePosButton->SetEnabled(selRow);
-      }
-    break;
+	InterfaceGeometry* interfGeom = worker->GetGeometry();
+	switch (message) {
+	case MSG_BUTTON:
+		if (src == dismissButton) {
+			SetVisible(false);
+		}
+		else if (src == insertLastButton) {
+			int vertexId;
+			size_t rowId = facetListC->GetNbRow();
+			if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId >= 1 && vertexId <= interfGeom->GetNbVertex())) {
+				GLMessageBox::Display("Wrong vertex Id entered", "Wrong number", GLDLG_OK, GLDLG_ICONWARNING);
+				break;
+			}
+			InsertVertex(rowId, vertexId - 1);
+		}
+		else if (src == insertBeforeButton) {
+			int vertexId;
+			int rowId = facetListC->GetSelectedRow();
+			if (!(insertIdText->GetNumberInt(&vertexId)) || !(vertexId >= 1 && vertexId <= interfGeom->GetNbVertex())) {
+				GLMessageBox::Display("Wrong vertex Id entered", "Wrong number", GLDLG_OK, GLDLG_ICONWARNING);
+				break;
+			}
+			InsertVertex(rowId, vertexId - 1);
+		}
+		else if (src == removePosButton) {
+			RemoveRow(facetListC->GetSelectedRow());
+		}
+		else if (src == applyButton) {
+			if (!selFacet) {
+				GLMessageBox::Display("No facet selected", "Select a facet", GLDLG_OK, GLDLG_ICONWARNING);
+				return;
+			}
+			int rep = GLMessageBox::Display("Apply geometry changes ?", "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONWARNING);
+			if (rep == GLDLG_OK) {
+				ApplyChanges();
+			}
+			break;
+		}
+		else if (src == setXbutton) {
+			double coordValue;
+			char* coord = GLInputBox::GetInput("0", "New coordinate:", "Set all X coordinates to:");
+			if (!coord) return;
+			if (!sscanf(coord, "%lf", &coordValue)) {
+				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			for (int row = 0; row < (int)lines.size(); row++) {
+				lines[row].coord.x = coordValue;
+			}
+			RebuildList();
+		}
+		else if (src == setYbutton) {
+			double coordValue;
+			char* coord = GLInputBox::GetInput("0", "New coordinate:", "Set all Y coordinates to:");
+			if (!coord) return;
+			if (!sscanf(coord, "%lf", &coordValue)) {
+				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			for (int row = 0; row < (int)lines.size(); row++) {
+				lines[row].coord.y = coordValue;
+			}
+			RebuildList();
+		}
+		else if (src == setZbutton) {
+			double coordValue;
+			char* coord = GLInputBox::GetInput("0", "New coordinate:", "Set all Z coordinates to:");
+			if (!coord) return;
+			if (!sscanf(coord, "%lf", &coordValue)) {
+				GLMessageBox::Display("Invalid number", "Error", GLDLG_OK, GLDLG_ICONERROR);
+				return;
+			}
+			for (int row = 0; row < (int)lines.size(); row++) {
+				lines[row].coord.z = coordValue;
+			}
+			RebuildList();
+		}
+		break;
+	case MSG_LIST:
+		if (src == facetListC) {
+			int selRow = facetListC->GetSelectedRow() + 1;
+			insertBeforeButton->SetEnabled(selRow);
+			removePosButton->SetEnabled(selRow);
+		}
+		break;
+	}
 
-  }
-
-  GLWindow::ProcessMessage(src,message);
+	GLWindow::ProcessMessage(src, message);
 
 }
 
@@ -356,7 +372,7 @@ void FacetCoordinates::RemoveRow(size_t rowId){
 void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 	line newLine;
 	newLine.vertexId=vertexId;
-	newLine.coord=*(worker->GetGeometry()->GetVertex(vertexId));
+	newLine.coord=static_cast<Vector3d>(*(worker->GetGeometry()->GetVertex(vertexId)));
 	lines.insert(lines.begin()+rowId,newLine);
 	RebuildList();
 
@@ -371,7 +387,11 @@ void FacetCoordinates::InsertVertex(size_t rowId,size_t vertexId){
 * \brief Apply changes to the geometry made in the table
 */
 void FacetCoordinates::ApplyChanges(){
-	
+	if (!selFacet) {
+		GLMessageBox::Display("A facet must have at least 3 vertices", "Not enough vertices", GLDLG_OK, GLDLG_ICONWARNING);
+		return;
+	}
+
 	InterfaceGeometry *interfGeom = worker->GetGeometry();
 	
 	if (facetListC->GetNbRow()<3) {
