@@ -60,7 +60,7 @@ private:
   InterfaceFacet        *selFacet;
   GLList       *facetListC;
   GLButton     *dismissButton;
-  GLButton     *updateButton; //apply
+  GLButton     *applyButton; //apply
   GLButton     *insertLastButton;
   GLButton     *insertBeforeButton;
   GLButton     *removePosButton;
