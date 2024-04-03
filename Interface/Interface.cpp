@@ -1728,17 +1728,23 @@ Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
+License summary: 
+This program is free software, but we do not warrant that
+it's free of bugs or that its results are valid.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+Full license text: https://molflow.docs.cern.ch/about/
 
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
+Open-source libraries used:
+- SDL2 (https://www.libsdl.org/)
+- Curl (https://curl.se/libcurl/)
+- LibPng (http://www.libpng.org/pub/png/libpng.html)
+- GCC (https://gcc.gnu.org/)
+- 7-zip and lib7zip wrapper (https://7-zip.org/ and https://github.com/stonewell/lib7zip)
+- NativeFileDialog extended (https://github.com/btzy/nativefiledialog-extended)
+- GTK3 (on Linux. https://www.gtk.org/)
+- pugixml (https://github.com/zeux/pugixml)
+- cereal (https://github.com/USCiLab/cereal)
+- fmt (https://github.com/fmtlib/fmt)
 )";
                     GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
                     return true;
