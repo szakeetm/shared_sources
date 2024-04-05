@@ -42,6 +42,17 @@ private:
 	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	void DeselectAll();
 	void DeselectAllVerticies();
+	class TextureType {
+	public:
+		bool enabled = false;    
+		bool countAbs = false;    
+		bool countRefl = false;   
+		bool countTrans = false;
+		bool countDirection = false;
+		bool countDes = false;
+		bool countACD = false;
+	};
+	void TextureFacet(size_t idx, int width, int height, TextureType type);
 	// -----
 	std::queue<std::function<void()>> callQueue; // queue for calls to interface geometry to be executed mid-test but outside of test body
 	void RegisterTests(); // runs on startup, contains test definitions

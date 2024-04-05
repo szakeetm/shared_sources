@@ -237,6 +237,27 @@ void ImTest::DeselectAllVerticies()
     callQueue.push(f);
 }
 
+// not working for unknown reasons
+void ImTest::TextureFacet(size_t idx, int width, int height, TextureType type)
+{
+    std::function<void()> func = [this, idx, width, height, type]() {
+        InterfaceFacet* f = interfGeom->GetFacet(idx);
+        f->sh.isTextured = type.enabled;
+        f->sh.countAbs = type.countAbs;
+        f->sh.countRefl = type.countRefl;
+        f->sh.countTrans = type.countTrans;
+        f->sh.countDirection = type.countDirection;
+        f->sh.countDes = type.countDes;
+        f->sh.countACD = type.countACD;
+        interfGeom->SetFacetTexture(idx, f->tRatioU*width, f->tRatioV*height, true);
+        interfGeom->BuildGLList();
+        mApp->UpdateModelParams();
+        mApp->UpdateFacetParams(false);
+        if (mApp->imWnd && mApp->imWnd->textPlot.IsVisible()) mApp->imWnd->textPlot.UpdatePlotter();
+        };
+    callQueue.push(func);
+}
+
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
 {
     InterfaceFacet* f = interfGeom->GetFacet(facetIdx);
@@ -832,4 +853,13 @@ void ImTest::RegisterTests()
         }
         IM_CHECK_EQ(interfGeom->GetNbFacet(), 0);
         };
+    /*
+    t = IM_REGISTER_TEST(engine, "Test Utils", "Set texture");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        TextureType t;
+        t.enabled = true;
+        t.countDes = true;
+        TextureFacet(0, 10, 10, t);
+        };
+    */
 }
