@@ -144,6 +144,14 @@ bool ImTest::ConfigureGeometry(Configuration index)
     return true;
 }
 
+void ImTest::ConfigureGeometryMidTest(Configuration index)
+{
+    std::function<void()> f = [this, index]() {
+        ConfigureGeometry(index);
+        };
+    callQueue.push(f);
+}
+
 void ImTest::DrawPresetControl()
 {
     ImGui::Begin("Test preset control", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
