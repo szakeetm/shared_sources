@@ -110,14 +110,6 @@ ELSE() #not MSVC
         target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
     endif()
 
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
-    endif()
-
     #external libraries from our project
     message(Shared CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
