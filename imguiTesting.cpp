@@ -199,6 +199,7 @@ void ImTest::SelectFacet(std::vector<size_t> idxs, bool shift, bool ctrl)
 
 void ImTest::SelectVertex(size_t idx, bool add)
 {
+    if (idx >= interfGeom->GetNbVertex()) return;
     std::function<void()> f = [this, idx, add]() {
         if (!add) interfGeom->EmptySelectedVertexList();
         interfGeom->SelectVertex(idx);
@@ -235,6 +236,29 @@ void ImTest::DeselectAllVerticies()
         interfGeom->UnselectAllVertex();
         };
     callQueue.push(f);
+}
+
+// not working for unknown reasons
+void ImTest::TextureFacet(size_t idx, int width, int height, TextureType type)
+{
+    if (idx >= interfGeom->GetNbFacet()) return;
+    std::function<void()> func = [this, idx, width, height, type]() {
+        InterfaceFacet* f = interfGeom->GetFacet(idx);
+        f->sh.isTextured = type.enabled;
+        f->sh.countAbs = type.countAbs;
+        f->sh.countRefl = type.countRefl;
+        f->sh.countTrans = type.countTrans;
+        f->sh.countDirection = type.countDirection;
+        f->sh.countDes = type.countDes;
+        f->sh.countACD = type.countACD;
+        interfGeom->SetFacetTexture(idx, width, height, true);
+        interfGeom->BuildGLList();
+        mApp->UpdateModelParams();
+        mApp->UpdateFacetParams(true);
+        mApp->worker.MarkToReload();
+        if (mApp->imWnd && mApp->imWnd->textPlot.IsVisible()) mApp->imWnd->textPlot.UpdatePlotter();
+        };
+    callQueue.push(func);
 }
 
 void ImTest::DeleteFacet(size_t idx)
