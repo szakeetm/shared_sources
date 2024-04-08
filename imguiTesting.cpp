@@ -50,15 +50,7 @@ void ImTest::PostSwap()
 {
     ImGuiTestEngine_PostSwap(engine); // normal operation
 
-    // execute queued calls
-    {
-        LockWrapper lW(mApp->imguiRenderLock);
-        while (callQueue.size() > 0) {
-            std::function<void()> f = callQueue.front();
-            f();
-            callQueue.pop();
-        }
-    }
+    ExecuteQueue();
 
     // Command-line run test
 
@@ -138,6 +130,33 @@ bool ImTest::ConfigureGeometry(Configuration index)
         SetFacetProfile(6, 5);
         currentConfig = index;
         break;
+    case texture:
+    {
+        ConfigureGeometry(qPipe);
+        TextureType t;
+        t.enabled = true;
+        t.countDes = true;
+        TextureFacet(0, 10, 10, t);
+        t = TextureType();
+        t.enabled = true;
+        t.countAbs = true;
+        TextureFacet(1, 10, 10, t);
+        t = TextureType();
+        t.enabled = true;
+        t.countRefl = true;
+        TextureFacet(2, 10, 10, t);
+        t = TextureType();
+        t.enabled = true;
+        t.countACD = true;
+        TextureFacet(3, 10, 10, t);
+        t = TextureType();
+        t.enabled = true;
+        t.countDirection = true;
+        TextureFacet(4, 10, 10, t);
+        ExecuteQueue();
+        currentConfig = index;
+    }
+        break;
     default:
         return false;
     }
@@ -172,6 +191,10 @@ void ImTest::DrawPresetControl()
         if (ImGui::Selectable("Profile", selection == profile)) {
             previewVal = "Profile";
             selection = profile;
+        }
+        if (ImGui::Selectable("Texture", selection == texture)) {
+            previewVal = "Texture";
+            selection = texture;
         }
         ImGui::EndCombo();
     } ImGui::SameLine();
@@ -272,6 +295,16 @@ bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
         mApp->worker.MarkToReload();
         mApp->UpdateFacetParams(false);
         if (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) mApp->imWnd->profPlot.Refresh();
+    }
+}
+
+void ImTest::ExecuteQueue()
+{
+    LockWrapper lW(mApp->imguiRenderLock);
+    while (callQueue.size() > 0) {
+        std::function<void()> f = callQueue.front();
+        f();
+        callQueue.pop();
     }
 }
 
@@ -382,9 +415,11 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Texture");
-        // TODO - Test Configuration with textured facets
         if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
             IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
+        if (currentConfig == texture) {
+            IM_CHECK_EQ(5, interfGeom->GetNbSelectedFacets());
         }
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Texture Type");
@@ -392,9 +427,18 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Texture type...");
         ctx->SetRef("Select facets by texture properties");
-        // TODO test tristate behaviour & test configuration with different texture types
+        ctx->ItemClick("  Select  ");
         if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
             IM_CHECK_EQ(0, interfGeom->GetNbSelectedFacets());
+        }
+        if (currentConfig == texture) {
+            IM_CHECK_EQ(5, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("**/Count desorbtion");
+            ctx->ItemClick("  Select  ");
+            IM_CHECK_EQ(1, interfGeom->GetNbSelectedFacets());
+            ctx->ItemClick("**/Count desorbtion");
+            ctx->ItemClick("  Select  ");
+            IM_CHECK_EQ(4, interfGeom->GetNbSelectedFacets());
         }
         ctx->ItemClick("#CLOSE");
         };
@@ -674,6 +718,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Texture Plotter ...");
         ctx->SetRef("###TexturePlotter");
@@ -697,11 +742,21 @@ void ImTest::RegisterTests()
         IM_CHECK_EQ(mApp->imWnd->textPlot.fitToWindow, false);
         ctx->MenuClick("Data");
         ctx->ItemClick("Find Max");
-        for (int i = 0; i < mApp->imWnd->textPlot.comboOpts.size(); i++) {
-            ctx->ComboClick(("##View/###" + std::to_string(i)).c_str());
+        if (currentConfig == texture) {
+            SelectFacet(0);
+            ctx->Sleep(1);
+            SelectFacet(1);
+            ctx->Sleep(1);
+            SelectFacet(2);
+            ctx->Sleep(1);
+            SelectFacet(3);
+            ctx->Sleep(1);
+            SelectFacet(4);
+            ctx->Sleep(1);
+            ctx->ItemClick("Find Max");
+            ctx->ComboClickAll("##View");
         }
         ctx->ItemClick("#CLOSE");
-        // TODO test with a texture selected
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Profile plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {

@@ -27,9 +27,10 @@ private:
 	enum Configuration : int {
 		empty = 0,
 		qPipe = 1,
-		profile = 2
+		profile = 2,
+		texture = 3
 	};
-	int numberOfScenarios = 3;
+	int numberOfScenarios = 4;
 	Configuration currentConfig = empty;
 	bool SetFacetProfile(size_t facetIdx, int profile);
 
@@ -55,6 +56,7 @@ private:
 	void TextureFacet(size_t idx, int width, int height, TextureType type);
 	// -----
 	std::queue<std::function<void()>> callQueue; // queue for calls to interface geometry to be executed mid-test but outside of test body
+	void ExecuteQueue();
 	void RegisterTests(); // runs on startup, contains test definitions
 	ImGuiTestEngine* engine = nullptr;
 };
