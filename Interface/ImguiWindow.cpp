@@ -255,6 +255,9 @@ void ImguiWindow::init() {
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
 
+    geoView = ImGeoViewer();
+    geoView.Init(mApp);
+
     RegisterShortcuts();
 
     start_time = ImGui::GetTime();
@@ -381,6 +384,10 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+            bool geomViewVisible = geoView.IsVisible();
+            if (ImGui::Checkbox("Geometry Viewer", &geomViewVisible)) {
+                geoView.SetVisible(geomViewVisible);
+            }
 #ifdef DEBUG
             bool testEngineVis = testEngine.IsVisible();
             if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
@@ -470,6 +477,8 @@ void ImguiWindow::renderSingle() {
         extrudeFacet.Draw();
 
         expFac.Draw();
+
+        geoView.Draw();
 
         shortcutMan.DoShortcuts();
 

@@ -49,6 +49,8 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiFacetExtrude.h"
 #include "ImguiMenu.h"
 
+#include "ImguiGeometryViewer.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #else
@@ -120,6 +122,8 @@ public:
     ImFacetAlign alignFacet;
     ImFacetExtrude extrudeFacet;
     ImExplodeFacet expFac;
+
+    ImGeoViewer geoView;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;

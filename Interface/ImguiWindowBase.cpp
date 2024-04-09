@@ -22,12 +22,12 @@ void ImWindow::Init(Interface* mApp_)
 
 void ImWindow::Show()
 {
+	OnShow();
 	drawn = true;
 	if (txtW == 0 || txtH == 0) {
 		txtW = ImGui::CalcTextSize("0").x;
 		txtH = ImGui::GetTextLineHeightWithSpacing();
 	}
-	OnShow();
 }
 
 void ImWindow::Hide()
@@ -47,8 +47,8 @@ const bool ImWindow::IsVisible() {
 
 void ImWindow::SetVisible(bool value)
 {
-	if (value) OnShow();
-	drawn = value;
+	if (value) Show();
+	else Hide();
 }
 
 void ImWindow::OnShow()
