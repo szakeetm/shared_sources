@@ -47,6 +47,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 #include "ImguiFacetRotate.h"
 #include "ImguiFacetAlign.h"
 #include "ImguiFacetExtrude.h"
+#include "ImguiFacetSplit.h"
 #include "ImguiMenu.h"
 
 #include "ImguiGeometryViewer.h"
@@ -122,6 +123,8 @@ public:
     ImFacetRotate rotFacet;
     ImFacetAlign alignFacet;
     ImFacetExtrude extrudeFacet;
+    ImFacetSplit splitFac;
+
     ImExplodeFacet expFac;
 
     ImGeoViewer geoView;

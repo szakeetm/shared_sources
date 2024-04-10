@@ -877,12 +877,14 @@ void ExtrudeMenuPress() {
     */
 }
 void SplitMenuPress() {
-    
+    mApp->imWnd->splitFac.Show();
+    /*
     if (!mApp->splitFacet || !mApp->splitFacet->IsVisible()) {
         SAFE_DELETE(mApp->splitFacet);
         mApp->splitFacet = new SplitFacet(interfGeom, &mApp->worker);
         mApp->splitFacet->SetVisible(true);
     }
+    */
 }
 void CreateShapeMenuPress() {
     

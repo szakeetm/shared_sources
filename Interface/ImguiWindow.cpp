@@ -254,6 +254,8 @@ void ImguiWindow::init() {
 
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
+    splitFac = ImFacetSplit();
+    splitFac.Init(mApp);
 
     geoView = ImGeoViewer();
     geoView.Init(mApp);
@@ -475,6 +477,7 @@ void ImguiWindow::renderSingle() {
         rotFacet.Draw();
         alignFacet.Draw();
         extrudeFacet.Draw();
+        splitFac.Draw();
 
         expFac.Draw();
 
