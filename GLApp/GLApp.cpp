@@ -478,6 +478,11 @@ void GLApplication::Run() {
                     }
                 }
             }
+            {
+                // event passthrough
+                activeImGuiEvent &= !imWnd->skipImGuiEvents;
+                imWnd->skipImGuiEvents = false;
+            }
             if (activeImGuiEvent) {
                 wereEvents_imgui = 3;
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){

@@ -32,6 +32,7 @@ void ImWindow::Show()
 
 void ImWindow::Hide()
 {
+	OnHide();
 	drawn = false;
 }
 
@@ -52,6 +53,10 @@ void ImWindow::SetVisible(bool value)
 }
 
 void ImWindow::OnShow()
+{
+}
+
+void ImWindow::OnHide()
 {
 }
 

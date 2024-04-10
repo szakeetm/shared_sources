@@ -65,6 +65,7 @@ Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
 class ImguiWindow {
 public:
     bool forceDrawNextFrame = false;
+    bool skipImGuiEvents = false;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
