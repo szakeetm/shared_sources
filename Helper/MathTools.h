@@ -192,7 +192,7 @@ Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
                  const bool reverse); //sets sHandle->currentParticleTracer.direction
 
-double GeneratePoissonRnd(const double lambda, const double rnd);
+double GenerateExponentialRnd(const double one_per_lambda, const double rnd);
 
 //Elementwise addition of two vectors:
 #include <algorithm>
