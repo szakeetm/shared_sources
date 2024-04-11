@@ -512,6 +512,7 @@ void ImguiWindow::Refresh()
     convPlot.Reload();
     movPart.Update();
     facCoord.UpdateFromSelection();
+    splitFac.Reset();
 }
 
 void ImguiWindow::Reset()
@@ -523,6 +524,7 @@ void ImguiWindow::Reset()
     convPlot.Reload();
     textScale.Load();
     partLog.Reset();
+    splitFac.Reset();
 }
 
 void ImguiWindow::Clear()

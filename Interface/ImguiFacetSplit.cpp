@@ -3,7 +3,8 @@
 #include "ImguiExtensions.h"
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
-#include "Facet_shared.h"
+#include "Interface.h"
+#include "ImguiWindow.h"
 
 void ImFacetSplit::Draw()
 {
@@ -67,26 +68,46 @@ void ImFacetSplit::Draw()
 		else
 		{
 			facetId = interfGeom->GetSelectedFacets()[0];
-			fIdIn = fmt::format("{}", facetId);
+			fIdIn = fmt::format("{}", facetId+1);
 		}
 	}
 	if (ImGui::RadioButton("By 3 selected verticies", mode == Mode::verticies)) mode = Mode::verticies;
 	ImGui::EndChild();
 	if (ImGui::Button("Split")) {
-		// todo
+		SplitButtonPress();
 	} ImGui::SameLine();
 	bool disable = !enableUndo;
 	if (disable) ImGui::BeginDisabled();
 	if (ImGui::Button("Undo")) {
-		// todo
+		UndoButtonPress();
 	}
 	if (disable) ImGui::EndDisabled();
+	ImGui::SameLine();
+	ImGui::AlignTextToFramePadding();
+	ImGui::Text(output);
 	ImGui::End();
+}
+
+void ImFacetSplit::Reset()
+{
+	for (auto facet : deletedFacetList) {
+		delete facet.f;
+	}
+	deletedFacetList.clear();
+	enableUndo = false;
+	output = "";
 }
 
 void ImFacetSplit::SplitButtonPress()
 {
-	// validate
+	if (interfGeom->GetNbSelectedFacets() == 0) {
+		ImIOWrappers::InfoPopup("Nothing to split", "No facets selected");
+		return;
+	}
+	
+	Vector3d P0, N;
+	double nN2;
+
 	switch (mode) {
 	case none:
 		ImIOWrappers::InfoPopup("Error", "Select plane definition mode");
@@ -112,6 +133,11 @@ void ImFacetSplit::SplitButtonPress()
 			ImIOWrappers::InfoPopup("Error", "A B and C are all 0, this is not a valid plane definition");
 			return;
 		}
+		N.x = x; N.y = y; N.z = z;
+		P0.x = 0.0; P0.y = 0; P0.z = 0;
+		if (x != 0) P0.x = -w / x;
+		else if (y != 0) P0.y = -w / y;
+		else if (z != 0) P0.z = -w / z;
 		break;
 	case facet:
 		if (!Util::getNumber(&facetId, fIdIn)) {
@@ -122,21 +148,85 @@ void ImFacetSplit::SplitButtonPress()
 			ImIOWrappers::InfoPopup("Error", "No such facet");
 			return;
 		}
+		P0 = *interfGeom->GetVertex(interfGeom->GetFacet(facetId - 1)->indices[0]);
+		N = interfGeom->GetFacet(facetId - 1)->sh.N;
 		break;
 	case verticies:
 		if (interfGeom->GetNbSelectedVertex() != 3) {
 			ImIOWrappers::InfoPopup("Error", "Select exactly 3 verticies");
 			return;
 		}
+		{
+			auto selectedVertexIds = interfGeom->GetSelectedVertices();
+			Vector3d U2 = (*interfGeom->GetVertex(selectedVertexIds[0]) - *interfGeom->GetVertex(selectedVertexIds[1])).Normalized();
+			Vector3d V2 = (*interfGeom->GetVertex(selectedVertexIds[0]) - *interfGeom->GetVertex(selectedVertexIds[2])).Normalized();
+			Vector3d N2 = CrossProduct(V2, U2); //We have a normal vector
+			nN2 = N2.Norme();
+			if (nN2 < 1e-8) {
+				ImIOWrappers::InfoPopup("Can't define plane", "The selected 3 vertices are on a line.");
+				return;
+			}
+			// Normalize N2
+			N = N2 * (1.0 / nN2);
+			P0 = *(interfGeom->GetVertex(selectedVertexIds[0]));
+		}
 		break;
 	default:
 		break;
 	}
 	// perform split
-	// todo
+	LockWrapper lW(mApp->imguiRenderLock);
+	if (mApp->AskToReset()) {
+		GLProgress_GUI prg = GLProgress_GUI("Splitting facets", "Facet split");
+
+		for (auto facet : deletedFacetList) {
+			delete facet.f;
+		}
+		deletedFacetList.clear();
+		nbCreated = 0;
+		deletedFacetList = interfGeom->SplitSelectedFacets(P0, N, &nbCreated, prg);
+		nbFacet = interfGeom->GetNbFacet();
+		output = fmt::format("{} facet split, creating {} new", deletedFacetList.size(), nbCreated);
+		if (deletedFacetList.size() > 0) enableUndo = true;
+		mApp->worker.MarkToReload();
+		mApp->UpdateModelParams();
+		mApp->UpdateFacetlistSelected();
+		mApp->UpdateViewers();
+	}
+}
+
+void ImFacetSplit::DoUndo() {
+	LockWrapper lW(mApp->imguiRenderLock);
+	deletedFacetList.clear();
+	enableUndo = false;
+	output = "";
+	//Renumberformula
+	mApp->worker.MarkToReload();
+	mApp->UpdateModelParams();
+	mApp->UpdateFacetlistSelected();
+	mApp->UpdateViewers();
 }
 
 void ImFacetSplit::UndoButtonPress()
 {
-	//todo
+	if (nbFacet == interfGeom->GetNbFacet()) { //Assume no change since the split operation
+		std::vector<size_t> newlyCreatedList;
+		for (size_t index = (interfGeom->GetNbFacet() - nbCreated); index < interfGeom->GetNbFacet(); index++) {
+			newlyCreatedList.push_back(index);
+		}
+		interfGeom->RemoveFacets(newlyCreatedList);
+		LockWrapper lW(mApp->imguiRenderLock);
+		interfGeom->RestoreFacets(deletedFacetList, false); //Restore to original position
+		DoUndo();
+	}
+	else {
+		auto f = [this]() {
+			LockWrapper lW(mApp->imguiRenderLock);
+			interfGeom->RestoreFacets(deletedFacetList, true); //Restore to end
+			DoUndo();
+			};
+		mApp->imWnd->popup.Open("Undo split", "Geometry changed since split, restore to end without deleting the newly created facets?",
+			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Ok", f, ImGuiKey_Enter, ImGuiKey_KeypadEnter),
+				std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", 0, ImGuiKey_Escape) });
+	}
 }
