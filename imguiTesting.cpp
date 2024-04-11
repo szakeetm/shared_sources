@@ -1267,7 +1267,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("Extrude Facet");
         ctx->ItemClick("Extrude");
         ctx->ItemClick("//Nothing to move/  Ok  ");
-        if (currentConfig != empty) {
+        if (currentConfig != empty && currentConfig != texture) {
             SelectFacet(0);
             if (mApp->imWnd->extrudeFacet.mode == ImFacetExtrude::Mode::none) {
                 ctx->ItemClick("Extrude");
@@ -1318,6 +1318,24 @@ void ImTest::RegisterTests()
             ctx->ItemClick("Extrude");
             ctx->Sleep(1);
             ConfigureGeometryMidTest(currentConfig);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Split");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Split ...");
+        ctx->SetRef("Split Facet");
+        ctx->ItemClick("**/XY plane");
+        ctx->ItemClick("**/XZ plane");
+        ctx->ItemClick("**/YZ plane");
+        if (currentConfig != empty) {
+            SelectFacet(3);
+            ctx->ItemClick("Split");
+            ctx->Sleep(1);
+            ctx->ItemClick("Undo");
+            ctx->Sleep(1);
         }
         ctx->ItemClick("#CLOSE");
         };

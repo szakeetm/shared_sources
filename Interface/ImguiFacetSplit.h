@@ -24,4 +24,5 @@ protected:
 	void SplitButtonPress();
 	void UndoButtonPress();
 	void DoUndo();
+	friend class ImTest;
 };
