@@ -176,7 +176,6 @@ set(SIM_FILES
         RayTracing/KDTree.cpp
         RayTracing/BVH.cpp
         RayTracing/BVH.h
-        RayTracing/Ray.cpp
         RayTracing/Ray.h
         RayTracing/Primitive.h
         BoundingBox.cpp
