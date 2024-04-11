@@ -9,7 +9,7 @@
 #include "FacetData.h"
 #include "Polygon.h"
 #include "Helper/MathTools.h"
-#include "RayTracing/RTHelper.h" // SimulationFacetTempVar
+#include "RayTracing/RTHelper.h" // FacetHitDetails
 #include "RayTracing/Ray.h" // hitlink
 
 #if defined(SYNRAD)
@@ -76,11 +76,11 @@ bool RTFacet::Intersect(Ray &ray) {
                             if (hardHit) {
                                 if (d < ray.tMax) {
                                     ray.tMax = d;
-                                    ray.hardHit = HitLink(globalId, SimulationFacetTempVar(d,u,v,true));
+                                    ray.hardHit = HitDescriptor(globalId, FacetHitDetails(d,u,v,true));
                                 }
                             }
                             else {
-                                ray.transparentHits.emplace_back(globalId, SimulationFacetTempVar(d,u,v,false));
+                                ray.transparentHits.emplace_back(globalId, FacetHitDetails(d,u,v,false));
                             }
                             return hardHit;
                         } // IsInFacet

@@ -1,6 +1,6 @@
 #include "Ray.h"
 #include "RTHelper.h"
 
-HitLink::~HitLink(){
+HitDescriptor::~HitDescriptor(){
     //delete hit;
 };

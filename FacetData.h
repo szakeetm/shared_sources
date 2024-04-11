@@ -53,30 +53,7 @@ class RTFacet : public RTPrimitive {
 protected:
     RTFacet() : RTPrimitive(), sh(0){};
     RTFacet(size_t nbIndex) : RTPrimitive(), sh(nbIndex) {};
-    /*
-    RTFacet(const RTFacet& cpy) {
-        globalId = cpy.globalId;
-        sh = cpy.sh;
-        indices = cpy.indices;
-        vertices2 = cpy.vertices2;
-        surf = cpy.surf; // Will be deleted tgthr with cpy
-    };
-    RTFacet(RTFacet&& cpy) noexcept{
-        globalId = std::move(cpy.globalId);
-        sh = std::move(cpy.sh);
-        indices = std::move(cpy.indices);
-        vertices2 = std::move(cpy.vertices2);
-        surf = cpy.surf;
-        cpy.surf = nullptr;
-    };
-    ~RTFacet() override{
-        if (surf) {
-            //delete surf;
-            // don' t delete, origin is an unreferenced shared ptr
-            surf = nullptr;
-        }
-    }
-    */
+
 public:
     FacetProperties sh;
     std::vector<size_t> indices;          // Indices (Reference to geometry vertex)
@@ -84,7 +61,6 @@ public:
     std::shared_ptr<Surface> surf;
 
     size_t globalId=0; //Global index (to identify when superstructures are present)
-    //size_t iSCount{0};
 
     void ComputeBB() { bb = sh.bb;};
     bool Intersect(Ray &r) override;

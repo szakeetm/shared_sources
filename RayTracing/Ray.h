@@ -1,49 +1,38 @@
-#ifndef MOLFLOW_PROJ_RAY_H
-#define MOLFLOW_PROJ_RAY_H
+#pragma once
 
 #include "Vector.h"
 #include "RTHelper.h"
 
 class MersenneTwister;
 
-//! Keep track of temporary/transparent hits in a single linked list
-//! Deprecated as replaced by HitLink
-/*
-struct HitChain {
-    size_t facetId;
-    SimulationFacetTempVar *hitDetails;
-    HitChain *next;
-};
-*/
+//! Keep track of temporary/transparent hits; corresponds to an individual hit
+struct HitDescriptor {
+    HitDescriptor() : facetId(9999999999), hitDetails(FacetHitDetails()) {};
+    HitDescriptor(size_t facetId, FacetHitDetails h) : facetId(facetId), hitDetails(h) {};
 
-//! Keep track of temporary/transparent hits; correspomds to an individual hit
-struct HitLink {
-    HitLink() : facetId(9999999999), hitDetails(SimulationFacetTempVar()) {};
-    HitLink(size_t id, SimulationFacetTempVar h) : facetId(id), hitDetails(h) {};
+    // Move constructor called on resize, prevent from deleting FacetHitDetails
+    HitDescriptor(const HitDescriptor &rhs) = default;
 
-    // Move constructor called on resize, prevent from deleting SimulationFacetTempVar
-    HitLink(const HitLink &rhs) = default;
-
-    HitLink(HitLink &&rhs) noexcept:
+    HitDescriptor(HitDescriptor &&rhs) noexcept:
             facetId(rhs.facetId),
             hitDetails(rhs.hitDetails) {};
 
-    HitLink &operator=(const HitLink &src) {
+    HitDescriptor &operator=(const HitDescriptor &src) {
         facetId = src.facetId;
         hitDetails = src.hitDetails;
         return *this;
     };
 
-    HitLink &operator=(HitLink &&src) {
+    HitDescriptor &operator=(HitDescriptor &&src) {
         facetId = src.facetId;
         hitDetails = src.hitDetails;
         return *this;
     };
 
-    ~HitLink();
+    ~HitDescriptor();
 
     size_t facetId; //! id of the hit entity
-    SimulationFacetTempVar hitDetails; //! Hit statistic
+    FacetHitDetails hitDetails; //! Hit statistic
 };
 
 //! Additional application specific payload
@@ -86,9 +75,7 @@ public:
     //const Medium *medium;
     Payload *pay;
 
-    std::vector<HitLink> transparentHits;
-    HitLink hardHit;
+    std::vector<HitDescriptor> transparentHits;
+    HitDescriptor hardHit;
     MersenneTwister *rng;
 };
-
-#endif //MOLFLOW_PROJ_RAY_H

@@ -11,19 +11,14 @@
 #include <mutex>
 
 class RTFacet;
-class AABBNODE;
 class GlobalSimuState;
 
 class SuperStructure {
 public:
-    std::shared_ptr<AABBNODE> aabbTree; // Structure AABB tree
     std::string name;
 
     size_t GetMemSize(){
         size_t sum = sizeof(name);
-        if (aabbTree) {
-            sum += aabbTree->GetMemSize();
-        }
         return sum;
     }
 };
