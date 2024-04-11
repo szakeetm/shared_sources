@@ -7,12 +7,13 @@ class MersenneTwister;
 
 //! Keep track of temporary/transparent hits; corresponds to an individual hit
 struct HitDescriptor {
-    HitDescriptor() : facetId(9999999999), hitDetails(FacetHitDetail()) {};
+    HitDescriptor() = default;
     HitDescriptor(size_t facetId, FacetHitDetail h) : facetId(facetId), hitDetails(h) {};
 
     // Move constructor called on resize, prevent from deleting FacetHitDetail
-    HitDescriptor(const HitDescriptor &rhs) = default;
+    //HitDescriptor(const HitDescriptor &rhs) = default;
 
+    /*
     HitDescriptor(HitDescriptor &&rhs) noexcept:
             facetId(rhs.facetId),
             hitDetails(rhs.hitDetails) {};
@@ -28,10 +29,8 @@ struct HitDescriptor {
         hitDetails = src.hitDetails;
         return *this;
     };
-
-    ~HitDescriptor();
-
-    size_t facetId; //! id of the hit entity
+    */
+    size_t facetId= 9999999999; //! id of the hit entity
     FacetHitDetail hitDetails; //! Hit statistic
 };
 
