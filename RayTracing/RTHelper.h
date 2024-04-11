@@ -1,13 +1,12 @@
 #pragma once
 
-struct FacetHitDetails {
+struct FacetHitDetail {
     // Temporary var (used in Intersect for collision)
 
-    FacetHitDetails() = default;
-    FacetHitDetails(double d, double u, double v, bool hit) :colDistTranspPass(d), colU(u), colV(v), isHit(hit) {};
+    FacetHitDetail() = default;
+    FacetHitDetail(double d, double u, double v, bool hit) :colDistTranspPass(d), colU(u), colV(v) {};
 
     double colDistTranspPass = 1.0E99;
     double colU = 0.0;
     double colV = 0.0;
-    bool   isHit = false;
 };
