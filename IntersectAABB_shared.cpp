@@ -272,8 +272,8 @@ bool RaySphereIntersect(Vector3d *center, double radius, Vector3d *rPos, Vector3
 
 }
 
-
-/*std::tuple<bool,SubprocessFacet*,double>*/ void
+/*
+void
 IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
               const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,
               const bool nullRy, const bool nullRz, const Vector3d &inverseRayDir, bool &found,
@@ -287,10 +287,6 @@ IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, cons
 	// Method: 3x3 Sytem solving for ray/rectangle intersection. 
 	// Solve the vectosr equation u*U + v*V + d*D = Z (using Cramer's rule)
 	// nuv = u^v (for faster calculation)
-
-	/*bool found = false;
-	SubprocessFacet* collidedFacet = lastHitBefore;
-	double minLength=minLengthSoFar;*/
 
 	if (node.left == nullptr || node.right == nullptr) { // Leaf
 
@@ -370,20 +366,21 @@ IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, cons
 			} // dot<0
 		} // end for
 
-	} /* end Leaf */ else {
+	} else {
 
 		if (IntersectBB_new(*(node.left), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
             IntersectTree(
                     currentParticleTracer, *(node.left), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
-                    inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
+                    inverseRayDir,  found, collidedFacet, minLength);
 		}
 		if (IntersectBB_new(*(node.right), rayPos, nullRx, nullRy, nullRz, inverseRayDir)) {
             IntersectTree(
                     currentParticleTracer, *(node.right), rayPos, rayDirOpposite, lastHitBefore, nullRx, nullRy, nullRz,
-                    inverseRayDir, /*transparentHitFacetPointers,*/ found, collidedFacet, minLength);
+                    inverseRayDir, found, collidedFacet, minLength);
 		}
 	}
 }
+*/
 
 bool IsInFacet(const SimulationFacet &f, const double u, const double v) {
 
@@ -391,6 +388,7 @@ bool IsInFacet(const SimulationFacet &f, const double u, const double v) {
 
 }
 
+/*
 std::tuple<bool, SimulationFacet *, double>
 Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh) {
 	// Source ray (rayDir vector must be normalized)
@@ -416,18 +414,14 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
     IntersectTree(currentParticleTracer, *bvh, rayPos, -1.0 * rayDir,
                   currentParticleTracer->lastHitFacet,
                   nullRx, nullRy, nullRz, inverseRayDir,
-            /*transparentHitFacetPointers,*/ found, collidedFacet, minLength); //output params
+             found, collidedFacet, minLength); //output params
 
 	if (found) {
 
         currentParticleTracer->tmpFacetVars[collidedFacet->globalId].isHit = true;
 
-		// Second pass for transparent hits
-		/*for (const auto& tpFacet : currentParticleTracer->transparentHitBuffer){
-			if (tpFacet->colDist < minLength) {
-                model->RegisterTransparentPass(tpFacet, currentParticleTracer);
-			}
-		}*/
+		// Here transparent pass register removed
+
         // Second pass for transparent hits
         for (auto& tpFacet : currentParticleTracer->transparentHitBuffer){
             if (currentParticleTracer->tmpFacetVars[tpFacet->globalId].colDistTranspPass >= minLength) {
@@ -438,6 +432,7 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
 	return { found, collidedFacet, minLength };
 
 }
+*/
 
 //! Ray-AABB intersection, given in the inverse direction of the ray and a handy array dirIsNeg that gives a factor for negative directions (dir < 0)
 //Performance critical! 35% of ray-tracing CPU usage

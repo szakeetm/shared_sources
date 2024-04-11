@@ -10,40 +10,40 @@ class MersenneTwister;
 //! Deprecated as replaced by HitLink
 /*
 struct HitChain {
-    size_t hitId;
-    SimulationFacetTempVar *hit;
+    size_t facetId;
+    SimulationFacetTempVar *hitDetails;
     HitChain *next;
 };
 */
 
 //! Keep track of temporary/transparent hits; correspomds to an individual hit
 struct HitLink {
-    HitLink() : hitId(9999999999), hit(SimulationFacetTempVar()) {};
-    HitLink(size_t id, SimulationFacetTempVar h) : hitId(id), hit(h) {};
+    HitLink() : facetId(9999999999), hitDetails(SimulationFacetTempVar()) {};
+    HitLink(size_t id, SimulationFacetTempVar h) : facetId(id), hitDetails(h) {};
 
     // Move constructor called on resize, prevent from deleting SimulationFacetTempVar
     HitLink(const HitLink &rhs) = default;
 
     HitLink(HitLink &&rhs) noexcept:
-            hitId(rhs.hitId),
-            hit(rhs.hit) {};
+            facetId(rhs.facetId),
+            hitDetails(rhs.hitDetails) {};
 
     HitLink &operator=(const HitLink &src) {
-        hitId = src.hitId;
-        hit = src.hit;
+        facetId = src.facetId;
+        hitDetails = src.hitDetails;
         return *this;
     };
 
     HitLink &operator=(HitLink &&src) {
-        hitId = src.hitId;
-        hit = src.hit;
+        facetId = src.facetId;
+        hitDetails = src.hitDetails;
         return *this;
     };
 
     ~HitLink();
 
-    size_t hitId; //! id of the hit entity
-    SimulationFacetTempVar hit; //! Hit statistic
+    size_t facetId; //! id of the hit entity
+    SimulationFacetTempVar hitDetails; //! Hit statistic
 };
 
 //! Additional application specific payload
@@ -64,7 +64,7 @@ constexpr double inf_d = 1.0e99;
 //! Geometric class describing a ray for ray-object intersections in ray-tracing algorithms
 class Ray {
 public:
-    Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersected(-1), /*hitChain(nullptr),*/ rng(nullptr), pay(nullptr) {}
+    Ray() : tMax(inf_d), time(0.f), structure(-1), lastIntersectedId(-1), /*hitChain(nullptr),*/ rng(nullptr), pay(nullptr) {}
 
     Ray(const Vector3d &o, const Vector3d &d, Payload *payload, double tMax = inf_d,
         double time = 0.f, int structure = -1)
@@ -81,7 +81,7 @@ public:
     double tMax;     // To keep track of shortest intersection
 
     double time; // Only for td simulations in Molflow
-    int lastIntersected=-1; // id of last intersected entity
+    int lastIntersectedId=-1; // id of last intersected entity
     int structure; // id of structure in which ray currently interacts
     //const Medium *medium;
     Payload *pay;

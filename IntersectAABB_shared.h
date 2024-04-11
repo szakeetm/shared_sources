@@ -31,7 +31,7 @@ public:
 };
 
 AABBNODE *BuildAABBTree(const std::vector<SimulationFacet *> &facets, const size_t depth, size_t& maxDepth);
-
+/*
 void IntersectTree(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const AABBNODE &node, const Vector3d &rayPos,
                    const Vector3d &rayDirOpposite, SimulationFacet *const lastHitBefore, const bool nullRx,
                    const bool nullRy, const bool nullRz, const Vector3d &inverseRayDir, bool &found,
@@ -40,6 +40,7 @@ std::tuple<bool, SimulationFacet *, double>
 Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Vector3d &rayPos, const Vector3d &rayDir, const AABBNODE *bvh);
 /*bool Visible(Simulation *sHandle, Vector3d *c1, Vector3d *c2, SubprocessFacet *f1, SubprocessFacet *f2,
              CurrentParticleStatus &currentParticleTracer);*/
+			 
 bool IsInFacet(const SimulationFacet &f, const double u, const double v);
 bool IntersectBox(const AxisAlignedBoundingBox& targetBox, const Ray& ray, const Vector3d& invDir, const int dirIsNeg[3]);
 

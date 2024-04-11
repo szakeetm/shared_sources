@@ -551,7 +551,7 @@ bool BVHAccel::Intersect(Ray &ray) {
 
                     const std::shared_ptr<Primitive> &p = primitives[node->primitivesOffset + i];
                     // Do not check last collided facet to prevent self intersections
-                    if (p->globalId != ray.lastIntersected && p->Intersect(ray)) {
+                    if (p->globalId != ray.lastIntersectedId && p->Intersect(ray)) {
                         hit = true;
                     }
                 }
