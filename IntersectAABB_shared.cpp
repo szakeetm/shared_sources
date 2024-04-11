@@ -412,7 +412,7 @@ Intersect(std::shared_ptr<MFSim::ParticleTracer> currentParticleTracer, const Ve
 	double minLength = 1e100;
 
     IntersectTree(currentParticleTracer, *bvh, rayPos, -1.0 * rayDir,
-                  currentParticleTracer->lastHitFacet,
+                  currentParticleTracer->lastHitFacetId,
                   nullRx, nullRy, nullRz, inverseRayDir,
              found, collidedFacet, minLength); //output params
 
