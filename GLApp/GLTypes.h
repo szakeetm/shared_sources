@@ -99,11 +99,11 @@ struct GLVIEWPORT {
 
 class LockWrapper {
 public:
-    [[nodiscard]] LockWrapper(size_t& _flag);
+    [[nodiscard]] LockWrapper(size_t& _lockCount);
     ~LockWrapper();
     bool IsLocked();
     bool IsOwner();
 private:
     bool owner = false;
-    size_t& flag;
+    size_t& lockCount;
 };
