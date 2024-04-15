@@ -13,7 +13,6 @@
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
-	ImPlot::GetStyle().AntiAliasedLines = true;
 }
 
 bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
@@ -84,6 +83,7 @@ void ImConvergencePlotter::MenuBar()
 		}
 		if (ImGui::BeginMenu("View")) {
 			//ImGui::Checkbox("Colorblind mode", &colorBlind);
+			ImGui::Checkbox("Log Y", &logY);
 			ImGui::Checkbox("Datapoints", &showDatapoints);
 			ImGui::AlignTextToFramePadding();
 			ImGui::Text("Linewidth:");
@@ -224,7 +224,7 @@ void ImConvergencePlotter::Draw()
 	if (nFormulas == 0) ImGui::EndDisabled();
 	
 	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvailWidth() - txtW * (33.5f+3.f);
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (33.5f+3.f);
 	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
 
 	if (ImGui::Button("Add curve")) {
@@ -266,9 +266,9 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight,lineWidth);
-	ImPlot::SetNextPlotLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
-	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y-4.5f*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (logY ? ImPlotAxisFlags_LogScale : 0))) {
-		if (logY) logY = false; 
+	ImPlot::SetNextAxesLimits(0, maxDatapoints, 0, maxDatapoints, ImGuiCond_FirstUseEver);
+	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5f*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
 			if (mApp->appFormulas->convergenceData.size() <= data[i].id) break;
 			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
@@ -296,12 +296,14 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	}
 	ImPlot::PopStyleVar();
 	if (colorBlind) ImPlot::PopColormap();
+	/*
 	if (lockYtoZero) {
 		ImPlotPlot& thisPlot = *ImPlot::GetPlot("##Convergence");
 		thisPlot.YAxis->SetMin(0, true);
 		thisPlot.XAxis.SetMin(0, true);
 		lockYtoZero = false;
 	}
+	*/
 }
 
 bool ImConvergencePlotter::IsPlotted(size_t idx)

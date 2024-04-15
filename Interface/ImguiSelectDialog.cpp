@@ -1,3 +1,4 @@
+#include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiSelectDialog.h"
 #include "ImguiWindow.h"
 #include "Helper/StringHelper.h"
@@ -6,7 +7,6 @@
 #include "Geometry_shared.h"
 #include "ImguiExtensions.h"
 #include "Facet_shared.h"
-#include "imgui_stdlib/imgui_stdlib.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -48,7 +48,7 @@ bool ImSelectDialog::Preprocess() {
 	}
 	catch (const std::exception& e) {
 		mApp->imWnd->popup.Open("Error", e.what(), { 
-			std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
+			std::make_shared<ImIOWrappers::ImButtonInt>("Ok",ImIOWrappers::buttonOk, ImGuiKey_Enter) 
 			});
 		return false;
 	}

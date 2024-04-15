@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiFormulaEditor.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -52,7 +55,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 		ImGui::TableHeadersRow();
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*4));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*0.1));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 
 		// this loop draws a row
@@ -77,11 +80,11 @@ void ImFormulaEditor::DrawFormulaList() {
 				ImGui::Text(appFormulas->formulas[i].GetName());
 			}
 			else { // selected - draw inputs
-				columnW = ImGui::GetContentRegionAvailWidth();
+				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeExp", &changeExpression);
 				ImGui::TableSetColumnIndex(2);
-				columnW = ImGui::GetContentRegionAvailWidth();
+				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeNam", &changeName);
 			}
@@ -96,7 +99,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
 			// show button only if the row is selected and there was a change
-			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[SDL_SCANCODE_RETURN]
+			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[ImGuiKey_Enter]
 																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
 				changeIndex = i; // set it when button or enter is pressed
 			}
@@ -111,13 +114,13 @@ void ImFormulaEditor::DrawFormulaList() {
 		}
 		// inputs for expression and name
 		ImGui::TableSetColumnIndex(1);
-		columnW = ImGui::GetContentRegionAvailWidth();
+		columnW = ImGui::GetContentRegionAvail().x;
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NE", &newExpression)) {
 			selRow = formulasSize; // auto select row if field changed
 		}
 		ImGui::TableSetColumnIndex(2);
-		columnW = ImGui::GetContentRegionAvailWidth();
+		columnW = ImGui::GetContentRegionAvail().x;
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NN", &newName)) {
 			selRow = formulasSize;
@@ -125,7 +128,7 @@ void ImFormulaEditor::DrawFormulaList() {
 		ImGui::TableSetColumnIndex(4);
 		// show button if either field is not empty
 		if (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
-			|| (selRow == formulasSize && (io->KeysDown[SDL_SCANCODE_RETURN]
+			|| (selRow == formulasSize && (io->KeysDown[ImGuiKey_Enter]
 										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
 			// add new formula when button is pressed or row is selected and enter is pressed
 			appFormulas->AddFormula(newName, newExpression);
@@ -254,7 +257,7 @@ void ImFormulaEditor::Draw() {
 		}
 	}
 	ImGui::SameLine();
-	float dummyWidthA = ImGui::GetContentRegionAvailWidth() - txtW*20.5f;
+	float dummyWidthA = ImGui::GetContentRegionAvail().x - txtW*20.5f;
 	ImGui::Dummy(ImVec2(dummyWidthA,txtH));
 	ImGui::SameLine();
 	
@@ -276,7 +279,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::Checkbox("Record values for convergence", &appFormulas->recordConvergence);
 	ImGui::Checkbox("Auto-update formulas", &mApp->autoUpdateFormulas);
 	ImGui::SameLine();
-	float dummyWidthB = ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
+	float dummyWidthB = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
 	ImGui::SameLine();
 	if (ImGui::Button("Open convergence plotter >>")) {
