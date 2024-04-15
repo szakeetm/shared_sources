@@ -97,7 +97,9 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
+#ifdef DEBUG
+    testEngine.Init(mApp);
+#endif
 
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
@@ -226,8 +228,14 @@ void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+#ifdef DEBUG
+    testEngine.StopEngine();
+#endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
+#ifdef DEBUG
+    testEngine.DestroyContext();
+#endif
 }
 
 // TODO: When Imgui will be the main window/main GUI, use a full render cycle instead of a single frame rendering call
@@ -334,6 +342,12 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+#ifdef DEBUG
+            bool testEngineVis = testEngine.IsVisible();
+            if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
+                testEngine.SetVisible(testEngineVis);
+            }
+#endif
 
             static int response;
             if (ImGui::CollapsingHeader("Popups")) {
@@ -378,7 +392,9 @@ void ImguiWindow::renderSingle() {
                         ImGui::GetTime(), difftime(static_cast<time_t>(now_time), static_cast<time_t>(start_time)));
             ImGui::End();
         }
-
+#ifdef DEBUG
+        testEngine.Draw();
+#endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
             ShowPerfoPlot(&show_perfo, mApp);

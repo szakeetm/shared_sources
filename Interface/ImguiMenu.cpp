@@ -209,7 +209,7 @@ void QuitMenuPress() {
 }
 
 static void ShowMenuFile() {
-    if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry")){
+    if(ImGui::MenuItem(ICON_FA_PLUS "  New, empty geometry###NewGeom")) {
         auto common = []() { NewGeometry(); };
         ImIOWrappers::AskToSaveBeforeDoing(common);
     }
@@ -703,7 +703,7 @@ void MeasureForcesMenuPress() {
 #endif //MOLFLOW
 
 static void ShowMenuTools() {
-    if (ImGui::MenuItem(u8"\u221AFormula editor", "Alt+F")) {
+    if (ImGui::MenuItem(u8"\u221AFormula editor###Formula editor", "Alt+F")) {
         FormulaEditorMenuPress();
     }
     if (ImGui::MenuItem("Convergence Plotter ...", "Alt+C")) {
@@ -1324,7 +1324,7 @@ static void ShowMenuView() {
         }
         ImGui::EndMenu();
     }
-    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen")) {
+    if (ImGui::MenuItem(ICON_FA_TH_LARGE "  Full Screen###Full Screen")) {
         LockWrapper myLock(mApp->imguiRenderLock);
         mApp->ToggleFullscreen();
     }
@@ -1427,6 +1427,12 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
+#ifdef DEBUG
+    if (ImGui::MenuItem("ImGui Test Engine")) {
+        mApp->imWnd->testEngine.Show();
+    }
+#endif
+
     if (ImGui::MenuItem("Shortcut Test", "Ctrl+T")) {
         ImIOWrappers::InfoPopup("Menu Shortcut", "Menu Shortcut");
     }
@@ -1593,15 +1599,15 @@ void ShowAppMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         ImGui::PopStyleVar(2);
         ImGui::AlignTextToFramePadding();
-        if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File")) {
+        if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File###File")) {
             ImMenu::ShowMenuFile();
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection")) {
+        if (ImGui::BeginMenu(ICON_FA_MOUSE_POINTER "  Selection###Selection")) {
             ImMenu::ShowMenuSelection();
             ImGui::EndMenu();
         }
-        if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools")) {
+        if (ImGui::BeginMenu(ICON_FA_TOOLS "  Tools###Tools")) {
             ImMenu::ShowMenuTools();
             ImGui::EndMenu();
         }

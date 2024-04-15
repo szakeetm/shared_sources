@@ -6,6 +6,7 @@
 class ImguiWindow;
 namespace ImMenu {
 	void ConvergencePlotterMenuPress();
+	void NewGeometry();
 };
 void ShowAppMainMenuBar();
 void RegisterShortcuts();

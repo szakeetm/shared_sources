@@ -82,6 +82,7 @@ namespace ImIOWrappers {
 		std::string title = "";
 		bool drawn = false;
 		std::vector<std::shared_ptr< ImButton >> buttons;
+		friend class ImTest;
 	};
 
 	class ImInputPopup : public ImPopup {
@@ -91,5 +92,6 @@ namespace ImIOWrappers {
 	protected:
 		std::function<void(std::string)> function;
 		std::string value;
+		friend class ImTest;
 	};
 }
