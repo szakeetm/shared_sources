@@ -7,6 +7,9 @@
 // See more C++ related extension (fmt, RAII, syntaxis sugar) on Wiki:
 //   https://github.com/ocornut/imgui/wiki/Useful-Extensions#cness
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS#include "imgui.h"
 #include "imgui.h"
 #include "imgui_stdlib.h"
 
@@ -56,6 +59,11 @@ bool ImGui::InputText(const char* label, std::string* str, ImGuiInputTextFlags f
     return InputText(label, (char*)str->c_str(), str->capacity() + 1, flags, InputTextCallback, &cb_user_data);
 }
 
+IMGUI_API bool ImGui::InputText(std::string label, std::string* str, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+{
+    return IMGUI_API ImGui::InputText(label.c_str(), str, flags, callback, user_data);
+}
+
 bool ImGui::InputTextMultiline(const char* label, std::string* str, const ImVec2& size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 {
     IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
@@ -98,6 +106,14 @@ bool  ImGui::MenuItem(std::string label, std::string shortcut)
 bool  ImGui::MenuItem(std::string label)
 {
     return ImGui::MenuItem(label.c_str());
+}
+bool ImGui::Selectable(std::string label, bool selected, ImGuiSelectableFlags flags, const ImVec2& size_arg)
+{
+    return ImGui::Selectable(label.c_str(), selected, flags, size_arg);
+}
+IMGUI_API bool ImGui::BeginCombo(std::string label, std::string preview_value, ImGuiComboFlags flags)
+{
+    return BeginCombo(label.c_str(), preview_value.c_str(), flags);
 }
 #if defined(__clang__)
 #pragma clang diagnostic pop

@@ -267,8 +267,15 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 	return u * U + v * V + n * N;
 }
 
-double GeneratePoissonRnd(const double lambda, const double rnd) {
-	//Transforms a uniform 0..1 random variable rnd to a Poisson-distributed one (P(x)=lambda * exp(-lambda*x))
-	//Used to get the free path, when mean free path is lambda = 1/(density * cross_section_sigma)
-	return -lambda * log(1 - rnd);
+double MathHelper::mapRange(double value, double inMin, double inMax, double outMin, double outMax) {
+	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+}
+
+double GenerateExponentialRnd(const double one_per_lambda, const double rnd) {
+	//Transforms a uniform 0..1 random variable rnd to an exponential distributed one (P(x)=lambda * exp(-lambda*x))
+	//Used to get the free path, when mean free path is mfp = 1/(density * cross_section_sigma)
+	//And lambda = 1 / mfp
+	//Originally x = =1/lambda*log(1-r) and 1=r=1
+	//one_per_lambda = mfp
+	return -one_per_lambda * log(rnd);
 }

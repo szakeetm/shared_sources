@@ -1468,6 +1468,7 @@ void InterfaceGeometry::RemoveFacets(const std::vector<size_t> &facetIdList, boo
 	BuildGLList();
 }
 
+
 void InterfaceGeometry::AddFacets(std::vector<InterfaceFacet*> facetList) {
 	//Adds to end
 	std::vector<DeletedFacet> toRestore(facetList.size());

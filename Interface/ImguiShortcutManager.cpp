@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiShortcutManager.h"
 #include <memory>
 #include "imgui.h"
@@ -9,7 +12,7 @@ void ShortcutManager::RegisterShortcut(const std::vector<int>& keys_, const std:
 
 void ShortcutManager::UnregisterShortcut(const short id_)
 {
-	for (short i = shortcuts.size()-1; i >= 0; --i) {
+	for (int i = static_cast<int>(shortcuts.size())-1; i >= 0; --i) {
 		if (shortcuts[i].id == id_) {
 			shortcuts.erase(shortcuts.begin()+i);
 		}

@@ -24,8 +24,10 @@ bool endsWith(const std::string& fullString, const std::string& ending);
 bool iBeginsWith(const std::string& fullString, const std::string& beginning);
 bool iEndsWith(const std::string& fullString, const std::string& ending);
 
+std::string findAndReplace(std::string text, std::string find, std::string replace);
 std::string space2underscore(std::string text);
 std::string molflowToAscii(std::string text);
+std::string molflowToUnicode(std::string text);
 bool iequals(const std::string& a, const std::string& b);
 std::string lowercase(const std::string& s);
 std::string uppercase(const std::string& s);
@@ -36,6 +38,18 @@ size_t countLines(const std::stringstream& ss, bool countEmpty=true);
 
 namespace Util {
     std::string getTimepointString();
-    bool getNumber(double* num, std::string str);
+
+    template<typename T>
+    bool getNumber(T* num, std::string str)
+    {
+        try {
+            *num = static_cast<T>(std::stod(str));
+            return true;
+        }
+        catch (std::exception e)
+        {
+            return false;
+        }
+    }
 }
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

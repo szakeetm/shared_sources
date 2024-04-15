@@ -34,7 +34,7 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
         if (!true || refresh_time == 0.0) // force
             refresh_time = ImGui::GetTime();
         auto now_time = ImGui::GetTime();
-        if (mApp->worker.IsRunning() && difftime(now_time, refresh_time) > 1.0 &&
+        if (mApp->worker.IsRunning() && difftime(static_cast<time_t>(now_time), static_cast<time_t>(refresh_time)) > 1.0 &&
             mApp->hps.eventsAtTime.size() >= 2)
         {
             //static float phase = 0.0f;
@@ -75,8 +75,8 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
             sprintf(overlay, "avg %f hit/s", average);
             //ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,ImVec2(0, 80.0f));
 
-            ImPlot::SetNextPlotLimitsY(std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1), ImPlotFlags_AntiAliased,
+            ImPlot::SetNextAxisLimits(ImAxis_Y1 ,std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
+            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1),
                                   ImPlotAxisFlags_AutoFit/* | ImPlotAxisFlags_Time*//*, ImPlotAxisFlags_AutoFit*/)) {
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
                 ImPlot::PlotLine("Hit/s", tvalues, values, IM_ARRAYSIZE(values), values_offset);

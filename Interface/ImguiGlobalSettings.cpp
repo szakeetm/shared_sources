@@ -5,6 +5,9 @@
 #include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
 #include <sstream>
+#include "Helper/StringHelper.h"
+#include "ImguiWindow.h"
+#include "ImguiPopup.h"
 
 #include "Interface/AppUpdater.h"
 #include "../../src/Interface/GlobalSettings.h"
@@ -35,22 +38,25 @@ void ImGlobalSettings::ProcessControlTable() {
         ImGui::TableSetupColumn("Status", ImGuiTableColumnFlags_WidthStretch);
         ImGui::TableHeadersRow();
 
-        ProcComm procInfo;
-        mApp->worker.GetProcStatus(procInfo);
+        int time = SDL_GetTicks();
+        if (time - lastUpdate >= 500) {
+            mApp->worker.GetProcStatus(procInfo);
 
-        ImGui::TableNextRow();
 
-        double byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
-        //Interface
+            byte_to_mbyte = 1.0 / (1024.0 * 1024.0);
+            //Interface
 #ifdef _WIN32
-        size_t currPid = GetCurrentProcessId();
-        double memDenominator_sys = (1024.0 * 1024.0);
+            currPid = GetCurrentProcessId();
+            memDenominator_sys = (1024.0 * 1024.0);
 #else
-        size_t currPid = getpid();
-        double memDenominator_sys = (1024.0);
+            size_t currPid = getpid();
+            memDenominator_sys = (1024.0);
 #endif
-        PROCESS_INFO parentInfo{};
-        GetProcInfo(currPid, &parentInfo);
+            PROCESS_INFO parentInfo{};
+            GetProcInfo(static_cast<DWORD>(currPid), &parentInfo);
+            lastUpdate = SDL_GetTicks();
+        }
+        ImGui::TableNextRow();
         ImGui::TableSetColumnIndex(0);
         ImGui::Text("Interface");
         ImGui::TableSetColumnIndex(1);
@@ -72,7 +78,7 @@ void ImGlobalSettings::ProcessControlTable() {
 
 // Demonstrate using clipper for large vertical lists
         ImGuiListClipper clipper;
-        clipper.Begin(procInfo.threadInfos.size());
+        clipper.Begin(static_cast<int>(procInfo.threadInfos.size()));
         while (clipper.Step()) {
             for (int row = clipper.DisplayStart; row < clipper.DisplayEnd; row++) {
                 size_t i = row + 2;
@@ -96,13 +102,11 @@ void ImGlobalSettings::ProcessControlTable() {
 
 void ImGlobalSettings::Draw() {
     if (!drawn) return;
-    int txtW = ImGui::CalcTextSize(" ").x;
-    int txtH = ImGui::GetTextLineHeightWithSpacing();
     ImGui::PushStyleVar(
             ImGuiStyleVar_WindowMinSize,
-            ImVec2(170 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
+            ImVec2(85 * txtW, 30 * txtH )); // Lift normal size constraint, however the presence of
     // a menu-bar will give us the minimum height we want.
-    ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
+    ImGui::SetNextWindowPos(ImVec2(20.f, 20.f), ImGuiCond_FirstUseEver);
     ImGui::Begin(
         "Global settings", &drawn,
         ImGuiWindowFlags_NoSavedSettings);  // Pass a pointer to our bool
@@ -111,7 +115,7 @@ void ImGlobalSettings::Draw() {
     // clear the bool when clicked)
     ImGui::PopStyleVar(1);
 
-    float gasMass = 2.4;
+    float gasMass = 2.4f;
     bool appSettingsChanged = false; //To sync old global settings window
     if (ImGui::BeginTable("split", 2, ImGuiTableFlags_BordersInnerV)) {
         ImGui::TableSetupColumn("App settings (applied immediately)");
@@ -155,9 +159,13 @@ void ImGlobalSettings::Draw() {
         appSettingsChanged |= ImGui::Checkbox(
             "White Background",
             &mApp->whiteBg); // Edit bools storing our window open/close state
-        appSettingsChanged |= ImGui::Checkbox("Left-handed coord. system",
-            &mApp->leftHandedView); // Edit bools storing our
-        // window open/close state
+        if (ImGui::Checkbox("Left-handed coord. system", &mApp->leftHandedView)) {
+            appSettingsChanged |= true;
+            for (auto& i : mApp->viewers) {
+                i->UpdateMatrix();
+                i->UpdateLabelColors();
+            }
+        }
         ImGui::Checkbox(
             "Highlight non-planar facets",
             &mApp->highlightNonplanarFacets); // Edit bools storing our window
@@ -172,50 +180,49 @@ void ImGlobalSettings::Draw() {
         ImGui::PushItemWidth(100);
 
         /* --- Simu settings ---*/
-        static bool simChanged = false;
 #if defined(MOLFLOW)
         static double gasMass = mApp->worker.model->sp.gasMass;
         static bool enableDecay = mApp->worker.model->sp.enableDecay;
         static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
-        simChanged |= ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
-        simChanged |= ImGui::Checkbox("", &enableDecay);
+        ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
+        ImGui::Checkbox("", &enableDecay);
         if (!enableDecay) {
             ImGui::BeginDisabled();
         }
         ImGui::SameLine();
-        simChanged |= ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
+        ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
 
         if (!enableDecay) {
             ImGui::EndDisabled();
         }
 
-        simChanged |= ImGui::Checkbox(
+        ImGui::Checkbox(
             "Enable low flux mode",
             &lowFluxMode);
         ImGui::SameLine();
         ImGui::HelpMarker(
             "Low flux mode helps to gain more statistics on low pressure "
-            "parts of the system, at the expense\n"
+            "parts of the system, at the expense"
             "of higher pressure parts. If a traced particle reflects from a "
-            "high sticking factor surface, regardless of that probability,\n"
+            "high sticking factor surface, regardless of that probability,"
             "a reflected test particle representing a reduced flux will "
             "still be traced. Therefore test particles can reach low flux "
-            "areas more easily, but\n"
+            "areas more easily, but"
             "at the same time tracing a test particle takes longer. The "
             "cutoff ratio defines what ratio of the originally generated "
-            "flux\n"
+            "flux"
             "can be neglected. If, for example, it is 0.001, then, when "
             "after subsequent reflections the test particle carries less "
-            "than 0.1%\n"
+            "than 0.1%"
             "of the original flux, it will be eliminated. A good advice is "
             "that if you'd like to see pressure across N orders of "
             "magnitude, set it to 1E-N");
         if (!lowFluxMode) {
             ImGui::BeginDisabled();
         }
-        simChanged |= ImGui::InputDoubleRightSide(
+        ImGui::InputDoubleRightSide(
             "Cutoff ratio", &lowFluxCutoff,
             "%.2e");
         if (!lowFluxMode) {
@@ -223,21 +230,44 @@ void ImGlobalSettings::Draw() {
         }
 
         {
-            bool wasDisabled = !simChanged;
+            bool settingsChanged = false, simChanged = false, changedMass = false;
+            simChanged |= mApp->worker.model->sp.gasMass != gasMass;
+            changedMass = simChanged;
+            simChanged |= mApp->worker.model->sp.halfLife != halfLife;
+            simChanged |= mApp->worker.model->sp.enableDecay != enableDecay;
+
+            settingsChanged |= simChanged;
+
+            settingsChanged |= mApp->worker.model->otfParams.lowFluxMode != lowFluxMode;
+            settingsChanged |= mApp->worker.model->otfParams.lowFluxCutoff != lowFluxCutoff;
+            bool wasDisabled = settingsChanged;
             ImGui::PlaceAtRegionCenter("Apply above settings");
-            if (wasDisabled) {
+            if (!settingsChanged) {
                 ImGui::BeginDisabled();
             }
             if (ImGui::Button("Apply above settings")) {
-                simChanged = false;
-                mApp->worker.model->sp.gasMass = gasMass;
-                mApp->worker.model->sp.enableDecay = enableDecay;
-                mApp->worker.model->sp.halfLife = halfLife;
+                
                 mApp->worker.model->otfParams.lowFluxMode = lowFluxMode;
                 mApp->worker.model->otfParams.lowFluxCutoff = lowFluxCutoff;
+                
+                if (simChanged) {
+                    LockWrapper myLock(mApp->imguiRenderLock);
+                    if (mApp->AskToReset()) {
+                        mApp->worker.model->sp.gasMass = gasMass;
+                        mApp->worker.model->sp.halfLife = halfLife;
+                        mApp->worker.model->sp.enableDecay = enableDecay;
+                        mApp->worker.MarkToReload();
+                        mApp->changedSinceSave = true;
+                        mApp->UpdateFacetlistSelected();
+                        mApp->UpdateViewers();
+                        if (changedMass) {
+                            ImIOWrappers::InfoPopup("You have changed the gas mass.", "Don't forget the pumps: update pumping speeds and/or recalculate sticking factors.");
+                        }
+                    }
+                }
 
             }
-            if (wasDisabled) {
+            if (!settingsChanged) {
                 ImGui::EndDisabled();
             }
         }
@@ -290,7 +320,7 @@ void ImGlobalSettings::Draw() {
     ImGui::Text("Number of subprocesses:  ");
     ImGui::SameLine();
     if(updateNbProc)
-        nbProc = (mApp->worker.GetProcNumber());
+        nbProc = (static_cast<int>(mApp->worker.GetProcNumber()));
         updateNbProc = false;
     ImGui::SetNextItemWidth(ImGui::CalcTextSize("0").x * 10);
     ImGui::InputInt("##nbProc", &nbProc, 1, 8);
@@ -308,49 +338,22 @@ void ImGlobalSettings::Draw() {
         updateNbProc = true;
     }
     {
-        ImGui::PlaceAtRegionRight("Change desorption limit", true);
-        if (ImGui::Button("Change desorption limit"))
-            ImGui::OpenPopup("Edit MAX");
+        size_t maxDes = mApp->worker.model->otfParams.desorptionLimit;
+        std::string label = ("Desorption limit:" + ((maxDes == 0) ? "Infinite" : fmt::format("{:.2e}", static_cast<float>(maxDes))));
+        ImGui::PlaceAtRegionRight(label.c_str(), true);
+        if (ImGui::Button(label.c_str())) {
+            auto Func = [this](std::string arg) {
+                size_t inputD = 0;
+                if (!Util::getNumber(&inputD, arg)) {
+                    ImIOWrappers::InfoPopup("Error", "Invalid input");
+                    return;
+                }
+                mApp->worker.model->otfParams.desorptionLimit = inputD;
+                };
+            mApp->imWnd->input.Open("Change desorption limit", "Desorption max (0 for no limit)", Func, fmt::format("{:.2e}", static_cast<float>(maxDes)));
+        }
     }
     ImGui::End();
-    // Always center this window when appearing
-    ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing,
-                            ImVec2(0.5f, 0.5f));
-
-    if (ImGui::BeginPopupModal("Edit MAX", NULL,
-                               ImGuiWindowFlags_AlwaysAutoResize)) {
-        // static bool initMax = false;
-        static double maxDes = mApp->worker.model->otfParams.desorptionLimit;
-        /*if(!initMax) {
-            maxDes = mApp->worker.model->otfParams.desorptionLimit; // use
-        double function to allow exponential format initMax = true;
-        }*/
-        ImGui::InputDouble("Desorption max (0=>endless)", &maxDes, 0.0f, 0.0f,
-                           "%.0f");
-        ImGui::Separator();
-
-        // static int unused_i = 0;
-        // ImGui::Combo("Combo", &unused_i, "Delete\0Delete harder\0");
-
-        /*static bool dont_ask_me_next_time = false;
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-        ImGui::Checkbox("Don't ask me next time", &dont_ask_me_next_time);
-        ImGui::PopStyleVar();*/
-
-        if (ImGui::Button("OK", ImVec2(120, 0))) {
-            mApp->worker.model->otfParams.desorptionLimit = maxDes;
-            // initMax = false;
-            mApp->worker.ChangeSimuParams();
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::SetItemDefaultFocus();
-        ImGui::SameLine();
-        if (ImGui::Button("Cancel", ImVec2(120, 0))) {
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
 }
 
 void ImGlobalSettings::Init(Interface* mApp_)

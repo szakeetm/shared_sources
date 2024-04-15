@@ -2684,6 +2684,23 @@ int Interface::FrameMove() {
     return GL_OK;
 }
 
+void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    imWnd->LoadProfileFromFile(interfaceSettings);
+}
+
+void Interface::ImRefresh()
+{
+    if (!imWnd) return;
+    imWnd->Refresh();
+}
+
+void Interface::ImReset()
+{
+    if (!imWnd) return;
+    imWnd->Reset();
+}
+
 void Interface::ResetAutoSaveTimer() {
     UpdateStats(); //updates m_fTime
     if (autoSaveSimuOnly) lastSaveTimeSimu = worker.simuTimer.Elapsed();

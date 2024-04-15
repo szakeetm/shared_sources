@@ -1,24 +1,12 @@
-#ifndef MOLFLOW_PROJ_RTHELPER_H
-#define MOLFLOW_PROJ_RTHELPER_H
+#pragma once
 
-struct SimulationFacetTempVar {
+struct FacetHitDetail {
     // Temporary var (used in Intersect for collision)
-    SimulationFacetTempVar(){
-        colDistTranspPass=1.0E99;
-        colU = 0.0;
-        colV = 0.0;
-        isHit=false;
-    }
-    SimulationFacetTempVar(double d, double u, double v, bool hit){
-        colDistTranspPass=d;
-        colU = u;
-        colV = v;
-        isHit=hit;
-    }
-    double colDistTranspPass;
-    double colU;
-    double colV;
-    bool   isHit;
-};
 
-#endif //MOLFLOW_PROJ_RTHELPER_H
+    FacetHitDetail() = default;
+    FacetHitDetail(double d, double u, double v, bool hit) :colDistTranspPass(d), colU(u), colV(v) {};
+
+    double colDistTranspPass = 1.0E99;
+    double colU = 0.0;
+    double colV = 0.0;
+};

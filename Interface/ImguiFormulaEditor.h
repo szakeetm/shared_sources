@@ -13,6 +13,7 @@ protected:
 	void DrawFormulaList();
 	Interface* mApp=0;
 	std::shared_ptr<Formulas> appFormulas;
+	std::vector<std::string> valuesBuffer;
 	int selRow = -1;
 
 	class ImFormattingHelp : public ImWindow {

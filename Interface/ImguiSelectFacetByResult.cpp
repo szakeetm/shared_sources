@@ -1,6 +1,8 @@
-#include "ImguiSelectFacetByResult.h"
-#include "imgui.h"
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS#include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiSelectFacetByResult.h"
 #include "ImguiExtensions.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"

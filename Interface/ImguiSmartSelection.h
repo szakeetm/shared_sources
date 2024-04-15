@@ -16,4 +16,5 @@ protected:
 	bool enabledToggle = false;
 	bool isAnalyzed = false;
 	std::string result = "No neighborhood analysis yet.";
+	friend class ImTest;
 };

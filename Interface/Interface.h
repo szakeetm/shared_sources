@@ -236,11 +236,14 @@ protected:
 	virtual void InsertGeometry(bool newStr, const std::string& fileName) {}
 	virtual void SaveFile() {}
 	int FrameMove() override;
-
 public:
+	virtual void ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 	virtual void UpdateFacetParams(bool updateSelection) {}
 	virtual void SaveConfig() {}
 	virtual void UpdatePlotters() {}
+
+	void ImRefresh();
+	void ImReset();
 
 	// Simulation state
 	float    lastUpdate;   // Last 'hit update' time
@@ -535,4 +538,7 @@ protected:
 	int InvalidateDeviceObjects_shared();
 	bool ProcessMessage_shared(GLComponent* src, int message);
 	void  BeforeExit() override;
+public:
+	// command-line arguments
+	std::vector<std::string> argv;
 };

@@ -1,14 +1,15 @@
 
 
-#ifndef MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-#define MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-
-#include "imgui/imgui.h"
-#include <string>
-#include "imgui_stdlib/imgui_stdlib.h"
-
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
+#endif
+#include "imgui/imgui.h"
 #include <imgui/imgui_internal.h>
+#include <string>
+
+#include "ImguiExtensions.h"
+
+#include "imgui_stdlib/imgui_stdlib.h"
 
 namespace ImGui {
 // Make the UI compact because there are so many fields
@@ -28,6 +29,7 @@ namespace ImGui {
 // In your own code you may want to display an actual icon if you are using a
 // merged icon fonts (see docs/FONTS.md)
     void HelpMarker(const char *desc) {
+        ImGui::AlignTextToFramePadding();
         ImGui::TextDisabled("(?)");
         if (ImGui::IsItemHovered()) {
             ImGui::BeginTooltip();
@@ -88,7 +90,7 @@ namespace ImGui {
         return *val != tmp; // true if changed
     }
 
-    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags=0) {
+    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags) {
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
 
@@ -105,6 +107,18 @@ namespace ImGui {
         }
 
         return strcmp(buf,text); // true if changed
+    }
+
+    bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags, float width)
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(desc); ImGui::SameLine();
+        if (width == 0) width = ImGui::CalcTextSize("X").x * 10;
+        ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - width - ImGui::CalcTextSize("X").x,0));
+        ImGui::SameLine();
+        ImGui::SetNextItemWidth(width);
+        bool out = ImGui::InputText(("##" + desc), text, flags);
+        return out;
     }
 
 // Add spacing of checkbox width
@@ -141,8 +155,8 @@ namespace ImGui {
         window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart, bb.Max.y), bg_col);
         window->DrawList->AddRectFilled(bb.Min, ImVec2(pos.x + circleStart * value, bb.Max.y), fg_col);
 
-        const float t = g.Time;
-        const float r = size.y / 2;
+        const float t = static_cast<float>(g.Time);
+        const float r = static_cast<float>(size.y / 2);
         const float speed = 1.5f;
 
         const float a = speed * 0;
@@ -181,7 +195,7 @@ namespace ImGui {
         window->DrawList->PathClear();
 
         int num_segments = 30;
-        int start = abs(ImSin(g.Time * 1.8f) * (num_segments - 5));
+        int start = static_cast<int>(abs(ImSin(static_cast<float>(g.Time) * 1.8f) * (num_segments - 5)));
 
         const float a_min = IM_PI * 2.0f * ((float) start) / (float) num_segments;
         const float a_max = IM_PI * 2.0f * ((float) num_segments - 3) / (float) num_segments;
@@ -190,11 +204,11 @@ namespace ImGui {
 
         for (int i = 0; i < num_segments; i++) {
             const float a = a_min + ((float) i / (float) num_segments) * (a_max - a_min);
-            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + g.Time * 8) * radius,
-                                                centre.y + ImSin(a + g.Time * 8) * radius));
+            window->DrawList->PathLineTo(ImVec2(centre.x + ImCos(a + static_cast<float>(g.Time) * 8) * radius,
+                                                centre.y + ImSin(a + static_cast<float>(g.Time) * 8) * radius));
         }
 
-        window->DrawList->PathStroke(color, false, thickness);
+        window->DrawList->PathStroke(color, false, static_cast<float>(thickness));
         return true;
     }
 
@@ -214,7 +228,7 @@ namespace ImGui {
         const ImU32 col = ImGui::GetColorU32(ImGuiCol_ButtonHovered);
         const ImU32 bg = ImGui::GetColorU32(ImGuiCol_Button);
         const float size = 36.0f;
-        const int thickness = 6.0f;
+        const int thickness = 6;
         const float radius = 0.5f * (size - thickness);
 
         const ImGuiViewport *viewport = ImGui::GetMainViewport();
@@ -245,7 +259,7 @@ namespace ImGui {
         }
 
     }
-    bool TriState(const char* label, size_t* v) {
+    bool TriState(const char* label, short* v, bool allowManualMixed) {
         ImGuiWindow* window = GetCurrentWindow();
         if (window->SkipItems)
             return false;
@@ -269,9 +283,16 @@ namespace ImGui {
         bool pressed = ButtonBehavior(total_bb, id, &hovered, &held);
         if (pressed)
         {
-            if (*v == 0) *v = 2; // disable -> half
-            else if (*v == 2) *v = 1; // half -> full
-            else if (*v == 1) *v = 0; // full -> disabled
+            if (allowManualMixed) {
+                if (*v == 0) *v = 2; // disabled -> half
+                else if (*v == 2) *v = 1; // half -> full
+                else if (*v == 1) *v = 0; // full -> disabled
+            }
+            else {
+                if (*v == 0) *v = 1; // disable -> enabled
+                else if (*v == 1) *v = 0; // full -> disabled
+                else if (*v == 2) *v = 1; // half -> full
+            }
             MarkItemEdited(id);
         }
 
@@ -299,6 +320,34 @@ namespace ImGui {
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
         return pressed;
     }
-
+    void HelpMarker(const std::string& text)
+    {
+        ImGui::TextDisabled("(?)");
+        if (ImGui::IsItemHovered())
+        {
+            ImGui::BeginTooltip();
+            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+            ImGui::Text(text);
+            ImGui::PopTextWrapPos();
+            ImGui::EndTooltip();
+        }
+    }
 }
-#endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H
+namespace ImMath {
+    ImVec2 AddVec2(ImVec2 a, ImVec2 b)
+    {
+        return ImVec2(a.x + b.x, a.y + b.y);
+    }
+    ImVec2 SubstractVec2(ImVec2 a, ImVec2 b)
+    {
+        return ImVec2(a.x - b.x, a.y - b.y);
+    }
+    ImVec2 ScaleVec2(ImVec2 a, float x)
+    {
+        return ImVec2(a.x * x, a.y * x);
+    }
+    bool IsInsideVec2(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point)
+    {
+        return topLeft.x <= point.x && point.x <= bottomRight.x && topLeft.y <= point.y && point.y <= bottomRight.y;
+    }
+}

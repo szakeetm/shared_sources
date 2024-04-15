@@ -149,13 +149,11 @@ int Sprite2D::RestoreDeviceObjects(const char *diffName, const char *alphaName,i
     GLToolkit::printGlError(glError);
     return 0;    
   }
-
   // Compute othographic matrix (for Transformed Lit vertex)
   glMatrixMode( GL_PROJECTION );
   glLoadIdentity();
   glOrtho( 0, scrWidth, scrHeight, 0, -1, 1 );
   glGetFloatv( GL_PROJECTION_MATRIX , pMatrix );
-
   return 1;
 
 }

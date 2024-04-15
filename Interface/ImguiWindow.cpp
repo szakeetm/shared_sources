@@ -1,8 +1,13 @@
 
 
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui/imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
+#include <imgui/imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -12,15 +17,12 @@
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-
-#include "imgui/imgui.h"
 #include "imgui/imgui_impl_opengl2.h"
-#include "imgui/imgui_impl_sdl.h"
+#include "imgui/imgui_impl_sdl2.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 
-#include <imgui/imgui_internal.h>
 #include <imgui/IconsFontAwesome5.h>
 #include <future>
 #include <implot/implot.h>
@@ -88,13 +90,16 @@ Open-source libraries used:
 
 // Setup Dear ImGui context and various default values (font, colors etc.)
 void ImguiWindow::init() {
+    if(didIinit) return;
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
+#ifdef DEBUG
+    testEngine.Init(mApp);
+#endif
 
     // io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable
     // Keyboard Controls io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad; //
@@ -129,27 +134,36 @@ void ImguiWindow::init() {
     // - Read 'docs/FONTS.md' for more instructions and details.
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
-    // io.Fonts->AddFontDefault();
+    int oversample = 1;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
-    ImFontConfig sym_config;
-    sym_config.MergeMode = true;
-    sym_config.PixelSnapH = true;
+    ImFontConfig fontConfig;
+    fontConfig.MergeMode = true;
+    fontConfig.PixelSnapH = true;
+    fontConfig.OversampleH = oversample;
+    fontConfig.OversampleV = oversample;
+    //fontConfig.RasterizerMultiply = 0;
+    //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &sym_config, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
     ImFontConfig icons_config;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &sym_config, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
+    io.Fonts->Build();
+
     /*io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &sym_config, sym_ranges);*/
+    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges);*/
 
 // use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
 
@@ -170,11 +184,13 @@ void ImguiWindow::init() {
     popup = ImIOWrappers::ImPopup();
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
-    progress.Hide();
+    progress.Init(mApp);
     smartSelect = ImSmartSelection();
+    smartSelect.Init(mApp);
     selByNum = ImSelectDialog();
+    selByNum.Init(mApp);
     selByTex = ImSelectTextureType();
-    selByTex.Init();
+    selByTex.Init(mApp);
     facetMov = ImFacetMove();
     facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
@@ -186,10 +202,24 @@ void ImguiWindow::init() {
     sideBar = ImGuiSidebar();
     formulaEdit = ImFormulaEditor();
     formulaEdit.Init(mApp, mApp->appFormulas);
+    convPlot = ImConvergencePlotter();
+    convPlot.Init(mApp);
+    textPlot = ImTexturePlotter();
+    textPlot.Init(mApp);
+    profPlot = ImProfilePlotter();
+    profPlot.Init(mApp);
+    histPlot = ImHistogramPlotter();
+    histPlot.Init(mApp);
+    textScale = ImTextureScaling();
+    textScale.Init(mApp);
+
+    expFac = ImExplodeFacet();
+    expFac.Init(mApp);
 
     RegisterShortcuts();
 
     start_time = ImGui::GetTime();
+    didIinit = true;
     renderSingle();
 }
 
@@ -198,8 +228,14 @@ void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+#ifdef DEBUG
+    testEngine.StopEngine();
+#endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
+#ifdef DEBUG
+    testEngine.DestroyContext();
+#endif
 }
 
 // TODO: When Imgui will be the main window/main GUI, use a full render cycle instead of a single frame rendering call
@@ -250,6 +286,7 @@ void ImguiWindow::destruct() {
 // Function for an individual frame rendering step
 // If active, renders the individual components and handles the corresponding user actions
 void ImguiWindow::renderSingle() {
+    this->init();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
 
@@ -262,7 +299,7 @@ void ImguiWindow::renderSingle() {
     if (mApp) {
         bool redrawAabb = false;
         bool rebuildAabb = false;
-        static int nbProc = mApp->worker.GetProcNumber();
+        static int nbProc = static_cast<int>(mApp->worker.GetProcNumber());
 
 
         // Start the Dear ImGui frame
@@ -279,7 +316,7 @@ void ImguiWindow::renderSingle() {
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
         // ImGui!).
-        if ((io.KeyCtrl && io.KeyShift && io.KeyAlt && ImGui::IsKeyDown(SDL_GetScancodeFromKey(SDLK_d))))
+        if ((io.KeyCtrl && io.KeyShift && io.KeyAlt && ImGui::IsKeyDown(ImGuiKey_D)))
             show_demo_window = !show_demo_window;
         if (show_demo_window) {
             ImGui::ShowDemoWindow(&show_demo_window);
@@ -305,14 +342,20 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+#ifdef DEBUG
+            bool testEngineVis = testEngine.IsVisible();
+            if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
+                testEngine.SetVisible(testEngineVis);
+            }
+#endif
 
             static int response;
             if (ImGui::CollapsingHeader("Popups")) {
-                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3), ImGuiWindowFlags_NoSavedSettings);
+                ImGui::BeginChild("Popup", ImVec2(0.f, ImGui::GetTextLineHeightWithSpacing() * 3));
                 if (ImGui::Button("Test Popup Wrapper")) {
                     popup.Open("Title##0", "Message", { 
-                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN),
-                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, SDL_SCANCODE_ESCAPE)
+                        std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter),
+                        std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", ImIOWrappers::buttonCancel, ImGuiKey_Escape)
                         }); // Open wrapped popup
                 }
                 if (popup.WasResponse()) { // if there was a response
@@ -346,10 +389,12 @@ void ImguiWindow::renderSingle() {
                         1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             auto now_time = ImGui::GetTime();
             ImGui::Text("Application time %.3f s [%.3f s]",
-                        ImGui::GetTime(), difftime(now_time, start_time));
+                        ImGui::GetTime(), difftime(static_cast<time_t>(now_time), static_cast<time_t>(start_time)));
             ImGui::End();
         }
-
+#ifdef DEBUG
+        testEngine.Draw();
+#endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
             ShowPerfoPlot(&show_perfo, mApp);
@@ -370,6 +415,13 @@ void ImguiWindow::renderSingle() {
         globalSet.Draw();
         selFacetByResult.Draw();
         formulaEdit.Draw();
+        convPlot.Draw();
+        textPlot.Draw();
+        profPlot.Draw();
+        histPlot.Draw();
+        textScale.Draw();
+
+        expFac.Draw();
 
         shortcutMan.DoShortcuts();
 
@@ -391,4 +443,29 @@ void ImguiWindow::renderSingle() {
             io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
         }*/
     }
+}
+
+void ImguiWindow::Refresh()
+{
+    histPlot.RefreshFacetLists();
+    histPlot.LoadHistogramSettings();
+    convPlot.Reload();
+}
+
+void ImguiWindow::Reset()
+{
+    histPlot.Reset();
+    histPlot.RefreshFacetLists();
+    histPlot.LoadHistogramSettings();
+}
+
+void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
+{
+    if (interfaceSettings->profilePlotterSettings.hasData) {
+        profPlot.LoadSettingsFromFile(interfaceSettings->profilePlotterSettings.logYscale, interfaceSettings->profilePlotterSettings.viewIds);
+    }
+    if (interfaceSettings->convergencePlotterSettings.hasData) {
+        convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
+    } else convPlot.Reload();
+    textScale.Load();
 }
