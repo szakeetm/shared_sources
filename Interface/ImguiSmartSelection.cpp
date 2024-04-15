@@ -1,4 +1,6 @@
-#include "ImguiSmartSelection.h"
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS#include "ImguiSmartSelection.h"
 #include "imgui/imgui.h"
 #include "ImguiExtensions.h"
 #include "imgui_stdlib/imgui_stdlib.h"
@@ -28,7 +30,7 @@ void ImSmartSelection::Func() {
 		InterfaceGeometry* interfGeom = mApp->worker.GetGeometry();
 		if (!interfGeom->IsLoaded()) {
 			mApp->imWnd->popup.Open("Error", "No geometry", { 
-				std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN) 
+				std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter) 
 				});
 			return;
 		}
@@ -87,7 +89,7 @@ double ImSmartSelection::GetMaxAngle()
 		return this->planeDiff / 180.0 * 3.14159;
 	}
 	mApp->imWnd->popup.Open("Smart Select Error", "Invalid angle threshold in Smart Selection dialog\nMust be a non-negative number.", {
-		std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, SDL_SCANCODE_RETURN)
+		std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter)
 		});
 	return -1.0;
 }

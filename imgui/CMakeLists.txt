@@ -34,8 +34,8 @@ add_library( imgui STATIC
   imgui.h
   imgui_impl_opengl2.cpp
   imgui_impl_opengl2.h
-  imgui_impl_sdl.cpp
-  imgui_impl_sdl.h
+  imgui_impl_sdl2.cpp
+  imgui_impl_sdl2.h
   imgui_internal.h
   imgui_tables.cpp
   imgui_widgets.cpp

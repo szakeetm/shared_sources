@@ -147,7 +147,6 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
         window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
         window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
         ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        ImGui::SetNextWindowViewport(viewport->ID);
         flags |= ImGuiWindowFlags_NoMove;
     }
     //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));

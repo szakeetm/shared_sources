@@ -1,6 +1,10 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_internal.h"
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiHistogramPlotter.h"
-#include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
 #include "Helper/StringHelper.h"
@@ -18,7 +22,7 @@ extern MolFlow* mApp;
 void ImHistogramPlotter::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 85, txtH * 21), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::SetWindowPos("Histogram Plotter", ImVec2((3 + 40) * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Histogram Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
@@ -95,9 +99,13 @@ void ImHistogramPlotter::Draw()
 		globals[plotTab] = ImPlotData();
 	} ImGui::SameLine();
 	if (ImGui::Checkbox("Normalize", &normalize)) RefreshPlots();
+	if (ImGui::Checkbox("Log Y", &logY)) RefreshPlots();
+	ImGui::SameLine();
+	if (ImGui::Checkbox("Log X", &logX)) RefreshPlots();
 	if (settingsWindow.IsVisible()) {
 		if (anchor) ImGui::SetNextWindowPos(ImVec2(ImGui::GetWindowPos().x - settingsWindow.width - txtW, ImGui::GetWindowPos().y));
 	}
+
 	ImGui::End();
 	settingsWindow.Draw();
 }
@@ -129,7 +137,9 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==time) xAxisName = "Time [s]";
 #endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetWindowContentRegionWidth(), ImGui::GetWindowSize().y - 6 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 7 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+		if (logX) ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
+		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& plot : data[plotTab]) {
 			if (!plot.x || !plot.y || plot.x->size()==0 || plot.y->size()==0) continue;
 			std::string name = plot.id == -1 ? "Global" : ("Facet #" + std::to_string(plot.id + 1));

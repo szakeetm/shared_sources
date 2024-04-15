@@ -1,4 +1,7 @@
 #pragma once
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
 #include "Buffer_shared.h"
@@ -112,4 +115,5 @@ protected:
 	bool showValueOnHover = true;
 	bool overrange = true;
 	ImHistogramSettings settingsWindow;
+	bool logX = false, logY = false;
 };
