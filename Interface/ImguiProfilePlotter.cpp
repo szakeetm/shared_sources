@@ -388,8 +388,8 @@ void ImProfilePlotter::FacetHiglighting(bool toggle)
 	for (const auto& plot : data) {
 		std::pair<int, GLColor> pair;
 		pair.first = static_cast<int>(plot.id);
-		pair.second = GLColor(static_cast<int>(plot.color.x)*255, static_cast<int>(plot.color.y)*255, static_cast<int>(plot.color.z)*255);
-		colormap.emplace(pair);
+		pair.second = GLColor(static_cast<int>(plot.color.x*255.f), static_cast<int>(plot.color.y*255.f), static_cast<int>(plot.color.z*255.f));
+		colormap.insert(pair);
 	}
 	interfGeom->SetPlottedFacets(colormap);
 	UpdateSelection();

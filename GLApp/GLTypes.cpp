@@ -1,16 +1,16 @@
 #include "GLTypes.h"
 #include "GLTypes.h"
 
-LockWrapper::LockWrapper(size_t& _flag) : flag(_flag) {
-    owner = flag == 0;
-    flag++;
+LockWrapper::LockWrapper(size_t& _lockCount) : lockCount(_lockCount) {
+    owner = lockCount == 0;
+    lockCount++;
 }
 LockWrapper::~LockWrapper() {
-    if (flag == 0) throw Error("LockWrapper: Tried to unlock unlocked lock");
-    flag--;
+    if (lockCount == 0) throw Error("LockWrapper: Tried to unlock unlocked lock");
+    lockCount--;
 }
 bool LockWrapper::IsLocked() {
-    return flag>0;
+    return lockCount>0;
 }
 
 bool LockWrapper::IsOwner()
