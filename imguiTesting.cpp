@@ -84,6 +84,8 @@ void ImTest::PostSwap()
         ranScenarios++;
         if (ranScenarios >= numberOfScenarios) { // completed all scenarios
             std::cout << "Stopping" << std::endl;
+            double timeEnd = ImGui::GetTime();
+            std::cout << fmt::format("Elapsed time: {:.2f}s", timeEnd) << std::endl;
             exit(result);
         }
         else {
