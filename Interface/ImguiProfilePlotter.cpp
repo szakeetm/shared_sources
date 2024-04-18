@@ -43,16 +43,16 @@ void ImProfilePlotter::Draw()
 	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu\nClick on profile name to select corresponding facet in geometry, hold shift to add to selection");
 	ImGui::Separator();
 	for (int i = 0; i < profiledFacets.size(); i++) {
-		std::string fName = ("F#" + std::to_string(i + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
+		std::string fName = ("F#" + std::to_string(profiledFacets[i] + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
 		if (ImGui::Checkbox(("##"+fName).c_str(), (bool*)&(profileDrawToggle[i]))) {
-			if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
-			else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+			if (profileDrawToggle[i] == 0 && IsPlotted(profiledFacets[i])) RemoveCurve(profiledFacets[i]);
+			else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(profiledFacets[i]));
 			UpdateSidebarMasterToggle();
 			updateHilights = true;
 		} ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
 		if (ImGui::Selectable(fName)) {
-			ShowFacet(i, ImGui::IsKeyDown(ImGuiKey_LeftShift));
+			ShowFacet(profiledFacets[i], ImGui::IsKeyDown(ImGuiKey_LeftShift));
 		}
 	}
 	ImGui::EndChild();
@@ -455,7 +455,9 @@ void ImProfilePlotter::ApplyAggregateState()
 	for (int i = 0; i < profileDrawToggle.size(); i++) {
 		profileDrawToggle[i] = aggregateState;
 		if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
-		else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+		else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) {
+			data.push_back(ImUtils::MakePlotData(profiledFacets[i]));
+		}
 	}
 	updateHilights = true;
 }
