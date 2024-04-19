@@ -10,7 +10,6 @@ if(NOT MSVC)
     )
 endif()
 
-add_subdirectory(PugiXML)
 add_subdirectory(ziplib)
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
