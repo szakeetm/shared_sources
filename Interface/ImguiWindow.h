@@ -30,6 +30,7 @@
 #include "ImguiFacetAlign.h"
 #include "ImguiFacetExtrude.h"
 #include "ImguiFacetSplit.h"
+#include "ImguiCreateShape.h"
 #include "ImguiMenu.h"
 
 #include "ImguiGeometryViewer.h"
@@ -106,6 +107,7 @@ public:
     ImFacetAlign alignFacet;
     ImFacetExtrude extrudeFacet;
     ImFacetSplit splitFac;
+    ImCreateShape createShape;
 
     ImExplodeFacet expFac;
 

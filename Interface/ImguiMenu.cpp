@@ -867,9 +867,11 @@ void SplitMenuPress() {
     */
 }
 void CreateShapeMenuPress() {
-    
+    mApp->imWnd->createShape.Show();
+    /*
     if (!mApp->createShape) mApp->createShape = new CreateShape(interfGeom, &mApp->worker);
     mApp->createShape->SetVisible(true);
+    */
 }
 
 void TransitionBetween2MenuPress() {

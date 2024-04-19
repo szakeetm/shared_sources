@@ -42,6 +42,7 @@ namespace ImGui {
 
     void Loader(float& progress, float& time);
     void HelpMarker(const std::string& text);
+    void TextWithMargin(const std::string& text, const float width);
 }
 
 namespace ImMath {

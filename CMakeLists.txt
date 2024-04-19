@@ -143,6 +143,7 @@ set(INTERFACE_FILES
         Interface/ImguiFacetAlign.cpp
         Interface/ImguiFacetExtrude.cpp
         Interface/ImguiFacetSplit.cpp
+        Interface/ImguiCreateShape.cpp
 
         Interface/ImguiGeometryViewer.cpp
         Facet_shared.cpp

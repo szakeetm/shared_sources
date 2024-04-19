@@ -341,6 +341,13 @@ namespace ImGui {
             ImGui::EndTooltip();
         }
     }
+    void TextWithMargin(const std::string& text, const float width)
+    {
+        float txtWidth = ImGui::CalcTextSize(text.c_str()).x;
+        ImGui::Text(text);
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(width - txtWidth, 0));
+    }
 }
 namespace ImMath {
     ImVec2 AddVec2(ImVec2 a, ImVec2 b)

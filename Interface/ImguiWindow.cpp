@@ -233,6 +233,8 @@ void ImguiWindow::init() {
     alignFacet.Init(mApp);
     extrudeFacet = ImFacetExtrude();
     extrudeFacet.Init(mApp);
+    createShape = ImCreateShape();
+    createShape.Init(mApp);
 
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
@@ -460,6 +462,7 @@ void ImguiWindow::renderSingle() {
         alignFacet.Draw();
         extrudeFacet.Draw();
         splitFac.Draw();
+        createShape.Draw();
 
         expFac.Draw();
 
