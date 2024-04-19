@@ -29,7 +29,7 @@ void ImProfilePlotter::Draw()
 
 	DrawMenuBar();
 
-	ImGui::BeginChild("Sidebar", ImVec2(txtW * 15, ImGui::GetContentRegionAvail().y), true);
+	ImGui::BeginChild("Sidebar", ImVec2(txtW * 20, ImGui::GetContentRegionAvail().y), true);
 	if (ImGui::TriState("###All", &aggregateState, mixedState)) {
 		ApplyAggregateState();
 	} ImGui::SameLine();
@@ -42,18 +42,20 @@ void ImProfilePlotter::Draw()
 	ImGui::SameLine();
 	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu\nClick on profile name to select corresponding facet in geometry, hold shift to add to selection");
 	ImGui::Separator();
-	for (int i = 0; i < profiledFacets.size(); i++) {
-		std::string fName = ("F#" + std::to_string(profiledFacets[i] + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(i)->sh.profileType].second));
+	size_t i = 0;
+	for (size_t facetID : profiledFacets) {
+		std::string fName = ("F#" + std::to_string(facetID + 1) + " " + molflowToUnicode(profileRecordModeDescriptions[(ProfileRecordModes)interfGeom->GetFacet(facetID)->sh.profileType].second));
 		if (ImGui::Checkbox(("##"+fName).c_str(), (bool*)&(profileDrawToggle[i]))) {
-			if (profileDrawToggle[i] == 0 && IsPlotted(profiledFacets[i])) RemoveCurve(profiledFacets[i]);
-			else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(profiledFacets[i]));
+			if (profileDrawToggle[i] == 0 && IsPlotted(facetID)) RemoveCurve(facetID);
+			else if (profileDrawToggle[i] == 1 && !IsPlotted(facetID)) data.push_back(ImUtils::MakePlotData(facetID));
 			UpdateSidebarMasterToggle();
 			updateHilights = true;
 		} ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
 		if (ImGui::Selectable(fName)) {
-			ShowFacet(profiledFacets[i], ImGui::IsKeyDown(ImGuiKey_LeftShift));
+			ShowFacet(facetID, ImGui::IsKeyDown(ImGuiKey_LeftShift));
 		}
+		++i;
 	}
 	ImGui::EndChild();
 	ImGui::SameLine();
@@ -453,10 +455,11 @@ void ImProfilePlotter::ApplyAggregateState()
 {
 	mixedState = false;
 	for (int i = 0; i < profileDrawToggle.size(); i++) {
+		size_t facetID = profiledFacets[i];
 		profileDrawToggle[i] = aggregateState;
-		if (profileDrawToggle[i] == 0 && IsPlotted(i)) RemoveCurve(i);
-		else if (profileDrawToggle[i] == 1 && !IsPlotted(i)) {
-			data.push_back(ImUtils::MakePlotData(profiledFacets[i]));
+		if (profileDrawToggle[i] == 0 && IsPlotted(facetID)) RemoveCurve(facetID);
+		else if (profileDrawToggle[i] == 1 && !IsPlotted(facetID)) {
+			data.push_back(ImUtils::MakePlotData(facetID));
 		}
 	}
 	updateHilights = true;
