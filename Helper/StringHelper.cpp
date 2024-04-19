@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 
 #include "StringHelper.h"
 #include "MathTools.h"
@@ -257,6 +239,28 @@ std::string molflowToAscii(std::string text) {
     return text;
 }
 
+std::string findAndReplace(std::string text, std::string find, std::string replace) {
+    size_t pos = 0;
+    std::string out = text;
+    while ((pos = out.find(find, pos)) != std::string::npos) {
+        out.replace(pos, find.length(), replace);
+        pos += replace.length();
+    }
+    return out;
+}
+
+std::string molflowToUnicode(std::string text)
+{
+    std::string out = text;
+    
+    out = findAndReplace(out, "\201", u8"u\u20D7"); // vector u
+    out = findAndReplace(out, "\202", u8"v\u20D7"); // vector v
+    out = findAndReplace(out, "\262", u8"\u00B2"); // ^2
+    out = findAndReplace(out, "\263", u8"\u00B3"); // ^3
+    
+    return out;
+}
+
 bool iequals(const std::string& str1, const std::string& str2)
 {
     //From https://stackoverflow.com/questions/11635/case-insensitive-string-comparison-in-c
@@ -340,16 +344,4 @@ size_t countLines(const std::stringstream& ss, bool countEmpty) {
     }
 
     return count;
-}
-
-bool Util::getNumber(double* num, const std::string str)
-{
-    try {
-        *num = std::stod(str);
-        return true;
-    }
-    catch (std::exception e)
-    {
-        return false;
-    }
 }

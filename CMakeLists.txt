@@ -110,9 +110,15 @@ set(INTERFACE_FILES
         Interface/ImguiShortcutManager.cpp
         Interface/ImguiWindowBase.cpp
         Interface/ImguiFormulaEditor.cpp
+        Interface/ImguiConvergencePlotter.cpp
+        Interface/ImguiTexturePlotter.cpp
+        Interface/ImguiProfilePlotter.cpp
+        Interface/ImguiHistogramPlotter.cpp
+        Interface/ImguiTextureScaling.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
+        imguiTesting.cpp
 
         File.cpp
         Formulas.cpp
@@ -152,7 +158,6 @@ set(SIM_FILES
         RayTracing/KDTree.cpp
         RayTracing/BVH.cpp
         RayTracing/BVH.h
-        RayTracing/Ray.cpp
         RayTracing/Ray.h
         RayTracing/Primitive.h
         BoundingBox.cpp

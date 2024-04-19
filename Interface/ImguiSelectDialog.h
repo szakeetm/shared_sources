@@ -26,5 +26,5 @@ public:
 	std::vector<size_t> facetIds;
 protected:
 	std::string numText;
-	void Preprocess();
+	bool Preprocess();
 };

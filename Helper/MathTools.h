@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 #pragma once
 
 #include <vector>
@@ -210,7 +192,7 @@ Vector3d
 PolarToCartesian(const Vector3d &nU, const Vector3d &nV, const Vector3d &nN, const double theta, const double phi,
                  const bool reverse); //sets sHandle->currentParticleTracer.direction
 
-double GeneratePoissonRnd(const double lambda, const double rnd);
+double GenerateExponentialRnd(const double one_per_lambda, const double rnd);
 
 //Elementwise addition of two vectors:
 #include <algorithm>
@@ -255,6 +237,9 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 	*/
 
 	return lhs;
+}
+namespace MathHelper {
+	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
 }
 
 

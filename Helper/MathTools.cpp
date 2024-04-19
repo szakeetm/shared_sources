@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 #include "MathTools.h"
 #include "Random.h"
 
@@ -285,8 +267,15 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 	return u * U + v * V + n * N;
 }
 
-double GeneratePoissonRnd(const double lambda, const double rnd) {
-	//Transforms a uniform 0..1 random variable rnd to a Poisson-distributed one (P(x)=lambda * exp(-lambda*x))
-	//Used to get the free path, when mean free path is lambda = 1/(density * cross_section_sigma)
-	return -lambda * log(1 - rnd);
+double MathHelper::mapRange(double value, double inMin, double inMax, double outMin, double outMax) {
+	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+}
+
+double GenerateExponentialRnd(const double one_per_lambda, const double rnd) {
+	//Transforms a uniform 0..1 random variable rnd to an exponential distributed one (P(x)=lambda * exp(-lambda*x))
+	//Used to get the free path, when mean free path is mfp = 1/(density * cross_section_sigma)
+	//And lambda = 1 / mfp
+	//Originally x = =1/lambda*log(1-r) and 1=r=1
+	//one_per_lambda = mfp
+	return -one_per_lambda * log(rnd);
 }

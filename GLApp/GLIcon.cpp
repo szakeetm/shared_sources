@@ -27,10 +27,12 @@ void GLIcon::InvalidateDeviceObjects() {
 
 void GLIcon::RestoreDeviceObjects() {
 
-  GLint viewport[4];
-  glGetIntegerv(GL_VIEWPORT,viewport);
+  //GLint viewport[4];
+  //glGetIntegerv(GL_VIEWPORT,viewport);
   icon = new Sprite2D();
-  icon->RestoreDeviceObjects(name,"none",viewport[2],viewport[3]);
+  //icon->RestoreDeviceObjects(name,"none",viewport[2],viewport[3]);
+  ScreenSize size = GLToolkit::GetScreenSize();
+  icon->RestoreDeviceObjects(name,"none",size.width,size.height);
   icon->SetSpriteMapping(0.0f,0.0f,1.0f,1.0f);
 
 }

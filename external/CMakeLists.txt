@@ -10,9 +10,7 @@ if(NOT MSVC)
     )
 endif()
 
-add_subdirectory(TruncatedGaussian)
-target_compile_options(truncatedgaussian PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-
+add_subdirectory(PugiXML)
 add_subdirectory(ziplib)
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 

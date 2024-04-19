@@ -1,25 +1,6 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
-
-#ifndef MOLFLOW_PROJ_IMGUIEXTENSIONS_H
-#define MOLFLOW_PROJ_IMGUIEXTENSIONS_H
+#pragma once
 
 #include "imgui/imgui.h"
 #include <string>
@@ -46,7 +27,8 @@ namespace ImGui {
 
     bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f");
     bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
-    bool TriState(const char* desc, size_t* v);
+    bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width = 0);
+    bool TriState(const char* desc, short* v, bool allowManualMixed = true);
 
 // Add spacing of checkbox width
     void AddCheckboxWidthSpacing();
@@ -58,5 +40,12 @@ namespace ImGui {
     Spinner(const char *label, float radius, int thickness, const ImU32 &color);
 
     void Loader(float& progress, float& time);
+    void HelpMarker(const std::string& text);
 }
-#endif //MOLFLOW_PROJ_IMGUIEXTENSIONS_H
+
+namespace ImMath {
+    ImVec2 AddVec2(ImVec2 a, ImVec2 b);
+    ImVec2 SubstractVec2(ImVec2 a, ImVec2 b);
+    ImVec2 ScaleVec2(ImVec2 a, float x);
+    bool IsInsideVec2(ImVec2 topLeft, ImVec2 bottomRight, ImVec2 point);
+}

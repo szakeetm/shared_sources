@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 
 #include "ImguiPerformancePlot.h"
 #include "imgui/imgui.h"
@@ -52,7 +34,7 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
         if (!true || refresh_time == 0.0) // force
             refresh_time = ImGui::GetTime();
         auto now_time = ImGui::GetTime();
-        if (mApp->worker.IsRunning() && difftime(now_time, refresh_time) > 1.0 &&
+        if (mApp->worker.IsRunning() && difftime(static_cast<time_t>(now_time), static_cast<time_t>(refresh_time)) > 1.0 &&
             mApp->hps.eventsAtTime.size() >= 2)
         {
             //static float phase = 0.0f;
@@ -93,8 +75,8 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
             sprintf(overlay, "avg %f hit/s", average);
             //ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,ImVec2(0, 80.0f));
 
-            ImPlot::SetNextPlotLimitsY(std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1), ImPlotFlags_AntiAliased,
+            ImPlot::SetNextAxisLimits(ImAxis_Y1 ,std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
+            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1),
                                   ImPlotAxisFlags_AutoFit/* | ImPlotAxisFlags_Time*//*, ImPlotAxisFlags_AutoFit*/)) {
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
                 ImPlot::PlotLine("Hit/s", tvalues, values, IM_ARRAYSIZE(values), values_offset);

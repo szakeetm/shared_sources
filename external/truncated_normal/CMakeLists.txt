@@ -4,16 +4,11 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 # Change if you want modify path or other values. #
 ###################################################
 
-# Project
-set(PROJECT_NAME truncatedgaussian)
-
-############## CMake Project ################
-#        The main options of project        #
-#############################################
+set(PROJECT_NAME truncated_normal)
 
 # Folders files
-set(CPP_DIR_1 .)
-set(HEADER_DIR_1 .)
+set(CPP_DIR_1 src)
+set(HEADER_DIR_1 include)
 
 ############## CMake Project ################
 #        The main options of project        #
@@ -21,22 +16,29 @@ set(HEADER_DIR_1 .)
 
 project(${PROJECT_NAME} CXX)
 
+################# Flags ################
+# Defines Flags for Windows and Linux. #
+########################################
+if(MSVC)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+else()
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+endif()
+
 ################ Files ################
 #   --   Add files to project.   --   #
 #######################################
 
-set(SRC_FILES ${CPP_DIR_1}/rtnorm.cpp )
-set(HEADER_FILES ${HEADER_DIR_1}/rtnorm.hpp)
+# Source Files
+file(GLOB SRC_FILES
+		${CPP_DIR_1}/truncated_normal.cpp
+    )
 
 # Add library to build.
-add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
-
-
+add_library(${PROJECT_NAME} STATIC
+        ${SRC_FILES}
+        )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_1}
         )
-
-
-    find_package(GSL REQUIRED)
-    target_link_libraries(${PROJECT_NAME} GSL::gsl GSL::gslcblas)

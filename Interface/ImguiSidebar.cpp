@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
@@ -137,7 +119,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     static bool use_work_area = true; // experiment with work area vs normal area
 
-    static int width = TEXT_BASE_WIDTH * 30;
+    static float width = TEXT_BASE_WIDTH * 30;
 
     ImGui::SetNextWindowPos(use_work_area ?
                             ImVec2(viewport->Size.x - width, viewport->WorkPos.y)
@@ -165,7 +147,6 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
         window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
         window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
         ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        ImGui::SetNextWindowViewport(viewport->ID);
         flags |= ImGuiWindowFlags_NoMove;
     }
     //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
@@ -269,8 +250,8 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             auto sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
 
             bool updateFacetInterfaceValues = (lastNbFacets != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
-            lastNbFacets = nbSelectedFacets;
-            lastFacetId = selected_facet_id;
+            lastNbFacets = static_cast<int>(nbSelectedFacets);
+            lastFacetId = static_cast<int>(selected_facet_id);
             if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
             if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
@@ -615,7 +596,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 // Create item list that is sortable etc.
                 static ImVector<FacetData> items;
                 if (items.Size != interfGeom->GetNbFacet()) {
-                    items.resize(interfGeom->GetNbFacet(), FacetData());
+                    items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
                     for (int n = 0; n < items.Size; n++) {
                         InterfaceFacet *f = interfGeom->GetFacet(n);
                         FacetData &item = items[n];

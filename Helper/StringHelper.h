@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 
 #ifndef MOLFLOW_PROJ_STRINGHELPER_H
 #define MOLFLOW_PROJ_STRINGHELPER_H
@@ -42,8 +24,10 @@ bool endsWith(const std::string& fullString, const std::string& ending);
 bool iBeginsWith(const std::string& fullString, const std::string& beginning);
 bool iEndsWith(const std::string& fullString, const std::string& ending);
 
+std::string findAndReplace(std::string text, std::string find, std::string replace);
 std::string space2underscore(std::string text);
 std::string molflowToAscii(std::string text);
+std::string molflowToUnicode(std::string text);
 bool iequals(const std::string& a, const std::string& b);
 std::string lowercase(const std::string& s);
 std::string uppercase(const std::string& s);
@@ -54,6 +38,18 @@ size_t countLines(const std::stringstream& ss, bool countEmpty=true);
 
 namespace Util {
     std::string getTimepointString();
-    bool getNumber(double* num, std::string str);
+
+    template<typename T>
+    bool getNumber(T* num, std::string str)
+    {
+        try {
+            *num = static_cast<T>(std::stod(str));
+            return true;
+        }
+        catch (std::exception e)
+        {
+            return false;
+        }
+    }
 }
 #endif //MOLFLOW_PROJ_STRINGHELPER_H

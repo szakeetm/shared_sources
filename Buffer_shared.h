@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 #pragma once
 #include "Vector.h"
 #include "BoundingBox.h"
@@ -326,7 +308,8 @@ struct SimuParams { //Plain old data
 		double meanFreePath_cm = 10;
 		double massRatio = 1.0;
 		double rho = 2.0; //no effect currently
-		//double velocityCutoffRatio = 0.01; //destroy particle if reaches Brownian motion
+		bool enableCutoff = true;
+		double cutoffSpeed = 10; //destroy particle if reaches Brownian motion
 	};	
 	
 	double latestMoment=1E-10;

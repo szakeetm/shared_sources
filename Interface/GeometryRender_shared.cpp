@@ -1,22 +1,4 @@
-/*
-Program:     MolFlow+ / Synrad+
-Description: Monte Carlo simulator for ultra-high vacuum and synchrotron radiation
-Authors:     Jean-Luc PONS / Roberto KERSEVAN / Marton ADY / Pascal BAEHR
-Copyright:   E.S.R.F / CERN
-Website:     https://cern.ch/molflow
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-Full license text: https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html
-*/
 
 #include "Geometry_shared.h"
 #include "GeometryTools.h" //FindEar
@@ -781,7 +763,7 @@ void InterfaceGeometry::DrawSemiTransparentPolys(const std::vector<size_t>& sele
 	GLCOLOR currentColor;
 
 	for (const auto sel : selectedFacets) {
-		if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
+		if (!colorHighlighting.empty() && ((mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) || (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()))) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not
 			auto profileMode = facets[sel]->sh.profileType;
@@ -1537,7 +1519,7 @@ void InterfaceGeometry::BuildSelectList() {
 			const auto& f = facets[selectedFacets[i]];
 
 			//If color highlighting is on, skip highlighted facets as they will be drawn last
-			if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
+			if (!colorHighlighting.empty() && ((mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()) || (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()))) {
 				auto it = colorHighlighting.find(i);
 				// Check if element exists in map or not
 				if (it != colorHighlighting.end()) {
@@ -1589,7 +1571,7 @@ void InterfaceGeometry::BuildSelectList() {
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last
-	if (!colorHighlighting.empty() && (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible())) {
+	if (!colorHighlighting.empty() && ((mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) || (mApp->profilePlotter != nullptr && ((GLWindow*)(mApp->profilePlotter))->IsVisible()))) {
 		for (auto& sel : selectedFacets) {
 			auto it = colorHighlighting.find(sel);
 			// Check if element exists in map or not

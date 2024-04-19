@@ -1,3 +1,6 @@
+#ifndef IMGUI_DEFINE_MATH_OPERATORS
+#define IMGUI_DEFINE_MATH_OPERATORS
+#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiFormulaEditor.h"
 #include "imgui.h"
 #include "imgui_internal.h"
@@ -5,6 +8,8 @@
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Interface.h"
 #include "ImguiMenu.h"
+#include "ImguiExtensions.h"
+#include "ImguiConvergencePlotter.h"
 #include <sstream>
 
 
@@ -39,7 +44,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 	float columnW;
 	blue = mApp->worker.displayedMoment != 0; // control wether to color values blue or not
-	formulasSize = appFormulas->formulas.size(); // very frequently used value so it is stored
+	formulasSize = static_cast<int>(appFormulas->formulas.size()); // very frequently used value so it is stored
 	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
 		// Headers
 		ImGui::TableSetupColumn("##ID",ImGuiTableColumnFlags_WidthFixed,txtW*4);
@@ -50,7 +55,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 		ImGui::TableHeadersRow();
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*4));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*0.1));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 
 		// this loop draws a row
@@ -75,22 +80,26 @@ void ImFormulaEditor::DrawFormulaList() {
 				ImGui::Text(appFormulas->formulas[i].GetName());
 			}
 			else { // selected - draw inputs
-				columnW = ImGui::GetContentRegionAvailWidth();
+				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeExp", &changeExpression);
 				ImGui::TableSetColumnIndex(2);
-				columnW = ImGui::GetContentRegionAvailWidth();
+				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
 				ImGui::InputText("##changeNam", &changeName);
 			}
 			// values column
 			ImGui::TableSetColumnIndex(3);
-			ImGui::TextColored(ImVec4(0, 0, blue?1:0, 1), mApp->appFormulas->GetFormulaValue(i).c_str());
+			while (valuesBuffer.size() <= i) valuesBuffer.push_back("");
+			if (mApp->autoUpdateFormulas) {
+				valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
+			}
+			ImGui::TextColored(ImVec4(0.f, 0.f, blue?1.f:0.f, 1.f), valuesBuffer[i].c_str());
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
 			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
 			// show button only if the row is selected and there was a change
-			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[SDL_SCANCODE_RETURN]
+			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[ImGuiKey_Enter]
 																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
 				changeIndex = i; // set it when button or enter is pressed
 			}
@@ -105,13 +114,13 @@ void ImFormulaEditor::DrawFormulaList() {
 		}
 		// inputs for expression and name
 		ImGui::TableSetColumnIndex(1);
-		columnW = ImGui::GetContentRegionAvailWidth();
+		columnW = ImGui::GetContentRegionAvail().x;
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NE", &newExpression)) {
 			selRow = formulasSize; // auto select row if field changed
 		}
 		ImGui::TableSetColumnIndex(2);
-		columnW = ImGui::GetContentRegionAvailWidth();
+		columnW = ImGui::GetContentRegionAvail().x;
 		ImGui::SetNextItemWidth(columnW);
 		if (ImGui::InputText("##NN", &newName)) {
 			selRow = formulasSize;
@@ -119,11 +128,11 @@ void ImFormulaEditor::DrawFormulaList() {
 		ImGui::TableSetColumnIndex(4);
 		// show button if either field is not empty
 		if (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
-			|| (selRow == formulasSize && (io->KeysDown[SDL_SCANCODE_RETURN]
+			|| (selRow == formulasSize && (io->KeysDown[ImGuiKey_Enter]
 										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
 			// add new formula when button is pressed or row is selected and enter is pressed
 			appFormulas->AddFormula(newName, newExpression);
-			formulasSize = appFormulas->formulas.size();
+			formulasSize = static_cast<int>(appFormulas->formulas.size());
 			appFormulas->formulas[formulasSize-1].Parse();
 			if (mApp->autoUpdateFormulas) { // formula was added, if autoUpdate is true update all values
 				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
@@ -144,10 +153,14 @@ void ImFormulaEditor::DrawFormulaList() {
 		if (changeIndex > -1) {
 			if (changeName == "" && changeExpression == "") {
 				//delete formula
+				mApp->imWnd->convPlot.RemovePlot(selRow); // prevent convergence plotter crash when removing plotted formula
 				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
+				valuesBuffer.erase(valuesBuffer.begin() + selRow);
+				mApp->imWnd->convPlot.DecrementFormulaIndicies(selRow); // prevent convergence plotter crash when removing plotted formula
 			}
 			else {
 				//modify formula
+				mApp->imWnd->convPlot.RemovePlot(changeIndex); // undraw formula from conv plot on edit
 				appFormulas->formulas[changeIndex].SetName(changeName);
 				appFormulas->formulas[changeIndex].SetExpression(changeExpression);
 				appFormulas->formulas[changeIndex].Parse();
@@ -208,7 +221,7 @@ std::string ImFormulaEditor::ExportFormulasAtAllMoments() {
 
 void ImFormulaEditor::Draw() {
 	if (!drawn) return;
-	formulasSize = appFormulas->formulas.size();
+	formulasSize = static_cast<int>(appFormulas->formulas.size());
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiCond_FirstUseEver);
 	// ImGui has no min size constraint so we set both min and max, with max absurdly high
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 55, txtH*10), ImVec2(txtW*1000,txtH*1000));
@@ -216,7 +229,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::Begin("Formula editor", &drawn, ImGuiWindowFlags_NoSavedSettings);
 
 	float formulaListHeight = ImGui::GetWindowHeight() - txtH*8;
-	ImGui::BeginChild("Formula list",ImVec2(0, formulaListHeight),true,0);
+	ImGui::BeginChild("###Formula list",ImVec2(0, formulaListHeight),true,0);
 	ImGui::Text("Formula list");
 	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
 
@@ -238,9 +251,13 @@ void ImFormulaEditor::Draw() {
 	ImGui::EndChild();
 	if (ImGui::Button("Recalculate now")) {
 		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+		while (valuesBuffer.size() <= appFormulas->formulas.size()) valuesBuffer.push_back("");
+		for (int i = 0; i < appFormulas->formulas.size(); i++) {
+			valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
+		}
 	}
 	ImGui::SameLine();
-	float dummyWidthA = ImGui::GetContentRegionAvailWidth() - txtW*20.5;
+	float dummyWidthA = ImGui::GetContentRegionAvail().x - txtW*20.5f;
 	ImGui::Dummy(ImVec2(dummyWidthA,txtH));
 	ImGui::SameLine();
 	
@@ -262,13 +279,21 @@ void ImFormulaEditor::Draw() {
 	ImGui::Checkbox("Record values for convergence", &appFormulas->recordConvergence);
 	ImGui::Checkbox("Auto-update formulas", &mApp->autoUpdateFormulas);
 	ImGui::SameLine();
-	float dummyWidthB = ImGui::GetContentRegionAvailWidth() - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
+	float dummyWidthB = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
 	ImGui::SameLine();
 	if (ImGui::Button("Open convergence plotter >>")) {
+		ImVec2 pos;
+		pos.x = ImGui::GetWindowPos().x + ImGui::GetWindowSize().x + txtW;
+		pos.y = ImGui::GetWindowPos().y;
+		ImGui::SetWindowPos("Convergence Plotter", pos);
 		ImMenu::ConvergencePlotterMenuPress();
 	}
 	if (ImGui::Button("Syntax help")) {
+		ImVec2 pos;
+		pos.x = ImGui::GetWindowPos().x + ImGui::GetWindowSize().x + txtW;
+		pos.y = ImGui::GetWindowPos().y;
+		ImGui::SetWindowPos("Formula Editor Syntax Help", pos);
 		help.Show();
 	}
 	ImGui::End();
@@ -289,9 +314,10 @@ void ImFormulaEditor::ImFormattingHelp::Draw()
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*80, txtH*10), ImVec2(txtW*100,txtH*35));
 	ImGui::SetNextWindowSize(ImVec2(txtW*80, txtH*35),ImGuiCond_FirstUseEver);
 	ImGui::Begin("Formula Editor Syntax Help", &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH));
+	ImGui::BeginChild("##FEHTXT", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5f*txtH));
 	ImGui::TextWrapped(formulaSyntax);
 	ImGui::EndChild();
+	ImGui::PlaceAtRegionCenter("Close");
 	if (ImGui::Button("Close")) this->Hide();
 	ImGui::End();
 }
