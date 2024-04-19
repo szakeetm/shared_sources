@@ -76,12 +76,11 @@ void ImHistogramPlotter::Draw()
 		ImGui::AlignTextToFramePadding();
 		ImGui::Text("Global");
 	} 
-	histogramDrawToggle[plotTab].resize(histogrammedFacets[plotTab].size(), 0);
 	for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
-		std::string fName = ("Facet #" + std::to_string(i + 1));
+		std::string fName = ("Facet #" + std::to_string(histogrammedFacets[plotTab][i] + 1));
 		if (ImGui::Checkbox(("##" + fName).c_str(), (bool*)&(histogramDrawToggle[plotTab][i]))) {
-			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(i)) RemovePlot(i, plotTab);
-			else if (histogramDrawToggle[plotTab][i] == 1 && !IsPlotted(i)) AddPlot(i);
+			if (histogramDrawToggle[plotTab][i] == 0 && IsPlotted(histogrammedFacets[plotTab][i])) RemovePlot(histogrammedFacets[plotTab][i], plotTab);
+			else if (histogramDrawToggle[plotTab][i] == 1 && !IsPlotted(histogrammedFacets[plotTab][i])) AddPlot(histogrammedFacets[plotTab][i]);
 			UpdateSidebarMasterToggle();
 		} ImGui::SameLine();
 		ImGui::AlignTextToFramePadding();
@@ -93,7 +92,7 @@ void ImHistogramPlotter::Draw()
 	ImGui::SameLine();
 	ImGui::BeginGroup();
 	DrawPlot();
-	if(ImGui::Button("<< Hist settings")) {
+	if(ImGui::Button("Histogram settings")) {
 		settingsWindow.Toggle();
 	} ImGui::SameLine();
 	if (ImGui::Checkbox("Normalize", &normalize)) RefreshPlots();
@@ -397,21 +396,28 @@ void ImHistogramPlotter::ShowFacet(int idx, bool add)
 
 void ImHistogramPlotter::ApplyAggregateState()
 {
+	bool globalHist = ((plotTab == bounces && mApp->worker.model->sp.globalHistogramParams.recordBounce)
+		|| (plotTab == distance && mApp->worker.model->sp.globalHistogramParams.recordDistance)
+#ifdef MOLFLOW
+		|| (plotTab == time && mApp->worker.model->sp.globalHistogramParams.recordTime)
+#endif
+		);
 	mixedState = false;
 	globalDrawToggle[plotTab] = aggregateState;
-	if (globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) RemovePlot(-1, plotTab);
-	else if (globalDrawToggle[plotTab] == 1 && !IsPlotted(-1)) AddPlot(-1);
+	if ((globalDrawToggle[plotTab] == 0 && IsPlotted(-1)) || !globalHist) RemovePlot(-1, plotTab);
+	else if (globalDrawToggle[plotTab] == 1 && globalHist && !IsPlotted(-1)) AddPlot(-1);
 	for (int i = 0; i < histogrammedFacets[plotTab].size(); i++) {
 		histogramDrawToggle[plotTab][i] = aggregateState;
-		if (histogramDrawToggle[plotTab][i] == 1) AddPlot(i);
-		else if (histogramDrawToggle[plotTab][i] == 0) RemovePlot(i, plotTab);
+		if (histogramDrawToggle[plotTab][i] == 1) AddPlot(histogrammedFacets[plotTab][i]);
+		else if (histogramDrawToggle[plotTab][i] == 0) RemovePlot(histogrammedFacets[plotTab][i], plotTab);
 	}
 }
 
 void ImHistogramPlotter::UpdateSidebarMasterToggle()
 {
+	histogramDrawToggle[plotTab].resize(histogrammedFacets[plotTab].size(), 0);
 	mixedState = false;
-	if (histogrammedFacets[plotTab].size() == 0) {
+	if (histogrammedFacets[plotTab].size() == 0 && (globals[plotTab].x.get() == nullptr || globals[plotTab].y.get() == nullptr)) {
 		aggregateState = 0;
 		return;
 	}
@@ -429,8 +435,14 @@ void ImHistogramPlotter::UpdateSidebarMasterToggle()
 		}
 	}
 	if (globalDrawToggle[plotTab] != aggregateState) {
-		aggregateState = 2;
-		mixedState = true;
+		if (!checkedFirst) {
+			aggregateState = globalDrawToggle[plotTab];
+			checkedFirst = true;
+		}
+		else {
+			aggregateState = 2;
+			mixedState = true;
+		}
 	}
 }
 
