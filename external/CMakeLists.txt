@@ -16,6 +16,8 @@ target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 add_subdirectory(Clipper2Lib)
 target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
+add_subdirectory(truncated_normal)
+
 if(NOT NO_INTERFACE)
     add_subdirectory(SDL_SavePNG)
     target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
