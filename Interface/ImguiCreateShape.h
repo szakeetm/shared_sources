@@ -24,4 +24,16 @@ protected:
 
 	double axis1Len, axis2Len, trackTopLen, arcSteps;
 	std::string axis1LenIn, axis2LenIn, trackTopLenIn, arcStepsIn;
+	
+	void FacetCenterButtonPress();
+	void VertexButtonPress();
+	std::string centerRowMsg;
+	void FacetUButtonPress();
+	void CenterToVertAx1ButtonPress();
+	std::string axisRowMsg;
+	void FacetNButtonPress();
+	void CenterToVertNormalButtonPress();
+	std::string normalRowMsg;
+	void FullCircleSidesButtonPress();
+	void ApplyButtonPress();
 };
