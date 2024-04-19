@@ -110,7 +110,7 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml clipper2 sdl_savepng truncatedgaussian nativefiledialog-extended-molflow-wrapped)
+target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml clipper2 sdl_savepng nativefiledialog-extended-molflow-wrapped)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
