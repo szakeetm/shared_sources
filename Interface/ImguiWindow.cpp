@@ -58,12 +58,15 @@ void ImguiWindow::ShowWindowLicense() {
 Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
+License:    GNU GPL v3
 
 License summary: 
 This program is free software, but we do not warrant that
-it's free of bugs or that its results are valid.
+it's free of bugs or that its results are valid. Any derivative work must
+also be released as GNU GPL v3 (open-source)
 
-Full license text: https://molflow.docs.cern.ch/about/
+Full license info: https://molflow.docs.cern.ch/about/
+Full license text: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Open-source libraries used:
 - SDL2 (https://www.libsdl.org/)
