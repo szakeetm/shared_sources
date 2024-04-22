@@ -150,6 +150,7 @@ set(INTERFACE_FILES
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
         imguiTesting.cpp
+        ImguiImageManager.cpp
 
 
         File.cpp

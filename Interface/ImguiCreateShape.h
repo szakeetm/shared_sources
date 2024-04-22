@@ -1,9 +1,11 @@
 #pragma once
 #include "ImguiWindowBase.h"
+#include "ImguiImageManager.h"
 
 class ImCreateShape : public ImWindow {
 public:
 	void Draw();
+	void OnShow() override;
 protected:
 	enum Shape {
 		none,
@@ -36,4 +38,6 @@ protected:
 	std::string normalRowMsg;
 	void FullCircleSidesButtonPress();
 	void ApplyButtonPress();
+
+	ImImage *rectImg, *elipseImg, *trackImg;
 };

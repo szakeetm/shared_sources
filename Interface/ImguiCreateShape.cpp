@@ -11,7 +11,7 @@ void ImCreateShape::Draw()
 {
 	if (!drawn) return;
 
-	ImGui::SetNextWindowSize(ImVec2(txtW * 80, txtH * 20));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 70, txtH * 24.5));
 	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize);
 	if (ImGui::BeginTabBar("Shape selection")) {
 
@@ -30,7 +30,17 @@ void ImCreateShape::Draw()
 		ImGui::EndTabBar();
 	}
 	ImGui::BeginGroup();
-	ImGui::Text("// TODO Place images here");
+	switch (shapeSel) {
+	case rect:
+		rectImg->Draw();
+		break;
+	case elipse:
+		elipseImg->Draw();
+		break;
+	case track:
+		trackImg->Draw();
+		break;
+	}
 	ImGui::EndGroup();
 	ImGui::BeginChild("Position", ImVec2(0, txtH * 5.5), ImGuiChildFlags_Border);
 	ImGui::TextDisabled("Position");
@@ -144,6 +154,13 @@ void ImCreateShape::Draw()
 		ApplyButtonPress();
 	}
 	ImGui::End();
+}
+
+void ImCreateShape::OnShow()
+{
+	if (rectImg == nullptr) rectImg = new ImImage("images/edit_rectangle.png");
+	if (elipseImg == nullptr) elipseImg = new ImImage("images/edit_circle.png");
+	if (trackImg == nullptr) trackImg = new ImImage("images/edit_racetrack.png");
 }
 
 void ImCreateShape::FacetCenterButtonPress()
