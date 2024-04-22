@@ -3,6 +3,9 @@
 #include "ImguiExtensions.h"
 #include "ImguiPopup.h"
 #include "Facet_shared.h"
+#include "Helper/StringHelper.h"
+#include "Helper/MathTools.h"
+#include "Interface.h"
 
 void ImCreateShape::Draw()
 {
@@ -126,7 +129,7 @@ void ImCreateShape::Draw()
 	ImGui::TextWithMargin("Axis2 length:", txtW * 10);
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 6);
-	ImGui::InputText("###axis2Len", &axis1LenIn);
+	ImGui::InputText("###axis2Len", &axis2LenIn);
 	ImGui::SameLine();
 	ImGui::TextWithMargin("cm", txtW * 3);
 	if (shapeSel != rect) {
@@ -165,28 +168,259 @@ void ImCreateShape::FacetCenterButtonPress()
 
 void ImCreateShape::VertexButtonPress()
 {
+	if (interfGeom->GetNbSelectedVertex() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
+		return;
+	}
+	auto selVertices = interfGeom->GetSelectedVertices();
+	Vector3d center = *(interfGeom->GetVertex(selVertices[0]));
+
+	centerX = center.x;
+	centerY = center.y;
+	centerZ = center.z;
+
+	centerXIn = fmt::format("{}", centerX);
+	centerYIn = fmt::format("{}", centerY);
+	centerZIn = fmt::format("{}", centerZ);
+
+	centerRowMsg = fmt::format("Vertex {}", selVertices[0] + 1);
 }
 
 void ImCreateShape::FacetUButtonPress()
 {
+	if (interfGeom->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
+		return;
+	}
+	auto selFacets = interfGeom->GetSelectedFacets();
+	Vector3d facetU = interfGeom->GetFacet(selFacets[0])->sh.U;
+
+	axis1X = facetU.x;
+	axis1Y = facetU.y;
+	axis1Z = facetU.z;
+
+	axis1XIn = fmt::format("{}", axis1X);
+	axis1YIn = fmt::format("{}", axis1Y);
+	axis1ZIn = fmt::format("{}", axis1Z);
+
+	axisRowMsg = fmt::format(u8"Facet {} u\u20D7", selFacets[0] + 1);
 }
 
 void ImCreateShape::CenterToVertAx1ButtonPress()
 {
+	if (!Util::getNumber(&centerX, centerXIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center X coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerY, centerYIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Y coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerZ, centerZIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Z coordinate");
+		return;
+	}
+	if (interfGeom->GetNbSelectedVertex() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
+		return;
+	}
+	auto selVertices = interfGeom->GetSelectedVertices();
+	Vector3d vertexLocation = *(interfGeom->GetVertex(selVertices[0]));
+
+	axis1X = vertexLocation.x - centerX;
+	axis1Y = vertexLocation.y - centerY;
+	axis1Z = vertexLocation.z - centerZ;
+
+	axis1XIn = fmt::format("{}", axis1X);
+	axis1YIn = fmt::format("{}", axis1Y);
+	axis1ZIn = fmt::format("{}", axis1Z);
+
+	axisRowMsg = fmt::format("Center to vertex {}", selVertices[0] + 1);
 }
 
 void ImCreateShape::FacetNButtonPress()
 {
+	if (interfGeom->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
+		return;
+	}
+	auto selFacets = interfGeom->GetSelectedFacets();
+	Vector3d facetN = interfGeom->GetFacet(selFacets[0])->sh.N;
+
+	normalX = facetN.x;
+	normalY = facetN.y;
+	normalZ = facetN.z;
+
+	normalXIn = fmt::format("{}", normalX);
+	normalYIn = fmt::format("{}", normalY);
+	normalZIn = fmt::format("{}", normalZ);
+
+	normalRowMsg = fmt::format(u8"Facet {} normal", selFacets[0] + 1);
 }
 
 void ImCreateShape::CenterToVertNormalButtonPress()
 {
+	if (!Util::getNumber(&centerX, centerXIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center X coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerY, centerYIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Y coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerZ, centerZIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Z coordinate");
+		return;
+	}
+	if (interfGeom->GetNbSelectedVertex() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
+		return;
+	}
+	auto selVertices = interfGeom->GetSelectedVertices();
+	Vector3d vertexLocation = *(interfGeom->GetVertex(selVertices[0]));
+
+	normalX = vertexLocation.x - centerX;
+	normalY = vertexLocation.y - centerY;
+	normalZ = vertexLocation.z - centerZ;
+
+	normalXIn = fmt::format("{}", normalX);
+	normalYIn = fmt::format("{}", normalY);
+	normalZIn = fmt::format("{}", normalZ);
+
+	normalRowMsg = fmt::format("Center to vertex {}", selVertices[0] + 1);
 }
 
 void ImCreateShape::FullCircleSidesButtonPress()
 {
+	if (!Util::getNumber(&axis1Len, axis1LenIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 length");
+		return;
+	}
+	if (!Util::getNumber(&axis2Len, axis2LenIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis2 length");
+		return;
+	}
+	trackTopLen = axis1Len - axis2Len;
+
+	trackTopLenIn = fmt::format("{}", trackTopLen);
 }
 
 void ImCreateShape::ApplyButtonPress()
 {
+	// center
+	if (!Util::getNumber(&centerX, centerXIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center X coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerY, centerYIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Y coordinate");
+		return;
+	}
+	if (!Util::getNumber(&centerZ, centerZIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid center Z coordinate");
+		return;
+	}
+	// axis1
+	if (!Util::getNumber(&axis1X, axis1XIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 X coordinate");
+		return;
+	}
+	if (!Util::getNumber(&axis1Y, axis1YIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 Y coordinate");
+		return;
+	}
+	if (!Util::getNumber(&axis1Z, axis1ZIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 Z coordinate");
+		return;
+	}
+	// normal
+	if (!Util::getNumber(&normalX, normalXIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid normal X coordinate");
+		return;
+	}
+	if (!Util::getNumber(&normalY, normalYIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid normal Y coordinate");
+		return;
+	}
+	if (!Util::getNumber(&normalZ, normalZIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid normal Z coordinate");
+		return;
+	}
+	// null-vectors
+	Vector3d center, axisDir, normalDir;
+	center.x = centerX;
+	center.y = centerY;
+	center.z = centerZ;
+	axisDir.x = axis1X;
+	axisDir.y = axis1Y;
+	axisDir.z = axis1Z;
+	normalDir.x = normalX;
+	normalDir.y = normalY;
+	normalDir.z = normalZ;
+
+	if (IsEqual(axisDir.Norme(), 0.0)) {
+		ImIOWrappers::InfoPopup("Error", "Axis1 direction can't be null-vector");
+		return;
+	}
+	if (IsEqual(normalDir.Norme(), 0.0)) {
+		ImIOWrappers::InfoPopup("Error", "Normal direction can't be null-vector");
+		return;
+	}
+	// axis lengths
+	if (!Util::getNumber(&axis1Len, axis1LenIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 length");
+		return;
+	}
+	if (!Util::getNumber(&axis2Len, axis2LenIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis2 length");
+		return;
+	}
+	if (shapeSel == track) {
+		if (!Util::getNumber(&trackTopLen, trackTopLenIn)) {
+			ImIOWrappers::InfoPopup("Error", "Can't parse racetrack top length");
+			return;
+		}
+		if (trackTopLen >= axis1Len) {
+			ImIOWrappers::InfoPopup("Error", "For a racetrack, the top length must be less than Axis1");
+			return;
+		}
+		if (!(trackTopLen >= (axis1Len - axis2Len))) {
+			ImIOWrappers::InfoPopup("Error", "For a racetrack, the top length must be at least (Axis1 - Axis2)");
+			return;
+		}
+		if (trackTopLen <= 0) {
+			ImIOWrappers::InfoPopup("Error", "Top length must be positive");
+			return;
+		}
+	}
+	if (shapeSel == track || shapeSel == elipse) {
+		if (!Util::getNumber(&arcSteps, arcStepsIn)) {
+			ImIOWrappers::InfoPopup("Error", "Can't parse steps in arc");
+			return;
+		}
+		if (arcSteps<2) {
+			ImIOWrappers::InfoPopup("Error", "Number of arc steps must be at least 2");
+			return;
+		}
+	}
+	{
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (!mApp->AskToReset()) return;
+		switch (shapeSel) {
+		case rect:
+			interfGeom->CreateRectangle(center, axisDir, normalDir, axis1Len, axis2Len);
+			break;
+		case elipse:
+			interfGeom->CreateCircle(center, axisDir, normalDir, axis1Len, axis2Len, (size_t)arcSteps);
+			break;
+		case track:
+			interfGeom->CreateRacetrack(center, axisDir, normalDir, axis1Len, axis2Len, trackTopLen, (size_t)arcSteps);
+			break;
+		default:
+			break;
+		}
+		mApp->worker.MarkToReload();
+		mApp->changedSinceSave = true;
+		mApp->UpdateFacetlistSelected();
+	}
 }
