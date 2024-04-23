@@ -158,9 +158,9 @@ void ImCreateShape::Draw()
 
 void ImCreateShape::OnShow()
 {
-	if (rectImg == nullptr) rectImg = new ImImage("images/edit_rectangle.png");
-	if (elipseImg == nullptr) elipseImg = new ImImage("images/edit_circle.png");
-	if (trackImg == nullptr) trackImg = new ImImage("images/edit_racetrack.png");
+	if (rectImg == nullptr) rectImg = new ImImage("images/edit_rectangle_transparent.png");
+	if (elipseImg == nullptr) elipseImg = new ImImage("images/edit_circle_transparent.png");
+	if (trackImg == nullptr) trackImg = new ImImage("images/edit_racetrack_transparent.png");
 }
 
 void ImCreateShape::FacetCenterButtonPress()
