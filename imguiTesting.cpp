@@ -1341,7 +1341,52 @@ void ImTest::RegisterTests()
         }
         ctx->ItemClick("#CLOSE");
         };
-    // VIEW
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Create Shape");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Create shape...");
+        ctx->SetRef("Create shape");
+        ctx->ItemClick("Shape selection/###SR");
+        ctx->ItemClick("Shape selection/###CE");
+        ctx->ItemClick("Shape selection/###RT");
+        ctx->ItemClick("**/###centerXIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###centerYIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###centerZIn");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("**/###axis1XIn");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###axis1YIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###axis1ZIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalXIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalYIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalZIn");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###axis1Len");
+        ctx->KeyCharsReplaceEnter("2");
+        ctx->ItemClick("**/###axis2Len");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###trackTopLenIn");
+        ctx->KeyCharsReplaceEnter("1.5");
+        ctx->ItemClick("**/###arcStepsIn");
+        ctx->KeyCharsReplaceEnter("8");
+        ctx->ItemClick("Create facet");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Create shape");
+        ctx->ItemClick("**/###centerZIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Create facet");
+        ctx->ItemClick("#CLOSE");
+        DeleteFacet(interfGeom->GetNbFacet() - 1);
+        };
+        // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");

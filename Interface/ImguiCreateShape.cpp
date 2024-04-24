@@ -15,15 +15,15 @@ void ImCreateShape::Draw()
 	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize);
 	if (ImGui::BeginTabBar("Shape selection")) {
 
-		if (ImGui::BeginTabItem("Square / rectangle")) {
+		if (ImGui::BeginTabItem("Square / rectangle###SR")) {
 			shapeSel = rect;
 			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem("Curcle / Elipse")) {
+		if (ImGui::BeginTabItem("Circle / Elipse###CE")) {
 			shapeSel = elipse;
 			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem("Racetrack")) {
+		if (ImGui::BeginTabItem("Racetrack###RT")) {
 			shapeSel = track;
 			ImGui::EndTabItem();
 		}
