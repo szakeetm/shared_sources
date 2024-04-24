@@ -10,19 +10,8 @@
 #include <math.h>   // fabsf
 #include <stdint.h> // uint64_t
 #include <stdio.h>  // FILE*
-#include "../imgui/imgui.h"  // ImGuiID, ImGuiKey
+#include "imgui.h"  // ImGuiID, ImGuiKey
 class Str;          // Str<> from thirdparty/Str/Str.h
-
-//-----------------------------------------------------------------------------
-// Function Pointers
-//-----------------------------------------------------------------------------
-
-#if IMGUI_TEST_ENGINE_ENABLE_STD_FUNCTION
-#include <functional>
-#define ImFuncPtr(FUNC_TYPE)        std::function<FUNC_TYPE>
-#else
-#define ImFuncPtr(FUNC_TYPE)        FUNC_TYPE*
-#endif
 
 //-----------------------------------------------------------------------------
 // Hashing Helpers

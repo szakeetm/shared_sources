@@ -805,7 +805,7 @@ static void ImGuiTestEngine_PostNewFrame(ImGuiTestEngine* engine, ImGuiContext* 
     for (int task_n = 0; task_n < engine->InfoTasks.Size; task_n++)
     {
         ImGuiTestInfoTask* task = engine->InfoTasks[task_n];
-        if (task->FrameCount < engine->FrameCount - LOCATION_TASK_ELAPSE_FRAMES && task->Result.RefCount == 0)
+        if (task->FrameCount < engine->FrameCount - LOCATION_TASK_ELAPSE_FRAMES)
         {
             IM_DELETE(task);
             engine->InfoTasks.erase(engine->InfoTasks.Data + task_n);
@@ -950,7 +950,7 @@ int ImGuiTestEngine_GetFrameCount(ImGuiTestEngine* engine)
 
 const char* ImGuiTestEngine_GetStatusName(ImGuiTestStatus v)
 {
-    static const char* names[ImGuiTestStatus_COUNT] = { "Success", "Queued", "Running", "Error", "Suspended" };
+    static const char* names[ImGuiTestStatus_COUNT] = { "Unknown", "Success", "Queued", "Running", "Error", "Suspended" };
     IM_STATIC_ASSERT(IM_ARRAYSIZE(names) == ImGuiTestStatus_COUNT);
     if (v >= 0 && v < IM_ARRAYSIZE(names))
         return names[v];
@@ -1170,6 +1170,32 @@ ImGuiTest* ImGuiTestEngine_RegisterTest(ImGuiTestEngine* engine, const char* cat
     engine->TestsAll.push_back(t);
 
     return t;
+}
+
+void ImGuiTestEngine_UnregisterTest(ImGuiTestEngine* engine, ImGuiTest* test)
+{
+    // Cannot unregister a running test. Please contact us if you need this.
+    if (engine->TestContext != NULL)
+        IM_ASSERT(engine->TestContext->Test != test);
+
+    // Remove from lists
+    bool found = engine->TestsAll.find_erase(test);
+    IM_ASSERT(found); // Calling ImGuiTestEngine_UnregisterTest() on an unknown test.
+    for (int n = 0; n < engine->TestsQueue.Size; n++)
+    {
+        ImGuiTestRunTask& task = engine->TestsQueue[n];
+        if (task.Test == test)
+        {
+            engine->TestsQueue.erase(&task);
+            n--;
+        }
+    }
+    if (engine->UiSelectAndScrollToTest == test)
+        engine->UiSelectAndScrollToTest = NULL;
+    if (engine->UiSelectedTest == test)
+        engine->UiSelectedTest = NULL;
+
+    IM_DELETE(test);
 }
 
 ImGuiPerfTool* ImGuiTestEngine_GetPerfTool(ImGuiTestEngine* engine)

@@ -30,6 +30,7 @@ Index of this file:
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
+#include "imgui_te_engine.h"
 #include "imgui_capture_tool.h"
 #include "imgui_te_utils.h"         // ImPathFindFilename, ImPathFindExtension, ImPathFixSeparatorsForCurrentOS, ImFileCreateDirectoryChain, ImOsOpenInShell
 #include "thirdparty/Str/Str.h"
@@ -732,7 +733,7 @@ void ImGuiCaptureToolUI::_CaptureWindowsSelector(ImGuiCaptureContext* context, I
         if (!allow_capture)
             ImGui::BeginDisabled();
         bool do_capture = ImGui::Button(label, button_sz);
-        do_capture |= io.KeyAlt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_C));
+        do_capture |= io.KeyAlt && ImGui::IsKeyPressed(ImGuiKey_C);
         if (!allow_capture)
             ImGui::EndDisabled();
         if (ImGui::IsItemHovered())

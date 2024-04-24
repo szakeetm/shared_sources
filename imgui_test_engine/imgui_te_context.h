@@ -90,7 +90,8 @@ struct IMGUI_API ImGuiTestRefDesc
     char            Buf[80];
 
     const char* c_str()             { return Buf; }
-    ImGuiTestRefDesc(const ImGuiTestRef& ref, const ImGuiTestItemInfo* item);
+    ImGuiTestRefDesc(const ImGuiTestRef& ref);
+    ImGuiTestRefDesc(const ImGuiTestRef& ref, const ImGuiTestItemInfo& item);
 };
 
 //-------------------------------------------------------------------------
@@ -114,6 +115,7 @@ enum ImGuiTestAction
 };
 
 // Generic flags for many ImGuiTestContext functions
+// Some flags are only supported by a handful of functions. Check function headers for list of supported flags.
 enum ImGuiTestOpFlags_
 {
     ImGuiTestOpFlags_None               = 0,
@@ -122,11 +124,12 @@ enum ImGuiTestOpFlags_
     ImGuiTestOpFlags_NoFocusWindow      = 1 << 3,   // Don't focus window when aiming at an item
     ImGuiTestOpFlags_NoAutoUncollapse   = 1 << 4,   // Disable automatically uncollapsing windows (useful when specifically testing Collapsing behaviors)
     ImGuiTestOpFlags_NoAutoOpenFullPath = 1 << 5,   // Disable automatically opening intermediaries (e.g. ItemClick("Hello/OK") will automatically first open "Hello" if "OK" isn't found. Only works if ref is a string path.
-    ImGuiTestOpFlags_IsSecondAttempt    = 1 << 6,   // Used by recursing functions to indicate a second attempt
-    ImGuiTestOpFlags_MoveToEdgeL        = 1 << 7,   // Simple Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
-    ImGuiTestOpFlags_MoveToEdgeR        = 1 << 8,
-    ImGuiTestOpFlags_MoveToEdgeU        = 1 << 9,
-    ImGuiTestOpFlags_MoveToEdgeD        = 1 << 10,
+    ImGuiTestOpFlags_NoYield            = 1 << 6,   // Don't yield (only supported by a few functions), in case you need to manage rigorous per-frame timing.
+    ImGuiTestOpFlags_IsSecondAttempt    = 1 << 7,   // Used by recursing functions to indicate a second attempt
+    ImGuiTestOpFlags_MoveToEdgeL        = 1 << 8,   // Simple Dumb aiming helpers to test widget that care about clicking position. May need to replace will better functionalities.
+    ImGuiTestOpFlags_MoveToEdgeR        = 1 << 9,
+    ImGuiTestOpFlags_MoveToEdgeU        = 1 << 10,
+    ImGuiTestOpFlags_MoveToEdgeD        = 1 << 11,
 };
 
 // Advanced filtering for ItemActionAll()
@@ -302,7 +305,7 @@ struct IMGUI_API ImGuiTestContext
     ImGuiTestRef GetRef();
 
     // Windows
-    ImGuiTestItemInfo* WindowInfo(ImGuiTestRef window_ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
+    ImGuiTestItemInfo WindowInfo(ImGuiTestRef window_ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
     void        WindowClose(ImGuiTestRef window_ref);
     void        WindowCollapse(ImGuiTestRef window_ref, bool collapsed);
     void        WindowFocus(ImGuiTestRef window_ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
@@ -340,7 +343,7 @@ struct IMGUI_API ImGuiTestContext
     // Mouse inputs
     void        MouseMove(ImGuiTestRef ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
     void        MouseMoveToPos(ImVec2 pos);
-    void        MouseTeleportToPos(ImVec2 pos);
+    void        MouseTeleportToPos(ImVec2 pos, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
     void        MouseClick(ImGuiMouseButton button = 0);
     void        MouseClickMulti(ImGuiMouseButton button, int count);
     void        MouseDoubleClick(ImGuiMouseButton button = 0);
@@ -400,10 +403,10 @@ struct IMGUI_API ImGuiTestContext
     // Low-level queries
     // - ItemInfo queries never returns a NULL pointer, instead they return an empty instance (info->IsEmpty(), info->ID == 0) and set contexted as errored.
     // - You can use ImGuiTestOpFlags_NoError to do a query without marking context as errored. This is what ItemExists() does.
-    ImGuiTestItemInfo*  ItemInfo(ImGuiTestRef ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
-    ImGuiTestItemInfo*  ItemInfoOpenFullPath(ImGuiTestRef ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
+    ImGuiTestItemInfo   ItemInfo(ImGuiTestRef ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
+    ImGuiTestItemInfo   ItemInfoOpenFullPath(ImGuiTestRef ref, ImGuiTestOpFlags flags = ImGuiTestOpFlags_None);
     ImGuiID             ItemInfoHandleWildcardSearch(const char* wildcard_prefix_start, const char* wildcard_prefix_end, const char* wildcard_suffix_start);
-    ImGuiTestItemInfo*  ItemInfoNull();
+    ImGuiTestItemInfo   ItemInfoNull() { return ImGuiTestItemInfo(); }
     void                GatherItems(ImGuiTestItemList* out_list, ImGuiTestRef parent, int depth = -1);
 
     // Item/Widgets manipulation
