@@ -55,7 +55,7 @@ void ImguiWindow::ShowWindowLicense() {
         std::ostringstream aboutText;
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
-Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
+Authors:     Roberto KERSEVAN / Marton ADY / Tymoteusz MROCZKOWSKI / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
 
@@ -143,8 +143,8 @@ void ImguiWindow::init() {
     fontConfig.OversampleV = oversample;
     //fontConfig.RasterizerMultiply = 0;
     //io.Fonts->AddFontDefault(&fontConfig);
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
@@ -154,10 +154,13 @@ void ImguiWindow::init() {
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
     //icons_config.RasterizerMultiply = 0;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();

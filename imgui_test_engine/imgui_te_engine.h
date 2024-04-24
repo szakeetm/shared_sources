@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "imgui.h"
-#include "imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
+#include "../imgui/imgui.h"
+#include "../imgui/imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
 #include "imgui_te_utils.h"         // ImFuncPtr
 #include "imgui_capture_tool.h"     // ImGuiScreenCaptureFunc
 

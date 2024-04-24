@@ -1,9 +1,9 @@
 
 #include "AppUpdater.h"
 #include "AppUpdaterRemoteFeed.hpp"
-#include <ZipLib/ZipArchive.h>
-#include <ZipLib/ZipArchiveEntry.h>
-#include <ZipLib/ZipFile.h>
+#include <ziplib/Source/ZipLib/ZipArchive.h>
+#include <ziplib/Source/ZipLib/ZipArchiveEntry.h>
+#include <ziplib/Source/ZipLib/ZipFile.h>
 #include "File.h"
 //#include <Windows.h>
 #include <sstream>
