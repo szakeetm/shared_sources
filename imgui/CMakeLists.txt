@@ -57,52 +57,25 @@ target_include_directories( imgui
 target_include_directories(imgui PRIVATE ../imgui_test_engine)
 
 if(MSVC)
-    find_package(OpenGL REQUIRED)
     # 1. link against external libs
     target_link_libraries(imgui PUBLIC
             opengl32#.lib
             )
-    set(SDL_DIR ${CMAKE_HOME_DIRECTORY}/include/windows_only/SDL2)
-    target_include_directories(imgui PRIVATE ${SDL_DIR})
 endif(MSVC)
 if(NOT MSVC)
     if(APPLE)
-        #link to self-build sdl shared lib
-        target_link_libraries(imgui PRIVATE "-framework AppKit")
-        #target_link_libraries(${PROJECT_NAME} "-framework SDL2")
-
-        FIND_PACKAGE(SDL2 REQUIRED)
-        Message("")
-        Message( STATUS "FINDING SDL2" )
-        IF (${SDL2_FOUND})
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
-            Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
-        ELSE()
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( FATAL_ERROR "SDL2 NOT FOUND" )
-        ENDIF()
+            target_link_libraries(imgui PRIVATE "-framework AppKit")
     endif()
-
-    find_package(OpenGL REQUIRED)
-    target_include_directories(imgui PUBLIC ${OPENGL_INCLUDE_DIRS})
-
-
-
-    target_link_libraries(imgui PUBLIC ${OPENGL_LIBRARIES})
-
 endif(NOT MSVC)
 
+
+find_package(OpenGL REQUIRED)
+target_include_directories(imgui PUBLIC ${OPENGL_INCLUDE_DIRS})
 find_package(SDL2 REQUIRED)
 target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIRS})
-target_include_directories(imgui PUBLIC ${SDL2_INCLUDE_DIR})
 target_link_libraries(imgui PUBLIC ${SDL2_LIBRARIES})
 target_link_libraries(imgui PUBLIC ${SDL2_LIBRARY})
 
-message(¨Inc ${SDL2_INCLUDE_DIR}¨)
-message(¨Incs ${SDL2_INCLUDE_DIRS}¨)
-message(¨Libs ${SDL2_LIBRARIES}¨)
-message(¨Lib ${SDL2_LIBRARY}¨)
 
 #target_compile_definitions( imgui PRIVATE IMGUI_IMPL_OPENGL_LOADER_GLAD )
 target_link_libraries( imgui PUBLIC #[[glfw glad]] ${OPENGL_gl_LIBRARY})

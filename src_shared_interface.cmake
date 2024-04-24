@@ -42,17 +42,7 @@ ELSE() #not MSVC
         #link to self-built sdl shared lib
         target_link_libraries(${PROJECT_NAME} PRIVATE "-framework AppKit")
 
-        FIND_PACKAGE(SDL2 REQUIRED)
-        Message("")
-        Message( STATUS "FINDING SDL2" )
-        IF (${SDL2_FOUND})
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( STATUS "SDL2_INCLUDE_DIR:" ${SDL2_INCLUDE_DIR})
-            Message( STATUS "SDL2_LIBRARY: " ${SDL2_LIBRARY})
-        ELSE()
-            Message( STATUS "SDL2_FOUND: " ${SDL2_FOUND})
-            Message( FATAL_ERROR "SDL2 NOT FOUND" )
-        ENDIF()
+       
 
     else()
         # Use the package PkgConfig to detect GTK+ headers/library files
