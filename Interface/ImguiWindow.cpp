@@ -55,7 +55,7 @@ void ImguiWindow::ShowWindowLicense() {
         std::ostringstream aboutText;
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
-Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
+Authors:     Roberto KERSEVAN / Marton ADY / Tymoteusz MROCZKOWSKI / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
 
