@@ -16,8 +16,9 @@
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
 
-#include "imgui/imgui.h"
-#include <imgui/imgui_internal.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include <imgui_internal.h>
 #include <Helper/FormatHelper.h>
 #include <Helper/StringHelper.h>
 #include "Helper/MathTools.h"

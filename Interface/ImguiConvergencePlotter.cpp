@@ -1,9 +1,10 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiConvergencePlotter.h"
-#include "imgui/imgui.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
-#include "implot/implot.h"
-#include "implot/implot_internal.h"
+#include "implot.h"
+#include "implot_internal.h"
 #include "Buffer_shared.h"
 #include <functional>
 #include "Helper/MathTools.h"

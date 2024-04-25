@@ -104,7 +104,10 @@ target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml clipper2 sdl_savep
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui implot)
+find_package(imgui CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui::imgui)
+find_package(implot CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC implot::implot)
 
 #Suppress warnings for external libraries
 if(MSVC)
@@ -116,8 +119,6 @@ endif()
 target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #

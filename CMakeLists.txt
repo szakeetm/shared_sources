@@ -7,11 +7,7 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
-if(NOT NO_INTERFACE)
-    add_subdirectory(imgui)
-    add_subdirectory(implot)
-    add_dependencies(implot imgui)
-endif()
+
 
 # Folders files
 set(HEADER_DIR_1 .)
@@ -20,7 +16,6 @@ set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ${CMAKE_HOME_DIRECTORY}/include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_interface.cmake and src_shared_simulator.cmake
-set(IMGUI_DIR ./imgui)
 
 #TODO: All this below should go
 IF(APPLE)
@@ -118,7 +113,6 @@ set(INTERFACE_FILES
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
-        imguiTesting.cpp
 
         File.cpp
         Formulas.cpp

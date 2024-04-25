@@ -5,6 +5,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_te_utils.h"
 #include "imgui.h"
 #include "imgui_internal.h"

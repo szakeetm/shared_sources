@@ -3,9 +3,9 @@
 // This is the main (if not only) interface that your Tests will be using.
 
 #pragma once
-
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"     // ImGuiAxis, ImGuiItemStatusFlags, ImGuiInputSource, ImGuiWindow
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_internal.h"     // ImGuiAxis, ImGuiItemStatusFlags, ImGuiInputSource, ImGuiWindow
 #include "imgui_te_engine.h"    // ImGuiTestStatus, ImGuiTestRunFlags, ImGuiTestActiveFunc, ImGuiTestItemInfo, ImGuiTestLogFlags
 
 /*

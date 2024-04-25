@@ -10,7 +10,8 @@
 #include <math.h>   // fabsf
 #include <stdint.h> // uint64_t
 #include <stdio.h>  // FILE*
-#include "../imgui/imgui.h"  // ImGuiID, ImGuiKey
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"  // ImGuiID, ImGuiKey
 class Str;          // Str<> from thirdparty/Str/Str.h
 
 //-----------------------------------------------------------------------------

@@ -4,7 +4,8 @@
 #include <string>
 #include "Facet_shared.h"
 #include <vector>
-#include "imgui/imgui.h"
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
 
 class ImTexturePlotter : public ImWindow {
 public:

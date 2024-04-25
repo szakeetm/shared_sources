@@ -1,13 +1,9 @@
-
-
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
-#include <imgui/imgui_internal.h>
+#include <imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -17,15 +13,15 @@
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-#include "imgui/imgui_impl_opengl2.h"
-#include "imgui/imgui_impl_sdl2.h"
+#include "imgui_impl_opengl2.h"
+#include "imgui_impl_sdl2.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 
-#include <imgui/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsFontAwesome5.h>
 #include <future>
-#include <implot/implot.h>
+#include <implot.h>
 #include <Helper/FormatHelper.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 

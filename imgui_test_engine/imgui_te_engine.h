@@ -4,9 +4,9 @@
 // Actual tests will mostly use the interface of imgui_te_context.h
 
 #pragma once
-
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
 #include "imgui_te_utils.h"         // ImFuncPtr
 #include "imgui_capture_tool.h"     // ImGuiScreenCaptureFunc
 

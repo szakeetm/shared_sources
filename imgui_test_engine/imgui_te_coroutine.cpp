@@ -2,9 +2,10 @@
 // (coroutine interface + optional implementation)
 // Read https://github.com/ocornut/imgui_test_engine/wiki/Setting-Up
 
-#include "imgui_te_coroutine.h"
-#include "imgui.h"
 
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include "imgui_te_coroutine.h"
 #ifdef _MSC_VER
 #pragma warning (disable: 4996)     // 'This function or variable may be unsafe': strcpy, strdup, sprintf, vsnprintf, sscanf, fopen
 #endif

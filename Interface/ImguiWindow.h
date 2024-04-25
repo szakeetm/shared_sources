@@ -1,8 +1,9 @@
 
 
 #pragma once
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
 #include <GLApp/GLApp.h>
-#include <imgui/imgui.h>
 #include "AppUpdater.h"
 #include "ImguiPopup.h"
 #include "ImguiSmartSelection.h"

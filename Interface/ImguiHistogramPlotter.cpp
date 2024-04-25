@@ -1,7 +1,5 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "imgui_internal.h"
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiHistogramPlotter.h"
@@ -10,8 +8,8 @@
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "Facet_shared.h"
-#include "implot/implot.h"
-#include "implot/implot_internal.h"
+#include "implot.h"
+#include "implot_internal.h"
 #include "Helper/MathTools.h"
 
 #if defined(MOLFLOW)

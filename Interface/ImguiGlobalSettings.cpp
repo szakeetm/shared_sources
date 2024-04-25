@@ -2,8 +2,9 @@
 
 #include "ImguiGlobalSettings.h"
 #include "ImguiExtensions.h"
-#include "imgui/imgui.h"
-#include <imgui/imgui_internal.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include <imgui_internal.h>
 #include <sstream>
 #include "Helper/StringHelper.h"
 #include "ImguiWindow.h"

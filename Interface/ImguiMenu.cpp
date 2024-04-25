@@ -1,9 +1,10 @@
 
 
 #include "ImguiMenu.h"
-#include "imgui/imgui.h"
-#include <imgui/IconsFontAwesome5.h>
-#include <imgui/IconsMaterialDesign.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include <imgui_fonts/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsMaterialDesign.h>
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"

@@ -1,6 +1,5 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiTexturePlotter.h"
 #include "Geometry_shared.h"

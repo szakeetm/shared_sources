@@ -1567,7 +1567,7 @@ void InterfaceGeometry::BuildSelectList() {
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
-	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
+	glDrawElements(GL_LINES, (int)lines.size(), GL_UNSIGNED_INT, lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last

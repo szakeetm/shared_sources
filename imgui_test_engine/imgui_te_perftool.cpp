@@ -31,8 +31,8 @@ Index of this file:
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui_te_perftool.h"
 #include "imgui.h"
+#include "imgui_te_perftool.h"
 #include "imgui_internal.h"
 #include "imgui_te_utils.h"
 #include "thirdparty/Str/Str.h"

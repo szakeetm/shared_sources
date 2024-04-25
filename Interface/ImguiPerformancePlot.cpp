@@ -1,8 +1,9 @@
 
 
 #include "ImguiPerformancePlot.h"
-#include "imgui/imgui.h"
-#include <implot/implot.h>
+#define IMGUI_DEFINE_MATH_OPERATORS
+#include "imgui.h"
+#include <implot.h>
 
 #include "Interface.h"
 

@@ -7,10 +7,6 @@
 // See more C++ related extension (fmt, RAII, syntaxis sugar) on Wiki:
 //   https://github.com/ocornut/imgui/wiki/Useful-Extensions#cness
 
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS#include "imgui.h"
-#include "imgui.h"
 #include "imgui_stdlib.h"
 
 // Clang warnings with -Weverything

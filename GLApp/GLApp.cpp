@@ -17,8 +17,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
-#include <imgui/imgui_impl_sdl2.h>
-#include <imgui/imgui_internal.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_internal.h>
 #include "ImguiWindow.h"
 
 #ifndef _WIN32

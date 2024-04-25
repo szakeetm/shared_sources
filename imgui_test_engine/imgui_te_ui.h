@@ -11,6 +11,7 @@
 #pragma once
 
 #ifndef IMGUI_VERSION
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"      // IMGUI_API
 #endif
 

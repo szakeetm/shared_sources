@@ -4,7 +4,7 @@
 // User access via 'Test Engine UI -> Tools -> Perf Tool'
 
 #pragma once
-
+#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
 // Forward Declaration
