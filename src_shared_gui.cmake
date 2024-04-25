@@ -73,8 +73,6 @@ ELSE() #not MSVC
     find_package(OpenGL REQUIRED)
     find_package(PNG REQUIRED)
 
-    find_package(fmt CONFIG REQUIRED)
-
     set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
 
@@ -105,7 +103,6 @@ endif() #NOT MSVC
 #External libraries
 
 target_link_libraries(${PROJECT_NAME} PUBLIC sdl_savepng nativefiledialog-extended-molflow-wrapped)
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 find_package(imgui CONFIG REQUIRED)
