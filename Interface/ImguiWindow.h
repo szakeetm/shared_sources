@@ -31,6 +31,8 @@
 #include "ImguiFacetExtrude.h"
 #include "ImguiFacetSplit.h"
 #include "ImguiCreateShape.h"
+#include "ImguiBuildIntersection.h"
+
 #include "ImguiMenu.h"
 
 #include "ImguiGeometryViewer.h"
@@ -108,6 +110,7 @@ public:
     ImFacetExtrude extrudeFacet;
     ImFacetSplit splitFac;
     ImCreateShape createShape;
+    ImBuildIntersect buildIntersect;
 
     ImExplodeFacet expFac;
 

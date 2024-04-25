@@ -877,7 +877,7 @@ void CreateShapeMenuPress() {
 void TransitionBetween2MenuPress() {
     
     if (interfGeom->GetNbSelectedFacets() != 2) {
-        mApp->imWnd->popup.Open("Select Exactly 2 facets", "", {
+        mApp->imWnd->popup.Open("Error", "Select Exactly 2 facets", {
             std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter)
             });
         return;
@@ -892,12 +892,14 @@ void TransitionBetween2MenuPress() {
     mApp->UpdateViewers();
 }
 void BuildIntersectionMenuPress() {
-    
+    mApp->imWnd->buildIntersect.Show();
+    /*
     if (!mApp->buildIntersection || !mApp->buildIntersection->IsVisible()) {
         SAFE_DELETE(mApp->buildIntersection);
         mApp->buildIntersection = new BuildIntersection(interfGeom, &mApp->worker);
         mApp->buildIntersection->SetVisible(true);
     }
+    */
 }
 void CollapseMenuPress() {
     

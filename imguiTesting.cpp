@@ -1383,8 +1383,17 @@ void ImTest::RegisterTests()
         ctx->ItemClick("**/###centerZIn");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Create facet");
-        ctx->ItemClick("#CLOSE");
+        ctx->Sleep(1);
+        DeleteFacet(interfGeom->GetNbFacet() - 1); // delete the created facet (it will always be the last one in the facet vector
+        ctx->ItemClick("Shape selection/###CE");
+        ctx->ItemClick("Create facet");
+        ctx->Sleep(1);
         DeleteFacet(interfGeom->GetNbFacet() - 1);
+        ctx->ItemClick("Shape selection/###SR");
+        ctx->ItemClick("Create facet");
+        ctx->Sleep(1);
+        DeleteFacet(interfGeom->GetNbFacet() - 1);
+        ctx->ItemClick("#CLOSE");
         };
         // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
