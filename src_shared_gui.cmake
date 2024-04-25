@@ -102,7 +102,7 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC sdl_savepng nativefiledialog-extended-molflow-wrapped)
+target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 sdl_savepng nativefiledialog-extended-molflow-wrapped)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 find_package(imgui CONFIG REQUIRED)
@@ -117,6 +117,7 @@ else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
 
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
