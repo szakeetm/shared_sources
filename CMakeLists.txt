@@ -124,6 +124,12 @@ set(INTERFACE_FILES
         GeometryTools.cpp
         )
 
+if(ENABLE_IMGUI_TESTS)
+        list(APPEND INTERFACE_FILES
+                imguiTesting.cpp
+        )
+endif()
+
 set(SIM_FILES
         Distributions.cpp
         ProfileModes.cpp

@@ -29,7 +29,7 @@
 #include "../../src/SynRad.h"
 #endif
 
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
 #include "../imguiTesting.h"
 #endif
 
@@ -49,7 +49,7 @@ public:
 
     GLApplication* app;
 
-#ifdef USE_IMGUI_TEST
+#ifdef ENABLE_IMGUI_TESTS
     ImTest testEngine;
 #endif
 

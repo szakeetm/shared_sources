@@ -93,7 +93,7 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-#ifdef USE_IMGUI_TEST
+#ifdef ENABLE_IMGUI_TESTS
     testEngine.Init(mApp);
 #endif
 

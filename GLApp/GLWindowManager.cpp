@@ -411,7 +411,7 @@ void  GLWindowManager::Repaint() {
   }
     
   SDL_GL_SwapWindow(theApp->mainScreen);
-#ifdef USE_IMGUI_TEST
+#ifdef ENABLE_IMGUI_TESTS
   if (theApp->imWnd && !theApp->imguiRenderLock) {
       theApp->imWnd->testEngine.PostSwap();
   }

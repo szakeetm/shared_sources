@@ -1428,7 +1428,7 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
-#ifdef USE_IMGUI_TEST
+#ifdef ENABLE_IMGUI_TESTS
     if (ImGui::MenuItem("ImGui Test Engine")) {
         mApp->imWnd->testEngine.Show();
     }
