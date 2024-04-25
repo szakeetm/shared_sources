@@ -32,9 +32,9 @@ set(SRC_FILES
 # Add library to build.
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES})
 
-    find_package(PNG REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${PNG_INCLUDE_DIRS})
-    target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
+find_package(PNG REQUIRED)
+target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${PNG_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
 
 # Source Files
 IF (WIN32)
@@ -49,10 +49,5 @@ ELSE()
             ${HEADER_DIR_1}
             )
 
-    find_package(SDL2 CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-    )
+
 ENDIF()
