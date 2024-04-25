@@ -5,7 +5,7 @@
 #This is a separate project, excluded if NO_INTERFACE cmake option is set
 #Called from src_shared/CMakeLists.txt
 
-set(PROJECT_NAME src_shared_interface)
+set(PROJECT_NAME src_shared_gui)
 project(${PROJECT_NAME} CXX)
 
 # Add library to build.
@@ -104,7 +104,7 @@ endif() #NOT MSVC
 
 #External libraries
 
-target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml clipper2 sdl_savepng nativefiledialog-extended-molflow-wrapped)
+target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 sdl_savepng nativefiledialog-extended-molflow-wrapped)
 target_link_libraries(${PROJECT_NAME} PUBLIC fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)

@@ -5,7 +5,7 @@
 #CMake project file called from src_shared's CMakeLists.txt
 #CLI-GUI common parts of src_shared
 
-set(PROJECT_NAME src_shared_simulator)
+set(PROJECT_NAME src_shared_core)
 project(${PROJECT_NAME} CXX)
 
 # Add library to build.

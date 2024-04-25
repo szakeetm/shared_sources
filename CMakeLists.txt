@@ -15,7 +15,7 @@ set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ${CMAKE_HOME_DIRECTORY}/include)
 set(HEADER_DIR_5 ./Interface)
-set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_interface.cmake and src_shared_simulator.cmake
+set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_gui.cmake and src_shared_core.cmake
 
 #TODO: All this below should go
 IF(APPLE)
@@ -217,10 +217,10 @@ set(GLAPP_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_simulator.cmake) #CLI project, build as library
+include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_core.cmake) #CLI project, build as library
 
 if(NOT NO_INTERFACE)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_interface.cmake) #GUI project, build as library
+    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_gui.cmake) #GUI project, build as library
     find_package(CURL CONFIG REQUIRED)
     target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
 endif()
