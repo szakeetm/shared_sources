@@ -49,8 +49,10 @@ ELSE()
             ${HEADER_DIR_1}
             )
 
-    find_package(SDL2 REQUIRED)
-    target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${SDL2_INCLUDE_DIRS})
-
-    target_link_libraries(${PROJECT_NAME} ${SDL2_LIBRARIES})
+    find_package(SDL2 CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    )
 ENDIF()

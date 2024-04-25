@@ -25,6 +25,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_EXTERNAL}
         )
 
+    find_package(SDL2 CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+    )
+
 if(MSVC)
     find_package(OpenGL REQUIRED)
     # 1. link against external libs
@@ -64,7 +71,6 @@ ELSE() #not MSVC
     endif()
 
     find_package(OpenGL REQUIRED)
-    find_package(SDL2 REQUIRED)
     find_package(PNG REQUIRED)
 
     find_package(fmt CONFIG REQUIRED)
@@ -73,8 +79,6 @@ ELSE() #not MSVC
     find_package(Threads REQUIRED)
 
     target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARIES})
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${SDL2_LIBRARY})
     target_link_libraries(${PROJECT_NAME} PUBLIC ${PNG_LIBRARIES})
     target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
     target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
