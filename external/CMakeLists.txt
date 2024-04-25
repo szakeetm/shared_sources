@@ -13,9 +13,6 @@ endif()
 add_subdirectory(ziplib)
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
-add_subdirectory(Clipper2Lib)
-target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
-
 add_subdirectory(truncated_normal)
 
 if(NOT NO_INTERFACE)
