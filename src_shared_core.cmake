@@ -60,10 +60,12 @@ find_package(cereal CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 find_package(pugixml CONFIG REQUIRED)
 target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(Clipper2Z REQUIRED IMPORTED_TARGET Clipper2Z) #Z option allows to store user data at vertices
+target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::Clipper2Z)
 
 # Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
-target_link_libraries(${PROJECT_NAME} PUBLIC clipper2)
 
 ######################### Flags ############################
 # Defines Flags for Windows and Linux                      #
