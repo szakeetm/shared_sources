@@ -429,7 +429,7 @@ void GLApplication::Run() {
   wereEvents_imgui = 2;
 
   // TODO: Activate imgui directly on launch here
-#ifdef DEBUG
+#ifdef USE_IMGUI_TEST
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
       std::cout<<"Launching ImGui test sequence...\n";
       imWnd = new ImguiWindow(this);

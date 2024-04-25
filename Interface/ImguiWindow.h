@@ -49,7 +49,7 @@ public:
 
     GLApplication* app;
 
-#ifdef DEBUG
+#ifdef USE_IMGUI_TEST
     ImTest testEngine;
 #endif
 

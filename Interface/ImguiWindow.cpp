@@ -93,7 +93,7 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-#ifdef DEBUG
+#ifdef USE_IMGUI_TEST
     testEngine.Init(mApp);
 #endif
 
@@ -228,12 +228,12 @@ void ImguiWindow::destruct() {
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
 #ifdef DEBUG
-    testEngine.StopEngine();
+    //testEngine.StopEngine();
 #endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 #ifdef DEBUG
-    testEngine.DestroyContext();
+    //testEngine.DestroyContext();
 #endif
 }
 
@@ -342,10 +342,12 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
 #ifdef DEBUG
+            /*
             bool testEngineVis = testEngine.IsVisible();
             if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
                 testEngine.SetVisible(testEngineVis);
             }
+            */
 #endif
 
             static int response;
@@ -392,7 +394,7 @@ void ImguiWindow::renderSingle() {
             ImGui::End();
         }
 #ifdef DEBUG
-        testEngine.Draw();
+        //testEngine.Draw();
 #endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
