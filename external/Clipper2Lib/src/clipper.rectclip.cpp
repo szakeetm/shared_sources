@@ -8,8 +8,8 @@
 *******************************************************************************/
 
 #include <cmath>
-#include "clipper2/clipper.h"
-#include "clipper2/clipper.rectclip.h"
+#include "clipper.h"
+#include "clipper.rectclip.h"
 
 namespace Clipper2Lib {
 
