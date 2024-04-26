@@ -33,6 +33,7 @@
 #include "ImguiCreateShape.h"
 #include "ImguiBuildIntersection.h"
 #include "ImguiCollapseSettings.h"
+#include "ImguiOutgassingMap.h"
 
 #include "ImguiMenu.h"
 
@@ -113,6 +114,7 @@ public:
     ImCreateShape createShape;
     ImBuildIntersect buildIntersect;
     ImCollapse collapseSettings;
+    ImOutgassingMap outgassingMap;
 
     ImExplodeFacet expFac;
 

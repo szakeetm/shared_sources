@@ -950,8 +950,11 @@ void TriangulateMenuPress() {
 
 #ifdef MOLFLOW // TODO switch to polimorphism
 void ConvertToOutgassingMapMenuPress() {
+    mApp->imWnd->outgassingMap.Show();
+    /*
     if (!mApp->outgassingMapWindow) mApp->outgassingMapWindow = new OutgassingMapWindow();
     mApp->outgassingMapWindow->Display(&mApp->worker);
+    */
 }
 #endif
 

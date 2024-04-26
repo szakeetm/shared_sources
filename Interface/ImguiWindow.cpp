@@ -239,6 +239,8 @@ void ImguiWindow::init() {
     buildIntersect.Init(mApp);
     collapseSettings = ImCollapse();
     collapseSettings.Init(mApp);
+    outgassingMap = ImOutgassingMap();
+    outgassingMap.Init(mApp);
 
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
@@ -469,6 +471,7 @@ void ImguiWindow::renderSingle() {
         createShape.Draw();
         buildIntersect.Draw();
         collapseSettings.Draw();
+        outgassingMap.Draw();
 
         expFac.Draw();
 
