@@ -930,7 +930,7 @@ void TriangulateMenuPress() {
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (selectedFacets.empty()) return;
     auto Y = []() -> void {
-        //LockWrapper myLock(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->AskToReset()) {
 
             auto selectedFacets = interfGeom->GetSelectedFacets();
