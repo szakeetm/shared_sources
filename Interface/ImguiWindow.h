@@ -32,6 +32,7 @@
 #include "ImguiFacetSplit.h"
 #include "ImguiCreateShape.h"
 #include "ImguiBuildIntersection.h"
+#include "ImguiCollapseSettings.h"
 
 #include "ImguiMenu.h"
 
@@ -111,6 +112,7 @@ public:
     ImFacetSplit splitFac;
     ImCreateShape createShape;
     ImBuildIntersect buildIntersect;
+    ImCollapse collapseSettings;
 
     ImExplodeFacet expFac;
 

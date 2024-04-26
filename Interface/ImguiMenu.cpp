@@ -902,11 +902,11 @@ void BuildIntersectionMenuPress() {
     */
 }
 void CollapseMenuPress() {
-    
     if (interfGeom->IsLoaded()) {
-        mApp->DisplayCollapseDialog();
+        mApp->imWnd->collapseSettings.Show();
+        //mApp->DisplayCollapseDialog();
     }
-    else mApp->imWnd->popup.Open("No Geometry", "", {
+    else mApp->imWnd->popup.Open("Error", "No Geometry", {
         std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter)
         });
 }

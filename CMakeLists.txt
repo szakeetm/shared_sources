@@ -145,6 +145,7 @@ set(INTERFACE_FILES
         Interface/ImguiFacetSplit.cpp
         Interface/ImguiCreateShape.cpp
         Interface/ImguiBuildIntersection.cpp
+        Interface/ImguiCollapseSettings.cpp
 
         Interface/ImguiGeometryViewer.cpp
         Facet_shared.cpp
