@@ -4,8 +4,7 @@
 #include <tuple>
 #include <optional>
 #include <vector>
-#define USINGZ //Allows clipper library to store user data (globalId)
-#include <clipper2/clipper.h>
+#include <Clipper2Lib/include/clipper2/clipper.h>
 
 class GLAppPolygon { //To distinguish from possible other Polygon classes in the namespace
 public:

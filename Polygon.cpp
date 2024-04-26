@@ -543,7 +543,12 @@ std::optional<std::vector<GLAppPolygon>> IntersectPoly(const GLAppPolygon& inP1,
 
 std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(const Clipper2Lib::PathsD& subjects, const Clipper2Lib::RectD& rect, const bool isConvex) {
 
-	auto solRect = Clipper2Lib::RectClip(rect, subjects,8);
+	//Clipper2Lib::ClipperD c(8);
+	//c.AddSubject(subjects);
+	//c.AddClip(clips);
+	//Clipper2Lib::PolyTreeD solution;
+	//c.Execute(Clipper2Lib::ClipType::Intersection, Clipper2Lib::FillRule::NonZero, solution);
+	auto solRect = Clipper2Lib::ExecuteRectClip(rect, subjects,isConvex,8);
 
 
 	if (solRect.size() == 0) {
