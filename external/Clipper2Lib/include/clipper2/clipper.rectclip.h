@@ -1,6 +1,6 @@
 /*******************************************************************************
 * Author    :  Angus Johnson                                                   *
-* Date      :  1 November 2023                                                 *
+* Date      :  9 February 2023                                                 *
 * Website   :  http://www.angusj.com                                           *
 * Copyright :  Angus Johnson 2010-2023                                         *
 * Purpose   :  FAST rectangular clipping                                       *
@@ -13,7 +13,8 @@
 #include <cstdlib>
 #include <vector>
 #include <queue>
-#include "clipper2/clipper.core.h"
+#include "clipper.h"
+#include "clipper.core.h"
 
 namespace Clipper2Lib
 {
@@ -33,10 +34,10 @@ namespace Clipper2Lib
   };
 
   //------------------------------------------------------------------------------
-  // RectClip64
+  // RectClip
   //------------------------------------------------------------------------------
 
-  class RectClip64 {
+  class RectClip {
   private:
     void ExecuteInternal(const Path64& path);
     Path64 GetPath(OutPt2*& op);
@@ -57,23 +58,23 @@ namespace Clipper2Lib
     void AddCorner(Location prev, Location curr);
     void AddCorner(Location& loc, bool isClockwise);
   public:
-    explicit RectClip64(const Rect64& rect) :
+    explicit RectClip(const Rect64& rect) :
       rect_(rect),
       rect_as_path_(rect.AsPath()),
       rect_mp_(rect.MidPoint()) {}
-    Paths64 Execute(const Paths64& paths);
+    Paths64 Execute(const Paths64& paths, bool convex_only = false);
   };
 
   //------------------------------------------------------------------------------
-  // RectClipLines64
+  // RectClipLines
   //------------------------------------------------------------------------------
 
-  class RectClipLines64 : public RectClip64 {
+  class RectClipLines : public RectClip {
   private:
     void ExecuteInternal(const Path64& path);
     Path64 GetPath(OutPt2*& op);
   public:
-    explicit RectClipLines64(const Rect64& rect) : RectClip64(rect) {};
+    explicit RectClipLines(const Rect64& rect) : RectClip(rect) {};
     Paths64 Execute(const Paths64& paths);
   };
 

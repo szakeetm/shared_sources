@@ -548,7 +548,7 @@ std::tuple<double, Vector2d, std::vector<Vector2d>> GetInterArea_Clipper2Lib(con
 	//c.AddClip(clips);
 	//Clipper2Lib::PolyTreeD solution;
 	//c.Execute(Clipper2Lib::ClipType::Intersection, Clipper2Lib::FillRule::NonZero, solution);
-	auto solRect = Clipper2Lib::RectClip(rect, subjects,8);
+	auto solRect = Clipper2Lib::ExecuteRectClip(rect, subjects,isConvex,8);
 
 
 	if (solRect.size() == 0) {
