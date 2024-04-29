@@ -1,5 +1,10 @@
 #include "ImguiOutgassingMap.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "ImguiPopup.h"
+#include "Interface.h"
+#include "Helper/StringHelper.h"
+#include "ImguiWindow.h"
+#include <sstream>
 
 void ImOutgassingMap::Draw()
 {
@@ -14,11 +19,13 @@ void ImOutgassingMap::Draw()
 		ExplodeButtonPress();
 	}
 	ImGui::SameLine();
+	if (!facet || !facet->hasMesh) ImGui::BeginDisabled();
 	if (ImGui::Button("Paste")) {
 		PasteButtonPress();
 	}
+	if (!facet || !facet->hasMesh) ImGui::EndDisabled();
 	ImGui::SameLine();
-	ImGui::Text("Desporption type:");
+	ImGui::Text("Desorption type:");
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 13);
 	if (ImGui::BeginCombo("###OMDT", comboText)) {
@@ -48,10 +55,104 @@ void ImOutgassingMap::Draw()
 
 void ImOutgassingMap::ExplodeButtonPress()
 {
+	if (mApp->worker.GetGeometry()->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Exactly one facet has to be selected");
+		return;
+	}
+	if (!facet->hasMesh) {
+		ImIOWrappers::InfoPopup("Error", "Selected facet must have a mesh");
+		return;
+	}
+	if (data.empty() || data[0].empty()) {
+		throw std::exception("Empty table data");
+	}
+	size_t w = data[0].size();
+	size_t h = data.size();
+	std::vector<double> values; // to be passed to ExplodeSelected()
+	size_t rowN = 0, columnN = 0;
+	for (auto& row : data) {
+		columnN = 0;
+		for (auto& cell : row) {
+			if (facet->GetMeshArea(columnN + rowN * w)>0.0) { // skip outside
+				double v = 0;
+				if (!Util::getNumber(&v, cell)) { // verify correctness
+					ImIOWrappers::InfoPopup("Error", fmt::format("Invalid outgassing number at Cell({},{})", rowN+1, columnN+1));
+					return;
+				}
+				values.push_back(v); // add to vector
+			}
+			columnN++;
+		}
+		rowN++;
+	}
+	double desorbTypeN = 0;
+	if (desorptionType == cosineN) {
+		if (!Util::getNumber(&desorbTypeN, exponentIn)) {
+			ImIOWrappers::InfoPopup("Error", "Exponent is not a number");
+			return;
+		}
+		if (desorbTypeN <= 1) {
+			ImIOWrappers::InfoPopup("Error", "Desorption type exponent must be greater than 1.0");
+			return;
+		}
+	}
+	std::function<void()> f = [this, desorbTypeN, values]() {
+		LockWrapper lW(mApp->imguiRenderLock);
+		if (mApp->AskToReset()) {
+			mApp->changedSinceSave = true;
+			try {
+				mApp->worker.GetMolflowGeometry()->ExplodeSelected(true, (int)desorptionType, desorbTypeN, std::move(values.data()));
+				mApp->UpdateModelParams();
+				mApp->UpdateFacetParams(true);
+				//worker->CalcTotalOutgassing();
+				// Send to sub process
+				mApp->worker.MarkToReload();
+			}
+			catch (const std::exception& e) {
+				ImIOWrappers::InfoPopup("Error exploding facet", e.what());
+			}
+		}
+		};
+	mApp->imWnd->popup.Open("Confirm", "Explode selected facet?", 
+		{	std::make_shared<ImIOWrappers::ImButtonFunc>("Ok",f,ImGuiKey_Enter,ImGuiKey_KeypadEnter),
+			std::make_shared<ImIOWrappers::ImButtonInt>("Cancel",0,ImGuiKey_Escape)}
+	);
 }
 
 void ImOutgassingMap::PasteButtonPress()
 {
+	if (!facet) return;
+	if (selFacetId > interfGeom->GetNbFacet()) throw std::exception("Invalid facet ID");
+	if (facet->cellPropertiesIds.empty()) return;
+	if (!SDL_HasClipboardText()) return;
+
+	size_t w = facet->sh.texWidth;
+	size_t h = facet->sh.texHeight;
+	
+	std::string content(SDL_GetClipboardText());
+	size_t rows = 0, columns = 0;
+
+	// based on code by ChatGPT 3.5:
+	std::istringstream iss(content);
+	std::string line;
+	bool exceeded = false;
+
+	while (std::getline(iss, line)) {
+		std::istringstream lineStream(line);
+		std::string token;
+		columns = 0;
+		while (std::getline(lineStream, token, '\t')) {
+			if (columns < w) data[rows][columns]=token;
+			else exceeded = true;
+			columns++;
+		}
+		if (rows >= h) {
+			exceeded = true;
+			break;
+		}
+		rows++;
+	}
+	if (exceeded) ImIOWrappers::InfoPopup("Warning", "Pasted data exceeded table size, some values were clipped (not included)");
 }
 
 void ImOutgassingMap::DrawTable()

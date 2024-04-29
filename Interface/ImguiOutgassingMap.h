@@ -16,14 +16,13 @@ protected:
 	void OnShow() override;
 	size_t selFacetId;
 	InterfaceFacet* facet;
-	enum DesorptionType {
-		uniform,
-		cosine,
-		cosineN
+	enum DesorptionType : int {
+		uniform = 0,
+		cosine = 1,
+		cosineN = 2
 	};
 	DesorptionType desorptionType = cosine;
 	std::string comboText = "Cosine";
 
-	float exponent;
 	std::string exponentIn;
 };
