@@ -1,5 +1,6 @@
 #pragma once
 #include "ImguiWindowBase.h"
+#include "Facet_shared.h"
 
 class ImOutgassingMap : public ImWindow {
 public:
@@ -8,11 +9,13 @@ public:
 protected:
 	std::string name = "Outgassing map";
 	void ExplodeButtonPress();
-	void AutosizeButtonPress();
 	void PasteButtonPress();
 	void DrawTable();
+	void UpdateData();
+	std::vector<std::vector<std::string>> data;
 	void OnShow() override;
 	size_t selFacetId;
+	InterfaceFacet* facet;
 	enum DesorptionType {
 		uniform,
 		cosine,
