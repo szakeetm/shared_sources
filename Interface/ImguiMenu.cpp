@@ -1055,26 +1055,12 @@ static void ShowMenuFacet() {
 
 void ConvexHullMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
-    if (interfGeom->IsLoaded()) {
-        if (interfGeom->GetNbSelectedVertex() != 3) {
-            mApp->imWnd->popup.Open("Error", "Select exactly 3 vertices", {
-                std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
-                });
-            return;
-        }
-    }
-    else {
-        mApp->imWnd->popup.Open("Error", "No geometry loaded", {
-            std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
-            });
-    }
-
     if (mApp->AskToReset()) {
         try {
             interfGeom->CreatePolyFromVertices_Convex();
         }
-        catch (const std::exception& ) {
-            mApp->imWnd->popup.Open("Error", "Error creating polygon", {
+        catch (const std::exception& e) {
+            mApp->imWnd->popup.Open("Error creating polygon", e.what(), {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
                 });
         }
@@ -1087,8 +1073,8 @@ void SelectionOrderMenuPress() {
         try {
             interfGeom->CreatePolyFromVertices_Order();
         }
-        catch (const std::exception&) {
-            mApp->imWnd->popup.Open("Error", "Error creating polygon", {
+        catch (const std::exception& e) {
+            mApp->imWnd->popup.Open("Error creating polygon", e.what(), {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
                 });
         }
