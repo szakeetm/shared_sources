@@ -34,6 +34,7 @@
 #include "ImguiBuildIntersection.h"
 #include "ImguiCollapseSettings.h"
 #include "ImguiOutgassingMap.h"
+#include "ImguiVertexCoordinates.h"
 
 #include "ImguiMenu.h"
 
@@ -115,6 +116,7 @@ public:
     ImBuildIntersect buildIntersect;
     ImCollapse collapseSettings;
     ImOutgassingMap outgassingMap;
+    ImVertexCoordinates vertCoord;
 
     ImExplodeFacet expFac;
 

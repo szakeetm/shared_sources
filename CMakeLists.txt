@@ -147,6 +147,7 @@ set(INTERFACE_FILES
         Interface/ImguiBuildIntersection.cpp
         Interface/ImguiCollapseSettings.cpp
         Interface/ImguiOutgassingMap.cpp
+        Interface/ImguiVertexCoordinates.cpp
 
         Interface/ImguiGeometryViewer.cpp
         Facet_shared.cpp

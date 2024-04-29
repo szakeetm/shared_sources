@@ -1124,9 +1124,12 @@ void RemoveSelectedMenuPress() {
     }
 }
 void VertexCoordinatesMenuPress() {
+    mApp->imWnd->vertCoord.Show();
+    /*
     if (!mApp->vertexCoordinates) mApp->vertexCoordinates = new VertexCoordinates();
     mApp->vertexCoordinates->Display(&mApp->worker);
     mApp->vertexCoordinates->SetVisible(true);
+    */
 }
 void VertexMoveMenuPress() {
     
