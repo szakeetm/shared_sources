@@ -2,7 +2,6 @@
 #pragma once
 #include "Polygon.h"
 #include "GLApp/GLProgress_GUI.hpp"
-#define USINGZ //Allows clipper library to store user data (globalId)
 #include <clipper2/clipper.h>
 
 #include <vector>

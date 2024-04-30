@@ -12,7 +12,6 @@
 #include <GLApp/GLApp.h>
 #include <GLApp/GLFormula.h>
 
-#define USINGZ //Allows clipper library to store user data (globalId)
 #include <clipper2/clipper.h>
 
 class GLTextField;
