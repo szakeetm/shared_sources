@@ -64,7 +64,7 @@ void ImOutgassingMap::ExplodeButtonPress()
 		return;
 	}
 	if (data.empty() || data[0].empty()) {
-		throw std::exception("Empty table data");
+		return;
 	}
 	size_t w = data[0].size();
 	size_t h = data.size();
@@ -122,7 +122,7 @@ void ImOutgassingMap::ExplodeButtonPress()
 void ImOutgassingMap::PasteButtonPress()
 {
 	if (!facet) return;
-	if (selFacetId > interfGeom->GetNbFacet()) throw std::exception("Invalid facet ID");
+	if (selFacetId > interfGeom->GetNbFacet()) return;
 	if (facet->cellPropertiesIds.empty()) return;
 	if (!SDL_HasClipboardText()) return;
 
@@ -200,7 +200,7 @@ void ImOutgassingMap::UpdateData()
 	data.clear();
 	if (!facet) return;
 
-	if (selFacetId > interfGeom->GetNbFacet()) throw std::exception("Invalid facet ID");
+	if (selFacetId > interfGeom->GetNbFacet()) return;
 
 	if (facet->cellPropertiesIds.empty()) return;
 	
