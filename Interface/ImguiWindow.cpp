@@ -509,6 +509,7 @@ void ImguiWindow::Refresh()
     convPlot.Reload();
     movPart.Update();
     facCoord.UpdateFromSelection();
+    vertCoord.UpdateFromSelection();
     splitFac.Reset();
 }
 
