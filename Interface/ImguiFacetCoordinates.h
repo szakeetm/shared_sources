@@ -5,6 +5,7 @@
 class ImFacetCoordinates : public ImWindow {
 public:
 	void Draw();
+	void OnShow() override;
 	void UpdateFromSelection(const std::vector<size_t>& selectedFacets);
 	void UpdateFromSelection();
 protected:

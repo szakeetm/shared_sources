@@ -3,6 +3,7 @@
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "Interface.h"
+#include "ImguiWindow.h"
 
 // legacy windows to be updated
 #include "VertexCoordinates.h"
@@ -123,6 +124,7 @@ void ImCollapse::CollapseButtonPress(bool selectionOnly)
 
 		// legacy window updates
 		if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+		mApp->imWnd->Refresh();
 		if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
 		if (mApp->profilePlotter) mApp->profilePlotter->Refresh();
 		if (mApp->histogramPlotter) mApp->histogramPlotter->Refresh();

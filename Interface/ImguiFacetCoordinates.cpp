@@ -72,6 +72,11 @@ void ImFacetCoordinates::Draw()
 	ImGui::End();
 }
 
+void ImFacetCoordinates::OnShow()
+{
+	UpdateFromSelection();
+}
+
 void ImFacetCoordinates::DrawTable()
 {
 	ImGui::BeginChild("##FCTC", ImVec2(0, ImGui::GetContentRegionAvail().y - 6 * txtH));
