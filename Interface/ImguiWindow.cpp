@@ -241,8 +241,11 @@ void ImguiWindow::init() {
     collapseSettings.Init(mApp);
     outgassingMap = ImOutgassingMap();
     outgassingMap.Init(mApp);
+
     vertCoord = ImVertexCoordinates();
     vertCoord.Init(mApp);
+    vertMov = ImVertexMove();
+    vertMov.Init(mApp);
 
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
@@ -474,7 +477,9 @@ void ImguiWindow::renderSingle() {
         buildIntersect.Draw();
         collapseSettings.Draw();
         outgassingMap.Draw();
+
         vertCoord.Draw();
+        vertMov.Draw();
 
         expFac.Draw();
 

@@ -1132,7 +1132,8 @@ void VertexCoordinatesMenuPress() {
     */
 }
 void VertexMoveMenuPress() {
-    
+    mApp->imWnd->vertMov.Show();
+    /*
     if (interfGeom->IsLoaded()) {
         if (!mApp->moveVertex) mApp->moveVertex = new MoveVertex(interfGeom, &mApp->worker);
         mApp->moveVertex->SetVisible(true);
@@ -1142,6 +1143,7 @@ void VertexMoveMenuPress() {
             std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter) 
             });
     }
+    */
 }
 void VertexScaleMenuPress() {
     

@@ -57,7 +57,7 @@ void ImFacetMove::Draw()
         }
 
         {
-            ImGui::Text("         Distance"); ImGui::SameLine();
+            ImGui::Text("     Distance"); ImGui::SameLine();
             ImGui::SetNextItemWidth(23 * txtW);
             ImGui::InputText("cm##D", &distance);
         }

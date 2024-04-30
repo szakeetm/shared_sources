@@ -35,6 +35,7 @@
 #include "ImguiCollapseSettings.h"
 #include "ImguiOutgassingMap.h"
 #include "ImguiVertexCoordinates.h"
+#include "ImguiVertexMove.h"
 
 #include "ImguiMenu.h"
 
@@ -117,6 +118,7 @@ public:
     ImCollapse collapseSettings;
     ImOutgassingMap outgassingMap;
     ImVertexCoordinates vertCoord;
+    ImVertexMove vertMov;
 
     ImExplodeFacet expFac;
 

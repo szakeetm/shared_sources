@@ -108,8 +108,8 @@ void ImOutgassingMap::ExplodeButtonPress()
 				// Send to sub process
 				mApp->worker.MarkToReload();
 			}
-			catch (const std::exception& e) {
-				ImIOWrappers::InfoPopup("Error exploding facet", e.what());
+			catch (...) {
+				ImIOWrappers::InfoPopup("Error", "Error exploding facet");
 			}
 		}
 		};

@@ -148,6 +148,7 @@ set(INTERFACE_FILES
         Interface/ImguiCollapseSettings.cpp
         Interface/ImguiOutgassingMap.cpp
         Interface/ImguiVertexCoordinates.cpp
+        Interface/ImguiVertexMove.cpp
 
         Interface/ImguiGeometryViewer.cpp
         Facet_shared.cpp
