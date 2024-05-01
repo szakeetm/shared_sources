@@ -12,6 +12,7 @@
 #include <GLApp/GLApp.h>
 #include <GLApp/GLFormula.h>
 
+#define USINGZ
 #include <clipper2/clipper.h>
 
 class GLTextField;

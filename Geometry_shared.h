@@ -2,6 +2,7 @@
 #pragma once
 #include "Polygon.h"
 #include "GLApp/GLProgress_GUI.hpp"
+#define USINGZ
 #include <clipper2/clipper.h>
 
 #include <vector>

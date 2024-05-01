@@ -4,6 +4,7 @@
 #include <tuple>
 #include <optional>
 #include <vector>
+#define USINGZ
 #include <clipper2/clipper.h>
 
 class GLAppPolygon { //To distinguish from possible other Polygon classes in the namespace
