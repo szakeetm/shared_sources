@@ -63,7 +63,7 @@ target_link_libraries(${PROJECT_NAME} PUBLIC pugixml::pugixml)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(Clipper2Z REQUIRED IMPORTED_TARGET Clipper2Z) #Z option allows to store user data at vertices
 target_link_libraries(${PROJECT_NAME} PUBLIC PkgConfig::Clipper2Z)
-target_compile_definitions(${PROJECT_NAME} PRIVATE USINGZ)
+target_compile_definitions(${PROJECT_NAME} PUBLIC USINGZ)
 
 # Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
