@@ -21,4 +21,6 @@ protected:
 	std::string xIn, yIn, zIn, dIn;
 	double x, y, z, d;
 	std::string baseMsg="Nothing chosen", dirMsg = "Choose base first";
+	Vector3d baseLocation;
+	bool selectedBase = false;
 };

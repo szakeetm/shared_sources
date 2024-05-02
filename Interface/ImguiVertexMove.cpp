@@ -1,10 +1,14 @@
 #include "ImguiVertexMove.h"
 #include "ImguiExtensions.h"
+#include "ImguiPopup.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "Facet_shared.h"
+#include "Helper/StringHelper.h"
+#include "Interface.h"
 
 void ImVertexMove::Draw() {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW * 40, txtH * 20));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 40, txtH * 18));
 	ImGui::Begin("Move Vertex", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	if (ImGui::RadioButton("Absolute offset", mode == absOffset)) mode = absOffset;
 	if (ImGui::RadioButton("Direction and distance", mode == directionDist)) mode = directionDist;
@@ -34,22 +38,30 @@ void ImVertexMove::Draw() {
 	ImGui::InputText("cm###dIn", &dIn);
 
 	if (mode != directionDist)	ImGui::EndDisabled();
-
+	ImGui::PlaceAtRegionCenter("Facet normal");
 	if (ImGui::Button("Facet normal")) FacetNormalButtonPress();
 
 	if (ImGui::BeginTable("###MVlayoutHelper", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_BordersOuterH)) {
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
-
+		
+		ImGui::PlaceAtRegionCenter(baseMsg);
 		ImGui::Text(baseMsg);
-		if (ImGui::Button("Selected Vertex")) BaseSelVertButtonPress();
-		if (ImGui::Button("Facet center")) BaseFacCentButtonPress();
+		ImGui::PlaceAtRegionCenter("Selected Vertex");
+		if (ImGui::Button("Selected Vertex##B")) BaseSelVertButtonPress();
+		ImGui::PlaceAtRegionCenter("Facet center");
+		if (ImGui::Button("Facet center##B")) BaseFacCentButtonPress();
 
 		ImGui::TableSetColumnIndex(1);
-		
+
+		if (!selectedBase) ImGui::BeginDisabled();
+		ImGui::PlaceAtRegionCenter(dirMsg);
 		ImGui::Text(dirMsg);
-		if (ImGui::Button("Selected Vertex")) DirSelVertButtonPress();
-		if (ImGui::Button("Facet center")) DirFacCentButtonPress();
+		ImGui::PlaceAtRegionCenter("Selected Vertex");
+		if (ImGui::Button("Selected Vertex##D")) DirSelVertButtonPress();
+		ImGui::PlaceAtRegionCenter("Facet center");
+		if (ImGui::Button("Facet center##D")) DirFacCentButtonPress();
+		if (!selectedBase) ImGui::EndDisabled();
 
 		ImGui::EndTable();
 	}
@@ -65,24 +77,110 @@ void ImVertexMove::Draw() {
 
 void ImVertexMove::FacetNormalButtonPress()
 {
+	if (interfGeom->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
+		return;
+	}
+	Vector3d normal = interfGeom->GetFacet(interfGeom->GetSelectedFacets()[0])->sh.N;
+	xIn = fmt::format("{}", normal.x);
+	yIn = fmt::format("{}", normal.y);
+	zIn = fmt::format("{}", normal.z);
+	mode = directionDist;
 }
 
 void ImVertexMove::BaseSelVertButtonPress()
 {
+	if (interfGeom->GetNbSelectedVertex() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
+		return;
+	}
+	size_t vId = interfGeom->GetSelectedVertices()[0];
+	baseLocation = (Vector3d)*(interfGeom->GetVertex(vId));
+	baseMsg = fmt::format("Vertex {}", vId+1);
+	selectedBase = true;
 }
 
 void ImVertexMove::BaseFacCentButtonPress()
 {
+	if (interfGeom->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
+		return;
+	}
+	size_t fId = interfGeom->GetSelectedFacets()[0];
+	baseLocation = interfGeom->GetFacet(fId)->sh.center;
+	baseMsg = fmt::format("Center of facet {}", fId + 1);
+	selectedBase = true;
+	mode = directionDist;
 }
 
 void ImVertexMove::DirSelVertButtonPress()
 {
+	if (interfGeom->GetNbSelectedVertex() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one vertex");
+		return;
+	}
+	size_t vId = interfGeom->GetSelectedVertices()[0];
+	Vector3d translation = *(interfGeom->GetVertex(vId)) - baseLocation;
+	
+	xIn = fmt::format("{}", translation.x);
+	yIn = fmt::format("{}", translation.y);
+	zIn = fmt::format("{}", translation.z);
+	dIn = fmt::format("{}", translation.Norme());
+
+	dirMsg = fmt::format("Vertex {}", vId + 1);
 }
 
 void ImVertexMove::DirFacCentButtonPress()
 {
+	if (interfGeom->GetNbSelectedFacets() != 1) {
+		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
+		return;
+	}
+	size_t fId = interfGeom->GetSelectedFacets()[0];
+	Vector3d translation = (interfGeom->GetFacet(fId)->sh.center) - baseLocation;
+
+	xIn = fmt::format("{}", translation.x);
+	yIn = fmt::format("{}", translation.y);
+	zIn = fmt::format("{}", translation.z);
+	dIn = fmt::format("{}", translation.Norme());
+	
+	dirMsg = fmt::format("Center of facet {}", fId + 1);
 }
 
 void ImVertexMove::ApplyButtonPress(bool copy)
 {
+	if (interfGeom->GetNbSelectedVertex() == 0) {
+		ImIOWrappers::InfoPopup("Nothing to move", "No vertices selected");
+		return;
+	}
+	if (!Util::getNumber(&x, xIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid X offset/direction");
+		return;
+	}
+	if (!Util::getNumber(&y, yIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid Y offset/direction");
+		return;
+	}
+	if (!Util::getNumber(&z, zIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid Z offset/direction");
+		return;
+	}
+	if (mode == directionDist) {
+		if (!Util::getNumber(&d, dIn)) {
+			ImIOWrappers::InfoPopup("Error", "Invalid offset distance");
+			return;
+		}
+		if (x == y == z == 0.0) {
+			ImIOWrappers::InfoPopup("Error", "Direction can't be a null-vector");
+			return;
+		}
+	}
+	LockWrapper lW(mApp->imguiRenderLock);
+	if (mApp->AskToReset()) {
+		interfGeom->MoveSelectedVertex(x, y, z, mode == directionDist, d, copy);
+		mApp->worker.MarkToReload();
+		mApp->changedSinceSave = true;
+		mApp->UpdateFacetlistSelected();
+		mApp->UpdateViewers();
+	}
 }
