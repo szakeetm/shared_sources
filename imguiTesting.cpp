@@ -1395,6 +1395,39 @@ void ImTest::RegisterTests()
         DeleteFacet(interfGeom->GetNbFacet() - 1);
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Outgassing Map");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Convert to outgassing map...");
+        ctx->SetRef("###OgM");
+        if (currentConfig != empty) {
+            // TODO select facet, add texture, edit map, explode
+        }
+        ctx->ComboClickAll("###OMDT");
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "VertexMenu", "Vertex Coordinates");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Vertex/Vertex coordinates...");
+        ctx->SetRef("Vertex coordinates");
+        ctx->ItemClick("X");
+        ctx->SetRef("Set all X coordinates to:");
+        ctx->ItemClick("New coordinate");
+        ctx->KeyCharsReplaceEnter("5");
+        ctx->SetRef("Vertex coordinates");
+        // TODO
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "VertexMenu", "Move Vertex");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Vertex/Move...");
+        ctx->SetRef("Move Vertex");
+        // TODO
+        ctx->ItemClick("#CLOSE");
+        };
         // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
