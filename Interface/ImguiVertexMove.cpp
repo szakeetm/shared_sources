@@ -8,24 +8,25 @@
 
 void ImVertexMove::Draw() {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW * 40, txtH * 18));
+	float btnWidth = ImGui::CalcTextSize("_Selected Vertex_").x;
+	ImGui::SetNextWindowSize(ImVec2(txtW * 40, txtH * 19));
 	ImGui::Begin("Move Vertex", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 	if (ImGui::RadioButton("Absolute offset", mode == absOffset)) mode = absOffset;
 	if (ImGui::RadioButton("Direction and distance", mode == directionDist)) mode = directionDist;
 	std::string prefix = mode == absOffset ? "d" : "dir";
 	ImGui::TextWithMargin(prefix + "X", 3 * txtW);
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 15);
+	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::InputText("cm###xIn", &xIn);
 
 	ImGui::TextWithMargin(prefix + "Y", 3 * txtW);
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 15);
+	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::InputText("cm###yIn", &yIn);
 
 	ImGui::TextWithMargin(prefix + "Z", 3 * txtW);
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 15);
+	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::InputText("cm###zIn", &zIn);
 
 	ImGui::BeginChild("###MVD", ImVec2(0, ImGui::GetContentRegionAvail().y-txtH*1.3),ImGuiChildFlags_Border);
@@ -38,38 +39,45 @@ void ImVertexMove::Draw() {
 	ImGui::InputText("cm###dIn", &dIn);
 
 	if (mode != directionDist)	ImGui::EndDisabled();
-	ImGui::PlaceAtRegionCenter("Facet normal");
-	if (ImGui::Button("Facet normal")) FacetNormalButtonPress();
+	ImGui::PlaceAtRegionCenter("_Selected Vertex_");
+	if (ImGui::Button("Facet normal", ImVec2(btnWidth, 0))) FacetNormalButtonPress();
 
 	if (ImGui::BeginTable("###MVlayoutHelper", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_BordersOuterH)) {
 		ImGui::TableNextRow();
 		ImGui::TableSetColumnIndex(0);
-		
+		ImGui::BeginGroup();
+
+		ImGui::TextCentered("Base");
 		ImGui::PlaceAtRegionCenter(baseMsg);
 		ImGui::Text(baseMsg);
-		ImGui::PlaceAtRegionCenter("Selected Vertex");
-		if (ImGui::Button("Selected Vertex##B")) BaseSelVertButtonPress();
-		ImGui::PlaceAtRegionCenter("Facet center");
-		if (ImGui::Button("Facet center##B")) BaseFacCentButtonPress();
+		ImGui::PlaceAtRegionCenter("_Selected Vertex_");
+		if (ImGui::Button("Selected Vertex##B", ImVec2(btnWidth, 0))) BaseSelVertButtonPress();
+		ImGui::PlaceAtRegionCenter("_Selected Vertex_");
+		if (ImGui::Button("Facet center##B", ImVec2(btnWidth, 0))) BaseFacCentButtonPress();
 
+		ImGui::EndGroup();
 		ImGui::TableSetColumnIndex(1);
+		ImGui::BeginGroup();
 
 		if (!selectedBase) ImGui::BeginDisabled();
+		ImGui::TextCentered("Direction");
 		ImGui::PlaceAtRegionCenter(dirMsg);
 		ImGui::Text(dirMsg);
-		ImGui::PlaceAtRegionCenter("Selected Vertex");
-		if (ImGui::Button("Selected Vertex##D")) DirSelVertButtonPress();
-		ImGui::PlaceAtRegionCenter("Facet center");
-		if (ImGui::Button("Facet center##D")) DirFacCentButtonPress();
+		ImGui::PlaceAtRegionCenter("_Selected Vertex_");
+		if (ImGui::Button("Selected Vertex##D", ImVec2(btnWidth, 0))) DirSelVertButtonPress();
+		ImGui::PlaceAtRegionCenter("_Selected Vertex_");
+		if (ImGui::Button("Facet center##D", ImVec2(btnWidth, 0))) DirFacCentButtonPress();
 		if (!selectedBase) ImGui::EndDisabled();
-
+		
+		ImGui::EndGroup();
 		ImGui::EndTable();
 	}
 
 	ImGui::EndChild();
-	if (ImGui::Button("Move vertices")) ApplyButtonPress(false);
+	ImGui::Dummy(ImVec2(txtW * 4, 0)); ImGui::SameLine();
+	if (ImGui::Button("Move vertices", ImVec2(btnWidth, 0))) ApplyButtonPress(false);
 	ImGui::SameLine();
-	if (ImGui::Button("Copy vertices")) ApplyButtonPress(true);
+	if (ImGui::Button("Copy vertices", ImVec2(btnWidth, 0))) ApplyButtonPress(true);
 
 
 	ImGui::End();
