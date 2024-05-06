@@ -229,6 +229,7 @@ void ImTest::SelectVertex(size_t idx, bool add)
         if (!add) interfGeom->EmptySelectedVertexList();
         interfGeom->SelectVertex(idx);
         interfGeom->UpdateSelection();
+        mApp->imWnd->Refresh();
         };
     callQueue.push(f);
 }
@@ -1395,17 +1396,6 @@ void ImTest::RegisterTests()
         DeleteFacet(interfGeom->GetNbFacet() - 1);
         ctx->ItemClick("#CLOSE");
         };
-    t = IM_REGISTER_TEST(engine, "FacetMenu", "Outgassing Map");
-    t->TestFunc = [this](ImGuiTestContext* ctx) {
-        ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("Facet/Convert to outgassing map...");
-        ctx->SetRef("###OgM");
-        if (currentConfig != empty) {
-            // TODO select facet, add texture, edit map, explode
-        }
-        ctx->ComboClickAll("###OMDT");
-        ctx->ItemClick("#CLOSE");
-        };
     t = IM_REGISTER_TEST(engine, "VertexMenu", "Vertex Coordinates");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         DeselectAll();
@@ -1417,18 +1407,55 @@ void ImTest::RegisterTests()
         ctx->ItemClick("New coordinate");
         ctx->KeyCharsReplaceEnter("5");
         ctx->SetRef("Vertex coordinates");
-        // TODO
+        if (currentConfig != empty) {
+            SelectVertex({ 0,2,4,6,8 });
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            ctx->ItemClick("/**/###VCT/###0-Z");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Apply");
+            ctx->SetRef("Apply?");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Vertex coordinates");
+            ctx->ItemClick("Z");
+            ctx->SetRef("Set all Z coordinates to:");
+            ctx->ItemClick("New coordinate");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->SetRef("Vertex coordinates");
+            ctx->ItemClick("Apply");
+            ctx->SetRef("Apply?");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Vertex coordinates");
+        }
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "VertexMenu", "Move Vertex");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Vertex/Move...");
         ctx->SetRef("Move Vertex");
-        // TODO
+        if (currentConfig != empty) {
+            SelectVertex({ 0,2,4,6,8 });
+            ctx->ItemClick("Absolute offset");
+            ctx->ItemClick("###xIn");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("###yIn");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("###zIn");
+            ctx->KeyCharsReplaceEnter("-1");
+            ctx->ItemClick("Move vertices");
+
+            ctx->ItemClick("Direction and distance");
+            SelectFacet(0);
+            ctx->ItemClick("**/Facet normal");
+            ctx->ItemClick("**/###dIn");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Move vertices");
+        }
+        // TODO 
         ctx->ItemClick("#CLOSE");
         };
-        // VIEW
+    // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
@@ -1437,6 +1464,23 @@ void ImTest::RegisterTests()
         ctx->MenuClick("View/###Full Screen");
         };
     // geometry altering tests (to be run last)
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Outgassing Map");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Convert to outgassing map...");
+        ctx->SetRef("###OgM");
+        if (currentConfig != empty) {
+            TextureType t;
+            t.enabled = true;
+            t.countDes = true;
+            TextureFacet(0, 10, 10, t);
+            SelectFacet(0);
+            // edit map, explode
+        }
+        ctx->ComboClickAll("###OMDT");
+        ctx->ItemClick("#CLOSE");
+        };
     t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
