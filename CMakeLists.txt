@@ -98,7 +98,6 @@ set(INTERFACE_FILES
         Interface/ImguiSidebar.cpp
         Interface/ImguiExtensions.cpp
         Interface/ImguiFacetMove.cpp
-        Interface/imgui_stdlib/imgui_stdlib.cpp
         Interface/ImguiPopup.cpp
         Interface/ImguiSmartSelection.cpp
         Interface/ImguiSelectDialog.cpp
