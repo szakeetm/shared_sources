@@ -26,12 +26,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_EXTERNAL}
         )
 
-    find_package(SDL2 CONFIG REQUIRED)
-    target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
-        $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
-    )
+        # Commenting out this section: since now we include imgui by default, which links against SDL2, no need to do it here (would give a linker warning)
+        #find_package(SDL2 CONFIG REQUIRED)
+        #target_link_libraries(${PROJECT_NAME}
+        #    PRIVATE
+        #    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
+        #    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
+        #)
 
 if(MSVC)
     find_package(OpenGL REQUIRED)

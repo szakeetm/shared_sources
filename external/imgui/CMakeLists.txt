@@ -45,7 +45,6 @@ endif(NOT MSVC)
 
 find_package(OpenGL REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
-find_package(SDL2 CONFIG REQUIRED)
 target_link_libraries(imgui
     PRIVATE
     $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
