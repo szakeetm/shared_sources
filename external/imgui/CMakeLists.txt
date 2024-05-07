@@ -29,20 +29,9 @@ target_include_directories( imgui
 
 target_include_directories(imgui PRIVATE ../imgui_test_engine)
 
-if(MSVC)
-    find_package(OpenGL REQUIRED)
-    # 1. link against external libs
-    target_link_libraries(
-            opengl32#.lib
-            )
-    target_include_directories(imgui PRIVATE ${SDL_DIR})
-endif(MSVC)
-if(NOT MSVC)
-    if(APPLE)
-        target_link_libraries(imgui PRIVATE "-framework AppKit")
-
-    ENDIF()
-endif(NOT MSVC)
+if(APPLE)
+    target_link_libraries(imgui PRIVATE "-framework AppKit")
+ENDIF()
 
 find_package(OpenGL REQUIRED)
 find_package(SDL2 CONFIG REQUIRED)
