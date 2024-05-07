@@ -166,12 +166,16 @@ void ImConvergencePlotter::OnShow()
 	Refresh();
 }
 
+// Clear Data abd resize vectors
 void ImConvergencePlotter::Reload()
 {
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
 	data.clear();
 	UpdateSidebarMasterToggle();
 }
 
+// Check for changes in number and order of formulas
 void ImConvergencePlotter::Refresh()
 {
 	nFormulas = mApp->appFormulas->formulas.size();

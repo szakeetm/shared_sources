@@ -1,3 +1,4 @@
+#include "ImguiFormulaEditor.h"
 #ifndef IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_DEFINE_MATH_OPERATORS
 #endif // IMGUI_DEFINE_MATH_OPERATORS
@@ -29,6 +30,12 @@ void UpdateLegacyGUI() {
 		mApp->formulaEditor->Refresh();
 		mApp->formulaEditor->UpdateValues();
 	}
+}
+
+void ImFormulaEditor::OnShow()
+{
+	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("Formula editor"));
+	ImGui::FocusWindow(ImGui::FindWindowByName("Formula editor"));
 }
 
 void ImFormulaEditor::DrawFormulaList() {

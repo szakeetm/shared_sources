@@ -821,7 +821,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Histogram Plotter");
-        ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("Histogram settings");
         /* // cannot target items because of name conflicts (limitation of ImGui Test Engine)
         ctx->SetRef("Histogram Settings");
         ctx->ItemClick("Global Settings/Record bounces until absorbtion");
@@ -836,7 +836,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Apply");
         */
         ctx->SetRef("Histogram Plotter");
-        ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("Histogram settings");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture scaling");
@@ -949,18 +949,25 @@ void ImTest::RegisterTests()
         ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
         ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
         ctx->KeyCharsReplaceEnter("0");
         ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
         ctx->ItemClick("**/Rotation around axis");
         ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
         ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/Base to sel. vertex");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
@@ -973,6 +980,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Define moving parts");
@@ -1452,7 +1460,6 @@ void ImTest::RegisterTests()
             ctx->KeyCharsReplaceEnter("1");
             ctx->ItemClick("Move vertices");
         }
-        // TODO 
         ctx->ItemClick("#CLOSE");
         };
     // VIEW
@@ -1500,5 +1507,34 @@ void ImTest::RegisterTests()
             ctx->ItemClick("  No  ");
         }
         IM_CHECK_EQ(interfGeom->GetNbFacet(), 0);
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Convergence Plotter formula list");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Convergence Plotter ...");
+        ctx->SetRef("Convergence Plotter");
+        ctx->ItemClick("/**/All");
+        ctx->SetRef("##MainMenuBar");
+        if (currentConfig != empty) {
+            IM_CHECK_EQ(mApp->imWnd->convPlot.formulaDrawToggle.size(), mApp->appFormulas->formulas.size());
+        }
+        ctx->MenuClick("###File/###NewGeom");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            IM_CHECK_EQ(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
+            IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
+        }
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Test/Quick Pipe");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            ctx->ItemClick("/**/All");
+            IM_CHECK_GT(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
+        }
+        ConfigureGeometryMidTest(currentConfig);
         };
 }

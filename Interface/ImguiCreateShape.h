@@ -16,16 +16,16 @@ protected:
 	Shape shapeSel = rect;
 
 	double centerX, centerY, centerZ;
-	std::string centerXIn, centerYIn, centerZIn;
+	std::string centerXIn="0", centerYIn="0", centerZIn="0";
 
 	double axis1X, axis1Y, axis1Z;
-	std::string axis1XIn, axis1YIn, axis1ZIn;
+	std::string axis1XIn="1", axis1YIn="0", axis1ZIn="0";
 
 	double normalX, normalY, normalZ;
-	std::string normalXIn, normalYIn, normalZIn;
+	std::string normalXIn="0", normalYIn="0", normalZIn="1";
 
 	double axis1Len, axis2Len, trackTopLen, arcSteps;
-	std::string axis1LenIn, axis2LenIn, trackTopLenIn, arcStepsIn;
+	std::string axis1LenIn="1", axis2LenIn="1", trackTopLenIn, arcStepsIn="10";
 	
 	void FacetCenterButtonPress();
 	void VertexButtonPress();

@@ -89,7 +89,7 @@ void ImVertexMove::FacetNormalButtonPress()
 		ImIOWrappers::InfoPopup("Error", "Select exactly one facet");
 		return;
 	}
-	Vector3d normal = interfGeom->GetFacet(interfGeom->GetSelectedFacets()[0])->sh.N;
+	Vector3d normal = interfGeom->GetFacet(interfGeom->GetSelectedFacets()[0])->sh.N.Normalized();
 	xIn = fmt::format("{}", normal.x);
 	yIn = fmt::format("{}", normal.y);
 	zIn = fmt::format("{}", normal.z);

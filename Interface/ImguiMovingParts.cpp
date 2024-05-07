@@ -18,8 +18,14 @@ void ImMovingParts::Draw() {
     ImGui::TextWrapped("Movement paramenters set here will only apply to facets whih are marked \"moving\" in their parameters");
     ImGui::BeginChild("###movementChild", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH) , true);
     {
-        if(ImGui::RadioButton("No moving parts", mode==Modes::None)) mode = Modes::None;
-        if(ImGui::RadioButton("Fixed (same velocity vector everywhere)", mode==Modes::Fixed)) mode = Modes::Fixed;
+        if (ImGui::RadioButton("No moving parts", mode == Modes::None)) {
+            mode = Modes::None;
+            mApp->worker.model->sp.motionType = mode;
+        }
+        if (ImGui::RadioButton("Fixed (same velocity vector everywhere)", mode == Modes::Fixed)) {
+            mode = Modes::Fixed;
+            mApp->worker.model->sp.motionType = mode;
+        }
         {
             if(mode!=Modes::Fixed) ImGui::BeginDisabled();
             if(ImGui::BeginTable("###MovMartT1",7,ImGuiTableFlags_SizingStretchProp, ImVec2(ImGui::GetContentRegionAvail().x-txtW*20,0))) {
@@ -47,7 +53,10 @@ void ImMovingParts::Draw() {
 
             if(mode!=Modes::Fixed) ImGui::EndDisabled();
         }
-        if(ImGui::RadioButton("Rotation around axis", mode==Modes::Rotation)) mode = Modes::Rotation;
+        if (ImGui::RadioButton("Rotation around axis", mode == Modes::Rotation)) {
+            mode = Modes::Rotation;
+            mApp->worker.model->sp.motionType = mode;
+        }
         {
             if(mode!=Modes::Rotation) ImGui::BeginDisabled();
             
@@ -179,15 +188,15 @@ void ImMovingParts::ApplyButtonPress()
         case Modes::Rotation:
             AXIS_P0.x = ax; AXIS_P0.y = ay; AXIS_P0.z = az;
             AXIS_DIR.x = rx; AXIS_DIR.y = ry; AXIS_DIR.z = rz;
-            if(AXIS_DIR.Norme()<1E-5){
-                ImIOWrappers::InfoPopup("Error", "The rotation vector is shorter than 1E-5 cm.\n"
-                    "Very likely this is a null vector\n"
-                    "If not, increase its coefficients while keeping its direction");
-                return;
-            }
             break;
         default:
             return;
+    }
+    if (AXIS_DIR.Norme() < 1E-5) {
+        ImIOWrappers::InfoPopup("Error", "The rotation vector is shorter than 1E-5 cm.\n"
+            "Very likely this is a null vector\n"
+            "If not, increase its coefficients while keeping its direction");
+        return;
     }
     Apply();
 }
@@ -285,19 +294,19 @@ void ImMovingParts::Update() { // get values from selection / geometry
 
     if (mode == Fixed) {
         vx = mApp->worker.model->sp.motionVector2.x;
-        vxI = fmt::format("{:.3g", vx);
+        vxI = fmt::format("{:.3g}", vx);
         vy = mApp->worker.model->sp.motionVector2.y;
-        vyI = fmt::format("{:.3g", vy);
+        vyI = fmt::format("{:.3g}", vy);
         vz = mApp->worker.model->sp.motionVector2.z;
-        vzI = fmt::format("{:.3g", vz);
+        vzI = fmt::format("{:.3g}", vz);
     }
     else if (mode == Rotation) {
         ax = mApp->worker.model->sp.motionVector1.x;
-        axI = fmt::format("{:.3g", ax);
+        axI = fmt::format("{:.3g}", ax);
         ay = mApp->worker.model->sp.motionVector1.y;
-        ayI = fmt::format("{:.3g", ay);
+        ayI = fmt::format("{:.3g}", ay);
         az = mApp->worker.model->sp.motionVector1.z;
-        azI = fmt::format("{:.3g", az);
+        azI = fmt::format("{:.3g}", az);
         Vector3d rot = mApp->worker.model->sp.motionVector2.Normalized();
         rx = rot.x;
         rxI = fmt::format("{:.3g}", rx);

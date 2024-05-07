@@ -533,6 +533,7 @@ void ImguiWindow::Reset()
 void ImguiWindow::Clear()
 {
     mirrProjFacet.Clear();
+    convPlot.Reload();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
