@@ -1,5 +1,4 @@
 #include "GLProgress_ImGui.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "ImguiWindow.h"
 

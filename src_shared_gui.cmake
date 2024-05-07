@@ -22,6 +22,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_5}
         ${HEADER_DIR_7}
         ${IMGUI_DIR}
+        ${IMPLOT_DIR}
         ${HEADER_DIR_EXTERNAL}
         )
 
@@ -105,10 +106,8 @@ endif() #NOT MSVC
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 sdl_savepng nativefiledialog-extended-molflow-wrapped)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
-find_package(imgui CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC imgui::imgui)
-find_package(implot CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC implot::implot)
+target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
+target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 
 #Suppress warnings for external libraries
 if(MSVC)

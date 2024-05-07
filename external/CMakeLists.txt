@@ -10,6 +10,13 @@ if(NOT MSVC)
     )
 endif()
 
+#Suppress warnings for external libraries
+if(MSVC)
+    set(SUPPRESS_WARNINGS_FLAG "/w")
+else()
+    set(SUPPRESS_WARNINGS_FLAG "-w")
+endif()
+
 add_subdirectory(ziplib)
 target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
@@ -23,6 +30,10 @@ if(NOT NO_INTERFACE)
     target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
     add_subdirectory(NativeFileDialog)
     target_compile_options(nativefiledialog-extended-molflow-wrapped PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+    add_subdirectory(imgui)
+    target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+    add_subdirectory(implot)
+    target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 endif()
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS_BAK}") #restore warnings

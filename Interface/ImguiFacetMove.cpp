@@ -1,5 +1,4 @@
 #include "ImguiFacetMove.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"

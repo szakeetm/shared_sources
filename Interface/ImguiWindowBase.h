@@ -3,7 +3,6 @@
 #include <vector>
 #include "../GLApp/GLFormula.h"
 #include "Geometry_shared.h"
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <memory>

@@ -8,7 +8,6 @@
 //   https://github.com/ocornut/imgui/wiki/Useful-Extensions#cness
 
 #pragma once
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <string>

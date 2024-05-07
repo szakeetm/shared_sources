@@ -3,7 +3,6 @@
 #include "Interface.h"
 #include <string>
 #include <memory>
-#define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui.h"
 
 class ImFormulaEditor : public ImWindow {

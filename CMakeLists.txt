@@ -16,6 +16,8 @@ set(HEADER_DIR_3 ./GLApp/GLChart)
 set(HEADER_DIR_4 ${CMAKE_HOME_DIRECTORY}/include)
 set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_gui.cmake and src_shared_core.cmake
+set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui) #applied in src_shared_gui.cmake
+set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot) #applied in src_shared_gui.cmake
 
 #TODO: All this below should go
 IF(APPLE)

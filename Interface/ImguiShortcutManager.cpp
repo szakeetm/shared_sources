@@ -1,4 +1,4 @@
-#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include "imgui.h"
 #include "ImguiShortcutManager.h"
 #include <memory>
