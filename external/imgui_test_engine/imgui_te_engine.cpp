@@ -8,8 +8,8 @@
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h"
 #include "imgui_te_engine.h"
+#include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_te_utils.h"
 #include "imgui_te_context.h"
@@ -950,7 +950,7 @@ int ImGuiTestEngine_GetFrameCount(ImGuiTestEngine* engine)
 
 const char* ImGuiTestEngine_GetStatusName(ImGuiTestStatus v)
 {
-    static const char* names[ImGuiTestStatus_COUNT] = { "Success", "Queued", "Running", "Error", "Suspended" };
+    static const char* names[ImGuiTestStatus_COUNT] = { "Unknown", "Success", "Queued", "Running", "Error", "Suspended" };
     IM_STATIC_ASSERT(IM_ARRAYSIZE(names) == ImGuiTestStatus_COUNT);
     if (v >= 0 && v < IM_ARRAYSIZE(names))
         return names[v];

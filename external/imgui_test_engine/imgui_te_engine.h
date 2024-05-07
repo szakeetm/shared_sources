@@ -4,10 +4,21 @@
 // Actual tests will mostly use the interface of imgui_te_context.h
 
 #pragma once
-#define IMGUI_DEFINE_MATH_OPERATORS
+
 #include "imgui.h"
 #include "imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
-#include "imgui_te_utils.h"         // ImFuncPtr
+
+//-----------------------------------------------------------------------------
+// Function Pointers
+//-----------------------------------------------------------------------------
+
+#if IMGUI_TEST_ENGINE_ENABLE_STD_FUNCTION
+#include <functional>
+#define ImFuncPtr(FUNC_TYPE)        std::function<FUNC_TYPE>
+#else
+#define ImFuncPtr(FUNC_TYPE)        FUNC_TYPE*
+#endif
+
 #include "imgui_capture_tool.h"     // ImGuiScreenCaptureFunc
 
 //-------------------------------------------------------------------------
@@ -70,12 +81,12 @@ enum ImGuiTestVerboseLevel : int
 // Test status (stored in ImGuiTest)
 enum ImGuiTestStatus : int
 {
-    ImGuiTestStatus_Unknown     = -1,
-    ImGuiTestStatus_Success     = 0,
-    ImGuiTestStatus_Queued      = 1,
-    ImGuiTestStatus_Running     = 2,
-    ImGuiTestStatus_Error       = 3,
-    ImGuiTestStatus_Suspended   = 4,
+    ImGuiTestStatus_Unknown     = 0,
+    ImGuiTestStatus_Success     = 1,
+    ImGuiTestStatus_Queued      = 2,
+    ImGuiTestStatus_Running     = 3,
+    ImGuiTestStatus_Error       = 4,
+    ImGuiTestStatus_Suspended   = 5,
     ImGuiTestStatus_COUNT
 };
 
@@ -275,19 +286,19 @@ struct IMGUI_API ImGuiTestEngineIO
 // Information about a given item or window, result of an ItemInfo() or WindowInfo() query
 struct ImGuiTestItemInfo
 {
+    ImGuiID                     ID = 0;                     // Item ID
+    char                        DebugLabel[32] = {};        // Shortened label for debugging purpose
+    ImGuiWindow*                Window = NULL;              // Item Window
     int                         RefCount : 8;               // User can increment this if they want to hold on the result pointer across frames, otherwise the task will be GC-ed.
     unsigned int                NavLayer : 1;               // Nav layer of the item (ImGuiNavLayer)
     int                         Depth : 16;                 // Depth from requested parent id. 0 == ID is immediate child of requested parent id.
     int                         TimestampMain = -1;         // Timestamp of main result (all fields)
     int                         TimestampStatus = -1;       // Timestamp of StatusFlags
-    ImGuiID                     ID = 0;                     // Item ID
     ImGuiID                     ParentID = 0;               // Item Parent ID (value at top of the ID stack)
-    ImGuiWindow*                Window = NULL;              // Item Window
     ImRect                      RectFull = ImRect();        // Item Rectangle
     ImRect                      RectClipped = ImRect();     // Item Rectangle (clipped with window->ClipRect at time of item submission)
     ImGuiItemFlags              InFlags = 0;                // Item flags
     ImGuiItemStatusFlags        StatusFlags = 0;            // Item Status flags (fully updated for some items only, compare TimestampStatus to FrameCount)
-    char                        DebugLabel[32] = {};        // Shortened label for debugging purpose
 
     ImGuiTestItemInfo()         { RefCount = 0; NavLayer = 0; Depth = 0; }
     bool                        IsEmpty() const         { return ID == 0; }

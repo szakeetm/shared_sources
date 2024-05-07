@@ -7,8 +7,8 @@
 #endif
 
 #define IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui.h"
 #include "imgui_te_context.h"
+#include "imgui.h"
 #include "imgui_internal.h"
 #include "imgui_te_engine.h"
 #include "imgui_te_internal.h"
@@ -380,11 +380,15 @@ bool    ImGuiTestContext::SuspendTestFunc(const char* file, int line)
     if (IsError())
         return false;
 
-    file = ImPathFindFilename(file);
     if (file != NULL)
+    {
+        file = ImPathFindFilename(file);
         LogError("SuspendTestFunc() at %s:%d", file, line);
+    }
     else
+    {
         LogError("SuspendTestFunc()");
+    }
 
     // Save relevant state.
     // FIXME-TESTS: Saving/restoring window z-order could be desirable.
@@ -563,11 +567,9 @@ ImGuiTestRef ImGuiTestContext::GetRef()
     return RefID;
 }
 
-// Turn ref into a root ref unless ref is empty
-// FIXME: This seems inconsistent? Clarify?
 ImGuiWindow* ImGuiTestContext::GetWindowByRef(ImGuiTestRef ref)
 {
-    ImGuiID window_id = ref.IsEmpty() ? GetID(ref) : GetID(ref, "//");
+    ImGuiID window_id = GetID(ref);
     ImGuiWindow* window = ImGui::FindWindowByID(window_id);
     return window;
 }
@@ -587,6 +589,7 @@ ImGuiID ImGuiTestContext::GetID(ImGuiTestRef ref)
 // - Meaning of leading "/" .................. "/node" : move to root of window pointed by SetRef() when SetRef() uses a path
 // - Meaning of $$xxxx literal encoding ...... "list/$$1" : hash of "list" + hash if (int)1, equivalent of PushID("hello"); PushID(1);
 //// - Meaning of leading "../" .............. "../node" : move back 1 level from SetRef path() when SetRef() uses a path // Unimplemented
+// FIXME: "//$FOCUSED/.." is currently not usable.
 ImGuiID ImGuiTestContext::GetID(ImGuiTestRef ref, ImGuiTestRef seed_ref)
 {
     ImGuiContext& g = *UiContext;
@@ -2012,7 +2015,9 @@ void    ImGuiTestContext::MouseMoveToPos(ImVec2 target)
 }
 
 // This always teleport the mouse regardless of fast/slow mode. Useful e.g. to set initial mouse position for a GIF recording.
-void	ImGuiTestContext::MouseTeleportToPos(ImVec2 target)
+// Supported values for ImGuiTestOpFlags:
+// - ImGuiTestOpFlags_NoYield
+void	ImGuiTestContext::MouseTeleportToPos(ImVec2 target, ImGuiTestOpFlags flags)
 {
     if (IsError())
         return;
@@ -2021,8 +2026,11 @@ void	ImGuiTestContext::MouseTeleportToPos(ImVec2 target)
     LogDebug("MouseTeleportToPos from (%.0f,%.0f) to (%.0f,%.0f)", Inputs->MousePosValue.x, Inputs->MousePosValue.y, target.x, target.y);
 
     Inputs->MousePosValue = target;
-    ImGuiTestEngine_Yield(Engine);
-    ImGuiTestEngine_Yield(Engine);
+    if ((flags & ImGuiTestOpFlags_NoYield) == 0)
+    {
+        ImGuiTestEngine_Yield(Engine);
+        ImGuiTestEngine_Yield(Engine);
+    }
 }
 
 void    ImGuiTestContext::MouseDown(ImGuiMouseButton button)
@@ -3231,7 +3239,7 @@ void    ImGuiTestContext::MenuAction(ImGuiTestAction action, ImGuiTestRef ref)
                 ItemAction(Inputs->MouseButtonsValue ? ImGuiTestAction_Hover : ImGuiTestAction_Click, buf.c_str());
             }
         }
-        current_window = GetWindowByRef(Str16f("##Menu_%02d", depth).c_str());
+        current_window = GetWindowByRef(Str16f("//##Menu_%02d", depth).c_str());
         IM_CHECK_SILENT(current_window != NULL);
 
         path = p + 1;
@@ -3251,8 +3259,13 @@ void    ImGuiTestContext::MenuActionAll(ImGuiTestAction action, ImGuiTestRef ref
         MenuAction(ImGuiTestAction_Open, ref_parent); // We assume that every interaction will close the menu again
 
         if (action == ImGuiTestAction_Check || action == ImGuiTestAction_Uncheck)
-            if ((ItemInfo(item.ID)->StatusFlags & ImGuiItemStatusFlags_Checkable) == 0)
+        {
+            ImGuiTestItemInfo* info2 = ItemInfo(item.ID); // refresh info
+            if ((info2->InFlags & ImGuiItemFlags_Disabled) != 0) // FIXME: Report disabled state in log? Make that optional?
                 continue;
+            if ((info2->StatusFlags & ImGuiItemStatusFlags_Checkable) == 0)
+                continue;
+        }
 
         ItemAction(action, item.ID);
     }
@@ -3267,6 +3280,7 @@ static bool IsWindowACombo(ImGuiWindow* window)
     return true;
 }
 
+// Usage: ComboClick("ComboName/ItemName");
 void    ImGuiTestContext::ComboClick(ImGuiTestRef ref)
 {
     if (IsError())
@@ -3275,12 +3289,17 @@ void    ImGuiTestContext::ComboClick(ImGuiTestRef ref)
     IMGUI_TEST_CONTEXT_REGISTER_DEPTH(this);
     LogDebug("ComboClick '%s' %08X", ref.Path ? ref.Path : "NULL", ref.ID);
 
-    IM_ASSERT(ref.Path != NULL);
+    IM_ASSERT(ref.Path != NULL); // Should always pass an actual path, not an ID.
 
     const char* path = ref.Path;
     const char* path_end = path + strlen(path);
-
     const char* p = ImStrchrRangeWithEscaping(path, path_end, '/');
+    if (p == NULL)
+    {
+        LogError("Error: path should contains a / separator, e.g. ComboClick(\"mycombo/myitem\")");
+        IM_CHECK(p != NULL);
+    }
+
     Str128f combo_popup_buf = Str128f("%.*s", (int)(p-path), path);
     ItemClick(combo_popup_buf.c_str());
 
@@ -3716,6 +3735,8 @@ void    ImGuiTestContext::DockInto(ImGuiTestRef src_id, ImGuiTestRef dst_id, ImG
     MouseLiftDragThreshold();
     if (window_src->DockIsActive)
         MouseMoveToPos(g.IO.MousePos + ImVec2(0, ImGui::GetFrameHeight() * 2.0f));
+    else
+        Yield(); // A yield is necessary to start the moving, otherwise if by the time we call MouseSetViewport() no frame has elapsed and the viewports differs, dragging will fail.
     // (Button still held)
 
     // Locate target
