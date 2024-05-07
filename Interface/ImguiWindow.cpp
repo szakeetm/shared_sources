@@ -140,7 +140,7 @@ void ImguiWindow::init() {
     //fontConfig.RasterizerMultiply = 0;
     //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("fonst/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
