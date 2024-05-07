@@ -1,9 +1,9 @@
 
 
 #include "ImguiMenu.h"
-#include "imgui/imgui.h"
-#include <imgui/IconsFontAwesome5.h>
-#include <imgui/IconsMaterialDesign.h>
+#include "imgui.h"
+#include <imgui_fonts/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsMaterialDesign.h>
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
@@ -1427,7 +1427,7 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     if (ImGui::MenuItem("ImGui Test Engine")) {
         mApp->imWnd->testEngine.Show();
     }

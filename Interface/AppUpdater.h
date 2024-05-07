@@ -101,7 +101,7 @@ if (appUpdater && appUpdater->IsUpdateAvailable()) {
 #include <vector>
 #include <thread>
 #include <tuple>
-#include <PugiXML/pugixml.hpp>
+#include <pugixml.hpp>
 using namespace pugi;
 #include "GLApp/GLWindow.h"
 #include "Interface/Interface.h" //DoEvents

@@ -14,7 +14,7 @@
 #include "Vector.h"
 
 #include "Geometry_shared.h"
-#include "SDL_SavePNG/savepng.h"
+#include <SDL_SavePNG/savepng.h>
 
 #include <math.h>
 #include <cstdlib>

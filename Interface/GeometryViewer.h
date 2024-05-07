@@ -17,6 +17,10 @@ class GLMatrix;
 struct GLVIEWPORT;
 struct ScreenCoord;
 
+class GLMatrix;
+struct GLVIEWPORT;
+struct ScreenCoord;
+
 enum DragMode : int {
 	DragNone,
 	DragSelectFacet,

@@ -1,8 +1,6 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "ImguiFormulaEditor.h"
+
 #include "imgui.h"
+#include "ImguiFormulaEditor.h"
 #include "imgui_internal.h"
 #include "ImguiWindow.h"
 #include "imgui_stdlib/imgui_stdlib.h"

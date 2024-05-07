@@ -7,49 +7,29 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
-if(NOT NO_INTERFACE)
-    add_subdirectory(imgui)
-    add_subdirectory(implot)
-    add_dependencies(implot imgui)
-endif()
+
 
 # Folders files
 set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
 set(HEADER_DIR_3 ./GLApp/GLChart)
-set(HEADER_DIR_4 ../include)
+set(HEADER_DIR_4 ${CMAKE_HOME_DIRECTORY}/include)
 set(HEADER_DIR_5 ./Interface)
-#set(HEADER_DIR_EXT ../src/)
-#set(EXTERNAL_1 ./external)
-#set(EXTERNAL_2 ./external)
+set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_gui.cmake and src_shared_core.cmake
+set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui) #applied in src_shared_gui.cmake
+set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot) #applied in src_shared_gui.cmake
 
-set(HEADER_DIR_ZIP ./external/ziplib/Source)
-set(IMGUI_DIR ./imgui)
+#TODO: All this below should go
+IF(APPLE)
 
-#set(COPY_DIR ../copy_to_build/)
-
-IF (WIN32)
-    # set stuff for windows
-
-    set(HEADER_DIR_6 ../include/windows_only)
-    set(HEADER_DIR_7 ../include/windows_only/png)
-
-    set(LINK_DIR_1 ../lib/win/${MY_BUILD_TYPE})
-ELSEIF(APPLE)
-    # set stuff for mac os
-    if ("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "arm64")
-        set(LINK_DIR_1 ../../lib_external/mac_arm)
-    else()
-        set(LINK_DIR_1 ../../lib_external/mac)
-    endif()
 ELSE()
     # set stuff for other systems
 
     # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
     IF(os_version_suffix MATCHES "\\.el[1-9]")
-        set(LINK_DIR_1 ../lib_external/linux_fedora)
+        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_fedora)
     ELSE()
-        set(LINK_DIR_1 ../lib_external/linux_debian)
+        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_debian)
     ENDIF()
 ENDIF()
 
@@ -68,7 +48,6 @@ add_definitions(
 IF (WIN32)
     add_definitions(
             -DWIN
-            #-D_WINDOWS
             -D_WITHGL
     )
 ENDIF()
@@ -119,7 +98,6 @@ set(INTERFACE_FILES
         Interface/ImguiSidebar.cpp
         Interface/ImguiExtensions.cpp
         Interface/ImguiFacetMove.cpp
-        Interface/imgui_stdlib/imgui_stdlib.cpp
         Interface/ImguiPopup.cpp
         Interface/ImguiSmartSelection.cpp
         Interface/ImguiSelectDialog.cpp
@@ -136,8 +114,6 @@ set(INTERFACE_FILES
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
         Helper/GLProgress_ImGui.h
-        imguiTesting.cpp
-
 
         File.cpp
         Formulas.cpp
@@ -148,6 +124,12 @@ set(INTERFACE_FILES
         Worker_shared.cpp
         GeometryTools.cpp
         )
+
+if(ENABLE_IMGUI_TESTS)
+        list(APPEND INTERFACE_FILES
+                imguiTesting.cpp
+        )
+endif()
 
 set(SIM_FILES
         Distributions.cpp
@@ -196,7 +178,7 @@ set(HELPER_FILES
         AppSettings.cpp
         )
 
-set(GL_FILES
+set(GLAPP_FILES
         GLApp/GLApp.cpp
         GLApp/GLButton.cpp
         GLApp/GLColorBox.cpp
@@ -236,10 +218,13 @@ set(GL_FILES
         GLApp/GLChart/GLDataViewOptions.cpp
         )
 
-if(NOT NO_INTERFACE)
-    include(${CMAKE_CURRENT_SOURCE_DIR}/interface.cmake)
-endif()
-include(${CMAKE_CURRENT_SOURCE_DIR}/simulator.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_core.cmake) #CLI project, build as library
 
-include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)
+if(NOT NO_INTERFACE)
+    include(${CMAKE_CURRENT_SOURCE_DIR}/src_shared_gui.cmake) #GUI project, build as library
+    find_package(CURL CONFIG REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${CURL_LIBRARIES})
+endif()
+
+include(${CMAKE_HOME_DIRECTORY}/src_shared/SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)

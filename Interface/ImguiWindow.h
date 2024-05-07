@@ -1,8 +1,8 @@
 
 
 #pragma once
+#include "imgui.h"
 #include <GLApp/GLApp.h>
-#include <imgui/imgui.h>
 #include "AppUpdater.h"
 #include "ImguiPopup.h"
 #include "ImguiSmartSelection.h"
@@ -28,7 +28,7 @@
 #include "../../src/SynRad.h"
 #endif
 
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
 #include "../imguiTesting.h"
 #endif
 
@@ -48,7 +48,7 @@ public:
 
     GLApplication* app;
 
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     ImTest testEngine;
 #endif
 
