@@ -1,8 +1,7 @@
 
 
 #pragma once
-
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include <string>
 
 namespace ImGui {
@@ -25,10 +24,11 @@ namespace ImGui {
 
     void PlaceAtRegionRight(const char *str, bool sameLine);
 
-    bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f");
+    bool InputDoubleRightSide(const char *desc, double *val, const char* format = "%.4f", const char* ID="");
     bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags = 0);
     bool InputTextRightSide(std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width = 0);
     bool TriState(const char* desc, short* v, bool allowManualMixed = true);
+    bool InputTextLLabel(const std::string desc, std::string* text, ImGuiInputTextFlags flags = 0, float width=100);
 
 // Add spacing of checkbox width
     void AddCheckboxWidthSpacing();
@@ -41,6 +41,7 @@ namespace ImGui {
 
     void Loader(float& progress, float& time);
     void HelpMarker(const std::string& text);
+    void TextWithMargin(const std::string& text, const float width);
 }
 
 namespace ImMath {

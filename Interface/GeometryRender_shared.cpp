@@ -415,6 +415,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 	}
 
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+	if (mApp->imWnd) mApp->imWnd->vertCoord.UpdateFromSelection();
 }
 
 void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
@@ -478,6 +479,7 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 	}
 
 	//UpdateSelection();
+	if (mApp->imWnd) mApp->imWnd->vertCoord.UpdateFromSelection();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 
@@ -1567,7 +1569,7 @@ void InterfaceGeometry::BuildSelectList() {
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_DOUBLE, 0, vertices_raw_opengl.data());
-	glDrawElements(GL_LINES, lines.size(), GL_UNSIGNED_INT, lines.data());
+	glDrawElements(GL_LINES, (int)lines.size(), GL_UNSIGNED_INT, lines.data());
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	// give profiled selection priority for being rendered last

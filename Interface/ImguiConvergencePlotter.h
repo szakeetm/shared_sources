@@ -9,13 +9,15 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 	void RemovePlot(int idx);
+	void OnShow();
 	void Reload();
+	void Refresh();
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void DecrementFormulaIndicies(int startId);
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);
-	int selectedFormula = -1;
+	int nFormulas = 0;
 	bool showDatapoints = false;
 	std::vector<ImPlotData> data;
 	Interface* mApp;
@@ -35,4 +37,10 @@ protected:
 	size_t actualNbValues = 0;
 	bool showValueOnHover = true;
 	friend class ImTest;
+
+	std::vector<short> formulaDrawToggle;
+	short aggregateState = 0;
+	bool mixedState = false;
+	void UpdateSidebarMasterToggle();
+	void ApplyAggregateState();
 };

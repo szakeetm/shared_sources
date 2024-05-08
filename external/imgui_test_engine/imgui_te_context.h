@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"     // ImGuiAxis, ImGuiItemStatusFlags, ImGuiInputSource, ImGuiWindow
+#include "imgui.h"
+#include "imgui_internal.h"     // ImGuiAxis, ImGuiItemStatusFlags, ImGuiInputSource, ImGuiWindow
 #include "imgui_te_engine.h"    // ImGuiTestStatus, ImGuiTestRunFlags, ImGuiTestActiveFunc, ImGuiTestItemInfo, ImGuiTestLogFlags
 
 /*

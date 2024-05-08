@@ -1,4 +1,5 @@
-#include "imgui/imgui.h"
+
+#include "imgui.h"
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
 #include <string>
@@ -13,16 +14,14 @@ public:
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
 	void UpdatePlotter();
-	void HandleFacetDeletion(const std::vector<size_t>& facetIdList);
 private:
-	std::vector <size_t> comboOpts;
-	void UpdateComboOpts();
+	std::vector <size_t> profiledFacets;
+	void UpdateProfiledFacetList();
 	void OnShow() override;
 	void DrawProfileGraph();
 
 	// button actions
-	void ShowFacet();
-	void AddCurve();
+	void ShowFacet(int id = -1, bool add = false);
 	void RemoveCurve(int id);
 	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
@@ -33,8 +32,6 @@ private:
 	void UpdateSelection();
 	bool IsPlotted(size_t facetId);
 
-	std::vector<size_t> ParseManualFacetList();
-
 	int viewIdx = 1;
 	std::vector<ImPlotData> data;
 	ImPlotData manualPlot;
@@ -44,10 +41,6 @@ private:
 	bool updateHilights = false;
 
 	InterfaceGeometry* interfGeom;
-	size_t selectedProfile = -1;
-	InterfaceFacet* f = 0;
-	int nProfileFacets = 0;
-	std::string manualFacetSel;
 	bool colorBlind = false, identProfilesInGeom = false;
 	float lineWidth = 2;
 	std::string expression;
@@ -60,4 +53,10 @@ private:
 	bool setLog = false;
 	bool loading = false;
 	friend class ImTest;
+
+	short aggregateState = 0;
+	bool mixedState = false;
+	std::vector<short> profileDrawToggle;
+	void ApplyAggregateState();
+	void UpdateSidebarMasterToggle();
 };

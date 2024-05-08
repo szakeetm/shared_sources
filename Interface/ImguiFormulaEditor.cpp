@@ -1,8 +1,6 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
+
+#include "imgui.h"
 #include "ImguiFormulaEditor.h"
-#include "imgui/imgui.h"
 #include "imgui_internal.h"
 #include "ImguiWindow.h"
 #include "imgui_stdlib/imgui_stdlib.h"
@@ -29,6 +27,12 @@ void UpdateLegacyGUI() {
 		mApp->formulaEditor->Refresh();
 		mApp->formulaEditor->UpdateValues();
 	}
+}
+
+void ImFormulaEditor::OnShow()
+{
+	ImGui::BringWindowToDisplayFront(ImGui::FindWindowByName("Formula editor"));
+	ImGui::FocusWindow(ImGui::FindWindowByName("Formula editor"));
 }
 
 void ImFormulaEditor::DrawFormulaList() {
@@ -146,6 +150,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			newExpression = "";
 			// remove when ImGui becomes main UI
 			UpdateLegacyGUI();
+			mApp->imWnd->convPlot.Refresh();
 		}
 
 
@@ -172,6 +177,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			selRow = -1;
 
 			UpdateLegacyGUI();
+			mApp->imWnd->convPlot.Refresh();
 		}
 
 		ImGui::EndTable();

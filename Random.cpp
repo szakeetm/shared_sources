@@ -10,7 +10,6 @@
 #include <process.h>
 #else
 #include <unistd.h>
-#include <omp.h>
 
 #endif // def WIN
 

@@ -17,8 +17,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <cstring> //strcpy, etc.
-#include <imgui/imgui_impl_sdl2.h>
-#include <imgui/imgui_internal.h>
+#include <imgui_impl_sdl2.h>
+#include <imgui_internal.h>
 #include "ImguiWindow.h"
 
 #ifndef _WIN32
@@ -429,7 +429,7 @@ void GLApplication::Run() {
   wereEvents_imgui = 2;
 
   // TODO: Activate imgui directly on launch here
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
       std::cout<<"Launching ImGui test sequence...\n";
       imWnd = new ImguiWindow(this);
@@ -482,6 +482,11 @@ void GLApplication::Run() {
                         }
                     }
                 }
+            }
+            {
+                // event passthrough
+                activeImGuiEvent &= !imWnd->skipImGuiEvents;
+                imWnd->skipImGuiEvents = false;
             }
             if (activeImGuiEvent) {
                 wereEvents_imgui = 3;

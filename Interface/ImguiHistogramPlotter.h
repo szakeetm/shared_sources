@@ -1,7 +1,4 @@
 #pragma once
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
 #include "ImguiWindowBase.h"
 #include "Geometry_shared.h"
 #include "Buffer_shared.h"
@@ -32,10 +29,12 @@ protected:
 	void OnShow() override;
 	void DrawPlot();
 	void RemovePlot(int idx, plotTabs tab);
-	void AddPlot();
+	void AddPlot(int idx);
+	bool IsPlotted(int idx);
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
+	void ShowFacet(int idx, bool add);
 	
 
 	//types
@@ -106,14 +105,20 @@ protected:
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
-	std::vector<size_t> comboOpts[IM_HISTOGRAM_TABS];
+	std::vector<size_t> histogrammedFacets[IM_HISTOGRAM_TABS];
 	std::vector<ImPlotData> data[IM_HISTOGRAM_TABS];
 	ImPlotData globals[IM_HISTOGRAM_TABS];
-	long comboSelection=-2;
 	int maxDisplayed = 1000;
 	bool limitPoints = true;
 	bool showValueOnHover = true;
 	bool overrange = true;
-	ImHistogramSettings settingsWindow;
 	bool logX = false, logY = false;
+	ImHistogramSettings settingsWindow;
+
+	short aggregateState = 0;
+	bool mixedState = false;
+	std::vector<short> histogramDrawToggle[IM_HISTOGRAM_TABS];
+	short globalDrawToggle[IM_HISTOGRAM_TABS];
+	void ApplyAggregateState();
+	void UpdateSidebarMasterToggle();
 };

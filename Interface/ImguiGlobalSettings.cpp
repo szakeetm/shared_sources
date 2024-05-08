@@ -2,8 +2,8 @@
 
 #include "ImguiGlobalSettings.h"
 #include "ImguiExtensions.h"
-#include "imgui/imgui.h"
-#include <imgui/imgui_internal.h>
+#include "imgui.h"
+#include <imgui_internal.h>
 #include <sstream>
 #include "Helper/StringHelper.h"
 #include "ImguiWindow.h"
@@ -186,8 +186,8 @@ void ImGlobalSettings::Draw() {
         static double halfLife = mApp->worker.model->sp.halfLife;
         static bool lowFluxMode = mApp->worker.model->otfParams.lowFluxMode;
         static double lowFluxCutoff = mApp->worker.model->otfParams.lowFluxCutoff;
-        ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g");
-        ImGui::Checkbox("", &enableDecay);
+        ImGui::InputDoubleRightSide("Gas molecular mass (g/mol)", &gasMass, "%g", "###GMass");
+        ImGui::Checkbox("##EnableDecay", &enableDecay);
         if (!enableDecay) {
             ImGui::BeginDisabled();
         }

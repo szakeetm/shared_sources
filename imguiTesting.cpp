@@ -229,6 +229,7 @@ void ImTest::SelectVertex(size_t idx, bool add)
         if (!add) interfGeom->EmptySelectedVertexList();
         interfGeom->SelectVertex(idx);
         interfGeom->UpdateSelection();
+        mApp->imWnd->Refresh();
         };
     callQueue.push(f);
 }
@@ -284,6 +285,18 @@ void ImTest::TextureFacet(size_t idx, int width, int height, TextureType type)
         if (mApp->imWnd && mApp->imWnd->textPlot.IsVisible()) mApp->imWnd->textPlot.UpdatePlotter();
         };
     callQueue.push(func);
+}
+
+void ImTest::DeleteFacet(size_t idx)
+{
+    if (idx >= interfGeom->GetNbFacet()) return;
+    std::function<void()> f = [this, idx]() {
+        if (mApp->worker.IsRunning()) mApp->worker.Stop_Public();
+        interfGeom->RemoveFacets({idx});
+        mApp->UpdateModelParams();
+        mApp->worker.MarkToReload();
+        };
+    callQueue.push(f);
 }
 
 bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
@@ -616,11 +629,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Move Down");
         ctx->ItemClick("Open convergence plotter >>");
         // ----- CONVERGENCE PLOTTER
-        ctx->SetRef("Convergence Plotter");
-        ctx->ItemClick("Add curve");
-        ctx->ItemClick("Remove curve");
-        ctx->SetRef("Error");
-        ctx->ItemClick("  Ok  ");
+        // TODO test sidebar
         ctx->SetRef("Convergence Plotter");
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
@@ -661,17 +670,6 @@ void ImTest::RegisterTests()
         ctx->MenuClick("Custom Plot/##expressionInput");
         ctx->KeyCharsReplace("");
         ctx->MenuClick("Custom Plot/-> Plot expression");
-
-        ctx->ComboClick("##Formula Picker/[A]10");
-        ctx->ItemClick("Add curve");
-        ctx->ComboClick("##Formula Picker/[B]20");
-        ctx->ItemClick("Add curve");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
-        ctx->MenuClick("Export/Plotted to clipboard");
-        ctx->MouseMoveToPos(ImVec2(100, 100));
-        ctx->MenuClick("Export/All to clipboard");
-        ctx->ItemClick("Remove curve");
-        ctx->ItemClick("Remove all");
 
         ctx->ItemClick("#CLOSE");
         // -----
@@ -765,9 +763,6 @@ void ImTest::RegisterTests()
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Profile Plotter ...");
         ctx->SetRef("Profile Plotter");
-        ctx->ItemClick("Remove all");
-        ctx->ItemClick("##manualFacetSel");
-        ctx->KeyCharsReplaceEnter("");
         ctx->MenuClick("Export/To clipboard");
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
@@ -778,14 +773,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("Profile Plotter");
 
         if (currentConfig == profile) {
-            ctx->ComboClick("##ProfilePlotterCombo/Select [v] or type->");
-            ctx->ItemClick("##manualFacetSel");
-            ctx->KeyCharsReplaceEnter("3");
-            ctx->ItemClick("Add Curve");
-            ctx->ComboClick("##ProfilePlotterCombo/###profileCombo4");
-            ctx->ItemClick("Add Curve");
-            ctx->ComboClick("##ProfilePlotterCombo/###profileCombo6");
-            ctx->ItemClick("Add Curve");
+            // todo test sidebar
         }
 
         ctx->MenuClick("View/Log Y");
@@ -810,20 +798,7 @@ void ImTest::RegisterTests()
         ctx->MenuClick("Custom Plot/##expressionInput");
         ctx->KeyCharsReplaceEnter("");
         ctx->MenuClick("Custom Plot/-> Plot expression");
-        ctx->ItemClick("Show Facet");
-        if (mApp->imWnd->profPlot.manualFacetSel != "3") {
-            ctx->SetRef("Error");
-            ctx->ItemClick("  Ok  ");
-            ctx->SetRef("Profile Plotter");
-        }
-        ctx->ItemClick("Add Curve");
-        ctx->SetRef("Error");
-        ctx->ItemClick("  Ok  ");
-        ctx->SetRef("Profile Plotter");
         ctx->ComboClickAll("##View");
-        ctx->ItemClick("Remove Curve");
-        ctx->ItemClick("Remove all");
-        ctx->ItemClick("Select plotted facets");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Histogram plotter"); // this test faisl in fast mode for unknown reasons
@@ -834,10 +809,6 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Histogram types/Flight distance before absorption");
         ctx->ItemClick("Histogram types/Flight time before absorption");
         ctx->ItemClick("Histogram types/Bounces before absorption");
-        ctx->ItemClick("<- Show Facet");
-        ctx->ItemClick("Add");
-        ctx->ItemClick("Remove");
-        ctx->ItemClick("Remove all");
         ctx->ItemClick("Normalize");
         ctx->ItemClick("Normalize");
         ctx->ItemClick("Log Y");
@@ -850,7 +821,7 @@ void ImTest::RegisterTests()
         ctx->SetRef("Error");
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Histogram Plotter");
-        ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("Histogram settings");
         /* // cannot target items because of name conflicts (limitation of ImGui Test Engine)
         ctx->SetRef("Histogram Settings");
         ctx->ItemClick("Global Settings/Record bounces until absorbtion");
@@ -865,7 +836,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Apply");
         */
         ctx->SetRef("Histogram Plotter");
-        ctx->ItemClick("<< Hist settings");
+        ctx->ItemClick("Histogram settings");
         ctx->ItemClick("#CLOSE");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture scaling");
@@ -884,6 +855,613 @@ void ImTest::RegisterTests()
         ctx->ComboClickAll("##Show");
         ctx->ItemClick("#CLOSE");
         };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Particle Logger");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Particle logger...");
+        ctx->SetRef("Particle Logger");
+        // all other elements are inside child windows
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Global Settings");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Global Settings ...");
+        ctx->SetRef("Global settings");
+
+        ctx->ItemClick("split/Autosave frequency (minutes)");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Autosave only when simulation is running");
+        ctx->ItemClick("split/Autosave only when simulation is running");
+        ctx->ItemClick("split/Use .zip as default extension (otherwise .xml)");
+        ctx->ItemClick("split/Use .zip as default extension (otherwise .xml)");
+        ctx->ItemClick("split/Check for updates at startup");
+        ctx->ItemClick("split/Check for updates at startup");
+        ctx->ItemClick("split/Anti-Aliasing");
+        ctx->ItemClick("split/Anti-Aliasing");
+        ctx->ItemClick("split/White Background");
+        ctx->ItemClick("split/White Background");
+        ctx->ItemClick("split/Left-handed coord. system");
+        ctx->ItemClick("split/Left-handed coord. system");
+        ctx->ItemClick("split/Highlight non-planar facets");
+        ctx->ItemClick("split/Highlight non-planar facets");
+        ctx->ItemClick("split/Highlight selected facets");
+        ctx->ItemClick("split/Highlight selected facets");
+        ctx->ItemClick("split/Use old XML format");
+        ctx->ItemClick("split/Use old XML format");
+
+        ctx->ItemClick("##nbProc/-");
+        ctx->ItemClick("##nbProc");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply and restart processes");
+
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("30");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("You have changed the gas mass.");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("split/###GMass");
+        ctx->KeyCharsReplaceEnter("28");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("You have changed the gas mass.");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("split/##EnableDecay");
+        ctx->ItemClick("split/Gas half life (s)");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/##EnableDecay");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Enable low flux mode");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Cutoff ratio");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("split/Apply above settings");
+        ctx->ItemClick("split/Enable low flux mode");
+        ctx->ItemClick("split/Apply above settings");
+
+        ctx->ItemClick("split/Recalc. outgassing");
+
+        ctx->SetRef("Global settings");
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Screenshot");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Take screenshot");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        if (currentConfig != empty) {
+            DeselectAll();
+        }
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Moving parts...");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("**/No moving parts");
+        ctx->ItemClick("Apply");
+        ctx->ItemClick("//Define moving parts/**/Fixed (same velocity vector everywhere)");
+        ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("//Define moving parts/**/###MovMartT1/##vx");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("**/Rotation around axis");
+        ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/Base to sel. vertex");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        if (currentConfig != empty) {
+            SelectVertex(1);
+            ctx->ItemClick("**/###MovingPartsTable/Use selected vertex");
+            ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/Base to sel. vertex");
+        }
+
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("Apply");
+        ctx->MouseMoveToPos(ImVec2(100, 100));
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Define moving parts");
+        ctx->ItemClick("//Define moving parts/**/###MovingPartsTable/##ax");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/No moving parts");
+        ctx->ItemClick("Apply");
+
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Measure forces");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        if (currentConfig != empty) {
+            DeselectAll();
+        }
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Measure forces...");
+        ctx->SetRef("Measure forces");
+        if (currentConfig == empty) {
+            ctx->ItemClick("**/Selected vertex");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("**/Center of selected facet");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+        }
+        else {
+            SelectVertex(0);
+            ctx->ItemClick("**/Selected vertex");
+            SelectFacet(0);
+            ctx->ItemClick("**/Center of selected facet");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+
+            SelectVertex({ 0,1 });
+            ctx->ItemClick("**/Selected vertex");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            SelectFacet({ 0,1 });
+            ctx->ItemClick("**/Center of selected facet");
+            ctx->SetRef("Error");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Measure forces");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("Enable force measurement (has performance impact)");
+            ctx->ItemClick("Apply");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet coordiantes");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Facet coordinates ...");
+        ctx->SetRef("###FCoords");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            ctx->ItemClick("/**/##VIID");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("/**/Insert as last vertex");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/Insert before sel. row");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/Remove selected row");
+            ctx->ItemClick("//Error/  Ok  ");
+
+            ctx->ItemClick("X");
+            ctx->ItemClick("//Set all X coordinates to:/New coordinate");
+            ctx->KeyCharsReplace("");
+            ctx->ItemClick("//Set all X coordinates to:/  OK  ");
+            ctx->ItemClick("//Error/  Ok  ");
+
+            ctx->ItemClick("Z");
+            ctx->ItemClick("//Set all Z coordinates to:/New coordinate");
+            ctx->KeyCharsReplaceEnter("1");
+           
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("//Question/  Ok  ");
+
+            ctx->ItemClick("Z");
+            ctx->ItemClick("//Set all Z coordinates to:/New coordinate");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("//Set all Z coordinates to:/  OK  ");
+
+            ctx->ItemClick("Apply");
+            ctx->ItemClick("//Question/  Ok  ");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Move");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Move ...");
+        ctx->SetRef("Move Facet");
+        DeselectAll();
+        ctx->ItemClick("/**/Facet normal");
+        ctx->ItemClick("//Error/  Ok  ");
+        
+        ctx->ItemClick("/**/Selected Vertex##0");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("/**/Facet center##0");
+        ctx->ItemClick("//Error/  Ok  ");
+
+        ctx->ItemClick("Move facets");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("Copy facets");
+        ctx->ItemClick("//Error/  Ok  ");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            ctx->ItemClick("cm##X");
+            ctx->KeyCharsReplace("1");
+            ctx->ItemClick("cm##Y");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("cm##Z");
+            ctx->KeyCharsReplace("0");
+            ctx->ItemClick("Move facets");
+            ctx->ItemClick("cm##X");
+            ctx->KeyCharsReplace("-1");
+            ctx->ItemClick("Move facets");
+            ctx->ItemClick("/**/options/Facet center##0");
+            SelectFacet(1);
+            ctx->ItemClick("/**/options/Facet center##1");
+            ctx->ItemClick("Direction and Distance");
+            ctx->ItemClick("/**/cm##D");
+            ctx->KeyCharsReplace("-1");
+            ctx->ItemClick("Copy facets");
+            DeselectAll();
+            DeleteFacet(7);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Scale");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Scale ...");
+        ctx->SetRef("Scale selected facets");
+        ctx->ItemClick("Scale facet");
+        ctx->ItemClick("//Nothing to scale/  Ok  ");
+        ctx->ItemClick("Copy facet");
+        ctx->ItemClick("//Nothing to scale/  Ok  ");
+        ctx->ItemClick("/**/###SSF");
+        ctx->ItemClick("/**/Selected vertex");
+        ctx->ItemClick("/**/Center of selected facet #");
+        ctx->ItemClick("/**/<-Get selected");
+        ctx->ItemClick("//Error/  Ok  ");
+        ctx->ItemClick("/**/Uniform");
+        ctx->ItemClick("/**/Distorted");
+        if (currentConfig != empty) {
+            SelectFacet(0);
+            ctx->ItemClick("/**/<-Get selected");
+            SelectFacet(1);
+            ctx->ItemClick("/**/##X:");
+            ctx->KeyCharsReplace("1.1");
+            ctx->ItemClick("/**/##Y:");
+            ctx->KeyCharsReplace("1.1");
+            ctx->ItemClick("/**/##Z:");
+            ctx->KeyCharsReplaceEnter("1.1");
+            ctx->ItemClick("Copy facet");
+            ctx->ItemClick("/**/Uniform");
+            ctx->ItemClick("/**/###1by");
+            ctx->KeyCharsReplaceEnter("1.1");
+            ctx->ItemClick("Scale facet");
+            ctx->ItemClick("/**/###facetN");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("Scale facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/###SSF");
+            ctx->ItemClick("/**/##X=");
+            ctx->KeyCharsReplaceEnter("a");
+            DeleteFacet(7);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet MirrorProject");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/###MPF");
+        ctx->SetRef("###MPFW");
+        ctx->ItemClick("Mirror facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Copy mirror facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Project facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        ctx->ItemClick("Copy project facet");
+        ctx->ItemClick("//Nothing to mirror/  Ok  ");
+        if (currentConfig != empty && mApp->imWnd->mirrProjFacet.mode == ImFacetMirrorProject::PlaneDefinition::none) {
+            SelectFacet(2);
+            ctx->ItemClick("Mirror facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Copy mirror facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Project facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("Copy project facet");
+            ctx->ItemClick("//Error/  Ok  ");
+        }
+        ctx->ItemClick("/**/Define by plane equation");
+        ctx->ItemClick("/**/Define by 3 selected vertices");
+        ctx->ItemClick("/**/Plane of facet #");
+        ctx->ItemClick("/**/XZ plane");
+        ctx->ItemClick("/**/YZ plane");
+        ctx->ItemClick("/**/XY plane");
+        if (currentConfig != empty) {
+            SelectFacet(2);
+            ctx->ItemClick("/**/YZ plane");
+            ctx->ItemClick("Copy mirror facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+            SelectFacet(2);
+            ctx->ItemClick("Copy project facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+        }
+        DeselectAll();
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Rotate");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Rotate ...");
+        ctx->SetRef("Rotate selected facets");
+        ctx->ItemClick("##Degrees:");
+        ctx->KeyCharsReplaceEnter("180");
+        ctx->ItemClick("##Radians:");
+        ctx->KeyCharsReplaceEnter("2");
+        ctx->ItemClick("/**/X axis");
+        ctx->ItemClick("/**/Y axis");
+        ctx->ItemClick("/**/Z axis");
+        ctx->ItemClick("/**/U vector");
+        ctx->ItemClick("/**/V vector");
+        ctx->ItemClick("/**/Normal vector");
+        ctx->ItemClick("/**/Define by 2 verticies");
+        ctx->ItemClick("/**/Define by equation:");
+        ctx->ItemClick("Rotate facet");
+        ctx->ItemClick("//Nothing to rotate/  Ok  ");
+        ctx->ItemClick("Copy facet");
+        ctx->ItemClick("//Nothing to rotate/  Ok  ");
+        if (currentConfig != empty) {
+            ctx->ItemClick("/**/###RSFADMEQ/###FPDMa");
+            ctx->KeyCharsReplaceEnter("x");
+            SelectFacet(0);
+            ctx->ItemClick("Copy facet");
+            ctx->ItemClick("//Error/  Ok  ");
+            SelectVertex(0);
+            ctx->ItemClick("/**/<-Get base");
+            DeselectAll();
+            SelectVertex(1);
+            ctx->ItemClick("/**/<-Calc diff");
+            SelectFacet(0);
+            ctx->ItemClick("Copy facet");
+            ctx->Sleep(1);
+            DeleteFacet(7);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Align");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Align to ...");
+        ctx->SetRef("Align selected facets to an other");
+        if (currentConfig != empty) {
+            SelectFacet(1);
+            ctx->ItemClick("/**/Update from selection");
+            SelectFacet({0,1});
+            SelectVertex(3);
+            SelectVertex(5);
+            SelectVertex(4);
+            SelectVertex(6);
+            ctx->ItemClick("Align");
+            ctx->Sleep(1);
+            ctx->ItemClick("Undo");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Extrude");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Extrude ...");
+        ctx->SetRef("Extrude Facet");
+        ctx->ItemClick("Extrude");
+        ctx->ItemClick("//Nothing to move/  Ok  ");
+        if (currentConfig != empty && currentConfig != texture) {
+            SelectFacet(0);
+            if (mApp->imWnd->extrudeFacet.mode == ImFacetExtrude::Mode::none) {
+                ctx->ItemClick("Extrude");
+                ctx->ItemClick("//Error/  Ok  ");
+            }
+            ctx->ItemClick("/**/Towards normal");
+            ctx->ItemClick("/**/Against normal");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("x");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("//Error/  Ok  ");
+            ctx->ItemClick("/**/##extrusion length:");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Extrude");
+            ctx->ItemClick("/**/Direction vector");
+            DeselectAll();
+            SelectVertex(0);
+            ctx->ItemClick("/**/Get Base Vertex");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            DeselectAll();
+            SelectVertex(1);
+            ctx->ItemClick("/**/Get Dir. Vertex");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            DeselectAll();
+            SelectFacet(1);
+            ctx->ItemClick("Extrude");
+            ctx->Sleep(1);
+            // 'Along Curve' section
+            ctx->ItemClick("/**/Towards normal##C");
+            ctx->ItemClick("/**/Against normal##C");
+            SelectFacet(2);
+            ctx->ItemClick("/**/Facet center");
+            ctx->ItemClick("/**/Facet V");
+            ctx->ItemClick("/**/###EF3TR");
+            ctx->KeyCharsReplaceEnter("5");
+            ctx->ItemClick("/**/###EF3TAD");
+            ctx->KeyCharsReplaceEnter("90");
+            ctx->ItemClick("/**/###FE3TS");
+            ctx->KeyCharsReplaceEnter("5");
+            ctx->ItemClick("Extrude");
+            ctx->Sleep(1);
+            ConfigureGeometryMidTest(currentConfig);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Split");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Split ...");
+        ctx->SetRef("Split Facet");
+        ctx->ItemClick("**/XY plane");
+        ctx->ItemClick("**/XZ plane");
+        ctx->ItemClick("**/YZ plane");
+        if (currentConfig != empty) {
+            SelectFacet(3);
+            ctx->ItemClick("Split");
+            ctx->Sleep(1);
+            ctx->ItemClick("Undo");
+            ctx->Sleep(1);
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Create Shape");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Create shape...");
+        ctx->SetRef("Create shape");
+        ctx->ItemClick("Shape selection/###SR");
+        ctx->ItemClick("Shape selection/###CE");
+        ctx->ItemClick("Shape selection/###RT");
+        ctx->ItemClick("**/###centerXIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###centerYIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###centerZIn");
+        ctx->KeyCharsReplaceEnter("a");
+        ctx->ItemClick("**/###axis1XIn");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###axis1YIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###axis1ZIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalXIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalYIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("**/###normalZIn");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###axis1Len");
+        ctx->KeyCharsReplaceEnter("2");
+        ctx->ItemClick("**/###axis2Len");
+        ctx->KeyCharsReplaceEnter("1");
+        ctx->ItemClick("**/###trackTopLenIn");
+        ctx->KeyCharsReplaceEnter("1.5");
+        ctx->ItemClick("**/###arcStepsIn");
+        ctx->KeyCharsReplaceEnter("8");
+        ctx->ItemClick("Create facet");
+        ctx->SetRef("Error");
+        ctx->ItemClick("  Ok  ");
+        ctx->SetRef("Create shape");
+        ctx->ItemClick("**/###centerZIn");
+        ctx->KeyCharsReplaceEnter("0");
+        ctx->ItemClick("Create facet");
+        ctx->Sleep(1);
+        DeleteFacet(interfGeom->GetNbFacet() - 1); // delete the created facet (it will always be the last one in the facet vector
+        ctx->ItemClick("Shape selection/###CE");
+        ctx->ItemClick("Create facet");
+        ctx->Sleep(1);
+        DeleteFacet(interfGeom->GetNbFacet() - 1);
+        ctx->ItemClick("Shape selection/###SR");
+        ctx->ItemClick("Create facet");
+        ctx->Sleep(1);
+        DeleteFacet(interfGeom->GetNbFacet() - 1);
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "VertexMenu", "Vertex Coordinates");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Vertex/Vertex coordinates...");
+        ctx->SetRef("Vertex coordinates");
+        ctx->ItemClick("X");
+        ctx->SetRef("Set all X coordinates to:");
+        ctx->ItemClick("New coordinate");
+        ctx->KeyCharsReplaceEnter("5");
+        ctx->SetRef("Vertex coordinates");
+        if (currentConfig != empty) {
+            SelectVertex({ 0,2,4,6,8 });
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            ctx->ItemClick("/**/###VCT/###0-Z");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Apply");
+            ctx->SetRef("Apply?");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Vertex coordinates");
+            ctx->ItemClick("Z");
+            ctx->SetRef("Set all Z coordinates to:");
+            ctx->ItemClick("New coordinate");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->SetRef("Vertex coordinates");
+            ctx->ItemClick("Apply");
+            ctx->SetRef("Apply?");
+            ctx->ItemClick("  Ok  ");
+            ctx->SetRef("Vertex coordinates");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
+    t = IM_REGISTER_TEST(engine, "VertexMenu", "Move Vertex");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Vertex/Move...");
+        ctx->SetRef("Move Vertex");
+        if (currentConfig != empty) {
+            SelectVertex({ 0,2,4,6,8 });
+            ctx->ItemClick("Absolute offset");
+            ctx->ItemClick("###xIn");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("###yIn");
+            ctx->KeyCharsReplaceEnter("0");
+            ctx->ItemClick("###zIn");
+            ctx->KeyCharsReplaceEnter("-1");
+            ctx->ItemClick("Move vertices");
+
+            ctx->ItemClick("Direction and distance");
+            SelectFacet(0);
+            ctx->ItemClick("**/Facet normal");
+            ctx->ItemClick("**/###dIn");
+            ctx->KeyCharsReplaceEnter("1");
+            ctx->ItemClick("Move vertices");
+        }
+        ctx->ItemClick("#CLOSE");
+        };
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -893,6 +1471,23 @@ void ImTest::RegisterTests()
         ctx->MenuClick("View/###Full Screen");
         };
     // geometry altering tests (to be run last)
+    t = IM_REGISTER_TEST(engine, "FacetMenu", "Outgassing Map");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        DeselectAll();
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Facet/Convert to outgassing map...");
+        ctx->SetRef("###OgM");
+        if (currentConfig != empty) {
+            TextureType t;
+            t.enabled = true;
+            t.countDes = true;
+            TextureFacet(0, 10, 10, t);
+            SelectFacet(0);
+            // edit map, explode
+        }
+        ctx->ComboClickAll("###OMDT");
+        ctx->ItemClick("#CLOSE");
+        };
     t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
@@ -912,5 +1507,34 @@ void ImTest::RegisterTests()
             ctx->ItemClick("  No  ");
         }
         IM_CHECK_EQ(interfGeom->GetNbFacet(), 0);
+        };
+    t = IM_REGISTER_TEST(engine, "ToolsMenu", "Convergence Plotter formula list");
+    t->TestFunc = [this](ImGuiTestContext* ctx) {
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("###Tools/Convergence Plotter ...");
+        ctx->SetRef("Convergence Plotter");
+        ctx->ItemClick("/**/All");
+        ctx->SetRef("##MainMenuBar");
+        if (currentConfig != empty) {
+            IM_CHECK_EQ(mApp->imWnd->convPlot.formulaDrawToggle.size(), mApp->appFormulas->formulas.size());
+        }
+        ctx->MenuClick("###File/###NewGeom");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            IM_CHECK_EQ(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
+            IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
+        }
+        ctx->SetRef("##MainMenuBar");
+        ctx->MenuClick("Test/Quick Pipe");
+        if (mApp->changedSinceSave) {
+            ctx->SetRef("File not saved");
+            ctx->ItemClick("  No  ");
+            ctx->MouseMoveToPos(ImVec2(100, 100));
+            ctx->ItemClick("/**/All");
+            IM_CHECK_GT(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
+        }
+        ConfigureGeometryMidTest(currentConfig);
         };
 }

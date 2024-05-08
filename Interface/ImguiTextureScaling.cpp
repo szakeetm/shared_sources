@@ -1,6 +1,5 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
+
+#include "imgui.h"
 #include "ImguiTextureScaling.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Geometry_shared.h"

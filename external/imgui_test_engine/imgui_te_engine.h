@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
+#include "imgui.h"
+#include "imgui_internal.h"         // ImPool<>, ImRect, ImGuiItemStatusFlags, ImFormatString
 
 #if defined(__clang__)
 #pragma clang diagnostic push

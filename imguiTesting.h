@@ -43,6 +43,7 @@ private:
 	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	void DeselectAll();
 	void DeselectAllVerticies();
+	void DeleteFacet(size_t idx);
 	class TextureType {
 	public:
 		bool enabled = false;    

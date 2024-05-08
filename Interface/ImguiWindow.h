@@ -1,8 +1,6 @@
-
-
 #pragma once
+#include "imgui.h"
 #include <GLApp/GLApp.h>
-#include <imgui/imgui.h>
 #include "AppUpdater.h"
 #include "ImguiPopup.h"
 #include "ImguiSmartSelection.h"
@@ -20,7 +18,26 @@
 #include "ImguiProfilePlotter.h"
 #include "ImguiHistogramPlotter.h"
 #include "ImguiTextureScaling.h"
+#include "ImguiParticleLogger.h"
+#include "ImguiMovingParts.h"
+#include "ImguiMeasureForce.h"
+#include "ImguiFacetCoordinates.h"
+#include "ImguiFacetScale.h"
+#include "ImguiFacetMirrorProject.h"
+#include "ImguiFacetRotate.h"
+#include "ImguiFacetAlign.h"
+#include "ImguiFacetExtrude.h"
+#include "ImguiFacetSplit.h"
+#include "ImguiCreateShape.h"
+#include "ImguiBuildIntersection.h"
+#include "ImguiCollapseSettings.h"
+#include "ImguiOutgassingMap.h"
+#include "ImguiVertexCoordinates.h"
+#include "ImguiVertexMove.h"
+
 #include "ImguiMenu.h"
+
+#include "ImguiGeometryViewer.h"
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
@@ -28,7 +45,7 @@
 #include "../../src/SynRad.h"
 #endif
 
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
 #include "../imguiTesting.h"
 #endif
 
@@ -36,6 +53,7 @@
 class ImguiWindow {
 public:
     bool forceDrawNextFrame = false;
+    bool skipImGuiEvents = false;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
@@ -44,11 +62,12 @@ public:
 
     void Refresh();
     void Reset();
+    void Clear();
     void LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings);
 
     GLApplication* app;
 
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     ImTest testEngine;
 #endif
 
@@ -82,7 +101,26 @@ public:
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
     ImTextureScaling textScale;
+    ImParticleLogger partLog;
+    ImMovingParts movPart;
+    ImMeasureForce measForce;
+    ImFacetCoordinates facCoord;
+    ImFacetScale facScale;
+    ImFacetMirrorProject mirrProjFacet;
+    ImFacetRotate rotFacet;
+    ImFacetAlign alignFacet;
+    ImFacetExtrude extrudeFacet;
+    ImFacetSplit splitFac;
+    ImCreateShape createShape;
+    ImBuildIntersect buildIntersect;
+    ImCollapse collapseSettings;
+    ImOutgassingMap outgassingMap;
+    ImVertexCoordinates vertCoord;
+    ImVertexMove vertMov;
+
     ImExplodeFacet expFac;
+
+    ImGeoViewer geoView;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
