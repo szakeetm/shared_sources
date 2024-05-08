@@ -7,8 +7,6 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 add_subdirectory(compress)
 add_subdirectory(external EXCLUDE_FROM_ALL)
 
-
-
 # Folders files
 set(HEADER_DIR_1 .)
 set(HEADER_DIR_2 ./GLApp)
@@ -18,20 +16,6 @@ set(HEADER_DIR_5 ./Interface)
 set(HEADER_DIR_EXTERNAL ./external) #applied in src_shared_gui.cmake and src_shared_core.cmake
 set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui) #applied in src_shared_gui.cmake
 set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot) #applied in src_shared_gui.cmake
-
-#TODO: All this below should go
-IF(APPLE)
-
-ELSE()
-    # set stuff for other systems
-
-    # link to fedora libraries if EL Linux (Red Hat Enterprise Linux) has been detected
-    IF(os_version_suffix MATCHES "\\.el[1-9]")
-        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_fedora)
-    ELSE()
-        set(LINK_DIR_1 ${CMAKE_HOME_DIRECTORY}/lib_external/linux_debian)
-    ENDIF()
-ENDIF()
 
 ############## Artefacts Output ############################
 # Defines outputs , depending BUILD TYPE                   #
@@ -113,7 +97,7 @@ set(INTERFACE_FILES
         Interface/ImguiTextureScaling.cpp
         Facet_shared.cpp
         Helper/GLProgress_ImGui.cpp
-        Helper/GLProgress_ImGui.h
+        #Helper/GLProgress_ImGui.h
 
         File.cpp
         Formulas.cpp
@@ -151,7 +135,7 @@ set(SIM_FILES
         SimulationController.cpp
         SimulationModel.cpp
         FacetData.cpp
-        FacetData.h
+        #FacetData.h
 
         SettingsIO.cpp
 
@@ -160,10 +144,10 @@ set(SIM_FILES
         RayTracing/BVH.cpp
         RayTracing/BVH.h
         RayTracing/Ray.h
-        RayTracing/Primitive.h
+        #RayTracing/Primitive.h
         BoundingBox.cpp
-        BoundingBox.h
-        RayTracing/RTHelper.h
+        #BoundingBox.h
+        #RayTracing/RTHelper.h
         )
 
 set(HELPER_FILES
@@ -172,7 +156,7 @@ set(HELPER_FILES
         Helper/GraphicsHelper.cpp
         Helper/Chronometer.cpp
         Helper/FormatHelper.cpp
-        Helper/ConsoleLogger.h
+        #Helper/ConsoleLogger.h
         Helper/GLProgress_abstract.cpp
         Helper/GLProgress_abstract.hpp
         AppSettings.cpp
