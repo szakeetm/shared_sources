@@ -7,27 +7,6 @@ project(${PROJECT_NAME} CXX)
 set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui)
 set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot)
 
-#required preprocessor definitions by the auto-updater
-IF (WIN32)
-    
-ELSEIF(APPLE)
-    
-ELSE()
-    string (REGEX MATCH "\\.el[1-9]" os_version_suffix ${CMAKE_SYSTEM})
-    message("-- os_version_suffix:      ${os_version_suffix}")
-    IF(os_version_suffix MATCHES "\\.el[1-9]")
-        add_definitions(
-            -D__LINUX_FEDORA
-        )
-        message("Assuming Fedora-based Linux")
-    ELSE()
-        add_definitions(
-            -D__LINUX_DEBIAN
-        )
-        message("Assuming Debian-based Linux")
-    ENDIF()
-ENDIF()
-
 
 set(INTERFACE_FILES
         ${INTERFACE_DIR}/AddVertex.cpp
@@ -255,3 +234,24 @@ target_compile_options(sdl_savepng PUBLIC ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(ziplib PUBLIC ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(imgui PUBLIC ${SUPPRESS_WARNINGS_FLAG})
 target_compile_options(implot PUBLIC ${SUPPRESS_WARNINGS_FLAG})
+
+#required preprocessor definitions by the auto-updater
+IF (WIN32)
+    
+ELSEIF(APPLE)
+    
+ELSE()
+    string (REGEX MATCH "\\.el[1-9]" os_version_suffix ${CMAKE_SYSTEM})
+    message("-- os_version_suffix:      ${os_version_suffix}")
+    IF(os_version_suffix MATCHES "\\.el[1-9]")
+        add_definitions(
+            -D__LINUX_FEDORA
+        )
+        message("Assuming Fedora-based Linux")
+    ELSE()
+        add_definitions(
+            -D__LINUX_DEBIAN
+        )
+        message("Assuming Debian-based Linux")
+    ENDIF()
+ENDIF()
