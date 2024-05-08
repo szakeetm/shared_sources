@@ -209,9 +209,9 @@ endif() #NOT MSVC
 find_package(OpenGL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PRIVATE cereal::cereal)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 
 #Shipped libraries
@@ -229,9 +229,9 @@ else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
 
-target_compile_options(clipper2 PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(sdl_savepng PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(ziplib PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(imgui PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(implot PUBLIC ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
