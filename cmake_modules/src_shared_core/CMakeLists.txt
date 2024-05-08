@@ -135,5 +135,5 @@ else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
 
-target_compile_options(clipper2 PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(ziplib PUBLIC ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
