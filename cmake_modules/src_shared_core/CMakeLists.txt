@@ -44,11 +44,6 @@ set(SIM_FILES
         ${CPP_DIR_SRC_SHARED}/SimulationModel.cpp
         ${CPP_DIR_SRC_SHARED}/FacetData.cpp
 
-        ${SIMU_DIR}/Particle.cpp
-        ${SIMU_DIR}/Physics.cpp
-        ${SIMU_DIR}/MolflowSimulation.cpp
-        ${SIMU_DIR}/SimulationMC.cpp
-        
         ${CPP_DIR_SRC_SHARED}/SettingsIO.cpp
 
         ${CPP_DIR_SRC_SHARED}/RayTracing/KDTree.h
@@ -61,6 +56,13 @@ set(SIM_FILES
 
         ${CPP_DIR_SRC_SHARED}/FlowMPI.cpp
         ${CPP_DIR_SRC_SHARED}/File.cpp
+
+        #Break out of src_shared
+        ${SIMU_DIR}/Particle.cpp
+        ${SIMU_DIR}/Physics.cpp
+        ${SIMU_DIR}/MolflowSimulation.cpp
+        ${SIMU_DIR}/SimulationMC.cpp
+        ${SIMU_DIR}/AnglemapGeneration.cpp
 )
 
 set(HELPER_FILES
