@@ -4,9 +4,6 @@
 set(PROJECT_NAME src_shared_gui)
 project(${PROJECT_NAME} CXX)
 
-set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui)
-set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot)
-
 
 set(INTERFACE_FILES
         ${INTERFACE_DIR}/AddVertex.cpp
@@ -68,7 +65,6 @@ set(INTERFACE_FILES
         
         ${HELPER_DIR}/GLProgress_ImGui.cpp
 
-        ${CPP_DIR_SRC_SHARED}/File.cpp
         ${CPP_DIR_SRC_SHARED}/Formulas.cpp
         ${CPP_DIR_SRC_SHARED}/FormulaEvaluator.cpp
         ${CPP_DIR_SRC_SHARED}/Geometry_shared.cpp
@@ -209,10 +205,13 @@ endif() #NOT MSVC
 find_package(OpenGL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 target_link_libraries(${PROJECT_NAME} PRIVATE cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+find_package(OpenMP REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 
 #Shipped libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 )

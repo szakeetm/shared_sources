@@ -51,7 +51,11 @@ set(SIM_FILES
         ${CPP_DIR_SRC_SHARED}/RayTracing/BVH.cpp
         ${CPP_DIR_SRC_SHARED}/RayTracing/BVH.h
         ${CPP_DIR_SRC_SHARED}/RayTracing/Ray.h
+        ${CPP_DIR_SRC_SHARED}/IntersectAABB_shared.cpp
         ${CPP_DIR_SRC_SHARED}/BoundingBox.cpp
+
+        ${CPP_DIR_SRC_SHARED}/FlowMPI.cpp
+        ${CPP_DIR_SRC_SHARED}/File.cpp
 )
 
 set(HELPER_FILES
@@ -74,6 +78,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_SRC_SHARED}
         ${INTERFACE_DIR} #CameraView, etc. still used by shared gui/cli
         ${HEADER_DIR_EXTERNAL}
+        ${HEADER_DIR_SRC} #Simulation folder
 )
 
 if(MSVC)
@@ -110,7 +115,7 @@ IF(APPLE)
     include(${CPP_DIR_SRC_SHARED}/cmake_modules/SetOpenMP.cmake)  #Help macOS find OpenMP
 ENDIF()
 find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 
 # Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
