@@ -4,7 +4,6 @@
 set(PROJECT_NAME src_shared_gui)
 project(${PROJECT_NAME} CXX)
 
-
 set(INTERFACE_FILES
         ${INTERFACE_DIR}/AddVertex.cpp
         ${INTERFACE_DIR}/AlignFacet.cpp
@@ -134,7 +133,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${IMGUI_DIR}
         ${IMPLOT_DIR}
         ${HEADER_DIR_EXTERNAL}
-        )
+)
         # Commenting out this section: since now we include imgui by default, which links against SDL2, no need to do it here (would give a linker warning)
         #find_package(SDL2 CONFIG REQUIRED)
         #target_link_libraries(${PROJECT_NAME}
@@ -142,6 +141,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         #    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         #    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
         #)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC src_shared_core)
 
 if(MSVC)
     # 1. link against external libs
@@ -178,24 +179,6 @@ ELSE() #not MSVC
         target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
     endif()
 
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
-    
-    #for shared memory
-    find_library(LIBRT rt)
-    if(LIBRT)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
-    endif()
-
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
-    endif()
-
     #external libraries from our project
     message(Shared CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -205,19 +188,13 @@ endif() #NOT MSVC
 find_package(OpenGL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
-find_package(fmt CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)
 target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
 target_link_libraries(${PROJECT_NAME} PRIVATE cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
-find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 
 #Shipped libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 )
 target_link_libraries(${PROJECT_NAME} PUBLIC sdl_savepng)
 target_link_libraries(${PROJECT_NAME} PUBLIC nativefiledialog-extended-molflow-wrapped)
-target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 
