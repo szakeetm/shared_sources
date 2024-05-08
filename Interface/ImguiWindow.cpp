@@ -269,13 +269,13 @@ void ImguiWindow::destruct() {
     // Cleanup
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
-#ifdef DEBUG
-    //testEngine.StopEngine();
+#ifdef ENABLE_IMGUI_TESTS
+    testEngine.StopEngine();
 #endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
-#ifdef DEBUG
-    //testEngine.DestroyContext();
+#ifdef ENABLE_IMGUI_TESTS
+    testEngine.DestroyContext();
 #endif
 }
 
@@ -387,13 +387,11 @@ void ImguiWindow::renderSingle() {
             if (ImGui::Checkbox("Geometry Viewer", &geomViewVisible)) {
                 geoView.SetVisible(geomViewVisible);
             }
-#ifdef DEBUG
-            /*
+#ifdef ENABLE_IMGUI_TESTS
             bool testEngineVis = testEngine.IsVisible();
             if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
                 testEngine.SetVisible(testEngineVis);
             }
-            */
 #endif
 
             static int response;
@@ -439,8 +437,8 @@ void ImguiWindow::renderSingle() {
                         ImGui::GetTime(), difftime(static_cast<time_t>(now_time), static_cast<time_t>(start_time)));
             ImGui::End();
         }
-#ifdef DEBUG
-        //testEngine.Draw();
+#ifdef ENABLE_IMGUI_TESTS
+        testEngine.Draw();
 #endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
