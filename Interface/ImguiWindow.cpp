@@ -1,13 +1,9 @@
 
-
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
-#include <imgui/imgui_internal.h>
+#include <imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -17,15 +13,15 @@
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-#include "imgui/imgui_impl_opengl2.h"
-#include "imgui/imgui_impl_sdl2.h"
+#include "imgui_impl_opengl2.h"
+#include "imgui_impl_sdl2.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 
-#include <imgui/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsFontAwesome5.h>
 #include <future>
-#include <implot/implot.h>
+#include <implot.h>
 #include <Helper/FormatHelper.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 
@@ -58,12 +54,15 @@ void ImguiWindow::ShowWindowLicense() {
 Authors:     Roberto KERSEVAN / Marton ADY / Tymoteusz MROCZKOWSKI / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
+License:    GNU GPL v3
 
 License summary: 
 This program is free software, but we do not warrant that
-it's free of bugs or that its results are valid.
+it's free of bugs or that its results are valid. Any derivative work must
+also be released as GNU GPL v3 (open-source)
 
-Full license text: https://molflow.docs.cern.ch/about/
+Full license info: https://molflow.docs.cern.ch/about/
+Full license text: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Open-source libraries used:
 - SDL2 (https://www.libsdl.org/)
@@ -97,7 +96,7 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     testEngine.Init(mApp);
 #endif
 
@@ -184,25 +183,25 @@ void ImguiWindow::init() {
     show_perfo = false;
     show_window_license = false;
 
+    // general
     popup = ImIOWrappers::ImPopup();
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
     progress.Init(mApp);
+    sideBar = ImGuiSidebar();
+    shortcutMan = ShortcutManager();
+    // selection
     smartSelect = ImSmartSelection();
     smartSelect.Init(mApp);
     selByNum = ImSelectDialog();
     selByNum.Init(mApp);
     selByTex = ImSelectTextureType();
     selByTex.Init(mApp);
-    facetMov = ImFacetMove();
-    facetMov.Init(mApp, mApp->worker.GetGeometry());
     globalSet = ImGlobalSettings();
     globalSet.Init(mApp);
     selFacetByResult = ImSelectFacetByResult();
     selFacetByResult.Init(mApp);
-
-    shortcutMan = ShortcutManager();
-    sideBar = ImGuiSidebar();
+    //tools
     formulaEdit = ImFormulaEditor();
     formulaEdit.Init(mApp, mApp->appFormulas);
     convPlot = ImConvergencePlotter();
@@ -215,9 +214,48 @@ void ImguiWindow::init() {
     histPlot.Init(mApp);
     textScale = ImTextureScaling();
     textScale.Init(mApp);
+    partLog = ImParticleLogger();
+    partLog.Init(mApp);
+    movPart = ImMovingParts();
+    movPart.Init(mApp);
+    measForce = ImMeasureForce();
+    measForce.Init(mApp);
+    // facet
+    facCoord = ImFacetCoordinates();
+    facCoord.Init(mApp);
+    facetMov = ImFacetMove();
+    facetMov.Init(mApp, mApp->worker.GetGeometry());
+    facScale = ImFacetScale();
+    facScale.Init(mApp);
+    mirrProjFacet = ImFacetMirrorProject();
+    mirrProjFacet.Init(mApp);
+    rotFacet = ImFacetRotate();
+    rotFacet.Init(mApp);
+    alignFacet = ImFacetAlign();
+    alignFacet.Init(mApp);
+    extrudeFacet = ImFacetExtrude();
+    extrudeFacet.Init(mApp);
+    createShape = ImCreateShape();
+    createShape.Init(mApp);
+    buildIntersect = ImBuildIntersect();
+    buildIntersect.Init(mApp);
+    collapseSettings = ImCollapse();
+    collapseSettings.Init(mApp);
+    outgassingMap = ImOutgassingMap();
+    outgassingMap.Init(mApp);
+
+    vertCoord = ImVertexCoordinates();
+    vertCoord.Init(mApp);
+    vertMov = ImVertexMove();
+    vertMov.Init(mApp);
 
     expFac = ImExplodeFacet();
     expFac.Init(mApp);
+    splitFac = ImFacetSplit();
+    splitFac.Init(mApp);
+
+    geoView = ImGeoViewer();
+    geoView.Init(mApp);
 
     RegisterShortcuts();
 
@@ -232,12 +270,12 @@ void ImguiWindow::destruct() {
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
 #ifdef DEBUG
-    testEngine.StopEngine();
+    //testEngine.StopEngine();
 #endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 #ifdef DEBUG
-    testEngine.DestroyContext();
+    //testEngine.DestroyContext();
 #endif
 }
 
@@ -345,11 +383,17 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox("Menu bar", &show_app_main_menu_bar);
             ImGui::Checkbox("Performance Plot", &show_perfo);
             ImGui::Checkbox("Demo window",&show_demo_window);
+            bool geomViewVisible = geoView.IsVisible();
+            if (ImGui::Checkbox("Geometry Viewer", &geomViewVisible)) {
+                geoView.SetVisible(geomViewVisible);
+            }
 #ifdef DEBUG
+            /*
             bool testEngineVis = testEngine.IsVisible();
             if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
                 testEngine.SetVisible(testEngineVis);
             }
+            */
 #endif
 
             static int response;
@@ -396,7 +440,7 @@ void ImguiWindow::renderSingle() {
             ImGui::End();
         }
 #ifdef DEBUG
-        testEngine.Draw();
+        //testEngine.Draw();
 #endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {
@@ -423,8 +467,27 @@ void ImguiWindow::renderSingle() {
         profPlot.Draw();
         histPlot.Draw();
         textScale.Draw();
+        partLog.Draw();
+        movPart.Draw();
+        measForce.Draw();
+        facCoord.Draw();
+        facScale.Draw();
+        mirrProjFacet.Draw();
+        rotFacet.Draw();
+        alignFacet.Draw();
+        extrudeFacet.Draw();
+        splitFac.Draw();
+        createShape.Draw();
+        buildIntersect.Draw();
+        collapseSettings.Draw();
+        outgassingMap.Draw();
+
+        vertCoord.Draw();
+        vertMov.Draw();
 
         expFac.Draw();
+
+        geoView.Draw();
 
         shortcutMan.DoShortcuts();
 
@@ -453,6 +516,10 @@ void ImguiWindow::Refresh()
     histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
     convPlot.Reload();
+    movPart.Update();
+    facCoord.UpdateFromSelection();
+    vertCoord.UpdateFromSelection();
+    splitFac.Reset();
 }
 
 void ImguiWindow::Reset()
@@ -460,6 +527,17 @@ void ImguiWindow::Reset()
     histPlot.Reset();
     histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
+    profPlot.Refresh();
+    convPlot.Reload();
+    textScale.Load();
+    partLog.Reset();
+    splitFac.Reset();
+}
+
+void ImguiWindow::Clear()
+{
+    mirrProjFacet.Clear();
+    convPlot.Reload();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)

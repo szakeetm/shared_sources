@@ -1,10 +1,6 @@
 
-
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif
-#include "imgui/imgui.h"
-#include <imgui/imgui_internal.h>
+#include "imgui.h"
+#include <imgui_internal.h>
 #include <string>
 
 #include "ImguiExtensions.h"
@@ -73,7 +69,7 @@ namespace ImGui {
                         (font_size + ImGui::GetStyle().FramePadding.x * 2));
     }
 
-    bool InputDoubleRightSide(const char *desc, double *val, const char *format) {
+    bool InputDoubleRightSide(const char *desc, double *val, const char *format, const char* ID) {
         double tmp = *val;
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
@@ -81,7 +77,7 @@ namespace ImGui {
             // Move to right side
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
-            ImGui::PushID(desc);
+            ImGui::PushID(ID=="" ? desc : ID);
             ImGui::InputDouble("", val, 0.00f, 0.0f, format);
             ImGui::PopID();
             ImGui::PopItemWidth();
@@ -320,6 +316,15 @@ namespace ImGui {
         IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags | ImGuiItemStatusFlags_Checkable | (*v ? ImGuiItemStatusFlags_Checked : 0));
         return pressed;
     }
+    
+    bool InputTextLLabel(const std::string desc, std::string* text, ImGuiInputTextFlags flags, float width)
+    {
+        ImGui::AlignTextToFramePadding();
+        ImGui::Text(desc); ImGui::SameLine();
+        ImGui::SetNextItemWidth(width);
+        return (ImGui::InputText("##"+desc, text));
+    }
+    
     void HelpMarker(const std::string& text)
     {
         ImGui::TextDisabled("(?)");
@@ -331,6 +336,13 @@ namespace ImGui {
             ImGui::PopTextWrapPos();
             ImGui::EndTooltip();
         }
+    }
+    void TextWithMargin(const std::string& text, const float width)
+    {
+        float txtWidth = ImGui::CalcTextSize(text.c_str()).x;
+        ImGui::Text(text);
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(width - txtWidth, 0));
     }
 }
 namespace ImMath {

@@ -1,15 +1,16 @@
 #include "NativeFileDialog/molflow_wrapper/nfd_wrapper.h"
 #include "ImguiConvergencePlotter.h"
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
-#include "implot/implot.h"
-#include "implot/implot_internal.h"
+#include "implot.h"
+#include "implot_internal.h"
 #include "Buffer_shared.h"
 #include <functional>
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
 #include "ImguiPopup.h"
 #include "ImguiExtensions.h"
+#include "ImguiWindow.h"
 
 void ImConvergencePlotter::Init(Interface* mApp_) {
 	mApp = mApp_;
@@ -119,12 +120,15 @@ void ImConvergencePlotter::MenuBar()
 					mApp->appFormulas->removeFirstN(N, formulaId);
 				}
 			}
+			if (ImGui::MenuItem("Show formula editor")) {
+				mApp->imWnd->formulaEdit.Show();
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Custom Plot")) {
 			ImGui::SetNextItemWidth(txtW * 15);
 			ImGui::InputText("##expressionInput", &expression); ImGui::SameLine();
-			if (ImGui::Button("-> Plot expression")) {
+			if (ImGui::Button("-> Plot expression") || ImGui::IsKeyPressed(ImGuiKey_Enter)) {
 				drawManual = ImUtils::ParseExpression(expression, formula);
 				manualxValues.clear();
 				manualyValues.clear();
@@ -136,11 +140,6 @@ void ImConvergencePlotter::MenuBar()
 				if (step < 1e-4) step = 1e-4;
 			}
 			if (endX - startX < 0) ImGui::TextDisabled("Start X cannot be higer than End X");
-			else if (drawManual && ImGui::Button("Apply")) {
-				manualxValues.clear();
-				manualyValues.clear();
-				ImUtils::ComputeManualExpression(drawManual, formula, manualxValues, manualyValues, endX, startX, step);
-			}
 			if (abs(endX - startX) / step > 1e5) ImGui::TextColored(ImVec4(1, 0, 0, 1), fmt::format("Warning! Number of datapoints\nwill exceed {}!", 1e5).c_str());
 			ImGui::EndMenu();
 		}
@@ -155,7 +154,6 @@ void ImConvergencePlotter::MenuBar()
 }
 
 void ImConvergencePlotter::RemovePlot(int idx) {
-	if (selectedFormula == idx) selectedFormula = -1;
 	for (int i = 0; i < data.size(); i++) if (data[i].id == idx)
 	{
 		data.erase(data.begin() + i);
@@ -163,10 +161,26 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 	}
 }
 
+void ImConvergencePlotter::OnShow()
+{
+	Refresh();
+}
+
+// Clear Data abd resize vectors
 void ImConvergencePlotter::Reload()
 {
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
 	data.clear();
-	selectedFormula = -1;
+	UpdateSidebarMasterToggle();
+}
+
+// Check for changes in number and order of formulas
+void ImConvergencePlotter::Refresh()
+{
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
+	UpdateSidebarMasterToggle();
 }
 
 void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -174,7 +188,7 @@ void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plott
 	data.clear();
 	logY = log;
 	for (int id : plotted) {
-		id += 494667622;
+		id += 494667622; // offset from unsigned to signed
 		if (IsPlotted(id)) continue;
 		if (id >= 0 && id < mApp->appFormulas->formulas.size()) {
 			if (mApp->appFormulas->formulas[id].hasEvalError) continue;
@@ -183,6 +197,7 @@ void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plott
 			}
 		}
 	}
+	UpdateSidebarMasterToggle();
 }
 
 //pass the first ID value which should be changed
@@ -198,66 +213,31 @@ void ImConvergencePlotter::Draw()
 	if (!drawn) return;
 	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(30*txtW, 40*txtW), ImGuiCond_FirstUseEver);
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 82, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Convergence Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	
 	MenuBar();
+
+	ImGui::BeginChild("Sidebar", ImVec2(txtW*20, ImGui::GetContentRegionAvail().y), true);
+	if(ImGui::TriState("All", &aggregateState, mixedState)) {
+		ApplyAggregateState();
+	} ImGui::SameLine();
+	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * 3;
+	ImGui::Dummy(ImVec2(dummyWidth,0));
+	ImGui::SameLine();
+	ImGui::HelpMarker("Right-click plot or axis to adjust fiting\nScroll to zoom (with auto-fit off)\nHold and drag to move (auto-fit must be off)\nHold right and drag for box select (auto-fit must be off)\nToggle logarithmic Y axis in View menu");
+	ImGui::Separator();
+	for (int i = 0; i < nFormulas; i++) {
+		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
+		if (ImGui::Checkbox(fName.c_str(), (bool*)&(formulaDrawToggle[i]))) {
+			if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
+			else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+			UpdateSidebarMasterToggle();
+		}
+	}
+	ImGui::EndChild();
+	ImGui::SameLine();
 	DrawConvergenceGraph();
-
-	ImGui::SetNextItemWidth(txtW*30);
-	
-	size_t nFormulas = mApp->appFormulas->formulas.size();
-
-	if (nFormulas == 0) ImGui::BeginDisabled();
-	if (ImGui::BeginCombo("##Formula Picker",
-			nFormulas==0 ? "No formula found" :
-		selectedFormula==-1 || selectedFormula>=nFormulas ? "Choose Formula" :
-		("[" + mApp->appFormulas->formulas[selectedFormula].GetName() + "]" + mApp->appFormulas->formulas[selectedFormula].GetExpression()).c_str())) {
-		for (int i = 0; i < nFormulas; i++) {
-			if (ImGui::Selectable(("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression()).c_str(),
-				i == selectedFormula)) {
-				selectedFormula = i;
-			}
-		}
-		ImGui::EndCombo();
-	}
-	if (nFormulas == 0) ImGui::EndDisabled();
-	
-	ImGui::SameLine();
-	dummyWidth = ImGui::GetContentRegionAvail().x - txtW * (33.5f+3.f);
-	ImGui::Dummy(ImVec2(dummyWidth, txtH)); ImGui::SameLine();
-
-	if (ImGui::Button("Add curve")) {
-		if (IsPlotted(selectedFormula)) {
-			ImIOWrappers::InfoPopup("Info", "Profile already plotted");
-		}
-		else if (selectedFormula != -1) {
-			if (mApp->appFormulas->formulas[selectedFormula].hasEvalError) {
-				ImIOWrappers::InfoPopup("Error", fmt::format("Formula can't be evaluated:\n{}", mApp->appFormulas->formulas[selectedFormula].GetEvalErrorMsg()));
-			}
-			else data.push_back(ImUtils::MakePlotData(selectedFormula));
-		}
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove curve")) {
-		if (IsPlotted(selectedFormula)) {
-			for (int i=0;i<data.size();i++) if (data[i].id==selectedFormula)
-			{
-				data.erase(data.begin() + i);
-				break;
-			}
-		}
-		else ImIOWrappers::InfoPopup("Error", "Profile not plotted");
-	} ImGui::SameLine();
-	if (ImGui::Button("Remove all")) 
-	{
-		data.clear();
-		drawManual = false;
-		manualxValues.clear();
-		manualyValues.clear();
-	}
-	ImGui::SameLine();
-	ImGui::HelpMarker("Right-click plot to adjust fiting, Scaling etc.\nScroll to zoom\nHold and drag to move (auto-fit must be disabled first)\nHold right and drag for box select (auto-fit must be disabled first)");
-
 	ImGui::End();
 }
 
@@ -312,4 +292,34 @@ bool ImConvergencePlotter::IsPlotted(size_t idx)
 		if (idx == formula.id) return true;
 	}
 	return false;
+}
+
+void ImConvergencePlotter::UpdateSidebarMasterToggle()
+{
+	mixedState = false;
+	if (nFormulas == 0) {
+		aggregateState = 0;
+		return;
+	}
+	formulaDrawToggle.resize(nFormulas, false);
+	aggregateState = formulaDrawToggle[0];
+	for (int i = 1; i < nFormulas; i++) {
+		if (aggregateState != formulaDrawToggle[i]) {
+			aggregateState = 2;
+			mixedState = true;
+			return;
+		}
+	}
+}
+
+void ImConvergencePlotter::ApplyAggregateState()
+{
+	nFormulas = mApp->appFormulas->formulas.size();
+	formulaDrawToggle.resize(nFormulas, false);
+	mixedState = false;
+	for (int i = 0; i < nFormulas; i++) {
+		formulaDrawToggle[i] = aggregateState;
+		if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
+		else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+	}
 }

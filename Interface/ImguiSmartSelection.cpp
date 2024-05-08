@@ -1,7 +1,4 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS#include "ImguiSmartSelection.h"
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "ImguiExtensions.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "Helper/StringHelper.h"

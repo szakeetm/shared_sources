@@ -1,5 +1,5 @@
 #include "ImguiFacetMove.h"
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
 #include "Geometry_shared.h"
@@ -57,7 +57,7 @@ void ImFacetMove::Draw()
         }
 
         {
-            ImGui::Text("         Distance"); ImGui::SameLine();
+            ImGui::Text("     Distance"); ImGui::SameLine();
             ImGui::SetNextItemWidth(23 * txtW);
             ImGui::InputText("cm##D", &distance);
         }

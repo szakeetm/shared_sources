@@ -1,11 +1,9 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
+
+#include "imgui.h"
 #include "ImguiWindowBase.h"
-#include "imgui/imgui.h"
 //#include "imgui_internal.h"
 #include "imgui_stdlib/imgui_stdlib.h"
-#include "implot/implot.h"
+#include "implot.h"
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
 
@@ -22,16 +20,17 @@ void ImWindow::Init(Interface* mApp_)
 
 void ImWindow::Show()
 {
+	OnShow();
 	drawn = true;
 	if (txtW == 0 || txtH == 0) {
 		txtW = ImGui::CalcTextSize("0").x;
 		txtH = ImGui::GetTextLineHeightWithSpacing();
 	}
-	OnShow();
 }
 
 void ImWindow::Hide()
 {
+	OnHide();
 	drawn = false;
 }
 
@@ -47,11 +46,15 @@ const bool ImWindow::IsVisible() {
 
 void ImWindow::SetVisible(bool value)
 {
-	if (value) OnShow();
-	drawn = value;
+	if (value) Show();
+	else Hide();
 }
 
 void ImWindow::OnShow()
+{
+}
+
+void ImWindow::OnHide()
 {
 }
 

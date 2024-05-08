@@ -3,13 +3,14 @@
 #include "Interface.h"
 #include <string>
 #include <memory>
-#include "imgui/imgui.h"
+#include "imgui.h"
 
 class ImFormulaEditor : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_, std::shared_ptr<Formulas> formulas_);
 protected:
+	void OnShow() override;
 	void DrawFormulaList();
 	Interface* mApp=0;
 	std::shared_ptr<Formulas> appFormulas;

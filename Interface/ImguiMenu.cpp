@@ -1,9 +1,9 @@
 
 
 #include "ImguiMenu.h"
-#include "imgui/imgui.h"
-#include <imgui/IconsFontAwesome5.h>
-#include <imgui/IconsMaterialDesign.h>
+#include "imgui.h"
+#include <imgui_fonts/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsMaterialDesign.h>
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
@@ -637,14 +637,15 @@ void TextureScalingMenuPress() {
     }*/
 }
 void ParticleLoggerMenuPress() {
-    if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {
+    mApp->imWnd->partLog.Show();
+    /*if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {
         SAFE_DELETE(mApp->particleLogger);
         
         mApp->particleLogger = new ParticleLogger(interfGeom, &mApp->worker);
     }
     LockWrapper lockWrapper(mApp->imguiRenderLock);
     mApp->particleLogger->UpdateStatus();
-    mApp->particleLogger->SetVisible(true);
+    mApp->particleLogger->SetVisible(true);*/
 }
 
 void TakeScreenshotMenuPress() {
@@ -689,16 +690,19 @@ void TakeScreenshotMenuPress() {
 
 #ifdef MOLFLOW //TODO replace with polimorphism
 void MovingPartsMenuPress() {
-    
+    mApp->imWnd->movPart.Show();
+    /*
     if (!mApp->movement) mApp->movement = new Movement(interfGeom, &mApp->worker);
     mApp->movement->Update();
-    mApp->movement->SetVisible(true);
+    mApp->movement->SetVisible(true);*/
 }
 void MeasureForcesMenuPress() {
-    
+    mApp->imWnd->measForce.Show();
+    /*
     if (!mApp->measureForces) mApp->measureForces = new MeasureForce(interfGeom, &mApp->worker);
     mApp->measureForces->Update();
     mApp->measureForces->SetVisible(true);
+    */
 }
 #endif //MOLFLOW
 
@@ -786,6 +790,7 @@ void SwapNormalMenuPress() {
     }
 }
 void ShiftIndicesMenuPress() {
+    mApp->imWnd->facCoord.UpdateFromSelection();
     LockWrapper myLock(mApp->imguiRenderLock);
     
     if (mApp->AskToReset()) {
@@ -795,18 +800,23 @@ void ShiftIndicesMenuPress() {
     }
 }
 void FacetCoordinatesMenuPress() {
+    mApp->imWnd->facCoord.Show();
+    /*
     if (!mApp->facetCoordinates) mApp->facetCoordinates = new FacetCoordinates();
     mApp->facetCoordinates->Display(&mApp->worker);
     mApp->facetCoordinates->SetVisible(true);
+    */
 }
 
 void FacetScaleMenuPress() {
-    
     if (interfGeom->IsLoaded()) {
+        mApp->imWnd->facScale.Show();
+        /*
         if (!mApp->scaleFacet) mApp->scaleFacet = new ScaleFacet(interfGeom, &mApp->worker);
 
         mApp->scaleFacet->SetVisible(true);
 
+    */
     }
     else {
         mApp->imWnd->popup.Open("No Geometry", "", {
@@ -815,47 +825,59 @@ void FacetScaleMenuPress() {
     }
 }
 void FacetMirrorProjectMenuPress() {
-    
+    mApp->imWnd->mirrProjFacet.Show();
+    /*
     if (!mApp->mirrorFacet) mApp->mirrorFacet = new MirrorFacet(interfGeom, &mApp->worker);
     mApp->mirrorFacet->SetVisible(true);
+    */
 }
 void FacetRotateMenuPress() {
-    
+    mApp->imWnd->rotFacet.Show();
+    /*
     if (!mApp->rotateFacet) mApp->rotateFacet = new RotateFacet(interfGeom, &mApp->worker);
     mApp->rotateFacet->SetVisible(true);
+    */
 }
 void AlignToMenuPress() {
-    
+    mApp->imWnd->alignFacet.Show();
+    /*
     if (!mApp->alignFacet) mApp->alignFacet = new AlignFacet(interfGeom, &mApp->worker);
     mApp->alignFacet->MemorizeSelection();
     mApp->alignFacet->SetVisible(true);
+    */
 }
 void ExtrudeMenuPress() {
-    
+    mApp->imWnd->extrudeFacet.Show();
+    /*
     if (!mApp->extrudeFacet || !mApp->extrudeFacet->IsVisible()) {
         SAFE_DELETE(mApp->extrudeFacet);
         mApp->extrudeFacet = new ExtrudeFacet(interfGeom, &mApp->worker);
     }
     mApp->extrudeFacet->SetVisible(true);
+    */
 }
 void SplitMenuPress() {
-    
+    mApp->imWnd->splitFac.Show();
+    /*
     if (!mApp->splitFacet || !mApp->splitFacet->IsVisible()) {
         SAFE_DELETE(mApp->splitFacet);
         mApp->splitFacet = new SplitFacet(interfGeom, &mApp->worker);
         mApp->splitFacet->SetVisible(true);
     }
+    */
 }
 void CreateShapeMenuPress() {
-    
+    mApp->imWnd->createShape.Show();
+    /*
     if (!mApp->createShape) mApp->createShape = new CreateShape(interfGeom, &mApp->worker);
     mApp->createShape->SetVisible(true);
+    */
 }
 
 void TransitionBetween2MenuPress() {
     
     if (interfGeom->GetNbSelectedFacets() != 2) {
-        mApp->imWnd->popup.Open("Select Exactly 2 facets", "", {
+        mApp->imWnd->popup.Open("Error", "Select Exactly 2 facets", {
             std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter)
             });
         return;
@@ -870,19 +892,21 @@ void TransitionBetween2MenuPress() {
     mApp->UpdateViewers();
 }
 void BuildIntersectionMenuPress() {
-    
+    mApp->imWnd->buildIntersect.Show();
+    /*
     if (!mApp->buildIntersection || !mApp->buildIntersection->IsVisible()) {
         SAFE_DELETE(mApp->buildIntersection);
         mApp->buildIntersection = new BuildIntersection(interfGeom, &mApp->worker);
         mApp->buildIntersection->SetVisible(true);
     }
+    */
 }
 void CollapseMenuPress() {
-    
     if (interfGeom->IsLoaded()) {
-        mApp->DisplayCollapseDialog();
+        mApp->imWnd->collapseSettings.Show();
+        //mApp->DisplayCollapseDialog();
     }
-    else mApp->imWnd->popup.Open("No Geometry", "", {
+    else mApp->imWnd->popup.Open("Error", "No Geometry", {
         std::make_shared<ImIOWrappers::ImButtonInt>("Ok", ImIOWrappers::buttonOk, ImGuiKey_Enter)
         });
 }
@@ -906,7 +930,7 @@ void TriangulateMenuPress() {
     auto selectedFacets = interfGeom->GetSelectedFacets();
     if (selectedFacets.empty()) return;
     auto Y = []() -> void {
-        //LockWrapper myLock(mApp->imguiRenderLock);
+        LockWrapper myLock(mApp->imguiRenderLock);
         if (mApp->AskToReset()) {
 
             auto selectedFacets = interfGeom->GetSelectedFacets();
@@ -926,8 +950,11 @@ void TriangulateMenuPress() {
 
 #ifdef MOLFLOW // TODO switch to polimorphism
 void ConvertToOutgassingMapMenuPress() {
+    mApp->imWnd->outgassingMap.Show();
+    /*
     if (!mApp->outgassingMapWindow) mApp->outgassingMapWindow = new OutgassingMapWindow();
     mApp->outgassingMapWindow->Display(&mApp->worker);
+    */
 }
 #endif
 
@@ -950,7 +977,7 @@ static void ShowMenuFacet() {
     if (ImGui::MenuItem("Scale ...")) {
         FacetScaleMenuPress();
     }
-    if (ImGui::MenuItem("Mirror / Project ...")) {
+    if (ImGui::MenuItem("Mirror / Project ...###MPF")) {
         FacetMirrorProjectMenuPress();
     }
     if (ImGui::MenuItem("Rotate ...")) {
@@ -1028,26 +1055,12 @@ static void ShowMenuFacet() {
 
 void ConvexHullMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
-    if (interfGeom->IsLoaded()) {
-        if (interfGeom->GetNbSelectedVertex() != 3) {
-            mApp->imWnd->popup.Open("Error", "Select exactly 3 vertices", {
-                std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
-                });
-            return;
-        }
-    }
-    else {
-        mApp->imWnd->popup.Open("Error", "No geometry loaded", {
-            std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
-            });
-    }
-
     if (mApp->AskToReset()) {
         try {
             interfGeom->CreatePolyFromVertices_Convex();
         }
-        catch (const std::exception& ) {
-            mApp->imWnd->popup.Open("Error", "Error creating polygon", {
+        catch (const std::exception& e) {
+            mApp->imWnd->popup.Open("Error creating polygon", e.what(), {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
                 });
         }
@@ -1060,8 +1073,8 @@ void SelectionOrderMenuPress() {
         try {
             interfGeom->CreatePolyFromVertices_Order();
         }
-        catch (const std::exception&) {
-            mApp->imWnd->popup.Open("Error", "Error creating polygon", {
+        catch (const std::exception& e) {
+            mApp->imWnd->popup.Open("Error creating polygon", e.what(), {
                 std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter)
                 });
         }
@@ -1111,12 +1124,16 @@ void RemoveSelectedMenuPress() {
     }
 }
 void VertexCoordinatesMenuPress() {
+    mApp->imWnd->vertCoord.Show();
+    /*
     if (!mApp->vertexCoordinates) mApp->vertexCoordinates = new VertexCoordinates();
     mApp->vertexCoordinates->Display(&mApp->worker);
     mApp->vertexCoordinates->SetVisible(true);
+    */
 }
 void VertexMoveMenuPress() {
-    
+    mApp->imWnd->vertMov.Show();
+    /*
     if (interfGeom->IsLoaded()) {
         if (!mApp->moveVertex) mApp->moveVertex = new MoveVertex(interfGeom, &mApp->worker);
         mApp->moveVertex->SetVisible(true);
@@ -1126,6 +1143,7 @@ void VertexMoveMenuPress() {
             std::make_shared<ImIOWrappers::ImButtonInt>("OK", ImIOWrappers::buttonOk, ImGuiKey_Enter) 
             });
     }
+    */
 }
 void VertexScaleMenuPress() {
     
@@ -1427,7 +1445,7 @@ static void ShowMenuTest() {
     if (ImGui::MenuItem("ImGui Test Suite")) {
         mApp->imWnd->ToggleMainHub();
     }
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     if (ImGui::MenuItem("ImGui Test Engine")) {
         mApp->imWnd->testEngine.Show();
     }

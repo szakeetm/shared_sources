@@ -3,10 +3,8 @@
 #include <vector>
 #include "../GLApp/GLFormula.h"
 #include "Geometry_shared.h"
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS#include "imgui.h"
-#include "imgui/imgui_internal.h"
+#include "imgui.h"
+#include "imgui_internal.h"
 #include <memory>
 
 class Interface;
@@ -22,6 +20,7 @@ public:
 	void SetVisible(bool value);
 protected:
 	virtual void OnShow();
+	virtual void OnHide();
 	bool drawn = false;
 	float txtW=0, txtH=0;
 	Interface* mApp=nullptr;
