@@ -7,31 +7,15 @@ cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 set(PROJECT_NAME truncated_normal)
 
 # Folders files
-set(CPP_DIR_1 src)
-set(HEADER_DIR_1 include)
-
-############## CMake Project ################
-#        The main options of project        #
-#############################################
+set(CPP_DIR_TN src)
+set(HEADER_DIR_TN include)
 
 project(${PROJECT_NAME} CXX)
-
-################# Flags ################
-# Defines Flags for Windows and Linux. #
-########################################
-if(MSVC)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-else()
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-endif()
-
-################ Files ################
-#   --   Add files to project.   --   #
-#######################################
+set(CMAKE_CXX_STANDARD 17)
 
 # Source Files
 file(GLOB SRC_FILES
-		${CPP_DIR_1}/truncated_normal.cpp
+		${CPP_DIR_TN}/truncated_normal.cpp
     )
 
 # Add library to build.
@@ -40,5 +24,5 @@ add_library(${PROJECT_NAME} STATIC
         )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        ${HEADER_DIR_1}
+        ${HEADER_DIR_TN}
         )

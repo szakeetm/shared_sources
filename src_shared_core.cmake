@@ -15,14 +15,13 @@ add_library(${PROJECT_NAME} STATIC
          )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
-        ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
-        ${HEADER_DIR_3}
-        ${HEADER_DIR_4}
-        ${HEADER_DIR_5}
-        ${HEADER_DIR_7}
+        .
+        ${GLAPP_DIR}
+        ${GLCHART_DIR}
+        ${HEADER_DIR_SRC_SHARED}
+        ${INTERFACE_DIR}
         ${HEADER_DIR_EXTERNAL}
-        )
+)
 
 include(SetOpenMP.cmake)  #Help macOS find OpenMP
 find_package(OpenMP REQUIRED)

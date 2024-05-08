@@ -15,12 +15,10 @@ add_library(${PROJECT_NAME} STATIC
          )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
-        ${HEADER_DIR_3}
-        ${HEADER_DIR_4}
-        ${HEADER_DIR_5}
-        ${HEADER_DIR_7}
+        .
+        ${GLAPP_DIR}
+        ${GLCHART_DIR}
+        ${INTERFACE_DIR}
         ${IMGUI_DIR}
         ${IMPLOT_DIR}
         ${HEADER_DIR_EXTERNAL}
