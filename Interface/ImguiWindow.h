@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include "imgui.h"
 #include <GLApp/GLApp.h>

@@ -18,10 +18,10 @@ set(SRC_FILES_SAVEPNG
 add_library(${PROJECT_NAME} STATIC ${SRC_FILES_SAVEPNG})
 
 find_package(PNG REQUIRED)
-target_include_directories(${PROJECT_NAME} SYSTEM PRIVATE ${PNG_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${PNG_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE PNG::PNG)
 
 # Source Files
 target_include_directories(${PROJECT_NAME} PRIVATE
         ${HEADER_DIR_SAVEPNG}
+
         )
