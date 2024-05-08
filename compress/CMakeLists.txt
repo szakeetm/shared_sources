@@ -1,22 +1,9 @@
 cmake_minimum_required(VERSION 3.12.2 FATAL_ERROR)
 
-################### Variables. ####################
-# Change if you want modify path or other values. #
-###################################################
-
 set(PROJECT_NAME compress)
 
-# Folders files
-set(CPP_DIR_1 ../../src_shared/compress)
-set(CPP_DIR_2 ../../src_shared)
-set(HEADER_DIR_1 ../../src_shared)
-set(HEADER_DIR_2 ../../src_shared/external)
-
-############## CMake Project ################
-#        The main options of project        #
-#############################################
-
 project(${PROJECT_NAME} CXX)
+set(CMAKE_CXX_STANDARD 17)
 
 # Definition of Macros
 add_definitions(
@@ -24,38 +11,21 @@ add_definitions(
         -D_CRT_SECURE_NO_WARNINGS
 )
 
-################# Flags ################
-# Defines Flags for Windows and Linux. #
-########################################
-
-
-################ Files ################
-#   --   Add files to project.   --   #
-#######################################
-
-set(SRC_FILES ${CPP_DIR_1}/compress.cpp
-        ${CPP_DIR_2}/File.cpp
-        )
-
+set(SRC_FILES_COMPRESS
+        compress.cpp
+        ${CPP_DIR_SRC_SHARED}/File.cpp
+)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_EXECUTABLE_OUTPUT_DIRECTORY}) #to build executable in main folder
 
 # Add executable to build.
 add_executable(${PROJECT_NAME}
-        ${SRC_FILES}
+        ${SRC_FILES_COMPRESS}
         )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-        ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
+        ${HEADER_DIR_SRC_SHARED}
         )
 
-target_link_directories(${PROJECT_NAME} PRIVATE
-        ${HEADER_DIR_1}
-        ${HEADER_DIR_2}
-        )
-
-target_link_libraries(${PROJECT_NAME} PUBLIC fmtlib_src) # header include
-target_link_libraries(${PROJECT_NAME} PUBLIC fmt)
-
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+find_package(fmt CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt)

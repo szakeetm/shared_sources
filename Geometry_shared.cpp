@@ -673,12 +673,15 @@ void InterfaceGeometry::SelectCoplanar(int width, int height, double tolerance, 
 				if (distance < tolerance) { //vertex is on the plane
 					vertices3[i].selected = true;
 				}
-				else {
+				else { //not in plane
 					vertices3[i].selected = false;
 				}
 			}
+			else { //not on screen
+				vertices3[i].selected = false;
+			}
 		}
-		else {
+		else { //behind camera
 			vertices3[i].selected = false;
 		}
 	}

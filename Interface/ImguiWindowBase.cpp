@@ -1,11 +1,9 @@
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "ImguiWindowBase.h"
+
 #include "imgui.h"
+#include "ImguiWindowBase.h"
 //#include "imgui_internal.h"
 #include "imgui_stdlib/imgui_stdlib.h"
-#include "implot/implot.h"
+#include "implot.h"
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
 

@@ -1,13 +1,9 @@
 
-
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-#define IMGUI_DEFINE_MATH_OPERATORS
-#endif // IMGUI_DEFINE_MATH_OPERATORS
-#include "imgui/imgui.h"
+#include "imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 #include "ImguiMenu.h"
-#include <imgui/imgui_internal.h>
+#include <imgui_internal.h>
 
 #if defined(MOLFLOW)
 #include "../../src/MolflowGeometry.h"
@@ -17,15 +13,15 @@
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-#include "imgui/imgui_impl_opengl2.h"
-#include "imgui/imgui_impl_sdl2.h"
+#include "imgui_impl_opengl2.h"
+#include "imgui_impl_sdl2.h"
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
 
-#include <imgui/IconsFontAwesome5.h>
+#include <imgui_fonts/IconsFontAwesome5.h>
 #include <future>
-#include <implot/implot.h>
+#include <implot.h>
 #include <Helper/FormatHelper.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 
@@ -55,15 +51,18 @@ void ImguiWindow::ShowWindowLicense() {
         std::ostringstream aboutText;
         aboutText << "Program:    " << appName << " " << appVersionName << " (" << appVersionId << ")";
                     aboutText << R"(
-Authors:     Roberto KERSEVAN / Marton ADY / Pascal BAEHR / Jean-Luc PONS
+Authors:     Roberto KERSEVAN / Marton ADY / Tymoteusz MROCZKOWSKI / Jean-Luc PONS
 Copyright:   CERN / E.S.R.F.   (2024)
 Website:    https://cern.ch/molflow
+License:    GNU GPL v3
 
 License summary: 
 This program is free software, but we do not warrant that
-it's free of bugs or that its results are valid.
+it's free of bugs or that its results are valid. Any derivative work must
+also be released as GNU GPL v3 (open-source)
 
-Full license text: https://molflow.docs.cern.ch/about/
+Full license info: https://molflow.docs.cern.ch/about/
+Full license text: https://www.gnu.org/licenses/gpl-3.0.en.html
 
 Open-source libraries used:
 - SDL2 (https://www.libsdl.org/)
@@ -97,7 +96,7 @@ void ImguiWindow::init() {
     ImPlot::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-#ifdef DEBUG
+#ifdef ENABLE_IMGUI_TESTS
     testEngine.Init(mApp);
 #endif
 
@@ -143,8 +142,8 @@ void ImguiWindow::init() {
     fontConfig.OversampleV = oversample;
     //fontConfig.RasterizerMultiply = 0;
     //io.Fonts->AddFontDefault(&fontConfig);
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
@@ -154,10 +153,13 @@ void ImguiWindow::init() {
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
     //icons_config.RasterizerMultiply = 0;
+    icons_config.OversampleH = oversample;
+    icons_config.OversampleV = oversample;
+    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
-    io.Fonts->AddFontFromFileTTF("DroidSans.ttf", 14.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
+    io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();
@@ -268,12 +270,12 @@ void ImguiWindow::destruct() {
     ImGui_ImplOpenGL2_Shutdown();
     ImGui_ImplSDL2_Shutdown();
 #ifdef DEBUG
-    testEngine.StopEngine();
+    //testEngine.StopEngine();
 #endif
     ImPlot::DestroyContext();
     ImGui::DestroyContext();
 #ifdef DEBUG
-    testEngine.DestroyContext();
+    //testEngine.DestroyContext();
 #endif
 }
 
@@ -386,10 +388,12 @@ void ImguiWindow::renderSingle() {
                 geoView.SetVisible(geomViewVisible);
             }
 #ifdef DEBUG
+            /*
             bool testEngineVis = testEngine.IsVisible();
             if (ImGui::Checkbox("Test Engine", &testEngineVis)) {
                 testEngine.SetVisible(testEngineVis);
             }
+            */
 #endif
 
             static int response;
@@ -436,7 +440,7 @@ void ImguiWindow::renderSingle() {
             ImGui::End();
         }
 #ifdef DEBUG
-        testEngine.Draw();
+        //testEngine.Draw();
 #endif
         // 3. Show window plotting the simulation performance
         if (show_perfo) {

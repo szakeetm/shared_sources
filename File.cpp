@@ -378,10 +378,10 @@ std::unique_ptr<FileReader> FileReader::ExtractFrom7zAndOpen(const std::string &
     sevenZipName += "7za.exe";
 #else //Linux, MacOS
     sevenZipName = "7za"; //so that Exist() check fails and we get an error message on the next command
-    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow
+    std::string possibleLocations[] = {"./7za", //use 7za binary shipped with Molflow (not anymore since 2.9.22)
                                        "/usr/bin/7za", //use p7zip installed system-wide
                                        "/usr/local/bin/7za", //use p7zip installed for user
-                                       "/opt/homebrew/bin/7za"}; //homebrew on M1 mac
+                                       "/opt/homebrew/bin/7za"}; //homebrew on arm mac
     for(auto& path : possibleLocations){
         if (FileUtils::Exist(path)) {
             sevenZipName = path;

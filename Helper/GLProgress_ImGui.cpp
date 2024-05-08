@@ -1,5 +1,5 @@
 #include "GLProgress_ImGui.h"
-#include "../imgui/imgui.h"
+#include "imgui.h"
 #include "ImguiWindow.h"
 
 #if defined(MOLFLOW)
