@@ -206,10 +206,8 @@ endif() #NOT MSVC
 
 #vcpkg or system-wide libraries
 find_package(OpenGL REQUIRED)
-find_package(PNG REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC PNG::PNG)
 target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
