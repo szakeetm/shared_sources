@@ -46,6 +46,8 @@ set(SIM_FILES
 
         ${SIMU_DIR}/Particle.cpp
         ${SIMU_DIR}/Physics.cpp
+        ${SIMU_DIR}/MolflowSimulation.cpp
+        ${SIMU_DIR}/SimulationMC.cpp
         
         ${CPP_DIR_SRC_SHARED}/SettingsIO.cpp
 
