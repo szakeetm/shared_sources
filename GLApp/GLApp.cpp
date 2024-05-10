@@ -443,8 +443,12 @@ void GLApplication::Run() {
   {
         
      //While there are events to handle
-      while (!quit && (SDL_PollEvent(&sdlEvent) || (imWnd && imWnd->forceDrawNextFrame)))
-     {
+      while (!quit && (SDL_PollEvent(&sdlEvent)
+#ifdef DEBUG
+          || (imWnd && imWnd->forceDrawNextFrame)
+#endif
+          ))
+      {
          bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
