@@ -33,7 +33,6 @@ void ImFacetCoordinates::Draw()
 		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
 		else {
 			Insert(selRow);
-			selRow--;
 		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove selected row")) {
@@ -204,6 +203,13 @@ void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selected
 void ImFacetCoordinates::UpdateFromSelection()
 {
 	UpdateFromSelection(interfGeom->GetSelectedFacets());
+}
+
+void ImFacetCoordinates::UpdateFromVertexSelection()
+{
+	std::vector<size_t> v = interfGeom->GetSelectedVertices();
+	if (v.size() == 0) return;
+	insertIdInput = fmt::format("{}", v[v.size() - 1] + 1);
 }
 
 bool ImFacetCoordinates::ValidateInputs(int idx)

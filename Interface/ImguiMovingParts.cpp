@@ -35,17 +35,17 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("vx");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##vx", &vxI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("vy");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##vy", &vyI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("vz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##vz", &vzI);
 
                 ImGui::EndTable();
@@ -67,17 +67,17 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("ax");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##ax", &axI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("ay");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##ay", &ayI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("az");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##az", &azI);
                 ImGui::TableSetColumnIndex(7);
                 if(ImGui::Button("Use selected vertex")) {
@@ -90,17 +90,17 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("rx");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##rx", &rxI);
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("ry");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##ry", &ryI);
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("rz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 ImGui::InputText("##rz", &rzI);
                 ImGui::TableSetColumnIndex(7);
                 if(ImGui::Button("Base to sel. vertex")) {
@@ -113,7 +113,7 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(1);
                 ImGui::Text("RPM");
                 ImGui::TableSetColumnIndex(2);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 if(ImGui::InputText("##rpm", &rpmI)) {
                     if(Util::getNumber(&rpm, rpmI)) {
                         deg = rpm*6;
@@ -125,7 +125,7 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text("deg/s");
                 ImGui::TableSetColumnIndex(4);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 if(ImGui::InputText("##deg", &degI)) {
                     if(Util::getNumber(&deg, degI)) {
                         rpm = deg/6;
@@ -137,7 +137,7 @@ void ImMovingParts::Draw() {
                 ImGui::TableSetColumnIndex(5);
                 ImGui::Text("Hz");
                 ImGui::TableSetColumnIndex(6);
-                ImGui::SetNextItemWidth(txtW*6);
+                ImGui::SetNextItemWidth(txtW*8);
                 if(ImGui::InputText("##Hz", &hzI)) {
                     if(Util::getNumber(&hz, hzI)) {
                         deg = hz*360;

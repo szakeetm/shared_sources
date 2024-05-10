@@ -8,6 +8,7 @@ public:
 	void OnShow() override;
 	void UpdateFromSelection(const std::vector<size_t>& selectedFacets);
 	void UpdateFromSelection();
+	void UpdateFromVertexSelection();
 protected:
 	void DrawTable();
 	void ApplyButtonPress();
