@@ -68,7 +68,18 @@ void ImParticleLogger::Draw()
 		}
 		ImGui::Text(statusLabel);
 		if (ImGui::Button("Copy to clipboard")) {
-			SDL_SetClipboardText(LogToText().c_str());
+			std::string text = LogToText();
+			std::function<void()> f = [text]() {
+				SDL_SetClipboardText(text.c_str());
+				};
+			if (sizeof(text[0])*text.size() > 50 * 1024 * 1024) {
+				mApp->imWnd->popup.Open("Large log size", fmt::format("Careful! You're putting {} to the clipboard.\nMaybe it's a better idea to save it as a file. Try anyway?", Util::formatSize(sizeof(text[0]) * text.size())),
+					{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", f, ImGuiKey_Enter, ImGuiKey_KeypadEnter),
+					  std::make_shared<ImIOWrappers::ImButtonInt>("Cancel", 0, ImGuiKey_Escape) });
+			}
+			else {
+				f();
+			}
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Export to CSV")) {
@@ -145,6 +156,11 @@ void ImParticleLogger::UpdateStatus()
 
 std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file)
 {
+	/* 
+	aborting not yet supported
+	might be possible in the future, after reworking the main ImGui Window manager (ImguiWindow class)
+	*/
+
 	bool directToFile = file != nullptr;
 	std::string out;
 
@@ -171,6 +187,7 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 	tmp.append("Flux_[photon/s]" + separator);
 	tmp.append("Power_[W]" + separator);
 #endif
+	tmp.append("\n");
 	if (directToFile) {
 		fprintf(file,tmp.c_str());
 	}
@@ -178,14 +195,23 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 		out.append(tmp);
 	}
 	tmp.clear();
-
+	/*
 	mApp->imWnd->progress.SetMessage("Assembling text");
 	mApp->imWnd->progress.SetTitle("Particle logger");
 	mApp->imWnd->progress.Show();
 	mApp->imWnd->progress.SetProgress(0.0);
+	*/
+	// using legacy progress bar, can be changed to the ImGui version after ImGui progress is properly implemented
+	LockWrapper lW(mApp->imguiRenderLock);
+	GLProgress_GUI prg = GLProgress_GUI("Assembling text", "Particle logger");
+	prg.SetVisible(true);
+
 	auto pLog = mApp->worker.GetLog()->pLog;
 	InterfaceFacet* f = mApp->worker.GetGeometry()->GetFacet(mApp->worker.model->otfParams.logFacetId);
 	for (size_t i = 0; i < pLog.size(); i++) {
+		
+		prg.SetProgress((double)i / (double)pLog.size());
+		
 		Vector3d hitPos = f->sh.O + pLog[i].facetHitPosition.u * f->sh.U + pLog[i].facetHitPosition.v * f->sh.V;
 		double u = sin(pLog[i].hitTheta) * cos(pLog[i].hitPhi);
 		double v = sin(pLog[i].hitTheta) * sin(pLog[i].hitPhi);
