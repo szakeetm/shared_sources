@@ -166,6 +166,7 @@ void ImFacetCoordinates::Insert(int pos)
 		ImIOWrappers::InfoPopup("Error", fmt::format("Invalid vertex id Vertex {} doesn't exist.", insertID));
 		return;
 	}
+	if (pos != table.size()) selRow = pos + 1;
 	line newLine;
 	newLine.vertexId = insertID-1;
 	newLine.coord = *(mApp->worker.GetGeometry()->GetVertex(newLine.vertexId));
@@ -173,7 +174,6 @@ void ImFacetCoordinates::Insert(int pos)
 	newLine.coordInput[1] = fmt::format("{:.10g}", newLine.coord.y);
 	newLine.coordInput[2] = fmt::format("{:.10g}", newLine.coord.z);
 	table.insert(table.begin() + pos, newLine);
-	selRow = pos;
 }
 
 void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selectedFacets)
