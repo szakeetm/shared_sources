@@ -11,7 +11,7 @@ void ImCreateShape::Draw()
 {
 	if (!drawn) return;
 
-	ImGui::SetNextWindowSize(ImVec2(txtW * 70, txtH * 24.5));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 90, txtH * 24.5));
 	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize);
 	if (ImGui::BeginTabBar("Shape selection")) {
 
@@ -44,22 +44,24 @@ void ImCreateShape::Draw()
 	ImGui::EndGroup();
 	ImGui::BeginChild("Position", ImVec2(0, txtH * 5.5), ImGuiChildFlags_Border);
 	ImGui::TextDisabled("Position");
+	
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2,2));
 
 	ImGui::AlignTextToFramePadding();
-	ImGui::TextWithMargin("Center:", txtW*12);
+	ImGui::TextWithMargin("Center:", txtW*13);
 	ImGui::SameLine();
 	ImGui::Text("X:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###centerXIn", &centerXIn);
 	ImGui::SameLine();
 	ImGui::Text("Y:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###centerYIn", &centerYIn); ImGui::SameLine();
 	ImGui::Text("Z:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###centerZIn", &centerZIn);
 	ImGui::SameLine();
 	if (ImGui::Button("Facet center")) { FacetCenterButtonPress(); }
@@ -69,50 +71,52 @@ void ImCreateShape::Draw()
 	ImGui::Text(centerRowMsg);
 
 	ImGui::AlignTextToFramePadding();
-	ImGui::TextWithMargin("Axis1 direction:", txtW*12);
+	ImGui::TextWithMargin("Axis1 direction:", txtW*13);
 	ImGui::SameLine();
 	ImGui::Text("X:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###axis1XIn", &axis1XIn);
 	ImGui::SameLine();
 	ImGui::Text("Y:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###axis1YIn", &axis1YIn); ImGui::SameLine();
 	ImGui::Text("Z:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###axis1ZIn", &axis1ZIn);
 	ImGui::SameLine();
 	if (ImGui::Button("Facet U")) { FacetUButtonPress(); }
 	ImGui::SameLine();
-	if (ImGui::Button("Center to vertex")) { CenterToVertAx1ButtonPress(); }
+	if (ImGui::Button("Center to vertex##AX")) { CenterToVertAx1ButtonPress(); }
 	ImGui::SameLine();
 	ImGui::Text(axisRowMsg);
 
 	ImGui::AlignTextToFramePadding();
-	ImGui::TextWithMargin("Normal direction:", txtW * 12);
+	ImGui::TextWithMargin("Normal direction:", txtW * 13);
 	ImGui::SameLine();
 	ImGui::Text("X:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###normalXIn", &normalXIn);
 	ImGui::SameLine();
 	ImGui::Text("Y:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###normalYIn", &normalYIn); ImGui::SameLine();
 	ImGui::Text("Z:");
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###normalZIn", &normalZIn);
 	ImGui::SameLine();
 	if (ImGui::Button("Facet N")) { FacetNButtonPress(); }
 	ImGui::SameLine();
-	if (ImGui::Button("Center to vertex")) { CenterToVertNormalButtonPress(); }
+	if (ImGui::Button("Center to vertex##N")) { CenterToVertNormalButtonPress(); }
 	ImGui::SameLine();
 	ImGui::Text(normalRowMsg);
+
+	ImGui::PopStyleVar();
 
 	ImGui::EndChild();
 	ImGui::BeginChild("Size", ImVec2(0, txtH * 4.5), ImGuiChildFlags_Border);
@@ -120,7 +124,7 @@ void ImCreateShape::Draw()
 
 	ImGui::TextWithMargin("Axis1 length:", txtW * 10);
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###axis1Len", &axis1LenIn);
 	ImGui::SameLine();
 	ImGui::TextWithMargin("cm", txtW * 3);
@@ -128,7 +132,7 @@ void ImCreateShape::Draw()
 		ImGui::SameLine();
 		ImGui::TextWithMargin("Racetrack top length:", txtW * 15);
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(txtW * 6);
+		ImGui::SetNextItemWidth(txtW * 10);
 		ImGui::InputText("###trackTopLenIn", &trackTopLenIn);
 		ImGui::SameLine();
 		ImGui::TextWithMargin("cm", txtW * 3);
@@ -138,7 +142,7 @@ void ImCreateShape::Draw()
 
 	ImGui::TextWithMargin("Axis2 length:", txtW * 10);
 	ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 10);
 	ImGui::InputText("###axis2Len", &axis2LenIn);
 	ImGui::SameLine();
 	ImGui::TextWithMargin("cm", txtW * 3);
@@ -146,7 +150,7 @@ void ImCreateShape::Draw()
 		ImGui::SameLine();
 		ImGui::TextWithMargin("Steps in arc:", txtW * 15);
 		ImGui::SameLine();
-		ImGui::SetNextItemWidth(txtW * 6);
+		ImGui::SetNextItemWidth(txtW * 10);
 		ImGui::InputText("###arcStepsIn", &arcStepsIn);
 	}
 	ImGui::EndChild();
@@ -176,9 +180,9 @@ void ImCreateShape::FacetCenterButtonPress()
 	centerY = facetCenter.y;
 	centerZ = facetCenter.z;
 
-	centerXIn = fmt::format("{}", centerX);
-	centerYIn = fmt::format("{}", centerY);
-	centerZIn = fmt::format("{}", centerZ);
+	centerXIn = fmt::format("{:.5g}", centerX);
+	centerYIn = fmt::format("{:.5g}", centerY);
+	centerZIn = fmt::format("{:.5g}", centerZ);
 
 	centerRowMsg = fmt::format("Center of facet {}", selFacets[0] + 1);
 }
@@ -196,9 +200,9 @@ void ImCreateShape::VertexButtonPress()
 	centerY = center.y;
 	centerZ = center.z;
 
-	centerXIn = fmt::format("{}", centerX);
-	centerYIn = fmt::format("{}", centerY);
-	centerZIn = fmt::format("{}", centerZ);
+	centerXIn = fmt::format("{:.5g}", centerX);
+	centerYIn = fmt::format("{:.5g}", centerY);
+	centerZIn = fmt::format("{:.5g}", centerZ);
 
 	centerRowMsg = fmt::format("Vertex {}", selVertices[0] + 1);
 }
@@ -216,9 +220,9 @@ void ImCreateShape::FacetUButtonPress()
 	axis1Y = facetU.y;
 	axis1Z = facetU.z;
 
-	axis1XIn = fmt::format("{}", axis1X);
-	axis1YIn = fmt::format("{}", axis1Y);
-	axis1ZIn = fmt::format("{}", axis1Z);
+	axis1XIn = fmt::format("{:.5g}", axis1X);
+	axis1YIn = fmt::format("{:.5g}", axis1Y);
+	axis1ZIn = fmt::format("{:.5g}", axis1Z);
 
 	axisRowMsg = fmt::format(u8"Facet {} u\u20D7", selFacets[0] + 1);
 }
@@ -248,9 +252,9 @@ void ImCreateShape::CenterToVertAx1ButtonPress()
 	axis1Y = vertexLocation.y - centerY;
 	axis1Z = vertexLocation.z - centerZ;
 
-	axis1XIn = fmt::format("{}", axis1X);
-	axis1YIn = fmt::format("{}", axis1Y);
-	axis1ZIn = fmt::format("{}", axis1Z);
+	axis1XIn = fmt::format("{:.5g}", axis1X);
+	axis1YIn = fmt::format("{:.5g}", axis1Y);
+	axis1ZIn = fmt::format("{:.5g}", axis1Z);
 
 	axisRowMsg = fmt::format("Center to vertex {}", selVertices[0] + 1);
 }
@@ -268,9 +272,9 @@ void ImCreateShape::FacetNButtonPress()
 	normalY = facetN.y;
 	normalZ = facetN.z;
 
-	normalXIn = fmt::format("{}", normalX);
-	normalYIn = fmt::format("{}", normalY);
-	normalZIn = fmt::format("{}", normalZ);
+	normalXIn = fmt::format("{:.5g}", normalX);
+	normalYIn = fmt::format("{:.5g}", normalY);
+	normalZIn = fmt::format("{:.5g}", normalZ);
 
 	normalRowMsg = fmt::format(u8"Facet {} normal", selFacets[0] + 1);
 }
@@ -300,9 +304,9 @@ void ImCreateShape::CenterToVertNormalButtonPress()
 	normalY = vertexLocation.y - centerY;
 	normalZ = vertexLocation.z - centerZ;
 
-	normalXIn = fmt::format("{}", normalX);
-	normalYIn = fmt::format("{}", normalY);
-	normalZIn = fmt::format("{}", normalZ);
+	normalXIn = fmt::format("{:.5g}", normalX);
+	normalYIn = fmt::format("{:.5g}", normalY);
+	normalZIn = fmt::format("{:.5g}", normalZ);
 
 	normalRowMsg = fmt::format("Center to vertex {}", selVertices[0] + 1);
 }
@@ -388,7 +392,15 @@ void ImCreateShape::ApplyButtonPress()
 		ImIOWrappers::InfoPopup("Error", "Invalid axis1 length");
 		return;
 	}
+	if (axis1Len <= 0.0) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis1 length");
+		return;
+	}
 	if (!Util::getNumber(&axis2Len, axis2LenIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid axis2 length");
+		return;
+	}
+	if (axis2Len <= 0.0) {
 		ImIOWrappers::InfoPopup("Error", "Invalid axis2 length");
 		return;
 	}

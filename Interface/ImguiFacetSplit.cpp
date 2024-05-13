@@ -70,6 +70,7 @@ void ImFacetSplit::Draw()
 			facetId = interfGeom->GetSelectedFacets()[0];
 			fIdIn = fmt::format("{}", facetId+1);
 		}
+		mode = Mode::facet;
 	}
 	if (ImGui::RadioButton("By 3 selected vertices", mode == Mode::vertices)) mode = Mode::vertices;
 	ImGui::EndChild();
@@ -144,7 +145,7 @@ void ImFacetSplit::SplitButtonPress()
 			ImIOWrappers::InfoPopup("Error", "Invalid number in facet ID");
 			return;
 		}
-		if (facetId > interfGeom->GetNbFacet()) {
+		if (facetId > interfGeom->GetNbFacet() || facetId < 1) {
 			ImIOWrappers::InfoPopup("Error", "No such facet");
 			return;
 		}
