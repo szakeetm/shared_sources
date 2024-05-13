@@ -42,7 +42,7 @@ private:
 	void SelectVertex(size_t idx, bool add = false);
 	void SelectVertex(std::vector<size_t> idxs, bool add = false);
 	void DeselectAll();
-	void DeselectAllVerticies();
+	void DeselectAllvertices();
 	void DeleteFacet(size_t idx);
 	class TextureType {
 	public:

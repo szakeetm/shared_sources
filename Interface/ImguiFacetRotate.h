@@ -5,7 +5,7 @@ public:
 	void Draw();
 protected:
 	enum Mode : int {
-		axisX, axisY, axisZ, facetU, facetV, facetN, verticies, equation, none
+		axisX, axisY, axisZ, facetU, facetV, facetN, vertices, equation, none
 	};
 	Mode mode = none;
 	int facetId;

@@ -11,7 +11,7 @@ protected:
 		none,
 		equation,
 		facet,
-		verticies
+		vertices
 	};
 	Mode mode = none;
 	std::string xIn, yIn, zIn, wIn, fIdIn;

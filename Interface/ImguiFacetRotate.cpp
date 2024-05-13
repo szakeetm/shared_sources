@@ -65,7 +65,7 @@ void ImFacetRotate::Draw()
 			}
 		}
 		ImGui::EndChild();
-		if (ImGui::RadioButton("Define by 2 verticies", mode == verticies)) mode = verticies;
+		if (ImGui::RadioButton("Define by 2 selected vertices", mode == vertices)) mode = vertices;
 		if (ImGui::RadioButton("Define by equation:", mode == equation)) mode = equation;
 		if (mode != equation) ImGui::BeginDisabled();
 		if (ImGui::BeginTable("###RSFADMEQ",8, ImGuiTableFlags_SizingFixedFit)) {
@@ -128,17 +128,17 @@ void ImFacetRotate::Draw()
 		if (mode != equation) ImGui::EndDisabled();
 	}
 	ImGui::EndChild();
-	if (ImGui::InputTextLLabel("Degrees:", &degIn, 0, txtW * 6)) {
+	if (ImGui::InputTextLLabel("Degrees:", &degIn, 0, txtW * 9)) {
 		if (Util::getNumber(&deg, degIn)) {
 			rad = deg/180.0*PI;
-			radIn = fmt::format("{}", rad);
+			radIn = fmt::format("{:.4g}", rad);
 		}
 	}
 	ImGui::SameLine();
-	if (ImGui::InputTextLLabel("Radians:", &radIn, 0, txtW * 6)) {
+	if (ImGui::InputTextLLabel("Radians:", &radIn, 0, txtW * 9)) {
 		if (Util::getNumber(&rad, radIn)) {
 			deg = rad / PI * 180.0;
-			degIn = fmt::format("{}", deg);
+			degIn = fmt::format("{:.4g}", deg);
 		}
 	}
 	if (mode == none) ImGui::BeginDisabled();
@@ -202,7 +202,7 @@ void ImFacetRotate::RotateFacetButtonPress(bool copy)
 		AXIS_P0 = interfGeom->GetFacet(facetId - 1)->sh.center;
 		AXIS_DIR = interfGeom->GetFacet(facetId - 1)->sh.N;
 		break;
-	case verticies:
+	case vertices:
 		if (interfGeom->GetNbSelectedVertex() != 2) {
 			ImIOWrappers::InfoPopup("Can't define axis", "Select exactly 2 vertices");
 			return;

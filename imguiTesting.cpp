@@ -253,10 +253,10 @@ void ImTest::DeselectAll()
         interfGeom->UnselectAll();
         };
     callQueue.push(f);
-    DeselectAllVerticies();
+    DeselectAllvertices();
 }
 
-void ImTest::DeselectAllVerticies()
+void ImTest::DeselectAllvertices()
 {
     std::function<void()> f = [this]() {
         interfGeom->UnselectAllVertex();
@@ -1226,7 +1226,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("/**/U vector");
         ctx->ItemClick("/**/V vector");
         ctx->ItemClick("/**/Normal vector");
-        ctx->ItemClick("/**/Define by 2 verticies");
+        ctx->ItemClick("/**/Define by 2 vertices");
         ctx->ItemClick("/**/Define by equation:");
         ctx->ItemClick("Rotate facet");
         ctx->ItemClick("//Nothing to rotate/  Ok  ");

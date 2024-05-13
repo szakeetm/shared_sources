@@ -71,7 +71,7 @@ void ImFacetSplit::Draw()
 			fIdIn = fmt::format("{}", facetId+1);
 		}
 	}
-	if (ImGui::RadioButton("By 3 selected verticies", mode == Mode::verticies)) mode = Mode::verticies;
+	if (ImGui::RadioButton("By 3 selected vertices", mode == Mode::vertices)) mode = Mode::vertices;
 	ImGui::EndChild();
 	if (ImGui::Button("Split")) {
 		SplitButtonPress();
@@ -151,9 +151,9 @@ void ImFacetSplit::SplitButtonPress()
 		P0 = *interfGeom->GetVertex(interfGeom->GetFacet(facetId - 1)->indices[0]);
 		N = interfGeom->GetFacet(facetId - 1)->sh.N;
 		break;
-	case verticies:
+	case vertices:
 		if (interfGeom->GetNbSelectedVertex() != 3) {
-			ImIOWrappers::InfoPopup("Error", "Select exactly 3 verticies");
+			ImIOWrappers::InfoPopup("Error", "Select exactly 3 vertices");
 			return;
 		}
 		{
