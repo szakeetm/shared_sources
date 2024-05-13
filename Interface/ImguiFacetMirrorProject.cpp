@@ -29,11 +29,13 @@ void ImFacetMirrorProject::Draw()
 	if (mode != planeOfFacet) ImGui::BeginDisabled();
 	ImGui::SetNextItemWidth(txtW * 6);
 	ImGui::InputText("###FPDMfacet", &facetIdInput); ImGui::SameLine();
+	if (mode != planeOfFacet) ImGui::EndDisabled();
 	if (ImGui::Button("<-Get selected")) {
 		if (interfGeom->GetNbSelectedFacets() != 1) {
-			ImIOWrappers::InfoPopup("Error", "Select exactly one vacet.");
+			ImIOWrappers::InfoPopup("Error", "Select exactly one facet.");
 		}
 		else {
+			mode = planeOfFacet;
 			for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
 				if (interfGeom->GetFacet(i)->selected) {
 					facetId = i;
@@ -43,7 +45,6 @@ void ImFacetMirrorProject::Draw()
 			facetIdInput = fmt::format("{}", facetId + 1);
 		}
 	}
-	if (mode != planeOfFacet) ImGui::EndDisabled();
 	if(ImGui::RadioButton("Define by 3 selected vertices", mode == byVerts)) mode = byVerts;
 	if(ImGui::RadioButton("Define by plane equation", mode == byEqation)) mode = byEqation;
 	if (mode != byEqation) ImGui::BeginDisabled();
