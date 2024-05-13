@@ -110,13 +110,13 @@ void ImFacetExtrude::Draw()
 	}
 
 	ImGui::Text("dX:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DX", &curveDXInput); ImGui::SameLine();
 	ImGui::Text("cm\tdY:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DY", &curveDYInput); ImGui::SameLine();
 	ImGui::Text("cm\tdZ:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DZ", &curveDZInput); ImGui::SameLine();
 	ImGui::Text("cm");
 
@@ -355,7 +355,6 @@ void ImFacetExtrude::PreProcessExtrude() {
 		mApp->imWnd->popup.Open("Warning", warning, { std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
 		return;
 	}
-	DoExtrude();
 }
 
 void ImFacetExtrude::DoExtrude()
@@ -404,16 +403,17 @@ void ImFacetExtrude::ExtrudeButtonPress()
 		ImIOWrappers::InfoPopup("Nothing to move", "No facets selected");
 		return;
 	}
-	else if (mode == none) {
+	if (mode == none) {
 		ImIOWrappers::InfoPopup("Error", "No mode selected");
 		return;
 	}
-	else if (interfGeom->GetNbSelectedFacets() > 1) {
+	PreProcessExtrude();
+	if (interfGeom->GetNbSelectedFacets() > 1) {
 		mApp->imWnd->popup.Open("Extrusion of more than one facet", fmt::format("Extrude {} facets at once?", interfGeom->GetNbSelectedFacets()),
-			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { PreProcessExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
+			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
 		return;
 	}
-	PreProcessExtrude();
+	DoExtrude();
 }
 
 void ImFacetExtrude::GetBaseButtonPress()
@@ -425,9 +425,9 @@ void ImFacetExtrude::GetBaseButtonPress()
 			pathDY=(interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ=(interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);
 
-			pathDXInput = fmt::format("{}", pathDX);
-			pathDYInput = fmt::format("{}", pathDY);
-			pathDZInput = fmt::format("{}", pathDZ);
+			pathDXInput = fmt::format("{:.3g}", pathDX);
+			pathDYInput = fmt::format("{:.3g}", pathDY);
+			pathDZInput = fmt::format("{:.3g}", pathDZ);
 		}
 	}
 }
@@ -441,9 +441,9 @@ void ImFacetExtrude::GetDirectionButtonPress()
 			pathDY = (interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ = (interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);
 
-			pathDXInput = fmt::format("{}", pathDX);
-			pathDYInput = fmt::format("{}", pathDY);
-			pathDZInput = fmt::format("{}", pathDZ);
+			pathDXInput = fmt::format("{:.3g}", pathDX);
+			pathDYInput = fmt::format("{:.3g}", pathDY);
+			pathDZInput = fmt::format("{:.3g}", pathDZ);
 		}
 	}
 }
@@ -457,9 +457,9 @@ void ImFacetExtrude::FacetCenterButtonPress()
 		curveY0=(center3d.y);
 		curveZ0=(center3d.z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -474,9 +474,9 @@ void ImFacetExtrude::FacetIndex1ButtonPress()
 		curveY0=(interfGeom->GetVertex(vertexId)->y);
 		curveZ0=(interfGeom->GetVertex(vertexId)->z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -489,9 +489,9 @@ void ImFacetExtrude::CurveGetBaseButtonPress()
 		curveY0=(interfGeom->GetVertex(*foundId)->y);
 		curveZ0=(interfGeom->GetVertex(*foundId)->z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -504,9 +504,9 @@ void ImFacetExtrude::CurveFacetUButtonPress()
 		curveDY=(interfGeom->GetFacet(*foundId)->sh.U.y);
 		curveDZ=(interfGeom->GetFacet(*foundId)->sh.U.z);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -519,9 +519,9 @@ void ImFacetExtrude::CurveFacetVButtonPress()
 		curveDY = (interfGeom->GetFacet(*foundId)->sh.V.y);
 		curveDZ = (interfGeom->GetFacet(*foundId)->sh.V.z);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -534,9 +534,9 @@ void ImFacetExtrude::CurveGetDirectionButtonPress()
 			curveDY=(interfGeom->GetVertex(*foundId)->y - curveY0);
 			curveDZ=(interfGeom->GetVertex(*foundId)->z - curveZ0);
 
-			curveDXInput = fmt::format("{}", curveDX);
-			curveDYInput = fmt::format("{}", curveDY);
-			curveDZInput = fmt::format("{}", curveDZ);
+			curveDXInput = fmt::format("{:.3g}", curveDX);
+			curveDYInput = fmt::format("{:.3g}", curveDY);
+			curveDZInput = fmt::format("{:.3g}", curveDZ);
 		}
 	}
 }
@@ -550,9 +550,9 @@ void ImFacetExtrude::FacetNXButtonPress()
 		curveDY=(interfGeom->GetFacet(*foundId)->sh.N.z);
 		curveDZ=(-interfGeom->GetFacet(*foundId)->sh.N.y);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -565,9 +565,9 @@ void ImFacetExtrude::FacetNYButtonPress()
 		curveDY = 0;
 		curveDZ = (interfGeom->GetFacet(*foundId)->sh.N.x);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -580,8 +580,8 @@ void ImFacetExtrude::FacetNZButtonPress()
 		curveDY = (-interfGeom->GetFacet(*foundId)->sh.N.x);
 		curveDZ = 0;
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
