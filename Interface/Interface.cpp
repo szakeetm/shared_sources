@@ -138,7 +138,7 @@ Interface::Interface() : GLApplication(){
 
     idSelection = 0;
 
-#if defined(_DEBUG) || defined(DEBUG)
+#if defined(DEBUG)
     nbProc = 1;
 #else
     nbProc = numCPU; //numCPU also displayed in Global Settings

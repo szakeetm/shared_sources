@@ -2227,7 +2227,7 @@ void GLAxis::paintMarkerTex(GLuint mTex, int x, int y, int width, int height, in
 	glVertex2i(x, y + height);
 	glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
 	theApp->nbPoly++;
 #endif
 
