@@ -776,7 +776,7 @@ const ImBuildInfo* ImBuildGetCompilationInfo()
     if (build_info.Type[0] == '\0')
     {
         // Build Type
-#if defined(DEBUG) || defined(_DEBUG)
+#if defined(DEBUG)
         build_info.Type = "Debug";
 #else
         build_info.Type = "Release";
