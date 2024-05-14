@@ -88,6 +88,7 @@ public:
 
     bool Get_m_bWindowed();
 
+//#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;
     int  nbLine;
@@ -98,6 +99,8 @@ public:
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
     ImguiWindow  *imWnd;
+
+//#endif
 
 private:
 

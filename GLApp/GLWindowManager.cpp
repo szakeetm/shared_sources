@@ -108,6 +108,8 @@ void GLWindowManager::FullRepaint() {
 }
 
 void GLWindowManager::DrawStats() {
+
+#if defined(_DEBUG)
 	
   // Statistics
   if( theApp ) {
@@ -133,6 +135,8 @@ void GLWindowManager::DrawStats() {
 	sprintf(polys,"m_fTime:%4.2f",theApp->m_fTime);
 	GLToolkit::GetDialogFont()->GLDrawTextFast(150,h-48,polys);
   }
+  
+#endif
 
 }
 
@@ -416,7 +420,9 @@ void  GLWindowManager::Repaint() {
 
 void GLWindowManager::RepaintNoSwap() {
 
+//#if defined(_DEBUG)
   double t0 = theApp->GetTick();
+//#endif
 
   // Search maximized window
   bool found = false;
@@ -446,19 +452,27 @@ void GLWindowManager::RepaintNoSwap() {
     }
   }
   for(int i=0;i<nbWindow;i++) allWin[i]->PaintMenu();
+
+//#if defined(_DEBUG)
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
+//#endif
+
 }
 
 void GLWindowManager::RepaintRange(int w0,int w1) {
 
+//#if defined(_DEBUG)
   double t0 = theApp->GetTick();
+//#endif
 
   if (!(w0<64 && w1<64)) throw Error("Buffer overrun: GLWindowManager::RepaintRange, array allWin");
   SetDefault();
   for(int i=w0;i<w1;i++) allWin[i]->Paint();  
   for(int i=w0;i<w1;i++) allWin[i]->PaintMenu();
 
+//#if defined(_DEBUG)
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
+//#endif
 
   DrawStats();
   SDL_GL_SwapWindow(theApp->mainScreen);

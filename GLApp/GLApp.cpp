@@ -51,7 +51,7 @@ GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, e
   wnd->SetVisible(true); // Make top level shell
 
 
-#if defined(DEBUG)
+#if defined(_DEBUG)
   nbRestore = 0;
   fPaintTime = 0.0;
   fMoveTime = 0.0;
@@ -140,7 +140,7 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 	if (doFirstInit) OneTimeSceneInit();
 
   GLWindowManager::RestoreDeviceObjects();
-#if defined(DEBUG)
+#if defined(_DEBUG)
   nbRestore++;
 #endif
   wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
@@ -315,7 +315,7 @@ void GLApplication::UpdateStats() {
   //m_fElapsedTime = (fTick - lastFrTick) * 0.001f;
   //lastFrTick = fTick;
 
-#if defined(DEBUG)
+#if defined(_DEBUG)
   nbPoly=0;
   nbLine=0;
 #endif
@@ -396,7 +396,9 @@ void GLApplication::Run() {
   quit = false;
   int    ok;
   GLenum glError;
+//#if defined(_DEBUG)
   double t1,t0;
+//#endif
 
   // Stats
   m_Timer.ReInit();
@@ -542,10 +544,15 @@ void GLApplication::Run() {
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
 
+//#if defined(_DEBUG)
        t0 = GetTick();
+//#endif
+       // Call FrameMove
        ok = FrameMove();
+//#if defined(_DEBUG)
        t1 = GetTick();
        fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0); //Moving average over 10 FrameMoves
+//#endif
        glError = glGetError();
        if( !ok || glError!=GL_NO_ERROR ) {
          GLToolkit::Log("GLApplication::FrameMove() failed.");

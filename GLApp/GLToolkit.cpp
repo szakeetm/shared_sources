@@ -710,7 +710,7 @@ void GLToolkit::DrawBorder(const int x,const int y,const int width,
     _glVertex2i(x+width,y);
     glEnd();
 
-    #if defined(DEBUG)
+    #if defined(_DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -759,7 +759,7 @@ void GLToolkit::DrawBorder(const int x,const int y,const int width,
     _glVertex2i(x,y+height);
     glEnd();
 
-    #if defined(DEBUG)
+    #if defined(_DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -792,7 +792,7 @@ void GLToolkit::DrawBox(const int x,const int y,const int width,const int height
   glVertex2i(x,y+height);
   glEnd();
 
-#if defined(DEBUG)
+#if defined(_DEBUG)
   theApp->nbPoly++;
 #endif
 
