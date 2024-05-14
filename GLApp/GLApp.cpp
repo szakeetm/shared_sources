@@ -32,26 +32,27 @@ LARGE_INTEGER perfTickStart; // Fisrt tick
 double perfTicksPerSec;      // Performance counter (number of tick per second)
 #endif*/
 
-GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, errMsg{"\0"} {
+GLApplication::GLApplication() : m_strFrameStats{"\0"}, m_strEventStats{"\0"}, m_strModifierStates{"\0"}, errMsg{"\0"} {
 
   m_bWindowed = true;
   m_strWindowTitle = "GL application";
   strcpy(m_strFrameStats,"");
   strcpy(m_strEventStats,"");
+  strcpy(m_strModifierStates,"");
   m_screenWidth = 640;
   m_screenHeight = 480;
   m_minScreenWidth = 640;
   m_minScreenHeight = 480;
   m_bResizable = false;
-  wnd = new GLWindow();
-  wnd->SetMaster(true);
-  wnd->SetBorder(false);
-  wnd->SetBackgroundColor(0,0,0);
-  wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
-  wnd->SetVisible(true); // Make top level shell
+  masterWindowPtr = new GLWindow();
+  masterWindowPtr->SetMaster(true);
+  masterWindowPtr->SetBorder(false);
+  masterWindowPtr->SetBackgroundColor(0,0,0);
+  masterWindowPtr->SetBounds(0,0,m_screenWidth,m_screenHeight);
+  masterWindowPtr->SetVisible(true); // Make top level shell
 
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   nbRestore = 0;
   fPaintTime = 0.0;
   fMoveTime = 0.0;
@@ -140,10 +141,10 @@ int GLApplication::setUpSDL(bool doFirstInit) {
 	if (doFirstInit) OneTimeSceneInit();
 
   GLWindowManager::RestoreDeviceObjects();
-#if defined(_DEBUG)
+#if defined(DEBUG)
   nbRestore++;
 #endif
-  wnd->SetBounds(0,0,m_screenWidth,m_screenHeight);
+  masterWindowPtr->SetBounds(0,0,m_screenWidth,m_screenHeight);
   errCode = RestoreDeviceObjects();
   if( !errCode ) {
     GLToolkit::Log("GLApplication::setUpSDL GLApplication::RestoreDeviceObjects() failed.");
@@ -248,7 +249,7 @@ int GLApplication::Resize( size_t nWidth, size_t nHeight, bool forceWindowed ) {
 }
 
 void GLApplication::Add(GLComponent *comp) {
-  wnd->Add(comp);
+  masterWindowPtr->Add(comp);
 }
 
 void GLApplication::Exit() {
@@ -277,7 +278,7 @@ void GLApplication::Exit() {
   }
   
   GLToolkit::InvalidateDeviceObjects();
-  wnd->InvalidateDeviceObjects();
+  masterWindowPtr->InvalidateDeviceObjects();
   InvalidateDeviceObjects();
   
   AfterExit(); //After GUI destroyed
@@ -309,13 +310,23 @@ void GLApplication::UpdateStats() {
      sprintf(m_strFrameStats,"%.2f fps (%dx%dx%d)   ",m_fFPS,m_screenWidth,m_screenHeight,m_bitsPerPixel);
      sprintf(m_strEventStats,"%.2f eps C:%d W:%d M:%d J:%d K:%d S:%d A:%d R:%d E:%d O:%d   ",
              eps,nbMouse,nbWheel,nbMouseMotion,nbJoystic,nbKey,nbSystem,nbActive,nbResize,nbExpose,nbOther);
+
+#if defined(__MACOSX__) || defined(__APPLE__)
+	static char ctrlText[] = "CMD";
+#else
+  static char ctrlText[] = "CTRL";
+#endif
+
+     sprintf(m_strModifierStates,"SHIFT:%d %s:%d ALT:%d CAPS:%d TAB:%d SPACE:%d D:%d Z:%d",
+             masterWindowPtr->IsShiftDown(),ctrlText,masterWindowPtr->IsCtrlDown(),masterWindowPtr->IsAltDown(),masterWindowPtr->IsCapsLockOn(),
+             masterWindowPtr->IsTabDown(),masterWindowPtr->IsSpaceDown(),masterWindowPtr->IsDkeyDown(),masterWindowPtr->IsZkeyDown());        
   }
 
   m_fTime = (float) m_Timer.Elapsed();
   //m_fElapsedTime = (fTick - lastFrTick) * 0.001f;
   //lastFrTick = fTick;
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   nbPoly=0;
   nbLine=0;
 #endif
@@ -396,7 +407,7 @@ void GLApplication::Run() {
   quit = false;
   int    ok;
   GLenum glError;
-//#if defined(_DEBUG)
+//#if defined(DEBUG)
   double t1,t0;
 //#endif
 
@@ -553,15 +564,15 @@ void GLApplication::Run() {
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
 
-//#if defined(_DEBUG)
+
        t0 = GetTick();
-//#endif
+
        // Call FrameMove
        ok = FrameMove();
-//#if defined(_DEBUG)
+
        t1 = GetTick();
        fMoveTime = 0.9*fMoveTime + 0.1*(t1 - t0); //Moving average over 10 FrameMoves
-//#endif
+
        glError = glGetError();
        if( !ok || glError!=GL_NO_ERROR ) {
          GLToolkit::Log("GLApplication::FrameMove() failed.");

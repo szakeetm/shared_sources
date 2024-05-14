@@ -198,7 +198,7 @@ void Sprite2D::Render(const bool doLinear) {
   glTexCoord2f(mx1,my2);glVertex2i(x1,y2);
   glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly++;
 #endif
 
@@ -237,7 +237,7 @@ void Sprite2D::Render90(bool doLinear) {
   glTexCoord2f(mx2,my1);glVertex2i(x1,y2);
   glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly++;
 #endif
 

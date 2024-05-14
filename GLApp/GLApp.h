@@ -1,9 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
-#ifndef _GLAPPH_
-#define _GLAPPH_
-
-//extern long long	  nbDesStart;
-//extern long long	  nbHitStart;
+#pragma once
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -33,7 +28,7 @@ protected:
     int       m_fullScreenWidth;
     int       m_fullScreenHeight;
     bool      m_bResizable;
-    GLWindow  *wnd;
+    GLWindow*   masterWindowPtr;
 
 
     // Overridable variables for the app
@@ -72,7 +67,8 @@ public:
 
     // Variables for timing
     char              m_strFrameStats[64]; 
-    char              m_strEventStats[128]; 
+    char              m_strEventStats[128];
+    char                m_strModifierStates[128]; 
   
     //float             m_fElapsedTime;      // Time elapsed since last frame
     float             m_fFPS;              // Instanteous frame rate
@@ -88,7 +84,6 @@ public:
 
     bool Get_m_bWindowed();
 
-//#if defined(_DEBUG)
     // Debugging stuff
     int  nbPoly;
     int  nbLine;
@@ -99,8 +94,6 @@ public:
 	SDL_Window *mainScreen;
 	SDL_GLContext mainContext;
     ImguiWindow  *imWnd;
-
-//#endif
 
 private:
 
@@ -126,6 +119,3 @@ private:
 
    bool quit;
 };
-
-#endif /* _GLAPPH_ */
-

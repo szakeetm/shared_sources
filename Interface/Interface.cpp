@@ -138,7 +138,7 @@ Interface::Interface() : GLApplication(){
 
     idSelection = 0;
 
-#if defined(_DEBUG) || defined(DEBUG)
+#if defined(DEBUG)
     nbProc = 1;
 #else
     nbProc = numCPU; //numCPU also displayed in Global Settings
@@ -150,7 +150,7 @@ Interface::Interface() : GLApplication(){
     imWnd = nullptr;
 
     m_strWindowTitle = appTitle;
-    wnd->SetBackgroundColor(212, 208, 200);
+    masterWindowPtr->SetBackgroundColor(212, 208, 200);
     m_bResizable = true;
     m_minScreenWidth = 800;
     m_minScreenHeight = 600;
@@ -497,7 +497,7 @@ void Interface::AnimateViewerChange(int next) {
         int x2 = lround(xs2 + t * (xe2 - xs2));
         int y2 = lround(ys2 + t * (ye2 - ys2));
         viewers[next]->SetBounds(x1, y1, x2 - x1, y2 - y1);
-        wnd->Paint();
+        masterWindowPtr->Paint();
         // Overides moving component
         viewers[next]->Paint();
         // Paint modeless
@@ -592,7 +592,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
 
     menu = new GLMenuBar(0);
-    wnd->SetMenuBar(menu);
+    masterWindowPtr->SetMenuBar(menu);
     menu->Add("File");
     menu->GetSubMenu("File")->Add("New, empty geometry", MENU_FILE_NEW);
     menu->GetSubMenu("File")->Add("&Load", MENU_FILE_LOAD, SDLK_o, CTRL_MODIFIER);

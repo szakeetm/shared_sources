@@ -109,7 +109,7 @@ void GLWindowManager::FullRepaint() {
 
 void GLWindowManager::DrawStats() {
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
 	
   // Statistics
   if( theApp ) {
@@ -127,10 +127,11 @@ void GLWindowManager::DrawStats() {
     char polys[256];
     sprintf(polys,"Quad:%d Line:%d Paint:%.2f ms   ",
     theApp->nbPoly,theApp->nbLine,theApp->fPaintTime*1000.0);
-    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-99,polys);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-117,polys);
     sprintf(polys,"Restore:%d FrameMove:%.2f ms   ",theApp->nbRestore,theApp->fMoveTime*1000.0);
-    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-83,polys);
-    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-65,theApp->m_strEventStats);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-99,polys);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-83,theApp->m_strEventStats);
+    GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-65,theApp->m_strModifierStates);
     GLToolkit::GetDialogFont()->GLDrawTextFast(7,h-48,theApp->m_strFrameStats);
 	sprintf(polys,"m_fTime:%4.2f",theApp->m_fTime);
 	GLToolkit::GetDialogFont()->GLDrawTextFast(150,h-48,polys);
@@ -420,9 +421,9 @@ void  GLWindowManager::Repaint() {
 
 void GLWindowManager::RepaintNoSwap() {
 
-//#if defined(_DEBUG)
+
   double t0 = theApp->GetTick();
-//#endif
+
 
   // Search maximized window
   bool found = false;
@@ -453,26 +454,26 @@ void GLWindowManager::RepaintNoSwap() {
   }
   for(int i=0;i<nbWindow;i++) allWin[i]->PaintMenu();
 
-//#if defined(_DEBUG)
+
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
-//#endif
+
 
 }
 
 void GLWindowManager::RepaintRange(int w0,int w1) {
 
-//#if defined(_DEBUG)
+
   double t0 = theApp->GetTick();
-//#endif
+
 
   if (!(w0<64 && w1<64)) throw Error("Buffer overrun: GLWindowManager::RepaintRange, array allWin");
   SetDefault();
   for(int i=w0;i<w1;i++) allWin[i]->Paint();  
   for(int i=w0;i<w1;i++) allWin[i]->PaintMenu();
 
-//#if defined(_DEBUG)
+
   theApp->fPaintTime = 0.9*theApp->fPaintTime + 0.1*(theApp->GetTick() - t0);
-//#endif
+
 
   DrawStats();
   SDL_GL_SwapWindow(theApp->mainScreen);
@@ -487,96 +488,7 @@ void GLWindowManager::InvalidateDeviceObjects() {
   for(int i=0;i<nbWindow;i++) allWin[i]->InvalidateDeviceObjects();
 }
 
-/*
-
-bool GLWindowManager::IsCtrlDown() {
-  return (modState & CTRL_MODIFIER)!=0;
-}
-
-bool GLWindowManager::IsShiftDown() {
-  return (modState & SHIFT_MODIFIER)!=0;
-}
-
-bool GLWindowManager::IsAltDown() {
-  return (modState & ALT_MODIFIER)!=0;
-}
-
-bool GLWindowManager::IsSpaceDown() {
-  return (modState & SPACE_MODIFIER)!=0;
-}
-
-bool GLWindowManager::IsTabDown() {
-  return (modState & TAB_MODIFIER)!=0;
-}
-
-bool GLWindowManager::IsCapsLockOn() {
- return (modState & CAPSLOCK_MODIFIER)!=0;
-}
-
-
-int GLWindowManager::GetModState() {
-	return modState;
-}
-*/
-
 bool GLWindowManager::SearchKeyboardShortcut(SDL_Event *evt,bool processAcc) {
-
-/*
-  if( evt->type == SDL_KEYDOWN )
-  {
-    if(evt->key.keysym.sym == SDLK_LCTRL || evt->key.keysym.sym == SDLK_RCTRL )
-      modState |= CTRL_MODIFIER;
-
-    else if(evt->key.keysym.sym == SDLK_LSHIFT || evt->key.keysym.sym == SDLK_RSHIFT )
-      modState |= SHIFT_MODIFIER;
-
-    else if(evt->key.keysym.sym == SDLK_RALT || evt->key.keysym.sym == SDLK_LALT )
-      modState |= ALT_MODIFIER;
-	
-	else if(evt->key.keysym.sym == SDLK_CAPSLOCK)
-      modState |= CAPSLOCK_MODIFIER;
-	
-	else if (evt->key.keysym.sym == SDLK_SPACE) {
-		modState |= SPACE_MODIFIER;
-		//OutputDebugStringA("\nSpace on");
-	}
-
-	else if (evt->key.keysym.sym == SDLK_TAB) {
-		modState |= TAB_MODIFIER;
-		//OutputDebugStringA("\nSpace on");
-	}
-  } else if( evt->type == SDL_KEYUP )
-  {
-    int altMask   =  ALT_MODIFIER; altMask   = ~altMask;
-    int ctrlMask  = CTRL_MODIFIER; ctrlMask  = ~ctrlMask;
-    int shiftMask = SHIFT_MODIFIER;shiftMask = ~shiftMask;
-	int capsLockMask = CAPSLOCK_MODIFIER;capsLockMask = ~capsLockMask;
-	int spaceMask = SPACE_MODIFIER;spaceMask = ~spaceMask;
-	int tabMask = TAB_MODIFIER;tabMask = ~tabMask;
-
-    if(evt->key.keysym.sym == SDLK_LCTRL || evt->key.keysym.sym == SDLK_RCTRL )
-      modState &= ctrlMask;
-
-    else if(evt->key.keysym.sym == SDLK_LSHIFT || evt->key.keysym.sym == SDLK_RSHIFT )
-      modState &= shiftMask;
-
-    else if(evt->key.keysym.sym == SDLK_RALT || evt->key.keysym.sym == SDLK_LALT )
-      modState &= altMask;
-
-	else if (evt->key.keysym.sym == SDLK_CAPSLOCK)
-      modState &= capsLockMask;
-
-	else if (evt->key.keysym.sym == SDLK_SPACE) {
-		modState &= spaceMask;
-		//OutputDebugStringA("\nSpace off");
-	}
-
-	else if (evt->key.keysym.sym == SDLK_TAB) {
-		modState &= tabMask;
-		//OutputDebugStringA("\nSpace off");
-	}
-  }
-  */
 
   // Process
 
