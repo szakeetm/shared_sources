@@ -21,6 +21,10 @@ protected:
 		cosine = 1,
 		cosineN = 2
 	};
+	struct Selection { 
+		size_t row = 0, column = 0; 
+		bool active = false; 
+	} selection;
 	DesorptionType desorptionType = cosine;
 	std::string comboText = "Cosine";
 
