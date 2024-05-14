@@ -310,8 +310,15 @@ void GLApplication::UpdateStats() {
      sprintf(m_strFrameStats,"%.2f fps (%dx%dx%d)   ",m_fFPS,m_screenWidth,m_screenHeight,m_bitsPerPixel);
      sprintf(m_strEventStats,"%.2f eps C:%d W:%d M:%d J:%d K:%d S:%d A:%d R:%d E:%d O:%d   ",
              eps,nbMouse,nbWheel,nbMouseMotion,nbJoystic,nbKey,nbSystem,nbActive,nbResize,nbExpose,nbOther);
-     sprintf(m_strModifierStates,"SHIFT:%d CTRL:%d ALT:%d CAPS:%d TAB:%d SPACE:%d D:%d Z:%d",
-             masterWindowPtr->IsShiftDown(),masterWindowPtr->IsCtrlDown(),masterWindowPtr->IsAltDown(),masterWindowPtr->IsCapsLockOn(),
+
+#if defined(__MACOSX__) || defined(__APPLE__)
+	static char ctrlText[] = "CMD";
+#else
+  static char ctrlText[] = "CTRL";
+#endif
+
+     sprintf(m_strModifierStates,"SHIFT:%d %s:%d ALT:%d CAPS:%d TAB:%d SPACE:%d D:%d Z:%d",
+             masterWindowPtr->IsShiftDown(),ctrlText,masterWindowPtr->IsCtrlDown(),masterWindowPtr->IsAltDown(),masterWindowPtr->IsCapsLockOn(),
              masterWindowPtr->IsTabDown(),masterWindowPtr->IsSpaceDown(),masterWindowPtr->IsDkeyDown(),masterWindowPtr->IsZkeyDown());        
   }
 
