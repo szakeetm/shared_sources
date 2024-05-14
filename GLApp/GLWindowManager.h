@@ -34,15 +34,6 @@ public:
   static void      BringToFront(GLWindow *wnd);
   static void      SetDefault();
 
-  // Key info
-  //static bool      IsCtrlDown();
-  //static bool      IsShiftDown();
-  //static bool      IsAltDown();
-  //static bool      IsCapsLockOn();
-  //static bool      IsSpaceDown();
-  //static bool		IsTabDown();
-  //static int	GetModState();
-
   // Registering
   static void RegisterWindow(GLWindow *wnd);
   static void UnRegisterWindow(GLWindow *wnd);
