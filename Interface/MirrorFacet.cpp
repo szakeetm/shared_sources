@@ -257,15 +257,16 @@ void MirrorFacet::ProcessMessage(GLComponent *src, int message) {
 					GLMessageBox::Display("Invalid D coefficient", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
-				if ((a == 0.0) && (b == 0.0) && (c == 0.0) && (d == 0.0)) {
+				if ((a == 0.0) && (b == 0.0) && (c == 0.0)) {
 					GLMessageBox::Display("A, B, C are all zero. That's not a plane.", "Error", GLDLG_OK, GLDLG_ICONERROR);
 					return;
 				}
 				N.x = a; N.y = b; N.z = c;
-				P0.x = 0.0; P0.y = 0; P0.z = 0;
-				if (a != 0) P0.x = -d / a;
-				else if (b != 0) P0.y = -d / b;
-				else if (c != 0) P0.z = -d / c;
+				N=N.Normalized();
+				P0.x = 0.0; P0.y = 0.0; P0.z = 0.0;
+				if (a != 0.0) P0.x = -d / a;
+				else if (b != 0.0) P0.y = -d / b;
+				else if (c != 0.0) P0.z = -d / c;
 				break;
 			default:
 				GLMessageBox::Display("Select a plane definition mode.", "Error", GLDLG_OK, GLDLG_ICONERROR);
