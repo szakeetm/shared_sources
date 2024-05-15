@@ -62,7 +62,6 @@ set(INTERFACE_FILES
         ${INTERFACE_DIR}/ImguiTexturePlotter.cpp
         ${INTERFACE_DIR}/ImguiProfilePlotter.cpp
         ${INTERFACE_DIR}/ImguiHistogramPlotter.cpp
-        ${INTERFACE_DIR}/ImguiTextureScaling.cpp
         ${INTERFACE_DIR}/ImguiParticleLogger.cpp
         ${INTERFACE_DIR}/ImguiMovingParts.cpp
         ${INTERFACE_DIR}/ImguiMeasureForce.cpp

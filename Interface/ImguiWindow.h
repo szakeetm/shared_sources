@@ -17,7 +17,6 @@
 #include "ImguiTexturePlotter.h"
 #include "ImguiProfilePlotter.h"
 #include "ImguiHistogramPlotter.h"
-#include "ImguiTextureScaling.h"
 #include "ImguiParticleLogger.h"
 #include "ImguiMovingParts.h"
 #include "ImguiMeasureForce.h"
@@ -41,6 +40,7 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
+#include "../../src/Interface/ImguiTextureScaling.h"
 #else
 #include "../../src/SynRad.h"
 #endif
@@ -100,7 +100,9 @@ public:
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
+#if defined(MOLFLOW)
     ImTextureScaling textScale;
+#endif
     ImParticleLogger partLog;
     ImMovingParts movPart;
     ImMeasureForce measForce;

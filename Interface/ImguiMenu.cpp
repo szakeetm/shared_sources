@@ -628,6 +628,7 @@ void HistogramPlotterMenuPress() {
     mApp->histogramPlotter->SetVisible(true);
     */
 }
+#if defined(MOLFLOW)
 void TextureScalingMenuPress() {
     mApp->imWnd->textScale.Show();
     /*if (!mApp->textureScaling || !mApp->textureScaling->IsVisible()) {
@@ -636,6 +637,7 @@ void TextureScalingMenuPress() {
         mApp->textureScaling->Display(&mApp->worker, mApp->viewers);
     }*/
 }
+#endif
 void ParticleLoggerMenuPress() {
     mApp->imWnd->partLog.Show();
     /*if (!mApp->particleLogger || !mApp->particleLogger->IsVisible()) {

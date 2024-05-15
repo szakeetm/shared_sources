@@ -212,8 +212,10 @@ void ImguiWindow::init() {
     profPlot.Init(mApp);
     histPlot = ImHistogramPlotter();
     histPlot.Init(mApp);
+#if defined(MOLFLOW)
     textScale = ImTextureScaling();
     textScale.Init(mApp);
+#endif
     partLog = ImParticleLogger();
     partLog.Init(mApp);
     movPart = ImMovingParts();
@@ -462,7 +464,9 @@ void ImguiWindow::renderSingle() {
         formulaEdit.Draw();
         convPlot.Draw();
         textPlot.Draw();
+#if defined(MOLFLOW)
         profPlot.Draw();
+#endif
         histPlot.Draw();
         textScale.Draw();
         partLog.Draw();
@@ -527,7 +531,9 @@ void ImguiWindow::Reset()
     histPlot.LoadHistogramSettings();
     profPlot.Refresh();
     convPlot.Reload();
+#if defined(MOLFLOW)
     textScale.Load();
+#endif
     partLog.Reset();
     splitFac.Reset();
 }
@@ -546,5 +552,7 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     if (interfaceSettings->convergencePlotterSettings.hasData) {
         convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
     } else convPlot.Reload();
+#if defined(MOLFLOW)
     textScale.Load();
+#endif
 }
