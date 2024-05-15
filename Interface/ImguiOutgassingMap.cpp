@@ -191,12 +191,18 @@ void ImOutgassingMap::DrawTable()
 					cell_bg_color = ImGui::GetColorU32(ImVec4(152.f/255.f, 186.f/255.f, 225.f/255.f, 1.0f));
 					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 					ImGui::InputText(fmt::format("###{}-{}", rowN, column), &cell);
+					if (selection.changed) {
+						ImGui::SetKeyboardFocusHere(-1);
+						selection.changed = false;
+					}
 				}
 				else {
+
 					if (ImGui::Selectable(fmt::format("{}###{}-{}", cell, rowN, column))) {
 						selection.row = rowN - 1;
 						selection.column = column - 1;
 						selection.active = true;
+						selection.changed = true;
 					}
 				}
 				column++;

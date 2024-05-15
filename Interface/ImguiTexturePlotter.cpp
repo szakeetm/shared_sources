@@ -29,7 +29,7 @@ void ImTexturePlotter::Draw()
 	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
 	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
 	
-	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(50 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5f * txtH),true);
@@ -164,6 +164,8 @@ void ImTexturePlotter::DrawTextureTable()
 			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0); // move to first column
+				ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.78f, 0.87f, 0.98f, 1.0f));
+				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 				if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
 					SelectRow(i);
 					scrollToSelected = false;
