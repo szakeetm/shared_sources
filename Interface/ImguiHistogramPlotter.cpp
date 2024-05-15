@@ -530,6 +530,7 @@ void ImHistogramPlotter::RefreshFacetLists()
 			}
 		}
 	}
+	UpdateSidebarMasterToggle();
 }
 
 void ImHistogramPlotter::Reset()
