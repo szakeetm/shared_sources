@@ -248,77 +248,77 @@ std::optional<size_t> ImFacetExtrude::AssertOneFacetSelected()
 	else return selectedFacets[0];
 }
 
-void ImFacetExtrude::PreProcessExtrude() {
+bool ImFacetExtrude::PreProcessExtrude() {
 	
 	if (mode == directionVector && !Util::getNumber(&pathDX, pathDXInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dX value");
-		return;
+		return false;
 	}
 	if (mode == directionVector && !Util::getNumber(&pathDY, pathDYInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dY value");
-		return;
+		return false;
 	}
 	if (mode == directionVector && !Util::getNumber(&pathDZ, pathDZInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dZ value");
-		return;
+		return false;
 	}
 
 	if ((mode == facetNormal || mode == facetAntinormal)
 		&& !Util::getNumber(&facetLength, facetLengthInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid extrusion length value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveX0, curveX0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base X0 value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveY0, curveY0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base Y0 value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveZ0, curveZ0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base Z0 value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDX, curveDXInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dX value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDY, curveDYInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dY value");
-		return;
+		return false;
 	}if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDZ, curveDZInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dZ value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&radius, radiusInput)){
 		ImIOWrappers::InfoPopup("Error","Invalid radius length value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&angleDeg, angleDegInput)){
 		ImIOWrappers::InfoPopup("Error", "Invalid total angle (deg) value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveLength, curveLengthInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid total length value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&steps, stepsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid 'number of steps' value");
-		return;
+		return false;
 	}
 	/*
 	int mode;
@@ -329,22 +329,22 @@ void ImFacetExtrude::PreProcessExtrude() {
 	std::string warning = "";
 	if ((mode == directionVector) && pathDX * pathDX + pathDY * pathDY + pathDZ * pathDZ < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Direction is a null-vector");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && curveDX * curveDX + curveDY * curveDY + curveDZ * curveDZ < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Direction is a null-vector");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && std::abs(radius) < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Radius length can't be 0");
-		return;
+		return false;
 	} if ((mode == facetNormal || mode == facetAntinormal) && std::abs(facetLength) < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Extrusion length can't be 0");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && (std::abs(angleDeg) < 1E-8 || angleDeg > 360)) {
 		ImIOWrappers::InfoPopup("Error", "Total angle can't be 0");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && !(steps > 0)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid number of steps");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && (angleDeg < -360 || angleDeg>360)) {
 		warning.append("Total angle outside -360..+360 degree. Are you sure?\n");
 	} if ((mode == curveAntinormal || mode == curveNormal) && (steps > 50)) {
@@ -353,8 +353,9 @@ void ImFacetExtrude::PreProcessExtrude() {
 	if (warning != "") {
 		if (warning[warning.size() - 1] == '\n') warning.erase(warning.end() - 1);
 		mApp->imWnd->popup.Open("Warning", warning, { std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
-		return;
+		return false;
 	}
+	return true;
 }
 
 void ImFacetExtrude::DoExtrude()
@@ -407,7 +408,7 @@ void ImFacetExtrude::ExtrudeButtonPress()
 		ImIOWrappers::InfoPopup("Error", "No mode selected");
 		return;
 	}
-	PreProcessExtrude();
+	if (!PreProcessExtrude()) return;
 	if (interfGeom->GetNbSelectedFacets() > 1) {
 		mApp->imWnd->popup.Open("Extrusion of more than one facet", fmt::format("Extrude {} facets at once?", interfGeom->GetNbSelectedFacets()),
 			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });

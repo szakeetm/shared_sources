@@ -1226,7 +1226,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("/**/U vector");
         ctx->ItemClick("/**/V vector");
         ctx->ItemClick("/**/Normal vector");
-        ctx->ItemClick("/**/Define by 2 vertices");
+        ctx->ItemClick("/**/###2V");
         ctx->ItemClick("/**/Define by equation:");
         ctx->ItemClick("Rotate facet");
         ctx->ItemClick("//Nothing to rotate/  Ok  ");
@@ -1301,9 +1301,9 @@ void ImTest::RegisterTests()
             ctx->ItemClick("/**/##extrusion length:");
             ctx->KeyCharsReplaceEnter("1");
             ctx->ItemClick("Extrude");
-            ctx->ItemClick("/**/Direction vector");
             DeselectAll();
             SelectVertex(0);
+            ctx->ItemClick("/**/Direction vector");
             ctx->ItemClick("/**/Get Base Vertex");
             ctx->MouseMoveToPos(ImVec2(100, 100));
             DeselectAll();
@@ -1535,6 +1535,8 @@ void ImTest::RegisterTests()
             ctx->ItemClick("/**/All");
             IM_CHECK_GT(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
         }
-        ConfigureGeometryMidTest(currentConfig);
+        //ConfigureGeometryMidTest(currentConfig);
+        ctx->SetRef("Convergence Plotter");
+        ctx->ItemClick("#CLOSE");
         };
 }

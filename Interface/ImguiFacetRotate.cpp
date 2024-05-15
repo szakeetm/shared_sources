@@ -45,7 +45,7 @@ void ImFacetRotate::Draw()
 				ImGui::InputText("###FPDMfacet", &facetIdInput); ImGui::SameLine();
 				if (ImGui::Button("<-Get selected")) {
 					if (interfGeom->GetNbSelectedFacets() != 1) {
-						ImIOWrappers::InfoPopup("Error", "Select exactly one vacet.");
+						ImIOWrappers::InfoPopup("Error", "Select exactly one facet.");
 					}
 					else {
 						for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
@@ -65,7 +65,7 @@ void ImFacetRotate::Draw()
 			}
 		}
 		ImGui::EndChild();
-		if (ImGui::RadioButton("Define by 2 selected vertices", mode == vertices)) mode = vertices;
+		if (ImGui::RadioButton("Define by 2 selected vertices###2V", mode == vertices)) mode = vertices;
 		if (ImGui::RadioButton("Define by equation:", mode == equation)) mode = equation;
 		if (mode != equation) ImGui::BeginDisabled();
 		if (ImGui::BeginTable("###RSFADMEQ",8, ImGuiTableFlags_SizingFixedFit)) {

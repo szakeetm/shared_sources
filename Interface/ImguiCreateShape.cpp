@@ -12,7 +12,8 @@ void ImCreateShape::Draw()
 	if (!drawn) return;
 
 	ImGui::SetNextWindowSize(ImVec2(txtW * 90, txtH * 24.5));
-	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize);
+	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
+	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 	if (ImGui::BeginTabBar("Shape selection")) {
 
 		if (ImGui::BeginTabItem("Square / rectangle###SR")) {

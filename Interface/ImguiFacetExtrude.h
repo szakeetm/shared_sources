@@ -17,7 +17,7 @@ protected:
 	void FacetNXButtonPress();
 	void FacetNYButtonPress();
 	void FacetNZButtonPress();
-	void PreProcessExtrude();
+	bool PreProcessExtrude();
 	void DoExtrude();
 	int baseId=-1, dirId=-1, curveDirFac=-1;
 	std::optional<size_t> AssertOneVertexSelected();
