@@ -9,9 +9,10 @@ public:
 	void Draw();
 	void Init(Interface* mApp);
 	void RemovePlot(int idx);
+	void AddPlot(int idx);
 	void OnShow();
-	void Reload();
 	void Refresh();
+	void GetData();
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void DecrementFormulaIndicies(int startId);
 protected:

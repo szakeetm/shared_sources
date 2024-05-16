@@ -221,6 +221,7 @@ void Interface::ResetSimulation(bool askConfirm) {
         if (convergencePlotter) {
             convergencePlotter->Refresh();
         }
+        if (mApp->imWnd) mApp->ImRefresh();
         if(formulaEditor) formulaEditor->UpdateValues();
         if(particleLogger) particleLogger->UpdateStatus();
     }
@@ -2650,9 +2651,16 @@ int Interface::FrameMove() {
         startSimu->SetText("Begin");
         //startSimu->SetFontColor(0, 140, 0);
     }
-
+    bool updatedConvData = false;
+    if (appFormulas->convergenceDataChanged && mApp->imWnd && mApp->imWnd->convPlot.IsVisible()) {
+        mApp->imWnd->convPlot.GetData();
+        updatedConvData = true;
+    }
     if(convergencePlotter && formulaEditor && appFormulas->convergenceDataChanged) {
         convergencePlotter->Refresh();
+        updatedConvData = true;
+    }
+    if (updatedConvData) {
         appFormulas->convergenceDataChanged = false;
     }
 
@@ -2690,7 +2698,7 @@ int Interface::FrameMove() {
 void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
 {
     imWnd->LoadProfileFromFile(interfaceSettings);
-    imWnd->convPlot.Reload();
+    imWnd->convPlot.Refresh();
 }
 
 void Interface::ImRefresh()
@@ -2790,4 +2798,5 @@ void Interface::RefreshPlotterCombos() {
     //Removes non-present views, rebuilds combobox and refreshes plotted data
     if (histogramPlotter) histogramPlotter->Refresh();
     if (convergencePlotter) convergencePlotter->Refresh();
+    ImRefresh();
 }

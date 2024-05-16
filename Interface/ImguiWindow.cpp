@@ -517,7 +517,7 @@ void ImguiWindow::Refresh()
 {
     histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
-    convPlot.Reload();
+    convPlot.Refresh();
     movPart.Update();
     facCoord.UpdateFromSelection();
     vertCoord.UpdateFromSelection();
@@ -530,7 +530,7 @@ void ImguiWindow::Reset()
     histPlot.RefreshFacetLists();
     histPlot.LoadHistogramSettings();
     profPlot.Refresh();
-    convPlot.Reload();
+    convPlot.Refresh();
 #if defined(MOLFLOW)
     textScale.Load();
 #endif
@@ -541,7 +541,7 @@ void ImguiWindow::Reset()
 void ImguiWindow::Clear()
 {
     mirrProjFacet.Clear();
-    convPlot.Reload();
+    convPlot.Refresh();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
@@ -551,7 +551,7 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     }
     if (interfaceSettings->convergencePlotterSettings.hasData) {
         convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
-    } else convPlot.Reload();
+    } else convPlot.Refresh();
 #if defined(MOLFLOW)
     textScale.Load();
 #endif
