@@ -9,6 +9,7 @@ class ImFormulaEditor : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_, std::shared_ptr<Formulas> formulas_);
+	void Update();
 protected:
 	void OnShow() override;
 	void DrawFormulaList();

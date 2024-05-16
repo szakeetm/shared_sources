@@ -43,12 +43,11 @@ void ImFormulaEditor::DrawFormulaList() {
 	if (momentChanged) lastMoment = mApp->worker.displayedMoment;
 	// if auto update is enabled and moment changed recalculate values
 	if (momentChanged && mApp->autoUpdateFormulas) {
-		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+		Update();
 	}
 
 	float columnW;
 	blue = mApp->worker.displayedMoment != 0; // control wether to color values blue or not
-	formulasSize = static_cast<int>(appFormulas->formulas.size()); // very frequently used value so it is stored
 	if (ImGui::BeginTable("##FL", 5, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable)) {
 		// Headers
 		ImGui::TableSetupColumn("##ID",ImGuiTableColumnFlags_WidthFixed,txtW*4);
@@ -66,11 +65,12 @@ void ImFormulaEditor::DrawFormulaList() {
 		for (int i = 0; i < formulasSize; i++) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-
+			bool isDiff = false;
 			// handle selecting a row
 			if (ImGui::Selectable(std::to_string(i + 1).c_str(), selRow==i, selRow == i ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
-				if (selRow == i) selRow = -1;
+				if (selRow == i) selRow = -1; // if clicked on the selected row, deselect
 				else {
+					// this only happens when a row is being selected
 					selRow = i;
 					changeExpression = appFormulas->formulas[i].GetExpression();
 					changeName = appFormulas->formulas[i].GetName();
@@ -79,6 +79,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			ImGui::TableSetColumnIndex(1);
 			if(selRow != i) // unselected - just draw values
 			{
+				// values are accessed via pointer, no copying
 				ImGui::Text(appFormulas->formulas[i].GetExpression());
 				ImGui::TableSetColumnIndex(2);
 				ImGui::Text(appFormulas->formulas[i].GetName());
@@ -86,22 +87,23 @@ void ImFormulaEditor::DrawFormulaList() {
 			else { // selected - draw inputs
 				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
-				ImGui::InputText("##changeExp", &changeExpression);
+				if (ImGui::InputText("##changeExp", &changeExpression)) {
+					// only check when a change was made, accesses via poitner without copying
+					isDiff = changeExpression != appFormulas->formulas[i].GetExpression();
+				}
 				ImGui::TableSetColumnIndex(2);
 				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
-				ImGui::InputText("##changeNam", &changeName);
+				if (ImGui::InputText("##changeNam", &changeName)) {
+					// only check when a change was made, accesses via poitner without copying
+					isDiff = changeName != appFormulas->formulas[i].GetName();
+				}
 			}
 			// values column
 			ImGui::TableSetColumnIndex(3);
-			while (valuesBuffer.size() <= i) valuesBuffer.push_back("");
-			if (mApp->autoUpdateFormulas) {
-				valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
-			}
-			ImGui::TextColored(ImVec4(0.f, 0.f, blue?1.f:0.f, 1.f), valuesBuffer[i].c_str());
+			if(i<valuesBuffer.size()) ImGui::TextColored(ImVec4(0.f, 0.f, blue?1.f:0.f, 1.f), valuesBuffer[i].c_str());
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
-			bool isDiff = changeExpression != appFormulas->formulas[i].GetExpression() || changeName != appFormulas->formulas[i].GetName();
 			// show button only if the row is selected and there was a change
 			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[ImGuiKey_Enter]
 																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
@@ -131,10 +133,9 @@ void ImFormulaEditor::DrawFormulaList() {
 		}
 		ImGui::TableSetColumnIndex(4);
 		// show button if either field is not empty
-		if (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
-			|| (selRow == formulasSize && (io->KeysDown[ImGuiKey_Enter]
-										|| io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
-			// add new formula when button is pressed or row is selected and enter is pressed
+		if (selRow == formulasSize && (!(newName == "" && newExpression == "") && (ImGui::Button(" Add ")
+										|| (io->KeysDown[ImGuiKey_Enter] || io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
+			// add new formula new row is selected, valuesa are not empty and button or enter are pressed
 			appFormulas->AddFormula(newName, newExpression);
 			formulasSize = static_cast<int>(appFormulas->formulas.size());
 			appFormulas->formulas[formulasSize-1].Parse();
@@ -153,8 +154,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			mApp->imWnd->convPlot.Refresh();
 		}
 
-
-		// apply changes
+		// apply changes only if some action set the changeIndex
 		if (changeIndex > -1) {
 			if (changeName == "" && changeExpression == "") {
 				//delete formula
@@ -171,7 +171,7 @@ void ImFormulaEditor::DrawFormulaList() {
 				appFormulas->formulas[changeIndex].Parse();
 			}
 			if (mApp->autoUpdateFormulas) {
-				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+				Update(); // update if autoupdate toggle is enabled
 			}
 			changeIndex = -1;
 			selRow = -1;
@@ -256,11 +256,7 @@ void ImFormulaEditor::Draw() {
 
 	ImGui::EndChild();
 	if (ImGui::Button("Recalculate now")) {
-		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
-		while (valuesBuffer.size() <= appFormulas->formulas.size()) valuesBuffer.push_back("");
-		for (int i = 0; i < appFormulas->formulas.size(); i++) {
-			valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
-		}
+		Update();
 	}
 	ImGui::SameLine();
 	float dummyWidthA = ImGui::GetContentRegionAvail().x - txtW*20.5f;
@@ -312,6 +308,17 @@ void ImFormulaEditor::Init(Interface* mApp_, std::shared_ptr<Formulas> formulas_
 	help = ImFormattingHelp();
 	io = &ImGui::GetIO();
 	blue = mApp->worker.displayedMoment != 0;
+}
+
+void ImFormulaEditor::Update()
+{
+	formulasSize = static_cast<int>(appFormulas->formulas.size()); // very frequently used value so it is stored
+	valuesBuffer.resize(appFormulas->formulas.size());
+	for (int i = 0; i < appFormulas->formulas.size(); i++)
+	{
+		valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
+	}
+	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 }
 
 void ImFormulaEditor::ImFormattingHelp::Draw()

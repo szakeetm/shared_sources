@@ -522,6 +522,7 @@ void ImguiWindow::Refresh()
     facCoord.UpdateFromSelection();
     vertCoord.UpdateFromSelection();
     splitFac.Reset();
+    formulaEdit.Update();
 }
 
 void ImguiWindow::Reset()
@@ -536,6 +537,7 @@ void ImguiWindow::Reset()
 #endif
     partLog.Reset();
     splitFac.Reset();
+    formulaEdit.Update();
 }
 
 void ImguiWindow::Clear()
