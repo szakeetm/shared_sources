@@ -23,7 +23,7 @@ public:
 	bool IsPlotted(plotTabs tab, size_t facetId);
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
-	void UpdateOnFacetChange();
+	void UpdatePlotter();
 protected:
 	//functions
 	void OnShow() override;

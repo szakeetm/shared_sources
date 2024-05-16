@@ -20,8 +20,8 @@ void ImCreateShape::Draw()
 			shapeSel = rect;
 			ImGui::EndTabItem();
 		}
-		if (ImGui::BeginTabItem("Circle / Elipse###CE")) {
-			shapeSel = elipse;
+		if (ImGui::BeginTabItem("Circle / Ellipse###CE")) {
+			shapeSel = ellipse;
 			ImGui::EndTabItem();
 		}
 		if (ImGui::BeginTabItem("Racetrack###RT")) {
@@ -35,8 +35,8 @@ void ImCreateShape::Draw()
 	case rect:
 		rectImg->Draw();
 		break;
-	case elipse:
-		elipseImg->Draw();
+	case ellipse:
+		ellipseImg->Draw();
 		break;
 	case track:
 		trackImg->Draw();
@@ -164,7 +164,7 @@ void ImCreateShape::Draw()
 void ImCreateShape::OnShow()
 {
 	if (rectImg == nullptr) rectImg = new ImImage("images/edit_rectangle_transparent.png");
-	if (elipseImg == nullptr) elipseImg = new ImImage("images/edit_circle_transparent.png");
+	if (ellipseImg == nullptr) ellipseImg = new ImImage("images/edit_circle_transparent.png");
 	if (trackImg == nullptr) trackImg = new ImImage("images/edit_racetrack_transparent.png");
 }
 
@@ -423,7 +423,7 @@ void ImCreateShape::ApplyButtonPress()
 			return;
 		}
 	}
-	if (shapeSel == track || shapeSel == elipse) {
+	if (shapeSel == track || shapeSel == ellipse) {
 		if (!Util::getNumber(&arcSteps, arcStepsIn)) {
 			ImIOWrappers::InfoPopup("Error", "Can't parse steps in arc");
 			return;
@@ -440,7 +440,7 @@ void ImCreateShape::ApplyButtonPress()
 		case rect:
 			interfGeom->CreateRectangle(center, axisDir, normalDir, axis1Len, axis2Len);
 			break;
-		case elipse:
+		case ellipse:
 			interfGeom->CreateCircle(center, axisDir, normalDir, axis1Len, axis2Len, (size_t)arcSteps);
 			break;
 		case track:

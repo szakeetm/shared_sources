@@ -151,7 +151,6 @@ void ImHistogramPlotter::DrawPlot()
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
-	RefreshPlots();
 }
 
 void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
@@ -543,9 +542,11 @@ void ImHistogramPlotter::Reset()
 	RefreshFacetLists();
 }
 
-void ImHistogramPlotter::UpdateOnFacetChange()
+void ImHistogramPlotter::UpdatePlotter()
 {
 	settingsWindow.UpdateOnFacetChange();
+	RefreshFacetLists();
+	RefreshPlots();
 }
 
 void ImHistogramPlotter::DrawMenuBar()

@@ -10,7 +10,7 @@ protected:
 	enum Shape {
 		none,
 		rect,
-		elipse,
+		ellipse,
 		track
 	};
 	Shape shapeSel = rect;
@@ -39,5 +39,5 @@ protected:
 	void FullCircleSidesButtonPress();
 	void ApplyButtonPress();
 
-	ImImage *rectImg, *elipseImg, *trackImg;
+	ImImage *rectImg, *ellipseImg, *trackImg;
 };
