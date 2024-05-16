@@ -161,26 +161,37 @@ void ImConvergencePlotter::RemovePlot(int idx) {
 	}
 }
 
+void ImConvergencePlotter::AddPlot(int idx)
+{
+	data.push_back(ImUtils::MakePlotData(idx));
+	GetData();
+}
+
 void ImConvergencePlotter::OnShow()
 {
 	Refresh();
 }
 
-// Clear Data abd resize vectors
-void ImConvergencePlotter::Reload()
-{
-	nFormulas = mApp->appFormulas->formulas.size();
-	formulaDrawToggle.resize(nFormulas, false);
-	data.clear();
-	UpdateSidebarMasterToggle();
-}
-
-// Check for changes in number and order of formulas
 void ImConvergencePlotter::Refresh()
 {
 	nFormulas = mApp->appFormulas->formulas.size();
 	formulaDrawToggle.resize(nFormulas, false);
+	GetData();
 	UpdateSidebarMasterToggle();
+}
+
+void ImConvergencePlotter::GetData() {
+	for (int i = 0; i < data.size(); i++) {
+		const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
+		actualNbValues = values.size();
+		size_t count = values.size() > maxDatapoints ? maxDatapoints : values.size();
+		data[i].x->clear();
+		data[i].y->clear();
+		for (int j = 0; j < values.size(); j++) {
+			data[i].x->push_back(static_cast<double>(values[j].nbDes));
+			data[i].y->push_back(values[j].value);
+		}
+	}
 }
 
 void ImConvergencePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -231,7 +242,7 @@ void ImConvergencePlotter::Draw()
 		std::string fName = ("[" + mApp->appFormulas->formulas[i].GetName() + "]" + mApp->appFormulas->formulas[i].GetExpression());
 		if (ImGui::Checkbox(fName.c_str(), (bool*)&(formulaDrawToggle[i]))) {
 			if (formulaDrawToggle[i] == 0 && IsPlotted(i)) RemovePlot(i);
-			else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) data.push_back(ImUtils::MakePlotData(i));
+			else if (formulaDrawToggle[i] == 1 && !IsPlotted(i)) AddPlot(i);
 			UpdateSidebarMasterToggle();
 		}
 	}
@@ -250,21 +261,11 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 	if (ImPlot::BeginPlot("##Convergence","Number of desorptions",0,ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y-4.5f*txtH),0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
-			if (mApp->appFormulas->convergenceData.size() <= data[i].id) break;
-			const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
-			actualNbValues = values.size();
-			size_t count = values.size()>maxDatapoints ? maxDatapoints : values.size();
-			data[i].x->clear();
-			data[i].y->clear();
-			for (int j = 0; j < values.size(); j++) {
-				data[i].x->push_back(static_cast<double>(values[j].nbDes));
-				data[i].y->push_back(values[j].value);
-			}
-			if (data[i].x->size() == 0) continue;
+			if (data[i].x == nullptr || data[i].y == nullptr || data[i].x->size() != data[i].y->size()) continue;
 			std::string name = mApp->appFormulas->formulas[data[i].id].GetName();
 			if(name=="") name = mApp->appFormulas->formulas[data[i].id].GetExpression();
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
-			ImPlot::PlotLine(name.c_str(), data[i].x->data(), data[i].y->data(), static_cast<int>(count));
+			ImPlot::PlotLine(name.c_str(), data[i].x->data(), data[i].y->data(), static_cast<int>(data[i].x->size()));
 		}
 
 		//draw manual
