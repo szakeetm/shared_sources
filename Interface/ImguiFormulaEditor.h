@@ -16,6 +16,14 @@ protected:
 	Interface* mApp=0;
 	std::shared_ptr<Formulas> appFormulas;
 	std::vector<std::string> valuesBuffer;
+
+	// std::vector<bool> does not have a standardized implementation and does
+	// not behave as expected, and behavior differs accross platforms
+	// using a simple struct to wrap around the bool in order to control the
+	// behavior
+	typedef struct { bool b; } boolWrapper; 
+	std::vector<boolWrapper> changed;
+
 	int selRow = -1;
 
 	class ImFormattingHelp : public ImWindow {

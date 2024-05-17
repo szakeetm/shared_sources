@@ -65,7 +65,6 @@ void ImFormulaEditor::DrawFormulaList() {
 		for (int i = 0; i < formulasSize; i++) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			bool isDiff = false;
 			// handle selecting a row
 			if (ImGui::Selectable(std::to_string(i + 1).c_str(), selRow==i, selRow == i ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
 				if (selRow == i) selRow = -1; // if clicked on the selected row, deselect
@@ -89,14 +88,14 @@ void ImFormulaEditor::DrawFormulaList() {
 				ImGui::SetNextItemWidth(columnW);
 				if (ImGui::InputText("##changeExp", &changeExpression)) {
 					// only check when a change was made, accesses via poitner without copying
-					isDiff = changeExpression != appFormulas->formulas[i].GetExpression();
+					changed[i].b = changeExpression != appFormulas->formulas[i].GetExpression();
 				}
 				ImGui::TableSetColumnIndex(2);
 				columnW = ImGui::GetContentRegionAvail().x;
 				ImGui::SetNextItemWidth(columnW);
 				if (ImGui::InputText("##changeNam", &changeName)) {
 					// only check when a change was made, accesses via poitner without copying
-					isDiff = changeName != appFormulas->formulas[i].GetName();
+					changed[i].b = changeName != appFormulas->formulas[i].GetName();
 				}
 			}
 			// values column
@@ -105,7 +104,7 @@ void ImFormulaEditor::DrawFormulaList() {
 			ImGui::TableSetColumnIndex(4);
 			// check if value changed
 			// show button only if the row is selected and there was a change
-			if (selRow == i && isDiff && (ImGui::Button(" Apply ")	|| io->KeysDown[ImGuiKey_Enter]
+			if (selRow == i && changed[i].b && (ImGui::Button(" Apply ")	|| io->KeysDown[ImGuiKey_Enter]
 																	|| io->KeysDown[SDL_SCANCODE_KP_ENTER])) {
 				changeIndex = i; // set it when button or enter is pressed
 			}
@@ -137,11 +136,9 @@ void ImFormulaEditor::DrawFormulaList() {
 										|| (io->KeysDown[ImGuiKey_Enter] || io->KeysDown[SDL_SCANCODE_KP_ENTER])))) {
 			// add new formula new row is selected, valuesa are not empty and button or enter are pressed
 			appFormulas->AddFormula(newName, newExpression);
-			formulasSize = static_cast<int>(appFormulas->formulas.size());
+			formulasSize++;
 			appFormulas->formulas[formulasSize-1].Parse();
-			if (mApp->autoUpdateFormulas) { // formula was added, if autoUpdate is true update all values
-				appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
-			}
+			Update();
 			selRow = formulasSize-1; // select newly added formula
 			// reset state
 			changeIndex = -1;
@@ -161,6 +158,7 @@ void ImFormulaEditor::DrawFormulaList() {
 				mApp->imWnd->convPlot.RemovePlot(selRow); // prevent convergence plotter crash when removing plotted formula
 				appFormulas->formulas.erase(appFormulas->formulas.begin() + selRow);
 				valuesBuffer.erase(valuesBuffer.begin() + selRow);
+				changed.erase(changed.begin() + selRow);
 				mApp->imWnd->convPlot.DecrementFormulaIndicies(selRow); // prevent convergence plotter crash when removing plotted formula
 			}
 			else {
@@ -169,10 +167,9 @@ void ImFormulaEditor::DrawFormulaList() {
 				appFormulas->formulas[changeIndex].SetName(changeName);
 				appFormulas->formulas[changeIndex].SetExpression(changeExpression);
 				appFormulas->formulas[changeIndex].Parse();
+				changed[changeIndex].b = false;
 			}
-			if (mApp->autoUpdateFormulas) {
-				Update(); // update if autoupdate toggle is enabled
-			}
+			Update();
 			changeIndex = -1;
 			selRow = -1;
 
@@ -185,7 +182,6 @@ void ImFormulaEditor::DrawFormulaList() {
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
 		// child will fill the space below table, its only purpose is to be clicked in order to deselect rows
-		// deselecting rows no longer 'submits' changes, that was bad design in my opinion ~Tym Mro
 		ImGui::BeginChild("##clickBait",ImVec2(0,0),false,ImGuiWindowFlags_NoScrollbar);
 		if (ImGui::IsWindowHovered() && io->MouseDown[0]) {
 			selRow = -1;
@@ -201,12 +197,16 @@ void ImFormulaEditor::Move(direction d)
 		std::swap(appFormulas->formulas[selRow], appFormulas->formulas[selRow - 1]);
 		std::swap(appFormulas->convergenceData[selRow], appFormulas->convergenceData[selRow - 1]);
 		std::swap(appFormulas->formulaValueCache[selRow], appFormulas->formulaValueCache[selRow - 1]);
+		std::swap(valuesBuffer[selRow], valuesBuffer[selRow - 1]);
+		std::swap(changed[selRow], changed[selRow - 1]);
 		--selRow; // keep it selected
 	}
 	else if (d == down && selRow >= 0 && selRow < formulasSize - 1) {
 		std::swap(appFormulas->formulas[selRow], appFormulas->formulas[selRow + 1]);
 		std::swap(appFormulas->convergenceData[selRow], appFormulas->convergenceData[selRow + 1]);
 		std::swap(appFormulas->formulaValueCache[selRow], appFormulas->formulaValueCache[selRow + 1]);
+		std::swap(valuesBuffer[selRow], valuesBuffer[selRow + 1]);
+		std::swap(changed[selRow], changed[selRow + 1]);
 		++selRow;
 	}
 }
@@ -234,7 +234,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::SetNextWindowSize(ImVec2(txtW * 75, txtH * 20), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Formula editor", &drawn, ImGuiWindowFlags_NoSavedSettings);
 
-	float formulaListHeight = ImGui::GetWindowHeight() - txtH*8;
+	float formulaListHeight = ImGui::GetWindowHeight() - txtH*7.25;
 	ImGui::BeginChild("###Formula list",ImVec2(0, formulaListHeight),true,0);
 	ImGui::Text("Formula list");
 	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);
@@ -279,7 +279,7 @@ void ImFormulaEditor::Draw() {
 	if (!moveDownEnable) ImGui::EndDisabled();
 	
 	ImGui::Checkbox("Record values for convergence", &appFormulas->recordConvergence);
-	ImGui::Checkbox("Auto-update formulas", &mApp->autoUpdateFormulas);
+	if (ImGui::Checkbox("Auto-update formulas", &mApp->autoUpdateFormulas)) Update();
 	ImGui::SameLine();
 	float dummyWidthB = ImGui::GetContentRegionAvail().x - ImGui::CalcTextSize("Open convergence plotter >>").x - 2 * txtW;
 	ImGui::Dummy(ImVec2(dummyWidthB, txtH));
@@ -313,12 +313,15 @@ void ImFormulaEditor::Init(Interface* mApp_, std::shared_ptr<Formulas> formulas_
 void ImFormulaEditor::Update()
 {
 	formulasSize = static_cast<int>(appFormulas->formulas.size()); // very frequently used value so it is stored
-	valuesBuffer.resize(appFormulas->formulas.size());
+	valuesBuffer.resize(formulasSize);
+	changed.resize(formulasSize);
+	if (mApp->autoUpdateFormulas) {
+		appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
+	}
 	for (int i = 0; i < appFormulas->formulas.size(); i++)
 	{
 		valuesBuffer[i] = mApp->appFormulas->GetFormulaValue(i);
 	}
-	appFormulas->EvaluateFormulas(mApp->worker.globalStatCache.globalHits.nbDesorbed);
 }
 
 void ImFormulaEditor::ImFormattingHelp::Draw()
