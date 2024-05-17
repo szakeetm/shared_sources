@@ -515,29 +515,31 @@ void ImguiWindow::renderSingle() {
 
 void ImguiWindow::Refresh()
 {
-    histPlot.RefreshFacetLists();
-    histPlot.LoadHistogramSettings();
-    convPlot.Refresh();
-    movPart.Update();
-    facCoord.UpdateFromSelection();
-    vertCoord.UpdateFromSelection();
-    splitFac.Reset();
-    formulaEdit.Update();
+    if (histPlot.IsVisible()) histPlot.RefreshFacetLists();
+    if (histPlot.IsVisible()) histPlot.LoadHistogramSettings();
+    if (convPlot.IsVisible()) convPlot.Refresh();
+    if (movPart.IsVisible()) movPart.Update();
+    if (facCoord.IsVisible()) facCoord.UpdateFromSelection();
+    if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
+    if (splitFac.IsVisible()) splitFac.Reset();
+    if (formulaEdit.IsVisible()) formulaEdit.Update();
+    if (measForce.IsVisible()) measForce.Update();
 }
 
 void ImguiWindow::Reset()
 {
-    histPlot.Reset();
-    histPlot.RefreshFacetLists();
-    histPlot.LoadHistogramSettings();
-    profPlot.Refresh();
-    convPlot.Refresh();
+    if (histPlot.IsVisible()) histPlot.Reset();
+    if (histPlot.IsVisible()) histPlot.RefreshFacetLists();
+    if (histPlot.IsVisible()) histPlot.LoadHistogramSettings();
+    if (profPlot.IsVisible()) profPlot.Refresh();
+    if (convPlot.IsVisible()) convPlot.Refresh();
 #if defined(MOLFLOW)
-    textScale.Load();
+    if (textScale.IsVisible()) textScale.Load();
 #endif
-    partLog.Reset();
-    splitFac.Reset();
-    formulaEdit.Update();
+    if (partLog.IsVisible()) partLog.Reset();
+    if (splitFac.IsVisible()) splitFac.Reset();
+    if (formulaEdit.IsVisible()) formulaEdit.Update();
+    if (measForce.IsVisible()) measForce.Update();
 }
 
 void ImguiWindow::Clear()

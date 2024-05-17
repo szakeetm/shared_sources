@@ -4,6 +4,8 @@
 class ImMeasureForce : public ImWindow {
 public:
 	void Draw();
+	void Update();
+	void OnShow() override;
 protected:
 	bool enableForceMeasurement = false;
 	void SelectedVertexButtonPress();
