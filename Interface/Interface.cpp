@@ -224,6 +224,7 @@ void Interface::ResetSimulation(bool askConfirm) {
         if (mApp->imWnd) mApp->ImRefresh();
         if(formulaEditor) formulaEditor->UpdateValues();
         if(particleLogger) particleLogger->UpdateStatus();
+        if (mApp->imWnd && mApp->imWnd->partLog.IsVisible()) mApp->imWnd->partLog.UpdateStatus();
     }
     UpdatePlotters();
 }
@@ -2560,6 +2561,8 @@ int Interface::FrameMove() {
                 formulaEditor->UpdateValues();
             }
             if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
+            if (mApp->imWnd && mApp->imWnd->partLog.IsVisible()) mApp->imWnd->partLog.UpdateStatus();
+
             //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
             // Update timing measurements

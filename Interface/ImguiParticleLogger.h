@@ -9,10 +9,11 @@ public:
 	void Draw();
 	void Init(Interface* mApp_);
 	void Reset();
+	void UpdateStatus();
+	void OnShow() override;
 private:
 	void ApplyButtonPress();
 	void UpdateMemoryEstimate();
-	void UpdateStatus();
 	std::string LogToText(const std::string& separator = "\t", FILE* file = nullptr);
 	bool enableLogging;
 	std::string facetNumInput = "";

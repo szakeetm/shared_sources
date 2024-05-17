@@ -540,6 +540,7 @@ void ImguiWindow::Reset()
     if (splitFac.IsVisible()) splitFac.Reset();
     if (formulaEdit.IsVisible()) formulaEdit.Update();
     if (measForce.IsVisible()) measForce.Update();
+    if (movPart.IsVisible()) movPart.Update();
 }
 
 void ImguiWindow::Clear()

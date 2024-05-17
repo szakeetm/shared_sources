@@ -143,7 +143,6 @@ void ImParticleLogger::UpdateMemoryEstimate()
 void ImParticleLogger::UpdateStatus()
 {
 	log = mApp->worker.GetLog();
-	mApp->worker.UnlockLog();
 	if (log->pLog.empty()) {
 		statusLabel = "No recording.";
 	}
@@ -152,6 +151,12 @@ void ImParticleLogger::UpdateStatus()
 	}
 	if (!mApp->imguiRenderLock)	LockWrapper lW(mApp->imguiRenderLock);
 	if (mApp->particleLogger != nullptr) mApp->particleLogger->UpdateStatus(); // update legacy gui
+	mApp->worker.UnlockLog();
+}
+
+void ImParticleLogger::OnShow()
+{
+	UpdateStatus();
 }
 
 std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file)
