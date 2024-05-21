@@ -1732,6 +1732,7 @@ Open-source libraries used:
 - pugixml (https://github.com/zeux/pugixml)
 - cereal (https://github.com/USCiLab/cereal)
 - fmt (https://github.com/fmtlib/fmt)
+- stb (https://github.com/nothings/stb)
 )";
                     GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
                     return true;

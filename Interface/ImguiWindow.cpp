@@ -75,6 +75,7 @@ Open-source libraries used:
 - pugixml (https://github.com/zeux/pugixml)
 - cereal (https://github.com/USCiLab/cereal)
 - fmt (https://github.com/fmtlib/fmt)
+- stb (https://github.com/nothings/stb)
 )";
         ImGui::TextWrapped(aboutText.str());
         ImGui::PlaceAtRegionCenter("  OK  ");
