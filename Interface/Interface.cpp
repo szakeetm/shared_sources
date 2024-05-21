@@ -1478,11 +1478,15 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     interfGeom->SelectIsolatedVertices();
                     return true;
                 case MENU_VERTEX_CLEAR_ISOLATED:
-                    interfGeom->DeleteIsolatedVertices(false);
-                    UpdateModelParams();
-                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
-                    if (vertexCoordinates) vertexCoordinates->Update();
-                    interfGeom->BuildGLList();
+                    if(interfGeom->GetNbIsolatedVertices()) { //First pass, prevents unnecessary simulation reset
+                        if (AskToReset()) { //can renumber facet indices
+                            interfGeom->DeleteIsolatedVertices(false);
+                            UpdateModelParams();
+                            if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                            if (vertexCoordinates) vertexCoordinates->Update();
+                            interfGeom->BuildGLList();
+                        }
+                    }
                     return true;
                 case MENU_VERTEX_CREATE_POLY_CONVEX:
                     if (AskToReset()) {

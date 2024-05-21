@@ -1068,15 +1068,20 @@ void SelectionOrderMenuPress() {
         mApp->worker.MarkToReload();
     }
 }
+
 void ClearIsolatedMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
-    
-    interfGeom->DeleteIsolatedVertices(false);
-    mApp->UpdateModelParams();
-    if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
-    if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
-    interfGeom->BuildGLList();
+    if(interfGeom->GetNbIsolatedVertices()) { //First pass, prevents unnecessary simulation reset
+        if (mApp->AskToReset()) { //can renumber facet indices
+            interfGeom->DeleteIsolatedVertices(false);
+            mApp->UpdateModelParams();
+            if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
+            if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+            interfGeom->BuildGLList();
+        }
+    }
 }
+
 void RemoveSelectedMenuPress() {
     
     if (interfGeom->IsLoaded()) {
