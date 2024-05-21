@@ -230,6 +230,9 @@ target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+find_package(Stb REQUIRED)
+message("-- Found STB " ${Stb_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})
 
 #Shipped libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 )

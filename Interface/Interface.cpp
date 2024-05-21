@@ -2702,6 +2702,7 @@ void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& 
 {
     imWnd->LoadProfileFromFile(interfaceSettings);
     imWnd->convPlot.Refresh();
+    imWnd->profPlot.Refresh();
 }
 
 void Interface::ImRefresh()
