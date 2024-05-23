@@ -101,8 +101,6 @@ void ImGeoViewer::Draw()
 {
 	if (!drawn) return;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(txtW*140, txtH*40));
-	ImGuiIO io = ImGui::GetIO();
-	io.ConfigWindowsMoveFromTitleBarOnly = true;
 	if (preventDragging)
 	{
 		ImGui::SetNextWindowPos(windowPos);
@@ -129,6 +127,7 @@ void ImGeoViewer::Draw()
 		//mApp->imWnd->skipImGuiEvents = true;
 		if (glViewer) glViewer->SetFocus(true);
 	}
+	if (ImGui::GetMousePos().y > windowPos.y + 25) preventDragging = true;
 	
 	// draw the image containing the viewer
 	// despite the code to do it, the viewer does not seem to be rendered into this texture
@@ -140,7 +139,6 @@ void ImGeoViewer::Draw()
 	textureHeight = (int)availableSpace.y;
 	
 	ImGui::End();
-	io.ConfigWindowsMoveFromTitleBarOnly = false;
 }
 
 void ImGeoViewer::OnShow()
@@ -148,10 +146,12 @@ void ImGeoViewer::OnShow()
 	// adding an extra viewer would require significant changes to core molflow code
 	glViewer = mApp->viewers[3];
 	glViewer->SetVisible(true);
+	glViewer->SetFocus(true);
 }
 
 void ImGeoViewer::OnHide()
 {
+	glViewer->SetFocus(false);
 	glViewer->SetVisible(false);
 	mApp->Place3DViewer();
 }
