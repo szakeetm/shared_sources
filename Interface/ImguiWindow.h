@@ -92,7 +92,7 @@ public:
     ImSelectTextureType selByTex;
     ImFacetMove facetMov;
     ShortcutManager shortcutMan;
-    ImGuiSidebar sideBar;
+    ImSidebar sideBar;
     ImGlobalSettings globalSet;
     ImSelectFacetByResult selFacetByResult;
     ImFormulaEditor formulaEdit;

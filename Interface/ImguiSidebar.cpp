@@ -1,5 +1,3 @@
-
-
 #include "ImguiSidebar.h"
 #include "ImguiExtensions.h"
 #include "ImguiPopup.h"
@@ -94,62 +92,38 @@ namespace {
     const ImGuiTableSortSpecs *FacetData::s_current_sort_specs = nullptr;
 }
 
-
-#if defined(MOLFLOW)
-double ImGuiSidebar::PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp) {
+#ifdef MOLFLOW
+double ImSidebar::PumpingSpeedFromSticking(double sticking, double area, double temperature) {
     return 1.0 * sticking * area / 10.0 / 4.0 * sqrt(8.0 * 8.31 * temperature / PI / (mApp->worker.model->sp.gasMass * 0.001));
 }
 
-double ImGuiSidebar::StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp) {
+double ImSidebar::StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature) {
     return std::abs(pumpingSpeed / (area / 10.0) * 4.0 * sqrt(1.0 / 8.0 / 8.31 / (temperature) * PI * (mApp->worker.model->sp.gasMass * 0.001)));
 }
-
-// Sidebar containing 3d viewer settings, facet settings and simulation data
-void ImGuiSidebar::ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom) {
-#else
-void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom) {
 #endif
-    const float PAD = 10.0f;
-    static int corner = 0;
-    static float TEXT_BASE_HEIGHT = ImGui::GetTextLineHeightWithSpacing();
-    static float TEXT_BASE_WIDTH = ImGui::CalcTextSize("A").x;
 
-    ImGuiIO &io = ImGui::GetIO();
+void ImSidebar::Place() {
+    int corner = 1; // top right
+    const float PAD = 0.0f;//const float PAD = 10.0f;
+    const ImGuiViewport* viewport = ImGui::GetMainViewport();
+    ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+    ImVec2 work_size = viewport->WorkSize;
+    window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
+    window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+    window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
+    window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
+    size.x = txtW * 30;
+    size.y = viewport->WorkSize.y;
+}
+// Sidebar containing 3d viewer settings, facet settings and simulation data
+void ImSidebar::Draw() {
+    if (!drawn) return;
+    Place();
 
-    const ImGuiViewport *viewport = ImGui::GetMainViewport();
-    static bool use_work_area = true; // experiment with work area vs normal area
-
-    static float width = TEXT_BASE_WIDTH * 30;
-
-    ImGui::SetNextWindowPos(use_work_area ?
-                            ImVec2(viewport->Size.x - width, viewport->WorkPos.y)
-                                          : viewport->Pos);
+    ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
     // Set size initially (to be able for resize) to take the full height on the right side
-    ImGui::SetNextWindowSize(
-            use_work_area ? ImVec2(width, viewport->WorkSize.y) : ImVec2(width, viewport->Size.y));
+    ImGui::SetNextWindowSize(size);
 
-    static ImGuiWindowFlags flags =
-            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings | 
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar;
-    /*ImGuiWindowFlags_NoDecoration | *//*ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove *//*| ImGuiWindowFlags_NoResize *//*|
-            ImGuiWindowFlags_NoSavedSettings;*/
-
-    if (!use_work_area) // example from ShowExampleAppSimpleOverlay() [demo] for corner positioning
-    {
-        int corner = 1; // top right
-        const float PAD = 0.0f;//const float PAD = 10.0f;
-        const ImGuiViewport* viewport = ImGui::GetMainViewport();
-        ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
-        ImVec2 work_size = viewport->WorkSize;
-        ImVec2 window_pos, window_pos_pivot;
-        window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
-        window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-        window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
-        window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
-        ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
-        flags |= ImGuiWindowFlags_NoMove;
-    }
-    //ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x - viewport->WorkSize.x * 0.8f, viewport->WorkSize.y));
     static bool displayedWarning = false;
 #ifndef DEBUG
     if (!displayedWarning) {
@@ -157,27 +131,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
         displayedWarning = true;
     }
 #endif
-    if (ImGui::Begin("[BETA] Molflow Sidebar", p_open, flags)) {
-#if defined(DEBUG)
-        if (p_open && ImGui::Button("Close this window"))
-            *p_open = false;
-        if (ImGui::CollapsingHeader("[DEMO] Window flags")) {
-
-            ImGui::Checkbox("Use work area instead of main area", &use_work_area);
-            ImGui::SameLine();
-            ImGui::HelpMarker(
-                    "Main Area = entire viewport,\nWork Area = entire viewport minus sections used by the main menu bars, task bars etc.\n\nEnable the main-menu bar in Examples menu to see the difference.");
-
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoBackground", &flags, ImGuiWindowFlags_NoBackground);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoDecoration", &flags, ImGuiWindowFlags_NoDecoration);
-            ImGui::Indent();
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoTitleBar", &flags, ImGuiWindowFlags_NoTitleBar);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoCollapse", &flags, ImGuiWindowFlags_NoCollapse);
-            ImGui::CheckboxFlags("ImGuiWindowFlags_NoScrollbar", &flags, ImGuiWindowFlags_NoScrollbar);
-            ImGui::Unindent();
-
-        }
-#endif
+    ImGui::Begin("[BETA] Molflow Sidebar", &drawn, flags);
         if (ImGui::CollapsingHeader("3D Viewer settings", ImGuiTreeNodeFlags_DefaultOpen)) {
             auto curViewer = mApp->curViewer;
             auto viewer = mApp->viewers[curViewer];
@@ -275,7 +229,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 }
 
                 ImGui::Text("Desorption"); ImGui::SameLine();
-                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                ImGui::SetNextItemWidth(txtW * 10);
                 // TODO handle mixed selection
                 if (ImGui::Combo("##Desorption", &des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
                     sel->sh.desorbType = des_idx;
@@ -299,7 +253,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 }
                 if (des_idx == 3) {
                     ImGui::SameLine();
-                    ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 4);
+                    ImGui::SetNextItemWidth(txtW * 4);
                     ImGui::InputText("##exponent", &exponentInput);
                 }
 
@@ -344,25 +298,25 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                 if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
                     sf = sel->sh.sticking; 
                     sfInput = std::to_string(sf);
-                    ps = PumpingSpeedFromSticking(sf,sel->sh.area,sel->sh.temperature, mApp);
+                    ps = PumpingSpeedFromSticking(sf,sel->sh.area,sel->sh.temperature);
                     psInput = std::to_string(ps);
                 }
                 ImGui::Text("Sticking Factor"); ImGui::SameLine();
-                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                ImGui::SetNextItemWidth(txtW * 10);
                 if (ImGui::InputText("##StickingFactor", &sfInput)) {
                     if (Util::getNumber(&sf, sfInput)) {
                         // could work incorrectly correctly if area and temperature are changed
-                        ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature, mApp);
+                        ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature);
                         psInput = std::to_string(ps);
                         updateFacetProperties = true;
                     }
                 }
                 ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
-                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                ImGui::SetNextItemWidth(txtW * 10);
                 if (ImGui::InputText("##PumpingSpeed", &psInput)) {
                     if (Util::getNumber(&ps, psInput)) {
                         // could work incorrectly correctly if area and temperature are changed
-                        sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature, mApp);
+                        sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature);
                         sfInput = std::to_string(sf);
                         updateFacetProperties = true;
                     }
@@ -399,7 +353,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                     opacityInput = std::to_string(opacity);
                 }
                 ImGui::Text("Opacity"); ImGui::SameLine();
-                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                ImGui::SetNextItemWidth(txtW * 10);
                 if (ImGui::InputText("##Opacity", &opacityInput)) { // if text changed
                     if (Util::getNumber(&opacity, opacityInput)) { // try to convert it to a number
                         updateFacetProperties = true; // if success set update flag
@@ -421,7 +375,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                     temperatureInput = std::to_string(temp);
                 }
                 ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
-                ImGui::SetNextItemWidth(TEXT_BASE_WIDTH * 10);
+                ImGui::SetNextItemWidth(txtW * 10);
                 if (ImGui::InputText("##Temperature", &temperatureInput)) {
                     if (Util::getNumber(&temp, temperatureInput)) {
                         updateFacetProperties = true;
@@ -488,7 +442,9 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             }
             if(ImGui::Button(title.c_str())){
                 mApp->changedSinceSave = true;
-                mApp->StartStopSimulation();
+#ifdef MOLFLOW
+                ((MolFlow*)mApp)->StartStopSimulation();
+#endif
             }
             ImGui::SameLine();
             if(!mApp->worker.IsRunning() && mApp->worker.globalStatCache.globalHits.nbDesorbed > 0)
@@ -623,7 +579,7 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
                         ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
                         ImGuiTableFlags_Sortable;
 
-                ImVec2 outer_size = ImVec2(0.0f, std::max(ImGui::GetContentRegionAvail().y, TEXT_BASE_HEIGHT * 8.f));
+                ImVec2 outer_size = ImVec2(0.0f, std::max(ImGui::GetContentRegionAvail().y, txtH * 8.f));
                 if (ImGui::BeginTable("facetlist", 4, tFlags, outer_size)) {
                     ImGui::TableSetupScrollFreeze(0, 1); // Make top row always visible
                     ImGui::TableSetupColumn("#", ImGuiTableColumnFlags_WidthFixed, 0.0f, FacetDataColumnID_ID);
@@ -672,6 +628,12 @@ void ImGuiSidebar::ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry 
             sprintf(errMsg, "%s\nError while updating facet hits", e.what());
             /*GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);*/
         }
-    }
     ImGui::End();
+}
+
+void ImSidebar::OnShow()
+{
+    width = txtW * 30;
+    viewport = ImGui::GetMainViewport();
+    Place();
 }

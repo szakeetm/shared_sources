@@ -189,7 +189,8 @@ void ImguiWindow::init() {
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
     progress.Init(mApp);
-    sideBar = ImGuiSidebar();
+    //sideBar = ImSidebar();
+    sideBar.Init(mApp);
     shortcutMan = ShortcutManager();
     // selection
     smartSelect = ImSmartSelection();
@@ -354,9 +355,6 @@ void ImguiWindow::renderSingle() {
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
 
-        if (show_app_sidebar)
-            sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());
-
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
         // ImGui!).
@@ -377,7 +375,10 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
+            bool sideBarVis = sideBar.IsVisible();
+            if (ImGui::Checkbox("Sidebar [NOT WORKING]", &sideBarVis)) {
+                sideBar.SetVisible(sideBarVis);
+            }
             
             bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
@@ -492,6 +493,7 @@ void ImguiWindow::renderSingle() {
 
         geoView.Draw();
 
+        sideBar.Draw();
         shortcutMan.DoShortcuts();
 
         // Rendering

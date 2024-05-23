@@ -1,21 +1,25 @@
+#pragma once
+#include "ImguiWindowBase.h"
 
-
-#ifndef MOLFLOW_PROJ_IMGUISIDEBAR_H
-#define MOLFLOW_PROJ_IMGUISIDEBAR_H
-
-class InterfaceGeometry;
-#if defined(MOLFLOW)
-class MolFlow;
-class ImGuiSidebar {
+class ImSidebar : public ImWindow {
 public:
-	void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom);
+	void Draw();
+    void OnShow() override;
 protected:
-	double PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp);
-	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp);
-};
-#else
-class SynRad;
-void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom);
+#if defined(MOLFLOW)
+    double PumpingSpeedFromSticking(double sticking, double area, double temperature);
+	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature);
 #endif
+    void Place();
+    ImVec2 window_pos, window_pos_pivot, size;
+    ImGuiWindowFlags flags =
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoMove;
+    const float PAD = 10.0f;
+    int corner = 0;
 
-#endif //MOLFLOW_PROJ_IMGUISIDEBAR_H
+    const ImGuiViewport* viewport;
+    bool use_work_area = true; // experiment with work area vs normal area
+
+    float width;
+};
