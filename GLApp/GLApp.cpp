@@ -463,6 +463,7 @@ void GLApplication::Run() {
          bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
+             imWnd->event = sdlEvent;
              if (imWnd->forceDrawNextFrame) {
                  imWnd->forceDrawNextFrame = false;
              }

@@ -52,6 +52,7 @@
 /*! Window manager for the Imgui GUI, right now it is rendered above the SDL2 GUI */
 class ImguiWindow {
 public:
+    SDL_Event event;
     bool forceDrawNextFrame = false;
     bool skipImGuiEvents = false;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
