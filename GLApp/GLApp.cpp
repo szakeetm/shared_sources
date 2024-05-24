@@ -462,6 +462,7 @@ void GLApplication::Run() {
       {
          bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
+         static bool skipShortcuts = false;
          if(imWnd) {
              if (imWnd->forceDrawNextFrame) {
                  imWnd->forceDrawNextFrame = false;
@@ -498,6 +499,7 @@ void GLApplication::Run() {
             if (ImGui_ImplSDL2_ProcessEvent(&sdlEvent)) {
                 //Handle input events caught by ImGui
             }
+            skipShortcuts = true;
             if (activeImGuiEvent) { // do not handle other events if ImGui is hovered
                 wereEvents_imgui = 3;
                 continue;
@@ -535,7 +537,7 @@ void GLApplication::Run() {
 
          default:
 
-           if(!forceSkipEvents && GLWindowManager::ManageEvent(&sdlEvent)) {
+           if(!forceSkipEvents && GLWindowManager::ManageEvent(&sdlEvent, skipShortcuts)) {
              // Relay to GLApp EventProc
              EventProc(&sdlEvent);
            }

@@ -42,6 +42,7 @@ public:
   // Processing
   static bool RestoreDeviceObjects(int width,int height);
   static bool ManageEvent(SDL_Event *evt);
+  static bool ManageEvent(SDL_Event *evt, bool skipShortcuts);
   static bool SearchKeyboardShortcut(SDL_Event *evt,bool processAcc);
   static void RestoreDeviceObjects();
   static void InvalidateDeviceObjects();
