@@ -494,16 +494,12 @@ void GLApplication::Run() {
                     }
                 }
             }
-            {
-                // event passthrough
-                activeImGuiEvent &= !imWnd->skipImGuiEvents;
-                imWnd->skipImGuiEvents = false;
+            // let ImGui always process events anywhere on the screen
+            if (ImGui_ImplSDL2_ProcessEvent(&sdlEvent)) {
+                //Handle input events caught by ImGui
             }
-            if (activeImGuiEvent) {
+            if (activeImGuiEvent) { // do not handle other events if ImGui is hovered
                 wereEvents_imgui = 3;
-                if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
-                    //Handle input events caught by ImGui
-                }
                 continue;
             }
          }
