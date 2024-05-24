@@ -1,4 +1,4 @@
-#include "nfd_wrapper.h"
+﻿#include "nfd_wrapper.h"
 #include <nfd.hpp>
 
 std::string NFD_OpenFile_Cpp(const std::string& fileFilters,const std::string& path) {
