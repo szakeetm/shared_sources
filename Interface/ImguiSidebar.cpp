@@ -102,9 +102,9 @@ double ImSidebar::StickingFromPumpingSpeed(double pumpingSpeed, double area, dou
 }
 #endif
 
+// calculates the position and size to place and fit correctly
 void ImSidebar::Place() {
     int corner = 1; // top right
-    const float PAD = 0.0f;//const float PAD = 10.0f;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
     ImVec2 work_size = viewport->WorkSize;
@@ -290,10 +290,10 @@ void ImSidebar::Draw() {
             }
             bool updateFacetProperties = false;
             if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-                    static std::string sfInput = "1.0";
-                    static std::string psInput = "1.0";
-                    static double sf = 1.0;
-                    static double ps = 1.0;
+                    sfInput = "1.0";
+                    psInput = "1.0";
+                    sf = 1.0;
+                    ps = 1.0;
 
                 if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
                     sf = sel->sh.sticking; 
@@ -331,7 +331,7 @@ void ImSidebar::Draw() {
             }
 #endif
             {
-                static int sides_idx = 0;
+                sides_idx = 0;
                 if(updateFacetInterfaceValues && sel) sides_idx = sel->sh.is2sided;
                 if (ImGui::Combo("Sides", &sides_idx, "1 Sided\0 2 Sided\0")) {
                     sel->sh.is2sided = sides_idx;
@@ -345,8 +345,8 @@ void ImSidebar::Draw() {
                     }
                 }
 
-                static double opacity = 1.0;
-                static std::string opacityInput = "1.0";
+                opacity = 1.0;
+                opacityInput = "1.0";
                 updateFacetProperties = false;
                 if (updateFacetInterfaceValues && sel) { // update if selection changed
                     opacity = sel->sh.opacity;
@@ -367,8 +367,8 @@ void ImSidebar::Draw() {
                 }
 
 #if defined(MOLFLOW)
-                static double temp = 1.0;
-                static std::string temperatureInput = "1.0";
+                temp = 1.0;
+                temperatureInput = "1.0";
                 updateFacetProperties = false;
                 if (updateFacetInterfaceValues && sel) {
                     temp = sel->sh.temperature;
@@ -389,11 +389,11 @@ void ImSidebar::Draw() {
                 }
 #endif
 
-                static double area = 1.0;
+                area = 1.0;
                 if(sel) area = sel->sh.area;
                 ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &area);
 
-                static int prof_idx = 0;
+                prof_idx = 0;
                 if(sel) prof_idx = sel->sh.profileType;
                 if (ImGui::Combo("Profile", &prof_idx,
                                  "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
@@ -476,8 +476,6 @@ void ImSidebar::Draw() {
                                                  ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
                                                  ImGuiTableFlags_Sortable*/, outer_size)) {
 
-                static std::string hit_stat;
-                static std::string des_stat;
                 bool runningState = mApp->worker.IsRunning();
                 if ((mApp->worker.simuTimer.Elapsed() <= 2.0f) && runningState) {
                     hit_stat = "Starting...";
@@ -549,8 +547,8 @@ void ImSidebar::Draw() {
             if (interfGeom->IsLoaded()) {
                 // TODO: Colors for moment highlighting
 
-                // Create item list that is sortable etc.
                 static ImVector<FacetData> items;
+                // Create item list that is sortable etc.
                 if (items.Size != interfGeom->GetNbFacet()) {
                     items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
                     for (int n = 0; n < items.Size; n++) {
@@ -571,13 +569,6 @@ void ImSidebar::Draw() {
                         item.abs = f->facetHitCache.nbAbsEquiv;
                     }
                 }
-
-                static ImGuiTableFlags tFlags =
-                        ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-                        /*ImGuiTableFlags_RowBg | */ImGuiTableFlags_BordersOuter |
-                        ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
-                        ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
-                        ImGuiTableFlags_Sortable;
 
                 ImVec2 outer_size = ImVec2(0.0f, std::max(ImGui::GetContentRegionAvail().y, txtH * 8.f));
                 if (ImGui::BeginTable("facetlist", 4, tFlags, outer_size)) {
