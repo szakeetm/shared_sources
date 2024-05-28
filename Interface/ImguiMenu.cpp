@@ -1679,7 +1679,7 @@ void ImExplodeFacet::DoExplode()
             ImIOWrappers::InfoPopup("Error", "Empty Selection");
         }
         else if (err == -2) {
-            ImIOWrappers::InfoPopup("Error", "All selected facets must have a mesh with boudary correction enabled");
+            ImIOWrappers::InfoPopup("Error", "All selected facets must have a texture");
         }
         else if (err == 0) {
             mApp->UpdateModelParams();

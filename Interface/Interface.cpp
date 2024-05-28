@@ -1284,7 +1284,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == -2) {
                                 GLMessageBox::Display(
-                                        "All selected facets must have a mesh with boudary correction enabled", "Error",
+                                        "All selected facets must have a texture", "Error",
                                         GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == 0) {
 
