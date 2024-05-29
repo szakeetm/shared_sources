@@ -113,7 +113,9 @@ Interface::Interface() : GLApplication(){
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     numCPU = (size_t) sysinfo.dwNumberOfProcessors;
-    
+    //Set console to UTF-8
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
