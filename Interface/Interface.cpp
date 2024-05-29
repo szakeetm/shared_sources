@@ -1,9 +1,10 @@
-
 #include <Interface.h>
 //#include <direct.h> //_getcwd()
 //#include <io.h> // Check for recovery
 
 #ifdef _WIN32
+// Set local to parse input files the same on all systems
+//duplicate, in case we called this function from the test suite and not from main()
 
 #else
 //#include <sys/sysinfo.h>
@@ -100,12 +101,19 @@ extern const char *cName[];
 
 
 Interface::Interface() : GLApplication(){
+#if defined(__APPLE__)
+    setlocale(LC_ALL, "en_US.UTF-8");
+#else
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+#endif
+    
     //Get number of cores
 #ifdef _WIN32
     compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     numCPU = (size_t) sysinfo.dwNumberOfProcessors;
+    
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
