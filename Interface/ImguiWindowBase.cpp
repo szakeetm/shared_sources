@@ -7,6 +7,8 @@
 #include "ImguiPopup.h"
 #include "Helper/StringHelper.h"
 
+#include "ImguiWindow.h"
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 extern MolFlow* mApp;
@@ -197,4 +199,13 @@ void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawMan
 			}
 		}
 	}
+}
+
+int Callback::MyCallback(ImGuiInputTextCallbackData* data)
+{
+	if (data->EventFlag == ImGuiInputTextFlags_CallbackAlways) {
+		int cursor_pos = data->CursorPos;
+		mApp->imWnd->textCursorPos = cursor_pos;
+	}
+	return 0;
 }

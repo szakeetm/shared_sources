@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <memory>
+#include "Interface.h"
 
 class Interface;
 
@@ -33,6 +34,11 @@ typedef struct {
 	std::shared_ptr<std::vector<double>> y;
 	ImVec4 color;
 } ImPlotData;
+
+struct Callback
+{
+	static int MyCallback(ImGuiInputTextCallbackData* data); // has to be static (ImGui requires it)
+};
 
 // functions used by some(>1) ImWindows but not common enough (==2) to be member functions
 namespace ImUtils {

@@ -14,8 +14,8 @@ protected:
 	void UpdateData();
 	std::vector<std::vector<std::string>> data;
 	void OnShow() override;
-	size_t selFacetId;
-	InterfaceFacet* facet;
+	size_t selFacetId = 0;
+	InterfaceFacet* facet = 0;
 	enum DesorptionType : int {
 		uniform = 0,
 		cosine = 1,

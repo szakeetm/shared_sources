@@ -1,10 +1,9 @@
 #include "ImguiOutgassingMap.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiPopup.h"
-#include "Interface.h"
 #include "Helper/StringHelper.h"
-#include "ImguiWindow.h"
 #include <sstream>
+#include "ImguiWindow.h"
 
 void ImOutgassingMap::Draw()
 {
@@ -190,7 +189,8 @@ void ImOutgassingMap::DrawTable()
 				if (selection.row == rowN - 1 && selection.column == column - 1 && selection.active) {
 					cell_bg_color = ImGui::GetColorU32(ImVec4(152.f/255.f, 186.f/255.f, 225.f/255.f, 1.0f));
 					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
-					ImGui::InputText(fmt::format("###{}-{}", rowN, column), &cell);
+					Callback f;
+					ImGui::InputText(fmt::format("###{}-{}", rowN, column).c_str(), &cell, ImGuiInputTextFlags_CallbackAlways,  f.MyCallback);
 					if (selection.changed) {
 						ImGui::SetKeyboardFocusHere(-1);
 						selection.changed = false;
@@ -217,6 +217,7 @@ void ImOutgassingMap::DrawTable()
 			selection.column = 0;
 		}
 		ImGui::EndTable();
+		printf("Cursor at: %d\n", mApp->imWnd->textCursorPos);
 	}
 }
 

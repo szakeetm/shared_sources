@@ -54,6 +54,7 @@ class ImguiWindow {
 public:
     bool forceDrawNextFrame = false;
     bool skipImGuiEvents = false;
+    unsigned int textCursorPos;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
