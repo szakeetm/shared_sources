@@ -166,6 +166,7 @@ void ImOutgassingMap::DrawTable()
 		return;
 	}
 	if (ImGui::BeginTable("###Outgass", facet->sh.texWidth+1, ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+		KeyboardNavigation();
 		ImGui::TableSetupScrollFreeze(1, 1);
 		// table setup
 		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
@@ -189,7 +190,6 @@ void ImOutgassingMap::DrawTable()
 				if (selection.row == rowN - 1 && selection.column == column - 1 && selection.active) {
 					cell_bg_color = ImGui::GetColorU32(ImVec4(152.f/255.f, 186.f/255.f, 225.f/255.f, 1.0f));
 					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
-					Callback f;
 					ImGui::InputText(fmt::format("###{}-{}", rowN, column).c_str(), &cell, ImGuiInputTextFlags_CallbackAlways,  f.MyCallback);
 					if (selection.changed) {
 						ImGui::SetKeyboardFocusHere(-1);
@@ -217,7 +217,6 @@ void ImOutgassingMap::DrawTable()
 			selection.column = 0;
 		}
 		ImGui::EndTable();
-		printf("Cursor at: %d\n", mApp->imWnd->textCursorPos);
 	}
 }
 
@@ -263,4 +262,49 @@ void ImOutgassingMap::UpdateOnFacetChange(const std::vector<size_t>& selectedFac
 void ImOutgassingMap::OnShow()
 {
 	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
+}
+
+void ImOutgassingMap::KeyboardNavigation()
+{
+	//printf("Cursor pos: %d\r", lastCursor);
+	static bool lock;
+	if (!selection.active) return; // if no cell selected do not compute navigation
+	if (lock) { // without this movement gets double-triggered
+		lock = false;
+		return;
+	}
+	bool moved = false;
+	if (ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
+		if (selection.row > 0) {
+			selection.row--;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
+		if (selection.row < data.size()-1) {
+			selection.row++;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
+		if (lastCursor == 0 && selection.column > 0) {
+			selection.column--;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
+		if (lastCursor == data[selection.row][selection.column].size() && selection.column < data[selection.row].size()-1) {
+			selection.column++;
+			moved = true;
+		}
+		else return;
+	}
+	if (moved) {
+		selection.changed = true;
+	}
+	lock = true;
+	lastCursor = mApp->imWnd->textCursorPos;
 }

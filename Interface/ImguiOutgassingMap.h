@@ -29,4 +29,7 @@ protected:
 	std::string comboText = "Cosine";
 
 	std::string exponentIn;
+	Callback f;
+	void KeyboardNavigation();
+	unsigned int lastCursor = 0;
 };
