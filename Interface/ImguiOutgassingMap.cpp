@@ -267,35 +267,30 @@ void ImOutgassingMap::OnShow()
 void ImOutgassingMap::KeyboardNavigation()
 {
 	//printf("Cursor pos: %d\r", lastCursor);
-	static bool lock;
 	if (!selection.active) return; // if no cell selected do not compute navigation
-	if (lock) { // without this movement gets double-triggered
-		lock = false;
-		return;
-	}
 	bool moved = false;
-	if (ImGui::IsKeyDown(ImGuiKey_UpArrow)) {
+	if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
 		if (selection.row > 0) {
 			selection.row--;
 			moved = true;
 		}
 		else return;
 	}
-	else if (ImGui::IsKeyDown(ImGuiKey_DownArrow)) {
+	else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
 		if (selection.row < data.size()-1) {
 			selection.row++;
 			moved = true;
 		}
 		else return;
 	}
-	else if (ImGui::IsKeyDown(ImGuiKey_LeftArrow)) {
+	else if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
 		if (lastCursor == 0 && selection.column > 0) {
 			selection.column--;
 			moved = true;
 		}
 		else return;
 	}
-	else if (ImGui::IsKeyDown(ImGuiKey_RightArrow)) {
+	else if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
 		if (lastCursor == data[selection.row][selection.column].size() && selection.column < data[selection.row].size()-1) {
 			selection.column++;
 			moved = true;
@@ -305,6 +300,5 @@ void ImOutgassingMap::KeyboardNavigation()
 	if (moved) {
 		selection.changed = true;
 	}
-	lock = true;
 	lastCursor = mApp->imWnd->textCursorPos;
 }
