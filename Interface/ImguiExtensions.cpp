@@ -91,7 +91,7 @@ namespace ImGui {
         ImGui::Text("%s:", desc);
 
         char buf[128];
-        strncpy_s(buf, text, sizeof(buf)-1);
+        strncpy(buf, text, sizeof(buf)-1);
         {
             // Move to right side
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
@@ -246,9 +246,9 @@ namespace ImGui {
             ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
             char buf[32];
             if(time >= 60)
-                sprintf_s(buf, "%d:%2dm", (int)(time / 60.0), ((int)time % 60));
+                sprintf(buf, "%d:%2dm", (int)(time / 60.0), ((int)time % 60));
             else
-                sprintf_s(buf, "%ds", (int)(time));
+                sprintf(buf, "%ds", (int)(time));
             ImGui::ProgressBar(progress, ImVec2(164.0f, size), buf);
             //ImGui::SameLine();
             ImGui::End();

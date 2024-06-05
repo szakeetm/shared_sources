@@ -495,7 +495,7 @@ static void ShowMenuSelection() {
         for (size_t i = 0; i < mApp->selections.size(); i++) {
             if (i <= 8) {
                 char shortcut[32];
-                sprintf_s(shortcut, "Alt+%llu", 1 + i);
+                sprintf(shortcut, "Alt+%llu", 1 + i);
                 if (ImGui::MenuItem(mApp->selections[i].name.c_str(), shortcut)) {
                     mApp->SelectSelection(i);
                 }
@@ -655,8 +655,7 @@ void TakeScreenshotMenuPress() {
 
     char buf[80];
     time_t now = time(nullptr);
-    struct tm tstruct;
-    localtime_s(&tstruct, &now);
+    struct tm tstruct = *localtime(&now);
     // Visit http://en.cppreference.com/w/cpp/chrono/c/strftime
     // for more information about date/time format
     strftime(buf, sizeof(buf), "%Y_%m_%d__%H_%M_%S", &tstruct);

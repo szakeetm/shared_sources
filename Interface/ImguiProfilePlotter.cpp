@@ -425,9 +425,8 @@ bool ImProfilePlotter::Export(bool toFile)
 		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
-			FILE* f = nullptr;
-			errno_t err = fopen_s(&f, fn.c_str(), "w");
-			if (err != 0) {
+			FILE* f = fopen(fn.c_str(), "w");
+			if (f == NULL) {
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return false;
 			}
