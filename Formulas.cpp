@@ -3,6 +3,7 @@
 #include "Formulas.h"
 #include "FormulaEvaluator.h"
 #include "Helper/ConsoleLogger.h"
+#include "GLTypes.h" //Error()
 #include "Worker.h"
 #include <cmath>
 #include <sstream>
@@ -50,7 +51,7 @@ void Formulas::EvaluateFormulaVariables(size_t formulaIndex, const std::vector <
             ok = evaluator->EvaluateVariable(varIterator, aboveFormulaValues);
             if (!ok) formula.SetEvalError(fmt::format("Unknown variable \"{}\"", varIterator->varName));
         }
-        catch (std::exception err) {//Specific evaluation error message to display to user, currently used for "formula not found" and "formula not yet evaluated"
+        catch (const Error& err) {//Specific evaluation error message to display to user, currently used for "formula not found" and "formula not yet evaluated"
             formula.SetEvalError(err.what());
             ok = false;
         }

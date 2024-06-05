@@ -87,9 +87,12 @@ void InterfaceGeometry::CheckNonSimple() {
 void InterfaceGeometry::CheckIsolatedVertex() {
 	int nbI = GetNbIsolatedVertices();
 	if (nbI) {
-		char tmp[256];
-		sprintf(tmp, "Remove %d isolated vertices ?", nbI);
-		if (GLMessageBox::Display(tmp, "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+		std::string question = fmt::format("Remove {} isolated vertices?",nbI);
+		if (mApp->worker.globalStatCache.globalHits.nbDesorbed) {
+			question += "\nThis will reset the simulation.";
+		}
+		if (GLMessageBox::Display(question.c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+			mApp->ResetSimulation(false);
 			DeleteIsolatedVertices(false);
 			mApp->UpdateModelParams();
 		}

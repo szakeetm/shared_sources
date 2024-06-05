@@ -4,10 +4,6 @@
 set(PROJECT_NAME src_shared_gui)
 project(${PROJECT_NAME} CXX)
 
-set(IMGUI_DIR ${HEADER_DIR_EXTERNAL}/imgui)
-set(IMPLOT_DIR ${HEADER_DIR_EXTERNAL}/implot)
-
-
 set(INTERFACE_FILES
         ${INTERFACE_DIR}/AddVertex.cpp
         ${INTERFACE_DIR}/AlignFacet.cpp
@@ -84,7 +80,6 @@ set(INTERFACE_FILES
         
         ${HELPER_DIR}/GLProgress_ImGui.cpp
 
-        ${CPP_DIR_SRC_SHARED}/File.cpp
         ${CPP_DIR_SRC_SHARED}/Formulas.cpp
         ${CPP_DIR_SRC_SHARED}/FormulaEvaluator.cpp
         ${CPP_DIR_SRC_SHARED}/Geometry_shared.cpp
@@ -155,7 +150,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         ${IMGUI_DIR}
         ${IMPLOT_DIR}
         ${HEADER_DIR_EXTERNAL}
-        )
+)
         # Commenting out this section: since now we include imgui by default, which links against SDL2, no need to do it here (would give a linker warning)
         #find_package(SDL2 CONFIG REQUIRED)
         #target_link_libraries(${PROJECT_NAME}
@@ -163,6 +158,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
         #    $<TARGET_NAME_IF_EXISTS:SDL2::SDL2main>
         #    $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
         #)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC src_shared_core)
 
 if(MSVC)
     # 1. link against external libs
@@ -199,24 +196,6 @@ ELSE() #not MSVC
         target_link_libraries(${PROJECT_NAME} PUBLIC ${X11_LIBRARIES})
     endif()
 
-    set(THREADS_PREFER_PTHREAD_FLAG ON)
-    find_package(Threads REQUIRED)
-    target_link_libraries(${PROJECT_NAME} PUBLIC Threads::Threads)
-    
-    #for shared memory
-    find_library(LIBRT rt)
-    if(LIBRT)
-        target_link_libraries(${PROJECT_NAME} PUBLIC ${LIBRT})
-    endif()
-
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        target_link_libraries(${PROJECT_NAME} PUBLIC c++fs)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
-        #don´t add anything for filesystem
-    else()
-        target_link_libraries(${PROJECT_NAME} PUBLIC stdc++fs)
-    endif()
-
     #external libraries from our project
     message(Shared CMAKE_LIBRARY_OUTPUT_DIRECTORY: ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -226,19 +205,16 @@ endif() #NOT MSVC
 find_package(OpenGL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
-target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
-target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
-target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PRIVATE CURL::libcurl)
+target_link_libraries(${PROJECT_NAME} PRIVATE cereal::cereal)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${OPENGL_LIBRARIES})
 find_package(Stb REQUIRED)
 message("-- Found STB " ${Stb_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${Stb_INCLUDE_DIR})
 
 #Shipped libraries
-target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 )
 target_link_libraries(${PROJECT_NAME} PUBLIC sdl_savepng)
 target_link_libraries(${PROJECT_NAME} PUBLIC nativefiledialog-extended-molflow-wrapped)
-target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 
@@ -249,29 +225,9 @@ else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
 
-target_compile_options(clipper2 PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(sdl_savepng PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(ziplib PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(imgui PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(implot PUBLIC ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(sdl_savepng PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(imgui PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(implot PRIVATE ${SUPPRESS_WARNINGS_FLAG})
 
-#required preprocessor definitions by the auto-updater
-IF (WIN32)
-    
-ELSEIF(APPLE)
-    
-ELSE()
-    string (REGEX MATCH "\\.el[1-9]" os_version_suffix ${CMAKE_SYSTEM})
-    message("-- os_version_suffix:      ${os_version_suffix}")
-    IF(os_version_suffix MATCHES "\\.el[1-9]")
-        add_definitions(
-            -D__LINUX_FEDORA
-        )
-        message("Assuming Fedora-based Linux")
-    ELSE()
-        add_definitions(
-            -D__LINUX_DEBIAN
-        )
-        message("Assuming Debian-based Linux")
-    ENDIF()
-ENDIF()

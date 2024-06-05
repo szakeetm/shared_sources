@@ -51,7 +51,18 @@ set(SIM_FILES
         ${CPP_DIR_SRC_SHARED}/RayTracing/BVH.cpp
         ${CPP_DIR_SRC_SHARED}/RayTracing/BVH.h
         ${CPP_DIR_SRC_SHARED}/RayTracing/Ray.h
+        ${CPP_DIR_SRC_SHARED}/IntersectAABB_shared.cpp
         ${CPP_DIR_SRC_SHARED}/BoundingBox.cpp
+
+        ${CPP_DIR_SRC_SHARED}/FlowMPI.cpp
+        ${CPP_DIR_SRC_SHARED}/File.cpp
+
+        #Break out of src_shared
+        ${SIMU_DIR}/Particle.cpp
+        ${SIMU_DIR}/Physics.cpp
+        ${SIMU_DIR}/MolflowSimulation.cpp
+        ${SIMU_DIR}/SimulationMC.cpp
+        ${SIMU_DIR}/AnglemapGeneration.cpp
 )
 
 set(HELPER_FILES
@@ -74,7 +85,22 @@ target_include_directories(${PROJECT_NAME} PUBLIC
         ${HEADER_DIR_SRC_SHARED}
         ${INTERFACE_DIR} #CameraView, etc. still used by shared gui/cli
         ${HEADER_DIR_EXTERNAL}
+        ${HEADER_DIR_SRC} #Simulation folder
 )
+
+
+option(USE_MPI FALSE)
+if(USE_MPI)
+    message(STATUS "MPI use requested (USE_MPI is TRUE), finding...")
+    find_package(MPI REQUIRED)
+    if(MPI_FOUND)
+    message(STATUS "Detected MPI version: ${MPI_CXX_VERSION}")
+    set(USE_MPI TRUE)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DUSE_MPI)
+    target_include_directories(${PROJECT_NAME} SYSTEM PUBLIC ${MPI_INCLUDE_PATH})
+    target_link_libraries(${PROJECT_NAME} PUBLIC MPI::MPI_CXX)
+    endif()
+endif()
 
 if(MSVC)
 
@@ -110,7 +136,7 @@ IF(APPLE)
     include(${CPP_DIR_SRC_SHARED}/cmake_modules/SetOpenMP.cmake)  #Help macOS find OpenMP
 ENDIF()
 find_package(OpenMP REQUIRED)
-target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
+target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
 
 # Third-party libraries shipped with Molflow
 target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
@@ -123,5 +149,5 @@ else()
     set(SUPPRESS_WARNINGS_FLAG "-w")
 endif()
 
-target_compile_options(clipper2 PUBLIC ${SUPPRESS_WARNINGS_FLAG})
-target_compile_options(ziplib PUBLIC ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(clipper2 PRIVATE ${SUPPRESS_WARNINGS_FLAG})
+target_compile_options(ziplib PRIVATE ${SUPPRESS_WARNINGS_FLAG})

@@ -9,12 +9,14 @@
 #include "Polygon.h" //IsInPoly
 #include "Helper/MathTools.h"
 #include <algorithm> //std::min
-#include "Simulation/MolflowSimulation.h"
 #include <tuple>
 #include "RayTracing/Ray.h"
 #include "BoundingBox.h"
-#include "Simulation/Particle.h"
 #include "GLApp/GLTypes.h"
+
+#include "Simulation/MolflowSimulation.h" //Breaks out from src_shared!
+#include "Simulation/Particle.h" //Breaks out from src_shared!
+
 
 // AABB tree stuff
 
