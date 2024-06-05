@@ -17,16 +17,16 @@
 void ImFacetRotate::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW * 51, txtH * 21.75));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 51, txtH * 21.75f));
 	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Rotate selected facets", &drawn, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("###RSFADM", ImVec2(0,ImGui::GetContentRegionAvail().y-2.75*txtH), true);
+	ImGui::BeginChild("###RSFADM", ImVec2(0,ImGui::GetContentRegionAvail().y-2.75f*txtH), true);
 	{
 		ImGui::TextDisabled("Axis definition mode");
 		if (ImGui::RadioButton("X axis", mode == axisX)) mode = axisX;
 		if (ImGui::RadioButton("Y axis", mode == axisY)) mode = axisY;
 		if (ImGui::RadioButton("Z axis", mode == axisZ)) mode = axisZ;
-		ImGui::BeginChild("###RSFADMFF", ImVec2(0,5.75*txtH),true);
+		ImGui::BeginChild("###RSFADMFF", ImVec2(0,5.75f*txtH),true);
 		{
 			ImGui::TextDisabled("From facet");
 			if (ImGui::BeginTable("###RSFFFT", 2, ImGuiTableFlags_SizingFixedFit)) {

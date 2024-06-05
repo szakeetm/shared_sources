@@ -16,7 +16,7 @@ void ImMovingParts::Draw() {
     ImGui::SetNextWindowSizeConstraints(ImVec2(txtW*75,txtH*16), ImVec2(txtW*100,txtH*20));
     ImGui::Begin("Define moving parts", &drawn, ImGuiWindowFlags_NoSavedSettings);
     ImGui::TextWrapped("Movement paramenters set here will only apply to facets whih are marked \"moving\" in their parameters");
-    ImGui::BeginChild("###movementChild", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5*txtH) , true);
+    ImGui::BeginChild("###movementChild", ImVec2(0,ImGui::GetContentRegionAvail().y-1.5f*txtH) , true);
     {
         if (ImGui::RadioButton("No moving parts", mode == Modes::None)) {
             mode = Modes::None;

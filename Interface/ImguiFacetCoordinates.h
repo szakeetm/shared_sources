@@ -13,7 +13,7 @@ protected:
 	void DrawTable();
 	void ApplyButtonPress();
 	void Apply();
-	void Insert(int pos=-1);
+	void Insert(size_t pos=-1);
 	bool ValidateInputs(int idx);
 	enum Axis : short {X,Y,Z};
 	Axis axis = X;
@@ -25,7 +25,7 @@ protected:
 	std::string name = "Facet coordinates###FCoords";
 	int selRow = -1;
 
-	typedef struct line {
+	struct line {
 		size_t vertexId=0;
 		Vector3d coord;
 		std::string coordInput[3];

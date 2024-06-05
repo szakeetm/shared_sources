@@ -57,7 +57,7 @@ void ImFacetScale::Draw()
 	}
 
 	ImGui::EndChild();
-	ImGui::BeginChild("##FSC2", ImVec2(0, 4.5 * txtH), true);
+	ImGui::BeginChild("##FSC2", ImVec2(0, 4.5f * txtH), true);
 	ImGui::TextDisabled("Scale factor");
 	if (ImGui::RadioButton("Uniform", scaleFac==Uniform)) scaleFac=Uniform;
 	if (scaleFac != Uniform) ImGui::BeginDisabled();

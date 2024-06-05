@@ -28,13 +28,13 @@ protected:
 	//functions
 	void OnShow() override;
 	void DrawPlot();
-	void RemovePlot(int idx, plotTabs tab);
-	void AddPlot(int idx);
-	bool IsPlotted(int idx);
+	void RemovePlot(size_t idx, plotTabs tab);
+	void AddPlot(size_t idx);
+	bool IsPlotted(size_t idx);
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
-	void ShowFacet(int idx, bool add);
+	void ShowFacet(size_t idx, bool add);
 	
 
 	//types

@@ -227,7 +227,7 @@ void ImTest::SelectVertex(size_t idx, bool add)
     if (idx >= interfGeom->GetNbVertex()) return;
     std::function<void()> f = [this, idx, add]() {
         if (!add) interfGeom->EmptySelectedVertexList();
-        interfGeom->SelectVertex(idx);
+        interfGeom->SelectVertex(static_cast<int>(idx));
         interfGeom->UpdateSelection();
         mApp->imWnd->Refresh();
         };
@@ -311,6 +311,7 @@ bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
         mApp->UpdateFacetParams(false);
         if (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) mApp->imWnd->profPlot.Refresh();
     }
+    return true;
 }
 
 void ImTest::ExecuteQueue()

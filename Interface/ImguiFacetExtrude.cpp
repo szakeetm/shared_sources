@@ -22,7 +22,7 @@ void ImFacetExtrude::Draw()
 	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Extrude Facet", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
-	ImGui::BeginChild("###EF1", ImVec2(0,txtH*4.25), true);
+	ImGui::BeginChild("###EF1", ImVec2(0,txtH*4.25f), true);
 	ImGui::TextDisabled("Towards/against normal");
 	if (ImGui::RadioButton("Towards normal", mode == facetNormal)) mode = facetNormal;
 	ImGui::SameLine();

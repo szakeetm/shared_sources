@@ -13,12 +13,12 @@
 void ImMeasureForce::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW * 55, txtH * 9.5));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 55, txtH * 9.5f));
 	ImGui::Begin("Measure forces", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
 	ImGui::Checkbox("Enable force measurement (has performance impact)", &enableForceMeasurement);
 
-	ImGui::BeginChild("###MFchild", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5), true);
+	ImGui::BeginChild("###MFchild", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5f), true);
 	
 	ImGui::TextDisabled("Torque relative to...");
 

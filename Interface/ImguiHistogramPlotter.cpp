@@ -155,7 +155,7 @@ void ImHistogramPlotter::DrawPlot()
 	ImPlot::PopStyleVar();
 }
 
-void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
+void ImHistogramPlotter::RemovePlot(size_t idx, plotTabs tab)
 {
 	for (size_t i = 0; i < data[tab].size(); i++) {
 		if (data[tab][i].id == idx) {
@@ -170,7 +170,7 @@ void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
 	// a non-existent id was passed, fails silently here by design
 }
 
-void ImHistogramPlotter::AddPlot(int idx)
+void ImHistogramPlotter::AddPlot(size_t idx)
 {
 	if (idx < -1) return;
 	if (IsPlotted(plotTab, idx)) return;
@@ -190,7 +190,7 @@ void ImHistogramPlotter::AddPlot(int idx)
 	RefreshPlots();
 }
 
-bool ImHistogramPlotter::IsPlotted(int idx)
+bool ImHistogramPlotter::IsPlotted(size_t idx)
 {
 	if (idx == -1) {
 		return globals[plotTab].x != nullptr;
@@ -357,8 +357,9 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 		std::string fileFilters = "txt,csv";
 		std::string fn = NFD_SaveFile_Cpp(fileFilters, "");
 		if (!fn.empty()) {
-			FILE* f = fopen(fn.c_str(), "w");
-			if (f == NULL) {
+			FILE* f = nullptr;
+			errno_t err = fopen_s(&f, fn.c_str(), "w");
+			if (err != 0) {
 				ImIOWrappers::InfoPopup("Error", "Cannot open file\nFile: " + fn);
 				return;
 			}
@@ -378,7 +379,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	limitPoints = preExportLimitPoints;
 }
 
-void ImHistogramPlotter::ShowFacet(int idx, bool add)
+void ImHistogramPlotter::ShowFacet(size_t idx, bool add)
 {
 	if(!add) interfGeom->UnselectAll();
 	try {

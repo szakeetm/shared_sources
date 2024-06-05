@@ -10,7 +10,7 @@ void ImOutgassingMap::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowSize(ImVec2(txtW*70, txtH*20), ImGuiCond_FirstUseEver);
 	ImGui::Begin((name + "###OgM").c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("OgMTab", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5), ImGuiChildFlags_Border);
+	ImGui::BeginChild("OgMTab", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5f), ImGuiChildFlags_Border);
 	DrawTable();
 	ImGui::EndChild();
 	
@@ -165,11 +165,11 @@ void ImOutgassingMap::DrawTable()
 		ImGui::Text("Selected facet does not have a mesh");
 		return;
 	}
-	if (ImGui::BeginTable("###Outgass", facet->sh.texWidth+1, ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+	if (ImGui::BeginTable("###Outgass", static_cast<int>(facet->sh.texWidth+1), ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
 		KeyboardNavigation();
 		ImGui::TableSetupScrollFreeze(1, 1);
 		// table setup
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 		ImGui::TableSetupColumn(u8"v\u20D7\\u\u20D7", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < facet->sh.texWidth; ++i) {
@@ -180,12 +180,12 @@ void ImOutgassingMap::DrawTable()
 		for (auto& row : data) {
 			ImGui::TableNextRow();
 			size_t column = 0;
-			ImGui::TableSetColumnIndex(column++); // will increment column after the call
+			ImGui::TableSetColumnIndex(static_cast<int>(column++)); // will increment column after the call
 			ImGui::Text(fmt::format("{}",rowN));
 			ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.78f, 0.87f, 0.98f, 1.0f));
 			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 			for (auto& cell : row) {
-				ImGui::TableSetColumnIndex(column);
+				ImGui::TableSetColumnIndex(static_cast<int>(column));
 				ImGui::SetNextItemWidth(txtW * 7);
 				if (selection.row == rowN - 1 && selection.column == column - 1 && selection.active) {
 					cell_bg_color = ImGui::GetColorU32(ImVec4(152.f/255.f, 186.f/255.f, 225.f/255.f, 1.0f));

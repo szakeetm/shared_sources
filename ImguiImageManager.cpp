@@ -62,7 +62,7 @@ void* ImImage::GetTexture()
 
 ImVec2 ImImage::GetSize()
 {
-	return ImVec2(width, height);
+	return ImVec2(static_cast<float>(width), static_cast<float>(height));
 }
 
 void ImImage::Draw()

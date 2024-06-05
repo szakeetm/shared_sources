@@ -58,7 +58,7 @@ void ImFormulaEditor::DrawFormulaList() {
 
 		ImGui::TableHeadersRow();
 		
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH*0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 
 		// this loop draws a row
@@ -234,7 +234,7 @@ void ImFormulaEditor::Draw() {
 	ImGui::SetNextWindowSize(ImVec2(txtW * 75, txtH * 20), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Formula editor", &drawn, ImGuiWindowFlags_NoSavedSettings);
 
-	float formulaListHeight = ImGui::GetWindowHeight() - txtH*7.25;
+	float formulaListHeight = ImGui::GetWindowHeight() - txtH*7.25f;
 	ImGui::BeginChild("###Formula list",ImVec2(0, formulaListHeight),true,0);
 	ImGui::Text("Formula list");
 	ImGui::OpenPopupOnItemClick("##FEFLcontext", ImGuiPopupFlags_MouseButtonRight);

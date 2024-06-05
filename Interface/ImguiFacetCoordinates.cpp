@@ -21,7 +21,7 @@ void ImFacetCoordinates::Draw()
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
 	if (selFacet == nullptr) ImGui::BeginDisabled();
 	DrawTable();
-	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5 * txtH), true);
+	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5f * txtH), true);
 	ImGui::TextDisabled("Insert / Remove vertex");
 	ImGui::Text("Vertex Id to insert:"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 10);
@@ -89,7 +89,7 @@ void ImFacetCoordinates::DrawTable()
 		ImGui::TableSetupColumn("Y");
 		ImGui::TableSetupColumn("Z");
 		ImGui::TableHeadersRow();
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 		for (line& ln : table) {
 			ImGui::TableNextRow();
@@ -156,7 +156,7 @@ void ImFacetCoordinates::Apply()
 	mApp->worker.MarkToReload();
 }
 
-void ImFacetCoordinates::Insert(int pos)
+void ImFacetCoordinates::Insert(size_t pos)
 {
 	if (!Util::getNumber(&insertID, insertIdInput)) {
 		ImIOWrappers::InfoPopup("Error", "Could not parse vertex ID");

@@ -18,7 +18,7 @@ public:
 protected:
 	void MenuBar();
 	bool Export(bool toFile = false, bool onlyVisible = false);
-	int nFormulas = 0;
+	size_t nFormulas = 0;
 	bool showDatapoints = false;
 	std::vector<ImPlotData> data;
 	Interface* mApp;

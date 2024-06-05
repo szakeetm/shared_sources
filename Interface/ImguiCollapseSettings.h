@@ -14,7 +14,7 @@ protected:
 	std::string facetCoplanarityIn = "1e-5";
 
 	bool enableFacetMaxVertexNum = false;
-	double facetMaxVertNum = 100;
+	int facetMaxVertNum = 100;
 	std::string facetMaxVertNumIn = "100";
 
 	bool enableFacetSideColinearityLimit = true;

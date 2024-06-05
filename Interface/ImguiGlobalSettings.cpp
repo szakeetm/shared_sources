@@ -275,16 +275,16 @@ void ImGlobalSettings::Draw() {
         {
             //ImGui::BeginDisabled();
             static char inputText[128] = "Model changed"; //Imgui only accepting C-style arrays // NOT ANYMORE, CAN UPGRAGE TO std::string
-            if (mApp->worker.needsReload) sprintf(inputText, "Model changed");
+            if (mApp->worker.needsReload) sprintf_s(inputText, "Model changed");
             // TODO Display Model changed when there are changes to facets, settings etc. show values when sim started or outgassing recalculated
-            if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
+            if (!mApp->worker.needsReload) sprintf_s(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate_Pa_m3_sec * PAM3S_TO_MBARLS);
             ImGui::InputTextRightSide("Final outgassing rate (mbar*l/sec)", inputText, ImGuiInputTextFlags_ReadOnly);
-            if (!mApp->worker.needsReload) sprintf(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
+            if (!mApp->worker.needsReload) sprintf_s(inputText, "%g", mApp->worker.model->sp.finalOutgassingRate);
             ImGui::InputTextRightSide("Final outgassing rate (1/sec)", inputText, ImGuiInputTextFlags_ReadOnly); // In molecules/sec
             {
                 char tmpLabel[64];
-                sprintf(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
-                if (!mApp->worker.needsReload) sprintf(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
+                sprintf_s(tmpLabel, "Tot.des. molecules [0 to %g s]", mApp->worker.model->sp.latestMoment);
+                if (!mApp->worker.needsReload) sprintf_s(inputText, "%.3E", mApp->worker.model->sp.totalDesorbedMolecules);
                 ImGui::InputTextRightSide(tmpLabel, inputText, ImGuiInputTextFlags_ReadOnly);
             }
 

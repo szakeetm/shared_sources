@@ -21,8 +21,8 @@ private:
 	void DrawProfileGraph();
 
 	// button actions
-	void ShowFacet(int id = -1, bool add = false);
-	void RemoveCurve(int id);
+	void ShowFacet(size_t id, bool add = false);
+	void RemoveCurve(size_t id);
 	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
 	void DrawMenuBar();

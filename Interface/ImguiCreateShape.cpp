@@ -11,7 +11,7 @@ void ImCreateShape::Draw()
 {
 	if (!drawn) return;
 
-	ImGui::SetNextWindowSize(ImVec2(txtW * 90, txtH * 24.5));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 90, txtH * 24.5f));
 	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Create shape", &drawn, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
 	if (ImGui::BeginTabBar("Shape selection")) {
@@ -43,7 +43,7 @@ void ImCreateShape::Draw()
 		break;
 	}
 	ImGui::EndGroup();
-	ImGui::BeginChild("Position", ImVec2(0, txtH * 5.5), ImGuiChildFlags_Border);
+	ImGui::BeginChild("Position", ImVec2(0, txtH * 5.5f), ImGuiChildFlags_Border);
 	ImGui::TextDisabled("Position");
 	
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2,2));
@@ -120,7 +120,7 @@ void ImCreateShape::Draw()
 	ImGui::PopStyleVar();
 
 	ImGui::EndChild();
-	ImGui::BeginChild("Size", ImVec2(0, txtH * 4.5), ImGuiChildFlags_Border);
+	ImGui::BeginChild("Size", ImVec2(0, txtH * 4.5f), ImGuiChildFlags_Border);
 	ImGui::TextDisabled("Size");
 
 	ImGui::TextWithMargin("Axis1 length:", txtW * 10);
