@@ -384,7 +384,10 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
 }
 
 void GLApplication::Run() {
-	#if defined(MOLFLOW)
+#ifdef DEBUG
+    printf("Entering GLApplication::Run\n");
+#endif
+#if defined(MOLFLOW)
 	extern MolFlow *mApp;
 	#endif
 
@@ -431,6 +434,9 @@ void GLApplication::Run() {
   // TODO: Activate imgui directly on launch here
 #ifdef ENABLE_IMGUI_TESTS
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
+#ifdef DEBUG
+      printf("ImTest argument detected\n");
+#endif
       std::cout<<"Launching ImGui test sequence...\n";
       imWnd = new ImguiWindow(this);
       imWnd->init();
@@ -439,9 +445,11 @@ void GLApplication::Run() {
   }
 #endif
   //Wait for user exit
+#ifdef DEBUG
+  printf("First entry into while(!quit)\n");
+#endif
   while( !quit )
   {
-        
      //While there are events to handle
       while (!quit && (SDL_PollEvent(&sdlEvent)
 #ifdef DEBUG
@@ -449,9 +457,15 @@ void GLApplication::Run() {
 #endif
           ))
       {
-         bool forceSkipEvents = false;
+#ifdef DEBUG
+          printf("Begining of while(!quit&& (SDL_PollEvent(&sdlEvent))\n");
+#endif
+          bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
+#ifdef DEBUG
+             printf("ImGui is Running\n");
+#endif
              if (imWnd->forceDrawNextFrame) {
                  imWnd->forceDrawNextFrame = false;
              }
@@ -490,6 +504,9 @@ void GLApplication::Run() {
             }
             if (activeImGuiEvent) {
                 wereEvents_imgui = 3;
+#ifdef DEBUG
+                printf("ImGui event handler\n");
+#endif
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
                     //Handle input events caught by ImGui
                 }
@@ -502,6 +519,9 @@ void GLApplication::Run() {
         //}
        if (forceSkipEvents) wereEvents = false;
 
+#ifdef DEBUG
+       printf("Legacy event handler\n");
+#endif
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
 

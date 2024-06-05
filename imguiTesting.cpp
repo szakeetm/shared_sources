@@ -99,6 +99,9 @@ void ImTest::PostSwap()
 
 void ImTest::RunTests()
 {
+#ifdef DEBUG
+    printf("Entry into ImTest::RunTests()\n");
+#endif
     //engine->IO.ConfigRunSpeed = ImGuiTestRunSpeed_Normal;
     ConfigureGeometry(static_cast<Configuration>(ranScenarios));
     std::cout << "Starting tests in scenario " << ranScenarios << std::endl;
@@ -108,10 +111,16 @@ void ImTest::RunTests()
         ImGuiTestEngine_QueueTest(engine, test, ImGuiTestRunSpeed_Normal | ImGuiTestRunFlags_None);
     }
     running = true;
+#ifdef DEBUG
+    printf("Exit from ImTest::RunTests()\n");
+#endif
 }
 
 bool ImTest::ConfigureGeometry(Configuration index)
 {
+#ifdef DEBUG
+    printf("Entry into ImTest::ConfigureGeometry\n");
+#endif
     switch (index) {
     case empty:
         if (static_cast<MolFlow*>(mApp)->worker.GetGeometry()->GetNbFacet() == 0) break; // don't do if geometry already is empty
@@ -163,6 +172,9 @@ bool ImTest::ConfigureGeometry(Configuration index)
         return false;
     }
     return true;
+#ifdef DEBUG
+    printf("Exit from ImTest::ConfigureGeometry\n");
+#endif
 }
 
 void ImTest::ConfigureGeometryMidTest(Configuration index)
