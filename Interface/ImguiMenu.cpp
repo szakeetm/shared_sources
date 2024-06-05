@@ -769,9 +769,7 @@ void FacetDeleteMenuPress() {
             //interfGeom->CheckIsolatedVertex();
             mApp->UpdateModelParams();
             mApp->RefreshPlotterCombos();
-            //UpdatePlotters();
-            if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
-            if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
+            mApp->UpdatePlotters();
             // Send to sub process
             mApp->worker.MarkToReload();
         }
@@ -1092,6 +1090,8 @@ void ClearIsolatedMenuPress() {
             mApp->UpdateModelParams();
             if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
             if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+            if (mApp->imWnd && mApp->imWnd->vertCoord.IsVisible()) mApp->imWnd->vertCoord.UpdateFromSelection();
+            if (mApp->imWnd && mApp->imWnd->facCoord.IsVisible()) mApp->imWnd->facCoord.UpdateFromSelection();
             interfGeom->BuildGLList();
         }
     }
@@ -1115,6 +1115,10 @@ void RemoveSelectedMenuPress() {
                 if (mApp->timewisePlotter) mApp->timewisePlotter->Refresh();
                 if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
                 if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+
+                if (mApp->imWnd && mApp->imWnd->vertCoord.IsVisible()) mApp->imWnd->vertCoord.UpdateFromSelection();
+                if (mApp->imWnd && mApp->imWnd->facCoord.IsVisible()) mApp->imWnd->facCoord.UpdateFromSelection();
+
                 // Send to sub process
                 mApp->worker.MarkToReload();
             }

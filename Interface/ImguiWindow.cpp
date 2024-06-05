@@ -542,6 +542,7 @@ void ImguiWindow::Reset()
     if (formulaEdit.IsVisible()) formulaEdit.Update();
     if (measForce.IsVisible()) measForce.Update();
     if (movPart.IsVisible()) movPart.Update();
+    if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
 }
 
 void ImguiWindow::Clear()
