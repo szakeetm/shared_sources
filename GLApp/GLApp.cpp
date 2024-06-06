@@ -385,7 +385,7 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
 
 void GLApplication::Run() {
 #ifdef DEBUG
-    std::cout << ("Entering GLApplication::Run\n");
+    std::cout << ("Entering GLApplication::Run") << std::endl;
 #endif
 #if defined(MOLFLOW)
 	extern MolFlow *mApp;
@@ -434,8 +434,8 @@ void GLApplication::Run() {
   // TODO: Activate imgui directly on launch here
 #ifdef ENABLE_IMGUI_TESTS
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
-      std::cout << ("ImTest argument detected\n");
-      std::cout<<"Launching ImGui test sequence...\n";
+      std::cout << ("ImTest argument detected") << std::endl;
+      std::cout << "Launching ImGui test sequence..." << std::endl;
       imWnd = new ImguiWindow(this);
       imWnd->init();
       imWnd->show_app_main_menu_bar = true;
@@ -443,7 +443,7 @@ void GLApplication::Run() {
   }
 #endif
   //Wait for user exit
-  std::cout << ("First entry into while(!quit)\n");
+  std::cout << ("First entry into while(!quit)") << std::endl;
   while( !quit )
   {
      //While there are events to handle
@@ -453,11 +453,11 @@ void GLApplication::Run() {
 #endif
           ))
       {
-          std::cout << ("Begining of while(!quit&& (SDL_PollEvent(&sdlEvent))\n");
+          std::cout << ("Begining of while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
           bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
-             std::cout << ("ImGui is Running\n");
+             std::cout << ("ImGui is Running") << std::endl;
              if (imWnd->forceDrawNextFrame) {
                  imWnd->forceDrawNextFrame = false;
              }
@@ -496,7 +496,7 @@ void GLApplication::Run() {
             }
             if (activeImGuiEvent) {
                 wereEvents_imgui = 3;
-                std::cout << ("ImGui event handler\n");
+                std::cout << ("ImGui event handler") << std::endl;
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
                     //Handle input events caught by ImGui
                 }
@@ -509,7 +509,7 @@ void GLApplication::Run() {
         //}
        if (forceSkipEvents) wereEvents = false;
 
-       std::cout << ("Legacy event handler\n");
+       std::cout << ("Legacy event handler") << std::endl;
        UpdateEventCount(&sdlEvent);
        switch( sdlEvent.type ) {
 

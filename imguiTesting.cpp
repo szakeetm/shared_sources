@@ -99,22 +99,26 @@ void ImTest::PostSwap()
 
 void ImTest::RunTests()
 {
-    std::cout << ("Entry into ImTest::RunTests()\n");
+    std::cout << ("Entry into ImTest::RunTests()") << std::endl;
     //engine->IO.ConfigRunSpeed = ImGuiTestRunSpeed_Normal;
     ConfigureGeometry(static_cast<Configuration>(ranScenarios));
     std::cout << "Starting tests in scenario " << ranScenarios << std::endl;
     for (int n = 0; n < engine->TestsAll.Size; n++)
     {
+        std::cout << "Enqueing test number " << n << std::endl;
+        std::cout << "Creating test object" << n << std::endl;
         ImGuiTest* test = engine->TestsAll[n];
+        std::cout << "Adding test object to queue" << n << std::endl;
         ImGuiTestEngine_QueueTest(engine, test, ImGuiTestRunSpeed_Normal | ImGuiTestRunFlags_None);
+        std::cout << "Test object added to queue" << n << std::endl;
     }
     running = true;
-    std::cout << ("Exit from ImTest::RunTests()\n");
+    std::cout << ("Exit from ImTest::RunTests()") << std::endl;
 }
 
 bool ImTest::ConfigureGeometry(Configuration index)
 {
-    std::cout << ("Entry into ImTest::ConfigureGeometry\n");
+    std::cout << ("Entry into ImTest::ConfigureGeometry") << std::endl;
     switch (index) {
     case empty:
         if (static_cast<MolFlow*>(mApp)->worker.GetGeometry()->GetNbFacet() == 0) break; // don't do if geometry already is empty
@@ -163,10 +167,11 @@ bool ImTest::ConfigureGeometry(Configuration index)
     }
         break;
     default:
+        std::cout << ("Exit from ImTest::ConfigureGeometry (cade fefault)") << std::endl;
         return false;
     }
+    std::cout << ("Exit from ImTest::ConfigureGeometry") << std::endl;
     return true;
-    std::cout << ("Exit from ImTest::ConfigureGeometry\n");
 }
 
 void ImTest::ConfigureGeometryMidTest(Configuration index)
