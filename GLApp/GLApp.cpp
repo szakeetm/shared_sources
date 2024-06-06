@@ -384,9 +384,6 @@ void GLApplication::UpdateEventCount(SDL_Event *evt) {
 }
 
 void GLApplication::Run() {
-#ifdef DEBUG
-    std::cout << ("Entering GLApplication::Run") << std::endl;
-#endif
 #if defined(MOLFLOW)
 	extern MolFlow *mApp;
 	#endif
@@ -434,7 +431,6 @@ void GLApplication::Run() {
   // TODO: Activate imgui directly on launch here
 #ifdef ENABLE_IMGUI_TESTS
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {
-      std::cout << ("ImTest argument detected") << std::endl;
       std::cout << "Launching ImGui test sequence..." << std::endl;
       imWnd = new ImguiWindow(this);
       imWnd->init();
@@ -443,7 +439,6 @@ void GLApplication::Run() {
   }
 #endif
   //Wait for user exit
-  std::cout << ("First entry into while(!quit)") << std::endl;
   while( !quit )
   {
      //While there are events to handle
@@ -453,11 +448,9 @@ void GLApplication::Run() {
 #endif
           ))
       {
-          std::cout << ("Begining of while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
           bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
-             std::cout << ("ImGui is Running") << std::endl;
              if (imWnd->forceDrawNextFrame) {
                  imWnd->forceDrawNextFrame = false;
              }
@@ -496,7 +489,6 @@ void GLApplication::Run() {
             }
             if (activeImGuiEvent) {
                 wereEvents_imgui = 3;
-                std::cout << ("ImGui event handler") << std::endl;
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
                     //Handle input events caught by ImGui
                 }
@@ -509,9 +501,7 @@ void GLApplication::Run() {
         //}
        if (forceSkipEvents) wereEvents = false;
 
-       std::cout << ("Legacy event handler start") << std::endl;
        UpdateEventCount(&sdlEvent);
-       std::cout << ("Updated Event Count") << std::endl;
        switch( sdlEvent.type ) {
 
          case SDL_QUIT:
@@ -543,9 +533,7 @@ void GLApplication::Run() {
            }
 
        }
-       std::cout << ("End of while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
      }
-     std::cout << ("Exited while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
 
      if( quit ) {
          std::cout << ("Quit flag was set, app exiting") << std::endl;
