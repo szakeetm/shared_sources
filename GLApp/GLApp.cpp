@@ -566,7 +566,11 @@ void GLApplication::Run() {
      std::cout << ("After UpdateStatus") << std::endl;
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
-     if (flags && (SDL_WINDOW_SHOWN & flags) || mApp->imWnd->testEngine.running) { //Application visible
+     if (flags && (SDL_WINDOW_SHOWN & flags)
+#ifdef ENABLE_IMGUI_TESTS
+         || mApp->imWnd->testEngine.running
+#endif
+         ) { //Application visible
          std::cout << ("inside if SDL_WINDOW_SHOWN") << std::endl;
 //#if defined(_DEBUG)
        t0 = GetTick();
