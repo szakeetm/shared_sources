@@ -536,22 +536,20 @@ void GLApplication::Run() {
      }
 
      if( quit ) {
-         std::cout << ("Quit flag was set, app exiting") << std::endl;
+         std::cout << ("\nQuit flag was set, app exiting") << std::endl;
          Exit();
        return;
      }
 
      glError = glGetError();
      if( glError!=GL_NO_ERROR ) {
-         std::cout << ("GLApplication::ManageEvent() failed.") << std::endl;
+         std::cout << ("\nGLApplication::ManageEvent() failed.") << std::endl;
          GLToolkit::Log("GLApplication::ManageEvent() failed.");
        GLToolkit::printGlError(glError); 
        Exit();
      }
 
-     std::cout << ("Before UpdateStatus") << std::endl;
      UpdateStats();
-     std::cout << ("After UpdateStatus") << std::endl;
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)
@@ -559,7 +557,6 @@ void GLApplication::Run() {
          || mApp->imWnd->testEngine.running
 #endif
          ) { //Application visible
-         std::cout << ("inside if SDL_WINDOW_SHOWN") << std::endl;
 //#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
@@ -571,7 +568,7 @@ void GLApplication::Run() {
 //#endif
        glError = glGetError();
        if( !ok || glError!=GL_NO_ERROR ) {
-           std::cout << ("GLApplication::FrameMove() failed.") << std::endl;
+           std::cout << ("\nGLApplication::FrameMove() failed.") << std::endl;
            GLToolkit::Log("GLApplication::FrameMove() failed.");
          GLToolkit::printGlError(glError); 
          Exit();
@@ -587,13 +584,13 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
-         std::cout << ("else of if SDL_WINDOW_SHOWN") << std::endl;
        SDL_Delay(100);
      }
       
   }
   
   //Clean up and exit
+  std::cout << ("\nApp exiting") << std::endl;
   Exit();
   
 }

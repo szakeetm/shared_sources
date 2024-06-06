@@ -129,7 +129,10 @@ bool ImTest::ConfigureGeometry(Configuration index)
     currentConfig = index;
     break;
     case profile:
-        ConfigureGeometry(qPipe);
+        {
+            LockWrapper myLock(mApp->imguiRenderLock);
+            static_cast<MolFlow*>(mApp)->BuildPipe(5, 5);
+        }
         SetFacetProfile(2, 1);
         SetFacetProfile(4, 3);
         SetFacetProfile(6, 5);
@@ -137,7 +140,10 @@ bool ImTest::ConfigureGeometry(Configuration index)
         break;
     case texture:
     {
-        ConfigureGeometry(qPipe);
+        {
+            LockWrapper myLock(mApp->imguiRenderLock);
+            static_cast<MolFlow*>(mApp)->BuildPipe(5, 5);
+        }
         TextureType t;
         t.enabled = true;
         t.countDes = true;
@@ -158,7 +164,6 @@ bool ImTest::ConfigureGeometry(Configuration index)
         t.enabled = true;
         t.countDirection = true;
         TextureFacet(4, 10, 10, t);
-        ExecuteQueue();
         currentConfig = index;
     }
         break;
