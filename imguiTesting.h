@@ -17,9 +17,9 @@ public:
 	void DrawPresetControl();
 
 	void RunTests(); // autorun tests (used when running from command line)
+	bool running = false;
 private:
 	// variables for keeping track of tests when running from command line
-	bool running = false;
 	int ranScenarios = 0;
 	bool result = false;
 

@@ -545,9 +545,11 @@ void GLApplication::Run() {
        }
        std::cout << ("End of while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
      }
+     std::cout << ("Exited while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
 
      if( quit ) {
-		 Exit();
+         std::cout << ("Quit flag was set, app exiting") << std::endl;
+         Exit();
        return;
      }
 
@@ -559,11 +561,13 @@ void GLApplication::Run() {
        Exit();
      }
 
+     std::cout << ("Before UpdateStatus") << std::endl;
      UpdateStats();
+     std::cout << ("After UpdateStatus") << std::endl;
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
-     if (flags && (SDL_WINDOW_SHOWN & flags)) { //Application visible
-
+     if (flags && (SDL_WINDOW_SHOWN & flags) || mApp->imWnd->testEngine.running) { //Application visible
+         std::cout << ("inside if SDL_WINDOW_SHOWN") << std::endl;
 //#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
@@ -591,6 +595,7 @@ void GLApplication::Run() {
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      
      } else {
+         std::cout << ("else of if SDL_WINDOW_SHOWN") << std::endl;
        SDL_Delay(100);
      }
       
