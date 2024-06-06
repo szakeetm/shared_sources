@@ -182,6 +182,7 @@ void ImConvergencePlotter::Refresh()
 
 void ImConvergencePlotter::GetData() {
 	for (int i = 0; i < data.size(); i++) {
+		if (mApp->appFormulas->convergenceData.size() <= data[i].id) continue;
 		const std::vector<FormulaHistoryDatapoint>& values = mApp->appFormulas->convergenceData[data[i].id];
 		actualNbValues = values.size();
 		size_t count = values.size() > maxDatapoints ? maxDatapoints : values.size();
@@ -262,6 +263,7 @@ void ImConvergencePlotter::DrawConvergenceGraph()
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (int i = 0; i < data.size(); i++) {
 			if (data[i].x == nullptr || data[i].y == nullptr || data[i].x->size() != data[i].y->size()) continue;
+			if (mApp->appFormulas->formulas.size() <= data[i].id) continue;
 			std::string name = mApp->appFormulas->formulas[data[i].id].GetName();
 			if(name=="") name = mApp->appFormulas->formulas[data[i].id].GetExpression();
 			if (showDatapoints) ImPlot::SetNextMarkerStyle(ImPlotMarker_Circle);
