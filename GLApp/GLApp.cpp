@@ -509,8 +509,9 @@ void GLApplication::Run() {
         //}
        if (forceSkipEvents) wereEvents = false;
 
-       std::cout << ("Legacy event handler") << std::endl;
+       std::cout << ("Legacy event handler start") << std::endl;
        UpdateEventCount(&sdlEvent);
+       std::cout << ("Updated Event Count") << std::endl;
        switch( sdlEvent.type ) {
 
          case SDL_QUIT:
@@ -542,6 +543,7 @@ void GLApplication::Run() {
            }
 
        }
+       std::cout << ("End of while(!quit&& (SDL_PollEvent(&sdlEvent))") << std::endl;
      }
 
      if( quit ) {
@@ -551,7 +553,8 @@ void GLApplication::Run() {
 
      glError = glGetError();
      if( glError!=GL_NO_ERROR ) {
-       GLToolkit::Log("GLApplication::ManageEvent() failed.");
+         std::cout << ("GLApplication::ManageEvent() failed.") << std::endl;
+         GLToolkit::Log("GLApplication::ManageEvent() failed.");
        GLToolkit::printGlError(glError); 
        Exit();
      }
@@ -572,7 +575,8 @@ void GLApplication::Run() {
 //#endif
        glError = glGetError();
        if( !ok || glError!=GL_NO_ERROR ) {
-         GLToolkit::Log("GLApplication::FrameMove() failed.");
+           std::cout << ("GLApplication::FrameMove() failed.") << std::endl;
+           GLToolkit::Log("GLApplication::FrameMove() failed.");
          GLToolkit::printGlError(glError); 
          Exit();
        }

@@ -105,12 +105,8 @@ void ImTest::RunTests()
     std::cout << "Starting tests in scenario " << ranScenarios << std::endl;
     for (int n = 0; n < engine->TestsAll.Size; n++)
     {
-        std::cout << "Enqueing test number " << n << std::endl;
-        std::cout << "Creating test object" << n << std::endl;
         ImGuiTest* test = engine->TestsAll[n];
-        std::cout << "Adding test object to queue" << n << std::endl;
         ImGuiTestEngine_QueueTest(engine, test, ImGuiTestRunSpeed_Normal | ImGuiTestRunFlags_None);
-        std::cout << "Test object added to queue" << n << std::endl;
     }
     running = true;
     std::cout << ("Exit from ImTest::RunTests()") << std::endl;
