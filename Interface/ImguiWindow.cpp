@@ -145,7 +145,7 @@ void ImguiWindow::init() {
     //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
-    io.Fonts->AddFontFromFileTTF("fonts/ZenMaruGothic-Regular.ttf", 16.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/NotoSansJP-Regular.ttf", 16.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
@@ -162,7 +162,7 @@ void ImguiWindow::init() {
 
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
-    io.Fonts->AddFontFromFileTTF("fonts/ZenMaruGothic-Regular.ttf", 14.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts//NotoSansJP-Regular.ttf", 14.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();
