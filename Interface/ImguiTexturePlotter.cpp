@@ -108,10 +108,13 @@ void ImTexturePlotter::OnShow()
 void ImTexturePlotter::DrawTextureTable()
 {
 	if (width < 1 || height < 1) return;
+#ifdef DEBUG // in debug mode imgui has an assert that will trigger above 511 columns, actual number is limited by capacity of type int 
 	if (width > 511) {
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Unsuported table width");
 		return;
 	}
+#endif
+
 
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
