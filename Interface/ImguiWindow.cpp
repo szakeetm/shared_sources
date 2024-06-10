@@ -162,7 +162,7 @@ void ImguiWindow::init() {
 
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
-    io.Fonts->AddFontFromFileTTF("fonts//NotoSansJP-Regular.ttf", 14.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/NotoSansJP-Regular.ttf", 14.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();
