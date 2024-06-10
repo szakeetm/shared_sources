@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "../GLChart/GLChart.h"
 #include "AxisPanel.h"
 #include "../GLMessageBox.h"

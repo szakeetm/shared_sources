@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLChart.h"
 #include "../GLMessageBox.h"
 #include "../GLColorBox.h"

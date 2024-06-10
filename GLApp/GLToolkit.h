@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLTOOLKITH_
 #define _GLTOOLKITH_
 

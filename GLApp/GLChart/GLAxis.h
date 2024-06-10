@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLCHARTAXISH_
 #define _GLCHARTAXISH_
 

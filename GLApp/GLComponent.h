@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLCOMPONENTH_
 #define _GLCOMPONENTH_
 

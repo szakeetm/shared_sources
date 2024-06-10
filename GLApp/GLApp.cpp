@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
 #endif

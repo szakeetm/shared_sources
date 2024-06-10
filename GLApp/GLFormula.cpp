@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include <stdio.h>
 #include <string.h>
 //#include <malloc.h>
