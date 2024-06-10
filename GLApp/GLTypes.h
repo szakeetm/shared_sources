@@ -44,7 +44,7 @@ template<typename T>
 constexpr void SAFE_DELETE(T& x) {if(x) {delete x; x=nullptr;}}
 template<typename T>
 constexpr void SAFE_FREE(T& x) {if(x) {free(x); x=nullptr;}}
-#define SAFE_CLEAR(vect) if(vect) {vect.clear();}
+//#define SAFE_CLEAR(vect) if(vect) {vect.clear();}
 template<typename T>
 constexpr void IVALIDATE_DLG(T& dlg){ if(dlg && !dlg->IsVisible()) dlg->InvalidateDeviceObjects();}
 template<typename T>
