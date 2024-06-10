@@ -16,12 +16,7 @@ GLFont2D::GLFont2D(const std::string _fileName, int _fontSize) : fileName{_fileN
 }
 
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
-    // Create SDL renderer
-    SDL_Renderer* ren = SDL_CreateRenderer(theApp->mainScreen, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (ren == nullptr) {
-        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
-        return 0;
-    }
+
 
   try{
     TTF_Font* font = TTF_OpenFont(fileName.c_str(), fontSize);
@@ -32,6 +27,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
     }
 
 
+  
 	}
 	catch (...) {
 		char tmp[600];
@@ -100,8 +96,8 @@ int GLFont2D::GetTextHeight() {
 
 void GLFont2D::InvalidateDeviceObjects() {
 
-  if(texId) glDeleteTextures(1, &texId);
-  texId = 0;
+  if(textureId) glDeleteTextures(1, &textureId);
+  textureId = 0;
 
 }
 
@@ -111,85 +107,32 @@ void GLFont2D::SetTextColor(const float r,const float g,const float b) {
   color.b=b;
 }
 
-void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
-
-    int lgth = text ? (int)strlen(text) : 0;
-  if( lgth==0 ) return;
-  int x = cx;
-  int y = cy+1;
-
-  glEnable(GL_TEXTURE_2D);
-  glBindTexture(GL_TEXTURE_2D,texId);
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glColor3f(rC,gC,bC);
-
-  if( loadMatrix ) {
-    glMatrixMode( GL_PROJECTION );
-    glLoadMatrixf(pMatrix);
-    glMatrixMode( GL_MODELVIEW );
-    glLoadIdentity();
-  }
-
-  int xcPos=x;
-  float cH   = (float)cHeight / (float)fWidth;
-  //float factor=1.1f;
-	//glScalef(factor,factor,factor);
-  glBegin(GL_QUADS);
-  for(int i=0;i<lgth;i++ ) {
-
-    unsigned char  c = (unsigned char)text[i];
-    float xPos = (float)((c % 16) * 16 + 1)/ (float)fWidth;
-    float yPos = (float)((c / 16) * 16 )/ (float)fHeight;
-
-    if(!isVariable) {
-
-      float cW   = (float)cMaxWidth / (float)fWidth;
-      glTexCoord2f(xPos   ,yPos   );glVertex2i(xcPos       ,y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cMaxWidth,y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cMaxWidth,y+cHeight);
-      glTexCoord2f(xPos   ,yPos+cH);glVertex2i(xcPos       ,y+cHeight);
-      xcPos += cMaxWidth;
-
-    } else {
-      float cW   = (float)cVarWidth[c] / (float)fWidth;
-      glTexCoord2f(xPos   ,yPos   );glVertex2f((float)xcPos             , (float)y   );
-      glTexCoord2f(xPos+cW,yPos   );glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y   );
-      glTexCoord2f(xPos+cW,yPos+cH);glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y+cHeight*sizeFactor);
-      glTexCoord2f(xPos   ,yPos+cH);glVertex2f((float)xcPos             , (float)y+cHeight*sizeFactor);
-      xcPos += (int)(cVarWidth[c]*sizeFactor);
-
-    }
-
-  }
-  
-  glEnd();
-  //glScalef(1.0f/factor,1.0f/factor,1.0f/factor);
-#if defined(DEBUG)
-  theApp->nbPoly+=lgth;
-#endif
-
-}
-
 void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool loadMatrix) {
 
     // Create a surface with the text
     SDL_Color color = {color.r, color.g, color.b, color.a};
-    SDL_Surface* surface = TTF_RenderText_Solid(font, "Hello, SDL_ttf!", color);
+    SDL_Surface* surface = TTF_RenderText_Solid(font, text, color);
     if (surface == nullptr) {
         printf("TTF_RenderText_Solid Error: %s\n", TTF_GetError());
     }
 
         // Create a texture from the surface
-    SDL_Texture* texture = SDL_CreateTextureFromSurface(ren, surface);
-    SDL_FreeSurface(surface);
-    if (texture == nullptr) {
-        printf("SDL_CreateTextureFromSurface Error: %s\n", SDL_GetError());
+   
+    glGenTextures(1, &textureID);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    
+    int Mode = GL_RGB;
+    
+    if(surface->format->BytesPerPixel == 4) {
+        Mode = GL_RGBA;
     }
+ 
+    glTexImage2D(GL_TEXTURE_2D, 0, Mode, surface->w, surface->h, 0, Mode, GL_UNSIGNED_BYTE, surface->pixels);
+    
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-
+    SDL_FreeSurface(surface);
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;
@@ -248,6 +191,71 @@ void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool 
 #endif
 
 }
+
+void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
+  GLDrawText(cx,cy,text,loadMatrix);
+/*
+    int lgth = text ? (int)strlen(text) : 0;
+  if( lgth==0 ) return;
+  int x = cx;
+  int y = cy+1;
+
+  glEnable(GL_TEXTURE_2D);
+  glBindTexture(GL_TEXTURE_2D,texId);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glColor3f(rC,gC,bC);
+
+  if( loadMatrix ) {
+    glMatrixMode( GL_PROJECTION );
+    glLoadMatrixf(pMatrix);
+    glMatrixMode( GL_MODELVIEW );
+    glLoadIdentity();
+  }
+
+  int xcPos=x;
+  float cH   = (float)cHeight / (float)fWidth;
+  //float factor=1.1f;
+	//glScalef(factor,factor,factor);
+  glBegin(GL_QUADS);
+  for(int i=0;i<lgth;i++ ) {
+
+    unsigned char  c = (unsigned char)text[i];
+    float xPos = (float)((c % 16) * 16 + 1)/ (float)fWidth;
+    float yPos = (float)((c / 16) * 16 )/ (float)fHeight;
+
+    if(!isVariable) {
+
+      float cW   = (float)cMaxWidth / (float)fWidth;
+      glTexCoord2f(xPos   ,yPos   );glVertex2i(xcPos       ,y   );
+      glTexCoord2f(xPos+cW,yPos   );glVertex2i(xcPos+cMaxWidth,y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2i(xcPos+cMaxWidth,y+cHeight);
+      glTexCoord2f(xPos   ,yPos+cH);glVertex2i(xcPos       ,y+cHeight);
+      xcPos += cMaxWidth;
+
+    } else {
+      float cW   = (float)cVarWidth[c] / (float)fWidth;
+      glTexCoord2f(xPos   ,yPos   );glVertex2f((float)xcPos             , (float)y   );
+      glTexCoord2f(xPos+cW,yPos   );glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y   );
+      glTexCoord2f(xPos+cW,yPos+cH);glVertex2f((float)xcPos+cVarWidth[c]*sizeFactor, (float)y+cHeight*sizeFactor);
+      glTexCoord2f(xPos   ,yPos+cH);glVertex2f((float)xcPos             , (float)y+cHeight*sizeFactor);
+      xcPos += (int)(cVarWidth[c]*sizeFactor);
+
+    }
+
+  }
+  
+  glEnd();
+  //glScalef(1.0f/factor,1.0f/factor,1.0f/factor);
+#if defined(DEBUG)
+  theApp->nbPoly+=lgth;
+#endif
+*/
+}
+
+
 
 void GLFont2D::GLDrawTextFast(int cx,int cy,const char *text) {
 

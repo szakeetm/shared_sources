@@ -48,4 +48,5 @@ private:
   GLfloat pMatrix[16];
   bool    isVariable=false;
   int fontSize=24;
+  GLuint  textureId; //opengl texture
 };
