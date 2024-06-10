@@ -2,99 +2,36 @@
 #include "GLFontTTF.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
-#define cimg_display 0
-#define cimg_use_png 1
-#include <CImg.h>
-using namespace cimg_library;
+
 #include <stdio.h>
 #include <cstring> //strcpy, etc.
 
 extern GLApplication *theApp;
 
-GLFont2D::GLFont2D() : fileName{}, pMatrix{}, cVarWidth{}{
-  strcpy(fileName,"images/font.png");
-  cHeight = 15;
-  cMaxWidth  = 9;
-  isVariable = false;
-  std::fill(cVarWidth, cVarWidth + 256, 0);
+GLFont2DTTF::GLFont2DTTF() : fileName{}, pMatrix{}, cVarWidth{}{
+  fileName="fonts/FreeMono.ttf";
 }
 
-GLFont2D::GLFont2D(const char *imgFileName) : fileName{}, pMatrix{}, cVarWidth{} {
-  strcpy(fileName,imgFileName);
-  cHeight = 15;
-  cMaxWidth  = 9;
-  isVariable = false;
-  std::fill(cVarWidth, cVarWidth + 256, 0);
+GLFont2D::GLFont2D(const std::string _fileName, int _fontSize) : fileName{_fileName}, fontSize(_fontSize), pMatrix{} {
 }
 
 int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
+    // Create SDL renderer
+    SDL_Renderer* ren = SDL_CreateRenderer(theApp->mainScreen, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    if (ren == nullptr) {
+        printf("SDL_CreateRenderer Error: %s\n", SDL_GetError());
+        return 0;
+    }
 
-  // Load the image
- // CImage img;
-  //if( !img.LoadCImage(fileName) ) {
+  try{
+    TTF_Font* font = TTF_OpenFont(fileName.c_str(), fontSize);
+    if (font == nullptr) {
+          std::string errorMsg = fmt::format("Failed to load {}:\n{}", fileName, TTF_GetError());
+          GLToolkit::Log(errorMsg.c_str());
+          return 0;
+    }
 
-	try {
-		CImg<BYTE> img(fileName);
-		// Make 32 Bit RGBA buffer
-		fWidth = img.width();
-		fHeight = img.height();
-		BYTE *buff32 = (BYTE *)malloc(fWidth*fHeight * 4);
-		//BYTE *data = img.data();
-		for (int y = 0; y < fHeight; y++) {
-			for (int x = 0; x < fWidth; x++) {
-				buff32[x * 4 + 0 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 0));
-				buff32[x * 4 + 1 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 1));
-				buff32[x * 4 + 2 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 2));
-				buff32[x * 4 + 3 + y * 4 * fWidth] = /*data[x * 3 + 2 + y * 3 * fWidth]*/ *(img.data(x, y, 0, 1)); // Green as alpha
-			}
-		}
 
-		if (isVariable) {
-
-			// Compute width for each char
-			for (int i = 0; i < 256; i++) {
-				cVarWidth[i] = 0;
-				int xO = ((i % 16) * 16 + 1);
-				int yO = ((i / 16) * 16);
-
-				//scan columns
-                int lastWhite = 0;
-				
-                for (int col = xO; col < (xO + img.width() / 16); col++) {
-                    bool hasWhite = false;
-                    for (int j = 0; !hasWhite && j < cHeight; j++) {
-                        hasWhite = (*(img.data(col, yO + j)) != 0);
-                    }
-                    if (hasWhite) {
-                        lastWhite = col;
-                    }
-                }
-
-                cVarWidth[i] = std::min(lastWhite - xO+1,cMaxWidth);
-
-				//Comprime space char when variable width font
-				if (i == 32) cVarWidth[i] = cMaxWidth / 3;
-
-			}
-		}
-
-		glGenTextures(1, &texId);
-		glBindTexture(GL_TEXTURE_2D, texId);
-
-		glTexImage2D(
-			GL_TEXTURE_2D,      // Type
-			0,                  // No Mipmap
-			4,                  // Format RGBA
-			fWidth,             // Width
-			fHeight,            // Height
-			0,                  // Border
-			GL_RGBA,            // Format RGBA
-			GL_UNSIGNED_BYTE,   // 8 Bit/color
-			buff32              // Data
-		);
-
-		free(buff32);
-		//img.Release();
 	}
 	catch (...) {
 		char tmp[600];
@@ -102,7 +39,6 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
 		GLToolkit::Log(tmp);
 		return 0;
 	}
-  //}
 
 
 
@@ -110,7 +46,7 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
   if( glError != GL_NO_ERROR )
   {
     char tmp[600];
-    sprintf(tmp,"Failed to create GLFont2D \"%s\"",fileName);
+    sprintf(tmp,"Failed to create GLFont2D \"%s\"",fileName.c_str());
     GLToolkit::Log(tmp);
     GLToolkit::printGlError(glError);
     return 0;
@@ -121,11 +57,6 @@ int GLFont2D::RestoreDeviceObjects(int scrWidth,int scrHeight) {
   glLoadIdentity();
   glOrtho( 0, scrWidth, scrHeight, 0, -1, 1 );
   glGetFloatv( GL_PROJECTION_MATRIX , pMatrix );
-
-  
-  rC = 1.0f;
-  gC = 1.0f;
-  bC = 1.0f;
 
   return 1;
 
@@ -146,8 +77,8 @@ void GLFont2D::SetVariableWidth(bool variable) {
 }
 
 void GLFont2D::SetTextSize(int width,int height) {
-  cHeight = height;
-  cMaxWidth  = width;
+  maxCharHeight = height;
+  maxCharHeight  = width;
 }
 
 int GLFont2D::GetTextWidth(const char *text) {
@@ -164,7 +95,7 @@ int GLFont2D::GetTextWidth(const char *text) {
 }
 
 int GLFont2D::GetTextHeight() {
-  return cHeight;
+  return fontHeight;
 }
 
 void GLFont2D::InvalidateDeviceObjects() {
@@ -175,9 +106,9 @@ void GLFont2D::InvalidateDeviceObjects() {
 }
 
 void GLFont2D::SetTextColor(const float r,const float g,const float b) {
-  rC = r;
-  gC = g;
-  bC = b;
+  color.r=r;
+  color.g=g;
+  color.b=b;
 }
 
 void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,bool loadMatrix) {
@@ -243,6 +174,22 @@ void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,b
 }
 
 void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool loadMatrix) {
+
+    // Create a surface with the text
+    SDL_Color color = {color.r, color.g, color.b, color.a};
+    SDL_Surface* surface = TTF_RenderText_Solid(font, "Hello, SDL_ttf!", color);
+    if (surface == nullptr) {
+        printf("TTF_RenderText_Solid Error: %s\n", TTF_GetError());
+    }
+
+        // Create a texture from the surface
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(ren, surface);
+    SDL_FreeSurface(surface);
+    if (texture == nullptr) {
+        printf("SDL_CreateTextureFromSurface Error: %s\n", SDL_GetError());
+    }
+
+
 
     int lgth = text ? (int)strlen(text) : 0;
   if( lgth==0 ) return;

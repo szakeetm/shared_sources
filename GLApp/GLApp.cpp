@@ -210,6 +210,13 @@ int GLApplication::Create(int width, int height, bool bFullScreen ) {
       return GL_FAIL;
   }
 
+    // Initialize SDL_ttf
+    if (TTF_Init() == -1) {
+        printf("TTF_Init Error: %s\n", TTF_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
   //SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, 0);
   //SDL_EnableUNICODE( 1 );
   //SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY,SDL_DEFAULT_REPEAT_INTERVAL);

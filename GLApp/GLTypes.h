@@ -71,13 +71,14 @@ struct Error : public std::runtime_error {
 };
 
 struct GLCOLOR {
-
+  GLCOLOR()=default;
+  GLCOLOR(float _r, float _g, float _b, float _a):r(_r),g(_g),b(_b),a(_a){};
   float r;
   float g;
   float b;
   float a;
 
-} ;
+};
 
 struct GLMATERIAL {
 

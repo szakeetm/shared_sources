@@ -9,7 +9,7 @@ public:
 
   // Default constructor
   GLFont2DTTF();
-  GLFont2DTTF(std::string fileName);
+  GLFont2DTTF(const std::string& _fileName);
   
   // Initialise the font
   // return 1 when success, 0 otherwise
@@ -37,22 +37,15 @@ public:
   int GetTextWidth(const char *text);
   int GetTextHeight();
 
-  // Adapat orthographic projection on viewport change
+  // Adapt orthographic projection on viewport change
   void ChangeViewport(GLVIEWPORT *g);
 
 private:
 
-  char    fileName[512];
-  GLuint  texId;
-  int     fWidth;
-  int     fHeight;
-  int     cMaxWidth;
-  int     cHeight;
-  float   rC;
-  float   gC;
-  float   bC;
+  std::string fileName;
+  int fontWidth,fontHeight,maxCharWidth=9,maxCharHeight=15;
+  GLCOLOR color(1.0f,1.0f,1.0f,1.0f);
   GLfloat pMatrix[16];
-  int     cVarWidth[256];
-  bool    isVariable;
-
+  bool    isVariable=false;
+  int fontSize=24;
 };
