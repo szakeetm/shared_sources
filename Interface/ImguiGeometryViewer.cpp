@@ -55,8 +55,8 @@ bool ImGeoViewer::CreateTexture()
 		hadErrors = true;
 	}
 	// Generate framebuffer
-	glGenFramebuffers(1, &frameBufferID);
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+	//glGenFramebuffers(1, &frameBufferID);
+	//glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	return true;
 }
 
