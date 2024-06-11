@@ -2,7 +2,7 @@
 #ifndef _GLTOOLKITH_
 #define _GLTOOLKITH_
 
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 #include <string>
 #include <optional>
 #include <tuple>

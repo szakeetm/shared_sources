@@ -2,7 +2,7 @@
 #ifndef _SPRITE2DH_
 #define _SPRITE2DH_
 
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 
 class Sprite2D {
 

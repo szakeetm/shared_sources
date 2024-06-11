@@ -2,7 +2,7 @@
 #ifndef _GLSAVEDIALOGH_
 #define _GLSAVEDIALOGH_
 
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 #include "GLWindow.h"
 
 // Buttons

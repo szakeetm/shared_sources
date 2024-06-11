@@ -1,7 +1,7 @@
 #pragma once
 #include "ImguiWindowBase.h"
 #include "GeometryViewer.h"
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 
 class ImGeoViewer : public ImWindow {
 public:

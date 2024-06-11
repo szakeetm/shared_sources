@@ -14,7 +14,7 @@
 #include "Vector.h"
 
 #include "Geometry_shared.h"
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 
 #include <math.h>
 #include <cstdlib>

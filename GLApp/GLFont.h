@@ -2,7 +2,7 @@
 #ifndef _GLFONT2DH_
 #define _GLFONT2DH_
 
-#include "graphicsLibraries.h
+#include "graphicsLibraries.h"
 #include "GLTypes.h"
 
 class GLFont2D {
