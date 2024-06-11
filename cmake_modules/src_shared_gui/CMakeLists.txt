@@ -93,6 +93,7 @@ set(INTERFACE_FILES
         ${CPP_DIR_SRC_SHARED}/Worker_shared.cpp
         ${CPP_DIR_SRC_SHARED}/GeometryTools.cpp
         ${CPP_DIR_SRC_SHARED}/ImguiImageManager.cpp
+        ${CPP_DIR_SRC_SHARED}/graphicsLibraries.h
 )
 
 if(ENABLE_IMGUI_TESTS)
@@ -222,10 +223,14 @@ ELSE() #not MSVC
     target_link_directories(${PROJECT_NAME} PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 endif() #NOT MSVC
 
+#target_precompile_headers(${PROJECT_NAME} PRIVATE ${CPP_DIR_SRC_SHARED}/graphicsLibraries.h)
+
 #vcpkg or system-wide libraries
 find_package(OpenGL REQUIRED)
 find_package(CURL REQUIRED)
 find_package(cereal CONFIG REQUIRED)
+find_package(GLEW REQUIRED)
+target_link_libraries(${PROJECT_NAME} PUBLIC GLEW:glew)
 target_link_libraries(${PROJECT_NAME} PUBLIC CURL::libcurl)
 target_link_libraries(${PROJECT_NAME} PUBLIC cereal::cereal)
 target_link_libraries(${PROJECT_NAME} PUBLIC ${OPENGL_LIBRARIES})
@@ -233,6 +238,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX)
 find_package(Stb REQUIRED)
 message("-- Found STB " ${Stb_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${Stb_INCLUDE_DIR})
+
 
 #Shipped libraries
 target_link_libraries(${PROJECT_NAME} PUBLIC clipper2 )

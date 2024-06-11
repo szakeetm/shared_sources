@@ -106,7 +106,7 @@ public:
   void  PaintAxisOppositeDouble(int x0, int y0,GLColor back,int tr,int la);
   bool  IsZeroAlwaysVisible();
   void  SetZeroAlwaysVisible(bool zeroAlwaysVisible);
-  char *GetDateFormat();
+  char *GetAxisDateFormat();
   void  SetDateFormat (const char *dateFormat);
   static void  Invalidate();
   static void  Revalidate();

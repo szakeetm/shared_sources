@@ -3471,7 +3471,7 @@ void GLAxis::SetZeroAlwaysVisible(bool zeroAlwaysVisible)
 	this->zeroAlwaysVisible = zeroAlwaysVisible;
 }
 
-char* GLAxis::GetDateFormat()
+char* GLAxis::GetAxisDateFormat()
 {
 	return dateFormat;
 }

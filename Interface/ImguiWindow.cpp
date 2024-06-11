@@ -13,8 +13,9 @@
 #endif
 #include "Facet_shared.h"
 #include "../../src/Interface/Viewer3DSettings.h"
-#include "imgui_impl_opengl2.h"
-#include "imgui_impl_sdl2.h"
+
+#include "graphicsLibraries.h"
+
 #include "ImguiGlobalSettings.h"
 #include "ImguiPerformancePlot.h"
 #include "ImguiSidebar.h"
@@ -351,6 +352,8 @@ void ImguiWindow::renderSingle() {
         ImGui_ImplSDL2_NewFrame(/*app->mainScreen*/);
         ImGui::NewFrame();
 
+        geoView.DrawViewer();
+
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
 
@@ -499,7 +502,6 @@ void ImguiWindow::renderSingle() {
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
 
-        geoView.DrawViewer();
 
         // SDL_GL_SwapWindow(app->mainScreen);
 

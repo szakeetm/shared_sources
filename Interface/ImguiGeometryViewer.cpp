@@ -54,6 +54,9 @@ bool ImGeoViewer::CreateTexture()
 		std::cerr << "Failed to set render target: " << SDL_GetError() << std::endl;
 		hadErrors = true;
 	}
+	// Generate framebuffer
+	glGenFramebuffers(1, &frameBufferID);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	return true;
 }
 
@@ -71,8 +74,8 @@ void ImGeoViewer::DrawViewer()
 	glViewer->Paint(); // despite setting the texture as target still draws in main window
 
 	// Create a new OpenGL texture
-	glGenTextures(1, &openglTexture);
-	glBindTexture(GL_TEXTURE_2D, openglTexture);
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -131,7 +134,8 @@ void ImGeoViewer::Draw()
 	
 	// draw the image containing the viewer
 	// despite the code to do it, the viewer does not seem to be rendered into this texture
-	ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)openglTexture, availableTLcorner, availableTLcorner+availableSpace);
+	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight));
+	//ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)textureID, availableTLcorner, availableTLcorner+availableSpace);
 	
 	availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(2*margin, margin+25+22));
 	availableTLcorner = ImMath::AddVec2(ImGui::GetWindowPos(),ImVec2(margin,25));
@@ -144,7 +148,7 @@ void ImGeoViewer::Draw()
 void ImGeoViewer::OnShow()
 {
 	// adding an extra viewer would require significant changes to core molflow code
-	glViewer = mApp->viewers[3];
+	glViewer = mApp->viewers[0];
 	glViewer->SetVisible(true);
 	glViewer->SetFocus(true);
 }

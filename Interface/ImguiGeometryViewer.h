@@ -1,7 +1,7 @@
 #pragma once
 #include "ImguiWindowBase.h"
 #include "GeometryViewer.h"
-#include <SDL2/SDL_opengl.h>
+#include "graphicsLibraries.h
 
 class ImGeoViewer : public ImWindow {
 public:
@@ -20,7 +20,8 @@ protected:
 	void* pixels = nullptr;
 	int pitch = 0;
 	
-	GLuint openglTexture;
+	GLuint textureID;
+	GLuint frameBufferID;
 	SDL_Renderer* renderer;
 	SDL_Texture* target;
 	bool CreateTexture();

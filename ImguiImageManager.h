@@ -1,5 +1,5 @@
 #pragma once
-#include <SDL2/SDL_opengl.h>
+#include "graphicsLibraries.h"
 #include <string>
 #include <imgui.h>
 

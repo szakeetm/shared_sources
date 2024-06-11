@@ -1,7 +1,6 @@
 #pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
+#include "graphicsLibraries.h"
 #include "GLTypes.h"  //GL_OK
 #include "Helper/Chronometer.h"
 #include <omp.h>
