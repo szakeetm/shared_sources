@@ -54,9 +54,9 @@ void ImGeoViewer::DrawViewer()
 	if (!glViewer || !drawn) return;
 	//int windowW, windowH;
 	//SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
-	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	//glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	glViewer->SetBounds(0, (availableSpace.y / 2), availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(true);
-	//glViewer->SetBounds(0, 0, availableSpace.x, availableSpace.y);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	CreateTexture();
@@ -101,7 +101,7 @@ void ImGeoViewer::Draw()
 	
 	// draw the image containing the viewer
 	// despite the code to do it, the viewer does not seem to be rendered into this texture
-	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight));
+	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), ImVec2(0, 1), ImVec2(1, 0));
 	//ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)textureID, availableTLcorner, availableTLcorner+availableSpace);
 	
 	availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(2*margin, margin+25+22));
