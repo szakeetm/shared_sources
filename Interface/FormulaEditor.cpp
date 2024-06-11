@@ -228,17 +228,17 @@ void FormulaEditor::ProcessMessage(GLComponent *src, int message) {
 			}
 
 		}
-		if (formulaList->GetValueAt(0, formulaList->GetNbRow() - 1) != nullptr) { //last line
+		if (formulaList->GetValueAt(0, formulaList->GetNbRow() - 1) != nullptr) { //last line expression enter
 			if (*(formulaList->GetValueAt(0, formulaList->GetNbRow() - 1)) != 0) {
 				//Add new line
 				appFormulas->AddFormula("", formulaList->GetValueAt(0, formulaList->GetNbRow() - 1));
 				Refresh();
 			}
 		}
-		else if (formulaList->GetValueAt(1, formulaList->GetNbRow() - 1) != nullptr) { //last line
+		else if (formulaList->GetValueAt(1, formulaList->GetNbRow() - 1) != nullptr) { //last line name enter
 			if (*(formulaList->GetValueAt(1, formulaList->GetNbRow() - 1)) != 0) {
 				//Add new line
-                appFormulas->AddFormula("", formulaList->GetValueAt(1, formulaList->GetNbRow() - 1));
+                appFormulas->AddFormula(formulaList->GetValueAt(1, formulaList->GetNbRow() - 1),"");
 				Refresh();
 			}
 		}
