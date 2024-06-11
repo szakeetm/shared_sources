@@ -17,46 +17,33 @@ with help from chatGPT 3.5
 
 void ImGeoViewer::Init(Interface* mApp_) {
 	mApp = mApp_;
-	renderer = SDL_CreateRenderer(mApp->mainScreen, -1, SDL_RENDERER_ACCELERATED);
-	if (!renderer) {
-		std::cerr << "Failed to create renderer: " << SDL_GetError() << std::endl;
-		hadErrors = true;
-	}
+	// Generate framebuffer
+	glGenFramebuffers(1, &frameBufferID);
 	// adding an extra viewer would require significant changes to core molflow code
 	//glViewer = new GeometryViewer(4);
 }
 
 ImGeoViewer::~ImGeoViewer()
 {
-	if (renderer) SDL_DestroyRenderer(renderer);
-	if (target) SDL_DestroyTexture(target);
 	if (glViewer) free(glViewer);
 }
 
 bool ImGeoViewer::CreateTexture()
 {
-	if (hadErrors) return false;
-	if (target) SDL_DestroyTexture(target);
-	target = SDL_CreateTexture(
-		renderer,
-		SDL_PIXELFORMAT_RGBA8888,
-		SDL_TEXTUREACCESS_TARGET,
-		textureWidth,
-		textureHeight
-	);
-	if (!target) {
-		std::cerr << "Failed to create render texture: " << SDL_GetError() << std::endl;
-		hadErrors = true;
-		return false;
+	// Generate texture
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	// Attach texture to framebuffer
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID, 0);
+
+	// Check framebuffer status
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "Framebuffer not complete!" << std::endl;
 	}
-	// Set Render target to be the texture (despite this the viewer renders into the main window and not the texture)
-	if (SDL_SetRenderTarget(renderer, target) != 0) {
-		std::cerr << "Failed to set render target: " << SDL_GetError() << std::endl;
-		hadErrors = true;
-	}
-	// Generate framebuffer
-	//glGenFramebuffers(1, &frameBufferID);
-	//glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	return true;
 }
 
@@ -65,39 +52,19 @@ void ImGeoViewer::DrawViewer()
 
 	hadErrors = false;
 	if (!glViewer || !drawn) return;
+	//int windowW, windowH;
+	//SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
 	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	glViewer->SetVisible(true);
+	//glViewer->SetBounds(0, 0, availableSpace.x, availableSpace.y);
 
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	CreateTexture();
-
-	SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-	SDL_RenderClear(renderer);
 	glViewer->Paint(); // despite setting the texture as target still draws in main window
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	// Create a new OpenGL texture
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	// Copy the SDL texture to the OpenGL texture
-	int texWidth, texHeight;
-	SDL_QueryTexture(target, NULL, NULL, &texWidth, &texHeight);
-	void* pixels = nullptr;
-	int pitch = 0;
-	SDL_LockTexture(target, NULL, &pixels, &pitch);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texWidth, texHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
-	SDL_UnlockTexture(target);
-
-	// Unbind the texture
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	/*
-	// Set Render target back to the main window
-	if (SDL_SetRenderTarget(renderer, NULL) != 0) {
-		std::cerr << "Failed to set render target: " << SDL_GetError() << std::endl;
-		hadErrors = true;
-	}
-	*/
+	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	glViewer->SetVisible(false);
 }
 
 void ImGeoViewer::Draw()
@@ -149,13 +116,13 @@ void ImGeoViewer::OnShow()
 {
 	// adding an extra viewer would require significant changes to core molflow code
 	glViewer = mApp->viewers[0];
-	glViewer->SetVisible(true);
+	glViewer->SetVisible(false);
 	glViewer->SetFocus(true);
 }
 
 void ImGeoViewer::OnHide()
 {
 	glViewer->SetFocus(false);
-	glViewer->SetVisible(false);
+	glViewer->SetVisible(true);
 	mApp->Place3DViewer();
 }

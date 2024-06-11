@@ -438,6 +438,14 @@ void GLApplication::Run() {
   wereEvents = false;
   wereEvents_imgui = 2;
 
+  // init glew
+  bool err = glewInit() != GLEW_OK;
+  if (err)
+  {
+      std::cerr << "Failed to initialize OpenGL loader!" << std::endl;
+      quit = true;
+  }
+
   // TODO: Activate imgui directly on launch here
 #ifdef ENABLE_IMGUI_TESTS
   if(mApp->argv.size()>=2 && mApp->argv[1]=="--ImTest" && !imWnd) {

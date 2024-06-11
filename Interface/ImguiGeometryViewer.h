@@ -20,10 +20,8 @@ protected:
 	void* pixels = nullptr;
 	int pitch = 0;
 	
-	GLuint textureID;
-	GLuint frameBufferID;
-	SDL_Renderer* renderer;
-	SDL_Texture* target;
+	GLuint textureID=0;
+	GLuint frameBufferID=0;
 	bool CreateTexture();
 	bool hadErrors;
 };
