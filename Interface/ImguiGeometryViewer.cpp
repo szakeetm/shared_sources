@@ -52,10 +52,9 @@ void ImGeoViewer::DrawViewer()
 
 	hadErrors = false;
 	if (!glViewer || !drawn) return;
-	//int windowW, windowH;
-	//SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
-	//glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
-	glViewer->SetBounds(0, (availableSpace.y / 2), availableSpace.x, availableSpace.y);
+	int windowW, windowH;
+	SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
+	glViewer->SetBounds(0, windowH - availableSpace.y - 22, availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(true);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
@@ -70,7 +69,7 @@ void ImGeoViewer::DrawViewer()
 void ImGeoViewer::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(txtW*140, txtH*40));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(txtW*1400, txtH*400));
 	if (preventDragging)
 	{
 		ImGui::SetNextWindowPos(windowPos);
