@@ -24,4 +24,5 @@ protected:
 	GLuint frameBufferID=0;
 	bool CreateTexture();
 	bool hadErrors;
+	bool needsRerender = true;
 };

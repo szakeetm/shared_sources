@@ -352,7 +352,6 @@ void ImguiWindow::renderSingle() {
         ImGui_ImplSDL2_NewFrame(/*app->mainScreen*/);
         ImGui::NewFrame();
 
-        geoView.DrawViewer();
 
         if (show_app_main_menu_bar)
             ShowAppMainMenuBar();
@@ -501,6 +500,7 @@ void ImguiWindow::renderSingle() {
         ImGui::Render();
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
+        geoView.DrawViewer();
 
 
         // SDL_GL_SwapWindow(app->mainScreen);

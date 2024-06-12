@@ -31,6 +31,7 @@ ImGeoViewer::~ImGeoViewer()
 bool ImGeoViewer::CreateTexture()
 {
 	// Generate texture
+	glDeleteTextures(1, &textureID);
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
@@ -43,13 +44,18 @@ bool ImGeoViewer::CreateTexture()
 	// Check framebuffer status
 	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		std::cerr << "Framebuffer not complete!" << std::endl;
+		return false;
 	}
 	return true;
 }
 
 void ImGeoViewer::DrawViewer()
 {
-
+	if (!needsRerender) {
+		glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y - 22, availableSpace.x, availableSpace.y);
+		glViewer->SetVisible(false);
+		return;
+	}
 	hadErrors = false;
 	if (!glViewer || !drawn) return;
 	int windowW, windowH;
@@ -58,12 +64,13 @@ void ImGeoViewer::DrawViewer()
 	glViewer->SetVisible(true);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
-	CreateTexture();
-	glViewer->Paint(); // despite setting the texture as target still draws in main window
+	hadErrors &= !CreateTexture();
+	if(!hadErrors) glViewer->Paint(); // only draw if there were no errors
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y-22, availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(false);
+	needsRerender = false;
 }
 
 void ImGeoViewer::Draw()
@@ -79,11 +86,14 @@ void ImGeoViewer::Draw()
 	windowPos = ImGui::GetWindowPos();
 
 
-	if (hadErrors) ImGui::Text("Had errors");
+	if (hadErrors) { 
+		ImGui::Text("Had errors");
+		needsRerender = true;
+	}
 
 
 	// event passthrough when window is in focus and viewer is hovered (temporary solution)
-	if (ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImMath::IsInsideVec2(ImMath::AddVec2(availableTLcorner, ImVec2(0, 22)), ImMath::AddVec2(availableTLcorner, ImMath::AddVec2(availableSpace, ImVec2(0, 22))), ImGui::GetMousePos())) {
+	if (ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImMath::IsInsideVec2(ImMath::AddVec2(availableTLcorner, ImVec2(0, 22)), ImMath::AddVec2(availableTLcorner, availableSpace), ImGui::GetMousePos())) {
 		try {
 			LockWrapper lW(mApp->imguiRenderLock);
 			glViewer->ManageEvent(&(mApp->imWnd->event));
@@ -92,7 +102,10 @@ void ImGeoViewer::Draw()
 		{
 			std::cerr << "Error handling event: " << e.what() << std::endl;
 		}
-		preventDragging = true;
+		if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
+			preventDragging = true;
+
+		}
 		//mApp->imWnd->skipImGuiEvents = true;
 		if (glViewer) glViewer->SetFocus(true);
 	}
@@ -103,8 +116,16 @@ void ImGeoViewer::Draw()
 	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), ImVec2(0, 1), ImVec2(1, 0));
 	//ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)textureID, availableTLcorner, availableTLcorner+availableSpace);
 	
+	ImVec2 prevAvailSpace = availableSpace;
+	ImVec2 prevCorner = availableTLcorner;
+
 	availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(2*margin, margin+25+22));
 	availableTLcorner = ImMath::AddVec2(ImGui::GetWindowPos(),ImVec2(margin,25));
+	
+	if (prevAvailSpace != availableSpace) {
+		needsRerender = true;
+	}
+	
 	textureWidth = (int)availableSpace.x;
 	textureHeight = (int)availableSpace.y;
 	
