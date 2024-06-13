@@ -122,6 +122,8 @@ public:
   bool autoScaleOn = false;
   int  hideLot = 500;
 
+  bool isInImgui = false;
+
   #ifdef  MOLFLOW
   bool showTime = false;
   #endif

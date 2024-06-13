@@ -1063,6 +1063,21 @@ void GeometryViewer::Paint() {
 	int x, y, width, height;
 	((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
 
+	if (isInImgui) {
+		glMatrixMode(GL_PROJECTION);
+		glPushMatrix();
+		glLoadIdentity();
+
+		glMatrixMode(GL_MODELVIEW);
+		glPushMatrix();
+		glLoadIdentity();
+
+		glOrtho(0, width, height, 0, -1, 1);
+
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_LIGHTING);
+	}
+
 	glBegin(GL_QUADS);
 	if (mApp->whiteBg) {
 		glColor3f(1.0f, 1.0f, 1.0f);
@@ -1076,8 +1091,15 @@ void GeometryViewer::Paint() {
 		glColor3ub(255, 200, 145); //red top
 #endif
 	}
-	glVertex2i(x, y);
-	glVertex2i(x + width, y);
+	if (!isInImgui) {
+		glVertex2i(x, y);
+		glVertex2i(x + width, y);
+	}
+	else {
+		//glOrtho(0, width, 0, height, -1, 1);
+		glVertex2f(0, 0);
+		glVertex2f(width, 0);
+	}
 
 	if (!mApp->whiteBg) {
 #if defined(MOLFLOW)
@@ -1087,10 +1109,28 @@ void GeometryViewer::Paint() {
 		glColor3f(0.2f, 0.2f, 0.2f); //light grey bottom
 #endif
 	}
-	glVertex2i(x + width, y + height);
-	glVertex2i(x, y + height);
+	if (!isInImgui) {
+		glVertex2i(x + width, y + height);
+		glVertex2i(x, y + height);
+	}
+	else {
+		//glOrtho(0, width, 0, height, -1, 1);
+		glVertex2i(width, height);
+		glVertex2i(0, height);
+	}
 
 	glEnd();
+
+	if (isInImgui) {
+		glMatrixMode(GL_PROJECTION);
+		glPopMatrix();
+
+		glMatrixMode(GL_MODELVIEW);
+		glPopMatrix();
+
+		// Re-enable depth test and lighting if needed
+		glEnable(GL_DEPTH_TEST);
+	}
 
 	if (!work) return;
 	InterfaceGeometry* interfGeom = work->GetGeometry();

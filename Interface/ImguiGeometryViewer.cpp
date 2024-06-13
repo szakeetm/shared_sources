@@ -30,6 +30,7 @@ ImGeoViewer::~ImGeoViewer()
 
 bool ImGeoViewer::CreateTexture()
 {
+	if (!needsTextureResize) return true;
 	// Generate texture
 	glDeleteTextures(1, &textureID);
 	glGenTextures(1, &textureID);
@@ -46,6 +47,7 @@ bool ImGeoViewer::CreateTexture()
 		std::cerr << "Framebuffer not complete!" << std::endl;
 		return false;
 	}
+	needsTextureResize = false;
 	return true;
 }
 
@@ -65,6 +67,7 @@ void ImGeoViewer::DrawViewer()
 
 	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
 	hadErrors &= !CreateTexture();
+	glClear(GL_COLOR_BUFFER_BIT);
 	if(!hadErrors) glViewer->Paint(); // only draw if there were no errors
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -101,6 +104,7 @@ void ImGeoViewer::Draw()
 		catch (const std::exception& e)
 		{
 			std::cerr << "Error handling event: " << e.what() << std::endl;
+			needsRerender = true;
 		}
 		if (!ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
 			preventDragging = true;
@@ -108,6 +112,7 @@ void ImGeoViewer::Draw()
 		}
 		//mApp->imWnd->skipImGuiEvents = true;
 		if (glViewer) glViewer->SetFocus(true);
+		needsRerender = true;
 	}
 	if (ImGui::GetMousePos().y > windowPos.y + 25) preventDragging = true;
 	
@@ -123,6 +128,7 @@ void ImGeoViewer::Draw()
 	availableTLcorner = ImMath::AddVec2(ImGui::GetWindowPos(),ImVec2(margin,25));
 	
 	if (prevAvailSpace != availableSpace) {
+		needsTextureResize = true;
 		needsRerender = true;
 	}
 	
@@ -136,12 +142,14 @@ void ImGeoViewer::OnShow()
 {
 	// adding an extra viewer would require significant changes to core molflow code
 	glViewer = mApp->viewers[0];
+	glViewer->isInImgui = true;
 	glViewer->SetVisible(false);
 	glViewer->SetFocus(true);
 }
 
 void ImGeoViewer::OnHide()
 {
+	glViewer->isInImgui = false;
 	glViewer->SetFocus(false);
 	glViewer->SetVisible(true);
 	mApp->Place3DViewer();

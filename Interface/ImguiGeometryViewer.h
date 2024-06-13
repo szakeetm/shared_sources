@@ -25,4 +25,5 @@ protected:
 	bool CreateTexture();
 	bool hadErrors;
 	bool needsRerender = true;
+	bool needsTextureResize = true;
 };
