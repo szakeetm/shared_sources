@@ -53,6 +53,7 @@ bool ImGeoViewer::CreateTexture()
 
 void ImGeoViewer::DrawViewer()
 {
+	if (!drawn) return;
 	if (!needsRerender) {
 		glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y - 22, availableSpace.x, availableSpace.y);
 		glViewer->SetVisible(false);
