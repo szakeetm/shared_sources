@@ -140,8 +140,6 @@ void ImguiWindow::init() {
     fontConfig.PixelSnapH = true;
     fontConfig.OversampleH = oversample;
     fontConfig.OversampleV = oversample;
-    //fontConfig.RasterizerMultiply = 0;
-    //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
     io.Fonts->AddFontFromFileTTF("fonts/NotoSansJP-Regular.ttf", 16.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
@@ -153,10 +151,8 @@ void ImguiWindow::init() {
     icons_config.PixelSnapH = true;
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
-    //icons_config.RasterizerMultiply = 0;
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
-    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
@@ -165,18 +161,6 @@ void ImguiWindow::init() {
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();
-
-    /*io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges);*/
-
-// use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
-
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    // ImFont* font =
-    // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-    // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
     show_main_hub = false;
     show_demo_window = false;
@@ -371,10 +355,7 @@ void ImguiWindow::renderSingle() {
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
             ImGui::SetNextWindowPos(ImVec2(20,20), ImGuiCond_FirstUseEver);
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings); // Create a window called "Hello, world!"
-            // and append into it.
-
-            
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
@@ -563,4 +544,6 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
 #if defined(MOLFLOW)
     textScale.Load();
 #endif
+    convPlot.Refresh();
+    profPlot.Refresh();
 }

@@ -14,6 +14,7 @@
 extern MolFlow* mApp;
 #endif
 
+// perhaps can be made into the constructor
 void ImWindow::Init(Interface* mApp_)
 {
 	mApp = mApp_;
@@ -148,6 +149,7 @@ ImPlotData ImUtils::MakePlotData(size_t id, std::shared_ptr<std::vector<double>>
 	return out;
 }
 
+// Annotes datapoint in plot which is closest to mouse cursor
 void ImUtils::DrawValueOnHover(const std::vector<ImPlotData>& data, bool drawManual, const std::vector<double>* manualxValues, const std::vector<double>* manualyValues) {
 	if (ImPlot::IsPlotHovered()) {
 		ImPlotPoint mouse = ImPlot::GetPlotMousePos();

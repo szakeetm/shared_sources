@@ -20,14 +20,18 @@ public:
 	const bool IsVisible();
 	void SetVisible(bool value);
 protected:
+	// optionally define what to do when a window appears and dissappears
+	// (switches from not visible to visible and vice-versa)
 	virtual void OnShow();
 	virtual void OnHide();
+	
 	bool drawn = false;
 	float txtW=0, txtH=0;
 	Interface* mApp=nullptr;
 	InterfaceGeometry* interfGeom=nullptr;
 };
 
+// common type to use datapoints for ImPlot plots
 typedef struct {
 	size_t id;
 	std::shared_ptr<std::vector<double>> x;
@@ -35,12 +39,13 @@ typedef struct {
 	ImVec4 color;
 } ImPlotData;
 
+// for getting cursor position within a texbox (used to navigate tables with arrows)
 struct Callback
 {
 	static int MyCallback(ImGuiInputTextCallbackData* data); // has to be static (ImGui requires it)
 };
 
-// functions used by some(>1) ImWindows but not common enough (==2) to be member functions
+// functions used by some ImWindows but not common enough to be member functions
 namespace ImUtils {
 	bool ParseExpression(const std::string& expression, GLFormula& formula);
 	void ComputeManualExpression(bool& drawManual, GLFormula& formula, std::vector<double>& xVals, std::vector<double>& yVals, double maxX, double start=0, double step=1);

@@ -2716,8 +2716,6 @@ int Interface::FrameMove() {
 void Interface::ImLoadFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
 {
     imWnd->LoadProfileFromFile(interfaceSettings);
-    imWnd->convPlot.Refresh();
-    imWnd->profPlot.Refresh();
 }
 
 void Interface::ImRefresh()
