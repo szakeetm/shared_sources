@@ -30,7 +30,7 @@ protected:
 		curveNormal,
 		curveAntinormal
 	};
-	Mode mode = none;
+	Mode mode = facetNormal;
 	std::string facetLengthInput="1", pathDXInput, pathDYInput, pathDZInput, curveX0Input, curveY0Input, curveZ0Input,
 		curveDXInput, curveDYInput, curveDZInput, radiusInput, angleDegInput, angleRadInput, curveLengthInput, stepsInput, facetInfo;
 	double facetLength = 1, pathDX, pathDY, pathDZ, curveX0, curveY0, curveZ0,

@@ -21,7 +21,7 @@ protected:
 	// not behave as expected, and behavior differs accross platforms
 	// using a simple struct to wrap around the bool in order to control the
 	// behavior
-	typedef struct { bool b; } boolWrapper; 
+	typedef struct { bool b = false; } boolWrapper;
 	std::vector<boolWrapper> changed;
 
 	int selRow = -1;

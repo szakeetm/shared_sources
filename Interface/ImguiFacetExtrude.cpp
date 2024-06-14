@@ -29,6 +29,8 @@ void ImFacetExtrude::Draw()
 	if (ImGui::RadioButton("Against normal", mode == facetAntinormal)) mode = facetAntinormal;
 	if (!(mode == facetNormal || mode == facetAntinormal)) ImGui::BeginDisabled();
 	ImGui::InputTextLLabel("extrusion length:", &facetLengthInput, 0, txtW * 6);
+	ImGui::SameLine();
+	ImGui::Text("cm");
 	if (!(mode == facetNormal || mode == facetAntinormal)) ImGui::EndDisabled();
 	ImGui::EndChild();
 

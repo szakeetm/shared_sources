@@ -1,5 +1,3 @@
-
-
 #include "ImguiMenu.h"
 #include "imgui.h"
 #include <imgui_fonts/IconsFontAwesome5.h>
@@ -11,20 +9,6 @@
 
 #include "VertexCoordinates.h"
 #include "FacetCoordinates.h"
-#include "SelectDialog.h"
-#include "SelectTextureType.h"
-#include "SelectFacetByResult.h"
-#include "FormulaEditor.h"
-#include "ConvergencePlotter.h"
-#include "HistogramPlotter.h"
-#include "ParticleLogger.h"
-#include "ScaleFacet.h"
-#include "MirrorFacet.h"
-#include "RotateFacet.h"
-#include "AlignFacet.h"
-#include "ExtrudeFacet.h"
-#include "SplitFacet.h"
-#include "CreateShape.h"
 #include "BuildIntersection.h"
 #include "MoveVertex.h"
 #include "ScaleVertex.h"
@@ -214,7 +198,7 @@ static void ShowMenuFile() {
         ImIOWrappers::AskToSaveBeforeDoing(common);
     }
 
-    if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", "Ctrl+O")){
+    if(ImGui::MenuItem(ICON_FA_FILE_IMPORT "  Load", mApp->imWnd->ctrlText+"+O")){
         LoadMenuButtonPress();
     }
     if (mApp->recentsList.empty()) {
@@ -243,7 +227,7 @@ static void ShowMenuFile() {
         ImGui::EndMenu();
     }
     ImGui::Separator();
-    if(ImGui::MenuItem(ICON_FA_SAVE "  Save", "Ctrl+S")){
+    if(ImGui::MenuItem(ICON_FA_SAVE "  Save", mApp->imWnd->ctrlText+"+S")){
         if (mApp->worker.GetGeometry()->IsLoaded())
             ImIOWrappers::DoSave();
     }
@@ -319,7 +303,7 @@ static void ShowMenuSelection() {
         mApp->imWnd->smartSelect.Show();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Select All Facets", "Ctrl+A")) {
+    if (ImGui::MenuItem("Select All Facets", mApp->imWnd->ctrlText+"+A")) {
         interfGeom->SelectAll();
         mApp->UpdateFacetParams(true);
     }
@@ -471,12 +455,12 @@ static void ShowMenuSelection() {
         mApp->UpdateFacetParams(true);
     }
 
-    if (ImGui::MenuItem("Invert selection", "Ctrl+I")) {
+    if (ImGui::MenuItem("Invert selection", mApp->imWnd->ctrlText+"+I")) {
         InvertSelectionMenuPress();
     }
     ImGui::Separator();
     if (ImGui::BeginMenu("Memorize selection to")) {
-        if (ImGui::MenuItem("Add new...", "Ctrl+W")) {
+        if (ImGui::MenuItem("Add new...", mApp->imWnd->ctrlText+"+W")) {
             NewSelectionMemoryMenuPress();
         }
         ImGui::Separator();
@@ -729,7 +713,7 @@ static void ShowMenuTools() {
     if (ImGui::MenuItem("Histogram Plotter...")) {
         HistogramPlotterMenuPress();
     }
-    if (ImGui::MenuItem("Texture scaling...", "Ctrl+D")) {
+    if (ImGui::MenuItem("Texture scaling...", mApp->imWnd->ctrlText+"+D")) {
         TextureScalingMenuPress();
     }
     if (ImGui::MenuItem("Particle logger...")) {
@@ -740,7 +724,7 @@ static void ShowMenuTools() {
         mApp->imWnd->globalSet.Show();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Take screenshot", "Ctrl+R")) {
+    if (ImGui::MenuItem("Take screenshot", mApp->imWnd->ctrlText+"+R")) {
         TakeScreenshotMenuPress();
     }
 
@@ -959,13 +943,13 @@ void ConvertToOutgassingMapMenuPress() {
 #endif
 
 static void ShowMenuFacet() {
-    if (ImGui::MenuItem("Delete", "Ctrl+DEL")) {
+    if (ImGui::MenuItem("Delete", mApp->imWnd->ctrlText+"+DEL")) {
         FacetDeleteMenuPress();
     }
-    if (ImGui::MenuItem("Swap normal", "Ctrl+N")) {
+    if (ImGui::MenuItem("Swap normal", mApp->imWnd->ctrlText+"+N")) {
         SwapNormalMenuPress();
     }
-    if (ImGui::MenuItem("Shift indices", "Ctrl+H")) {
+    if (ImGui::MenuItem("Shift indices", mApp->imWnd->ctrlText+"+H")) {
         ShiftIndicesMenuPress();
     }
     if (ImGui::MenuItem("Facet coordinates ...")) {
@@ -1317,7 +1301,7 @@ void UpdateStructuresShortcuts() {
     if (!interfGeom) return;
     for (int i = 0; i < interfGeom->GetNbStructure() && i+2<12; i++) {
         std::function<void()> F = [i]() { interfGeom->viewStruct = i; };
-        mApp->imWnd->shortcutMan.RegisterShortcut({SDL_SCANCODE_LCTRL, SDL_SCANCODE_F2+i},F,6);
+        mApp->imWnd->shortcutMan.RegisterShortcut({mApp->imWnd->modifier, SDL_SCANCODE_F2+i},F,6);
     }
 }
 
@@ -1335,19 +1319,19 @@ static void ShowMenuView() {
             UpdateStructuresShortcuts();
         }
         ImGui::Separator();
-        if (ImGui::MenuItem("Show All", "Ctrl+F1")) {
+        if (ImGui::MenuItem("Show All", mApp->imWnd->ctrlText+"+F1")) {
             interfGeom->viewStruct = -1; // -1 will show all, number of structures is interfGeom->GetNbStructure()
         }
-        if (ImGui::MenuItem("Show Previous", "Ctrl+F11")) {
+        if (ImGui::MenuItem("Show Previous", mApp->imWnd->ctrlText+"+F11")) {
             ShowPreviousStructureMenuPress();
         }
-        if (ImGui::MenuItem("Show Next", "Ctrl+F12")) { 
+        if (ImGui::MenuItem("Show Next", mApp->imWnd->ctrlText+"+F12")) { 
             ShowNextStructureMenuPress();
         }
         ImGui::Separator();
         // Procedural list of memorized structures
         for (int i = 0; i < interfGeom->GetNbStructure(); i++) {
-            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=10 ? "Ctrl + F" + std::to_string(i + 2) : "")) {
+            if ( ImGui::MenuItem("Show #" + std::to_string(i+1) + " (" + interfGeom->GetStructureName(i) + ")", i+2 <=10 ? mApp->imWnd->ctrlText+" + F" + std::to_string(i + 2) : "")) {
                 interfGeom->viewStruct = i;
             }
         }
@@ -1360,7 +1344,7 @@ static void ShowMenuView() {
     ImGui::Separator();
 
     if (ImGui::BeginMenu("Memorize view to")) {
-        if (ImGui::MenuItem("Add new...", "Ctrl+Q")) {
+        if (ImGui::MenuItem("Add new...", mApp->imWnd->ctrlText+"+Q")) {
             AddNewViewMenuPress();
         }
         for (int i = 0; i < mApp->views.size(); i++) {
@@ -1462,7 +1446,7 @@ static void ShowMenuTest() {
     }
 #endif
 
-    if (ImGui::MenuItem("Shortcut Test", "Ctrl+T")) {
+    if (ImGui::MenuItem("Shortcut Test", mApp->imWnd->ctrlText+"+T")) {
         ImIOWrappers::InfoPopup("Menu Shortcut", "Menu Shortcut");
     }
 }
@@ -1519,15 +1503,18 @@ static void ShowMenuAbout() {
         }
     }
 }
-}
 // static (not changing at runtime) shortcuts
 void RegisterShortcuts() {
+#if defined(__MACOSX__) || defined(__APPLE__)
+    mApp->imWnd->ctrlText = "CMD";
+    mApp->imWnd->modifier = ImGuiKey_LeftSuper;
+#endif
     if (!interfGeom) interfGeom = mApp->worker.GetGeometry();
     std::function<void()> ControlO = []() { ImMenu::LoadMenuButtonPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_O }, ControlO);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_O }, ControlO);
 
     std::function<void()> ControlS = []() {if (mApp->worker.GetGeometry()->IsLoaded()) ImIOWrappers::DoSave(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_S }, ControlS);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_S }, ControlS);
     
     std::function<void()> Altf4 = []() { ImMenu::QuitMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F4 }, Altf4);
@@ -1536,16 +1523,16 @@ void RegisterShortcuts() {
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_S }, AltS);
 
     std::function<void()> ControlA = []() { interfGeom->SelectAll(); mApp->UpdateFacetParams(true); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_A }, ControlA);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_A }, ControlA);
 
     std::function<void()> AltN = []() { mApp->imWnd->selByNum.Show(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_N }, AltN);
 
     std::function<void()> ControlI = []() { ImMenu::InvertSelectionMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_I }, ControlI);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_I }, ControlI);
     
     std::function<void()> ControlW = []() { ImMenu::NewSelectionMemoryMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_W }, ControlW);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_W }, ControlW);
 
     std::function<void()> Altf11 = []() { mApp->SelectSelection(Previous(mApp->idSelection, mApp->selections.size())); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_F11 }, Altf11);
@@ -1566,31 +1553,31 @@ void RegisterShortcuts() {
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_P }, AltP);
 
     std::function<void()> ControlD = []() { ImMenu::TextureScalingMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_D }, ControlD);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_D }, ControlD);
 
     std::function<void()> ControlR = []() { ImMenu::TakeScreenshotMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_R }, ControlR);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_R }, ControlR);
 
     std::function<void()> ControlDel = []() { ImMenu::FacetDeleteMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_DELETE }, ControlDel);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_DELETE }, ControlDel);
 
     std::function<void()> ControlN = []() { ImMenu::SwapNormalMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_N }, ControlN);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_N }, ControlN);
 
     std::function<void()> ControlH = []() { ImMenu::ShiftIndicesMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_H }, ControlH);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_H }, ControlH);
 
     std::function<void()> ControlF1 = []() { interfGeom->viewStruct = -1; };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F1 }, ControlF1);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_F1 }, ControlF1);
 
     std::function<void()> ControlF11 = []() { ImMenu::ShowPreviousStructureMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F11 }, ControlF11);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_F11 }, ControlF11);
 
     std::function<void()> ControlF12 = []() { ImMenu::ShowNextStructureMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_F12 }, ControlF12);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_F12 }, ControlF12);
 
     std::function<void()> ControlQ = []() { ImMenu::AddNewViewMenuPress(); };
-    mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LCTRL, SDL_SCANCODE_Q }, ControlQ);
+    mApp->imWnd->shortcutMan.RegisterShortcut({ mApp->imWnd->modifier, SDL_SCANCODE_Q }, ControlQ);
 
     std::function<void()> AltQ = []() { ImMenu::QuickPipeMenuPress(); };
     mApp->imWnd->shortcutMan.RegisterShortcut({ SDL_SCANCODE_LALT, SDL_SCANCODE_Q }, AltQ);
@@ -1616,6 +1603,10 @@ void ShowAppMainMenuBar() {
         ImMenu::UpdateSelectionShortcuts();
         ImMenu::UpdateViewShortcuts();
         ImMenu::UpdateStructuresShortcuts();
+#if defined(__MACOSX__) || defined(__APPLE__)
+        mApp->imWnd->ctrlText = "CMD";
+        mApp->imWnd->modifier = ImGuiKey_LeftSuper;
+#endif
         static bool firstDraw = false;
     }
 
@@ -1669,6 +1660,7 @@ void ShowAppMainMenuBar() {
 
         ImGui::EndMainMenuBar();
     }
+}
 }
 
 void ImExplodeFacet::Draw()

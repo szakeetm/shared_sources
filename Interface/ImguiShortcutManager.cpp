@@ -1,7 +1,6 @@
-
-#include "imgui.h"
 #include "ImguiShortcutManager.h"
 #include <memory>
+#include "imgui.h"
 
 void ShortcutManager::RegisterShortcut(const std::vector<int>& keys_, const std::function<void()>& function_, short id_)
 {

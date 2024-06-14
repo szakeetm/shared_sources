@@ -1,4 +1,3 @@
-
 #include "imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
@@ -262,7 +261,7 @@ void ImguiWindow::init() {
     geoView = ImGeoViewer();
     geoView.Init(mApp);
 
-    RegisterShortcuts();
+    ImMenu::RegisterShortcuts();
 
     start_time = ImGui::GetTime();
     didIinit = true;
@@ -354,7 +353,7 @@ void ImguiWindow::renderSingle() {
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
-            ShowAppMainMenuBar();
+            ImMenu::ShowAppMainMenuBar();
 
         if (show_app_sidebar)
             sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());

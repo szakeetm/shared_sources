@@ -1,5 +1,3 @@
-
-
 #pragma once
 #include "ImguiWindowBase.h"
 
@@ -7,9 +5,9 @@ class ImguiWindow;
 namespace ImMenu {
 	void ConvergencePlotterMenuPress();
 	void NewGeometry();
+	void ShowAppMainMenuBar();
+	void RegisterShortcuts();
 };
-void ShowAppMainMenuBar();
-void RegisterShortcuts();
 
 class ImExplodeFacet : public ImWindow {
 public:

@@ -124,6 +124,9 @@ public:
     ImExplodeFacet expFac;
 
     ImGeoViewer geoView;
+
+    std::string ctrlText = "CTRL";
+    ImGuiKey modifier = ImGuiKey_LeftCtrl;
 protected:
     bool didIinit = false;
     ImGuiConfigFlags storedConfigFlags;
