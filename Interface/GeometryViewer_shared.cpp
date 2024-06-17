@@ -1072,7 +1072,9 @@ void GeometryViewer::Paint() {
 		glPushMatrix();
 		glLoadIdentity();
 
-		glOrtho(0, width, height, 0, -1, 1);
+		int windowW, windowH;
+		SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
+		glOrtho(0, windowW, windowH, 0, -1, 1);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_LIGHTING);
@@ -1091,15 +1093,8 @@ void GeometryViewer::Paint() {
 		glColor3ub(255, 200, 145); //red top
 #endif
 	}
-	if (!isInImgui) {
-		glVertex2i(x, y);
-		glVertex2i(x + width, y);
-	}
-	else {
-		//glOrtho(0, width, 0, height, -1, 1);
-		glVertex2f(0, 0);
-		glVertex2f(width, 0);
-	}
+	glVertex2i(x, y);
+	glVertex2i(x + width, y);
 
 	if (!mApp->whiteBg) {
 #if defined(MOLFLOW)
@@ -1109,15 +1104,9 @@ void GeometryViewer::Paint() {
 		glColor3f(0.2f, 0.2f, 0.2f); //light grey bottom
 #endif
 	}
-	if (!isInImgui) {
-		glVertex2i(x + width, y + height);
-		glVertex2i(x, y + height);
-	}
-	else {
-		//glOrtho(0, width, 0, height, -1, 1);
-		glVertex2i(width, height);
-		glVertex2i(0, height);
-	}
+
+	glVertex2i(x + width, y + height);
+	glVertex2i(x, y + height);
 
 	glEnd();
 

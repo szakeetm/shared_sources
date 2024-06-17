@@ -136,6 +136,9 @@ void ImGeoViewer::Draw()
 	textureWidth = (int)availableSpace.x;
 	textureHeight = (int)availableSpace.y;
 	
+	ImGui::Dummy(ImGui::GetContentRegionAvail());
+	if (ImGui::IsItemHovered()) preventDragging = false;
+
 	ImGui::End();
 }
 
