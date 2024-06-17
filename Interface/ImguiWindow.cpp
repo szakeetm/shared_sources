@@ -507,6 +507,7 @@ void ImguiWindow::Refresh()
     if (splitFac.IsVisible()) splitFac.Reset();
     if (formulaEdit.IsVisible()) formulaEdit.Update();
     if (measForce.IsVisible()) measForce.Update();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::Reset()
@@ -519,12 +520,13 @@ void ImguiWindow::Reset()
 #if defined(MOLFLOW)
     if (textScale.IsVisible()) textScale.Load();
 #endif
-    if (partLog.IsVisible()) partLog.Reset();
     if (splitFac.IsVisible()) splitFac.Reset();
     if (formulaEdit.IsVisible()) formulaEdit.Update();
     if (measForce.IsVisible()) measForce.Update();
     if (movPart.IsVisible()) movPart.Update();
     if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
+    partLog.Reset();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::Clear()

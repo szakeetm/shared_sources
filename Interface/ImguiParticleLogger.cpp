@@ -142,6 +142,7 @@ void ImParticleLogger::UpdateMemoryEstimate()
 
 void ImParticleLogger::UpdateStatus()
 {
+	LockWrapper lW(mApp->imguiRenderLock);
 	log = mApp->worker.GetLog();
 	if (log->pLog.empty()) {
 		statusLabel = "No recording.";
@@ -149,7 +150,6 @@ void ImParticleLogger::UpdateStatus()
 	else {
 		statusLabel = fmt::format("{} particles logged", log->pLog.size());
 	}
-	if (!mApp->imguiRenderLock)	LockWrapper lW(mApp->imguiRenderLock);
 	if (mApp->particleLogger != nullptr) mApp->particleLogger->UpdateStatus(); // update legacy gui
 	mApp->worker.UnlockLog();
 }
@@ -161,6 +161,7 @@ void ImParticleLogger::OnShow()
 
 std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file)
 {
+	if (log->pLog.size() == 0) return "";
 	/* 
 	aborting not yet supported
 	might be possible in the future, after reworking the main ImGui Window manager (ImguiWindow class)
@@ -211,38 +212,37 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 	GLProgress_GUI prg = GLProgress_GUI("Assembling text", "Particle logger");
 	prg.SetVisible(true);
 
-	auto pLog = mApp->worker.GetLog()->pLog;
 	InterfaceFacet* f = mApp->worker.GetGeometry()->GetFacet(mApp->worker.model->otfParams.logFacetId);
-	for (size_t i = 0; i < pLog.size(); i++) {
+	for (size_t i = 0; i < log->pLog.size(); i++) {
 		
-		prg.SetProgress((double)i / (double)pLog.size());
+		prg.SetProgress((double)i / (double)log->pLog.size());
 		
-		Vector3d hitPos = f->sh.O + pLog[i].facetHitPosition.u * f->sh.U + pLog[i].facetHitPosition.v * f->sh.V;
-		double u = sin(pLog[i].hitTheta) * cos(pLog[i].hitPhi);
-		double v = sin(pLog[i].hitTheta) * sin(pLog[i].hitPhi);
-		double n = cos(pLog[i].hitTheta);
+		Vector3d hitPos = f->sh.O + log->pLog[i].facetHitPosition.u * f->sh.U + log->pLog[i].facetHitPosition.v * f->sh.V;
+		double u = sin(log->pLog[i].hitTheta) * cos(log->pLog[i].hitPhi);
+		double v = sin(log->pLog[i].hitTheta) * sin(log->pLog[i].hitPhi);
+		double n = cos(log->pLog[i].hitTheta);
 		Vector3d hitDir = u * f->sh.nU + v * f->sh.nV + n * f->sh.N;
 
 		tmp.append(fmt::format("{:.8g}", hitPos.x) + separator);
 		tmp.append(fmt::format("{:.8g}", hitPos.y) + separator);
 		tmp.append(fmt::format("{:.8g}", hitPos.z) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].facetHitPosition.u) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].facetHitPosition.v) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].facetHitPosition.u) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].facetHitPosition.v) + separator);
 		tmp.append(fmt::format("{:.8g}", hitDir.x) + separator);
 		tmp.append(fmt::format("{:.8g}", hitDir.y) + separator);
 		tmp.append(fmt::format("{:.8g}", hitDir.z) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].hitTheta) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].hitPhi) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].oriRatio) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].hitTheta) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].hitPhi) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].oriRatio) + separator);
 #ifdef MOLFLOW
-		tmp.append(fmt::format("{:.8g}", pLog[i].velocity) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].time) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].particleDecayMoment) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].velocity) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].time) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].particleDecayMoment) + separator);
 #endif
 #ifdef SYNRAD
-		tmp.append(fmt::format("{:.8g}", pLog[i].energy) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].dF/numScans) + separator);
-		tmp.append(fmt::format("{:.8g}", pLog[i].dP/numScans) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].energy) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].dF/numScans) + separator);
+		tmp.append(fmt::format("{:.8g}", log->pLog[i].dP/numScans) + separator);
 #endif
 		tmp.append("\n");
 		if (directToFile) {
@@ -253,7 +253,7 @@ std::string ImParticleLogger::LogToText(const std::string& separator, FILE* file
 		}
 		tmp.clear();
 
-		mApp->imWnd->progress.SetProgress((double)i/(double)pLog.size());
+		mApp->imWnd->progress.SetProgress((double)i/(double)log->pLog.size());
 	}
 	mApp->imWnd->progress.Hide();
 	mApp->worker.UnlockLog();
