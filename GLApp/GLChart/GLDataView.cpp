@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLChart.h"
 #include "../GLTypes.h"
 #include "Helper/MathTools.h" //PI

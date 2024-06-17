@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLWindowManager.h"
 #include "GLMessageBox.h"
 #include "GLApp.h"

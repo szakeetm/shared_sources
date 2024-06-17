@@ -1,14 +1,9 @@
 #include <Interface.h>
-//#include <direct.h> //_getcwd()
-//#include <io.h> // Check for recovery
 
 #ifdef _WIN32
-// Set local to parse input files the same on all systems
-//duplicate, in case we called this function from the test suite and not from main()
-
+// Nothing currently
 #else
-//#include <sys/sysinfo.h>
-#include <unistd.h>
+#include <unistd.h> //POSIX functions
 #endif
 
 #include <filesystem>
@@ -64,8 +59,6 @@
 #include "ParticleLogger.h"
 #include "CrossSection.h"
 
-//#include "NativeFileDialog/nfd.h"
-
 //Updater
 #include "File.h" //File utils (Get extension, etc)
 
@@ -74,19 +67,11 @@
 #include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 #include "Helper/FormatHelper.h" //unit formatting
 
-#include "../../src/versionId.h"
+#include "../../src/versionId.h" //Break out from src_shared
 #include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
-//extern const char* appTitle;
-
-/*
-extern const char *fileLFilters;
-extern const char *fileInsFilters;
-extern const char *fileSFilters;
-extern const char *fileDesFilters;
-*/
 extern char fileLFilters[];
 extern char fileInsFilters[];
 extern char fileSaveFilters[];
@@ -100,7 +85,7 @@ extern int cWidth[];
 extern const char *cName[];
 
 
-Interface::Interface() : GLApplication(){
+Interface::Interface() : GLApplication() {
 #if defined(__APPLE__)
     setlocale(LC_ALL, "en_US.UTF-8");
 #else
