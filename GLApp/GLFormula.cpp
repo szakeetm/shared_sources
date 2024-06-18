@@ -8,6 +8,10 @@
 #include "Helper/StringHelper.h"
 #include <fmt/core.h>
 #include "GLTypes.h" //Error
+#ifndef M_PI //Windows <cmath> doesn't define it.
+#define M_PI 3.14159265358979323846
+#endif
+
 
 const std::map<std::string, OperandType> GLFormula::mathExpressionsMap = {
 	{"abs(", OperandType::ABS},
