@@ -1,15 +1,12 @@
 
 #pragma once
-// M_PI define
-#ifdef _WIN32
-#define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
-#endif
+#include <cmath>
 #include <vector>
 #include <algorithm> //std::find
 #include <string>
 #include <cassert>
 #include <Vector.h>
-#include <cmath>
+
 
 bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);

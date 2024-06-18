@@ -1,5 +1,3 @@
-#include <cmath>
-
 #include "FacetData.h"
 #include "Polygon.h"
 #include "Helper/MathTools.h"

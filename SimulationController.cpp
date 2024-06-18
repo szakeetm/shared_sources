@@ -1,6 +1,3 @@
-
-
-#include <cmath>
 #include <sstream>
 #include "GLApp/GLTypes.h" //Error
 #include "SimulationController.h"
