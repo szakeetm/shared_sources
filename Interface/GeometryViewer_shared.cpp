@@ -1258,31 +1258,23 @@ void GeometryViewer::Paint() {
 			gluOrtho2D(0, windowW, 0, windowH);
 			glLoadIdentity();
 		}
-
+		int mouseYCorrection = isInImgui ? +(windowH - height - ImPosY) : 0;
+		int mouseXCorrection = isInImgui ? -ImPosX : 0;
 		if (!circleMode) { //normal rectangle
 			glBegin(GL_LINE_LOOP);
-			if (!isInImgui) {
-				_glVertex2i(selX1, selY1);
-				_glVertex2i(selX1, selY2);
-				_glVertex2i(selX2, selY2);
-				_glVertex2i(selX2, selY1);
-			}
-			else {
-				int mouseYCorrection = +(windowH-height-ImPosY);
-				_glVertex2i(selX1 - ImPosX, selY1 + mouseYCorrection);
-				_glVertex2i(selX1 - ImPosX, selY2 + mouseYCorrection);
-				_glVertex2i(selX2 - ImPosX, selY2 + mouseYCorrection);
-				_glVertex2i(selX2 - ImPosX, selY1 + mouseYCorrection);
-			}
+			_glVertex2i(selX1 + mouseXCorrection, selY1 + mouseYCorrection);
+			_glVertex2i(selX1 + mouseXCorrection, selY2 + mouseYCorrection);
+			_glVertex2i(selX2 + mouseXCorrection, selY2 + mouseYCorrection);
+			_glVertex2i(selX2 + mouseXCorrection, selY1 + mouseYCorrection);
 			glEnd();
 		}
 		else { //draw circle
 			glBegin(GL_POINTS);
-			glVertex2i(selX1, selY1);
+			glVertex2i(selX1 + mouseXCorrection, selY1 + mouseYCorrection);
 			glEnd();
 			glBegin(GL_LINE_LOOP);
-			glVertex2i(selX1, selY1);
-			glVertex2i(selX2, selY2);
+			glVertex2i(selX1 + mouseXCorrection, selY1 + mouseYCorrection);
+			glVertex2i(selX2 + mouseXCorrection, selY2 + mouseYCorrection);
 			glEnd();
 			glBegin(GL_LINE_LOOP);
 			float DEG2RAD = (float)(3.14159 / 180.0);
@@ -1290,7 +1282,7 @@ void GeometryViewer::Paint() {
 
 			for (int i = 0; i <= 360; i += 2) {
 				float degInRad = i * DEG2RAD;
-				glVertex2f(selX1 + cos(degInRad) * radius, selY1 + sin(degInRad) * radius);
+				glVertex2f(selX1 + mouseXCorrection + cos(degInRad) * radius, selY1 + mouseYCorrection + sin(degInRad) * radius);
 			}
 			glEnd();
 		}
