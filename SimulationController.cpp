@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cmath> //std::ceil
 #include "GLApp/GLTypes.h" //Error
 #include "SimulationController.h"
 #include "Helper/StringHelper.h"
