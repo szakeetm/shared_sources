@@ -5,7 +5,6 @@
 #include "Helper/ConsoleLogger.h"
 #include "GLTypes.h" //Error()
 #include "Worker.h"
-#include <cmath>
 #include <sstream>
 
 // convergence constants

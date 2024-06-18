@@ -1,6 +1,3 @@
-
-
-#include <cmath>
 #include <stdlib.h>
 #include "Random.h"
 #include "Helper/MathTools.h"

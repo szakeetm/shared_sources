@@ -1,12 +1,12 @@
 
 #pragma once
-
+#include <cmath>
 #include <vector>
 #include <algorithm> //std::find
 #include <string>
 #include <cassert>
 #include <Vector.h>
-#include <cmath>
+
 
 bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
