@@ -105,6 +105,7 @@ void ImParticleLogger::Draw()
 void ImParticleLogger::Reset() {
 	enableLogging = false;
 	facetNumInput = "";
+	UpdateStatus();
 }
 
 void ImParticleLogger::Init(Interface* mApp_)
