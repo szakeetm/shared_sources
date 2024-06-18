@@ -1250,12 +1250,30 @@ void GeometryViewer::Paint() {
 		glEnable(GL_LINE_STIPPLE);
 		glLineStipple(1, dashPattern);
 
+		int windowW, windowH;
+		SDL_GetWindowSize(mApp->mainScreen, &windowW, &windowH);
+		int x, y, width, height;
+		((GLComponent*)this)->GetBounds(&x, &y, &width, &height);
+		if (isInImgui) {
+			gluOrtho2D(0, windowW, 0, windowH);
+			glLoadIdentity();
+		}
+
 		if (!circleMode) { //normal rectangle
 			glBegin(GL_LINE_LOOP);
-			_glVertex2i(selX1, selY1);
-			_glVertex2i(selX1, selY2);
-			_glVertex2i(selX2, selY2);
-			_glVertex2i(selX2, selY1);
+			if (!isInImgui) {
+				_glVertex2i(selX1, selY1);
+				_glVertex2i(selX1, selY2);
+				_glVertex2i(selX2, selY2);
+				_glVertex2i(selX2, selY1);
+			}
+			else {
+				int mouseYCorrection = +(windowH-height-ImPosY);
+				_glVertex2i(selX1 - ImPosX, selY1 + mouseYCorrection);
+				_glVertex2i(selX1 - ImPosX, selY2 + mouseYCorrection);
+				_glVertex2i(selX2 - ImPosX, selY2 + mouseYCorrection);
+				_glVertex2i(selX2 - ImPosX, selY1 + mouseYCorrection);
+			}
 			glEnd();
 		}
 		else { //draw circle

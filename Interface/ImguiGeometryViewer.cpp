@@ -127,6 +127,9 @@ void ImGeoViewer::Draw()
 
 	availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(2*margin, margin+25+22));
 	availableTLcorner = ImMath::AddVec2(ImGui::GetWindowPos(),ImVec2(margin,25));
+
+	glViewer->ImPosX = availableTLcorner.x;
+	glViewer->ImPosY = availableTLcorner.y;
 	
 	if (prevAvailSpace != availableSpace) {
 		needsTextureResize = true;

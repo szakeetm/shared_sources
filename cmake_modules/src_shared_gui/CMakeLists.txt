@@ -93,7 +93,6 @@ set(INTERFACE_FILES
         ${CPP_DIR_SRC_SHARED}/Worker_shared.cpp
         ${CPP_DIR_SRC_SHARED}/GeometryTools.cpp
         ${CPP_DIR_SRC_SHARED}/ImguiImageManager.cpp
-        ${CPP_DIR_SRC_SHARED}/graphicsLibraries.h
 )
 
 if(ENABLE_IMGUI_TESTS)

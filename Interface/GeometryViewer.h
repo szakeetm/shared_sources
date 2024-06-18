@@ -123,6 +123,7 @@ public:
   int  hideLot = 500;
 
   bool isInImgui = false;
+  int ImPosX = 0, ImPosY = 0;
 
   #ifdef  MOLFLOW
   bool showTime = false;
