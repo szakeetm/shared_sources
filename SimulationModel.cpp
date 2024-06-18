@@ -4,7 +4,6 @@
 #include "FacetData.h"
 #include "SimulationFacet.h"
 #include "Helper/MathTools.h"
-#include <cmath>
 
 size_t SimulationModel::GetMemSize() {
     size_t modelSize = 0;

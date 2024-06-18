@@ -20,6 +20,7 @@ IF (WIN32)
     add_definitions(
             -DWIN
             -D_WITHGL
+            -D_USE_MATH_DEFINES #M_PI etc., needs to be defined before first including <cmath>
     )
 ENDIF()
 

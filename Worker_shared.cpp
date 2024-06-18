@@ -8,7 +8,6 @@
 
 #endif
 
-#include <cmath>
 #include <cstdlib>
 #include <algorithm>
 

@@ -4,7 +4,6 @@
 #include "FormulaEvaluator.h"
 #include "Helper/ConsoleLogger.h"
 #include "Worker.h"
-#include <cmath>
 #include <sstream>
 
 // convergence constants

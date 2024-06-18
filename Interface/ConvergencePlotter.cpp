@@ -14,8 +14,6 @@
 #include "Formulas.h"
 #include "Geometry_shared.h"
 #include "Facet_shared.h"
-
-#include <cmath>
 #include <Helper/StringHelper.h>
 
 #if defined(MOLFLOW)
