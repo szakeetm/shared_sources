@@ -1,27 +1,13 @@
 // Copyright (c) 2011 rubicon IT GmbH
 #include <stdio.h>
 #include <string.h>
-//#include <malloc.h>
 #include <math.h>
 #include <errno.h>
 #include "GLFormula.h"
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
-#if defined(MOLFLOW)
-#include "../../src/MolFlow.h"
-#endif
-
-#if defined(SYNRAD)
-#include "../src/SynRad.h"
-#endif
-
-#if defined(MOLFLOW)
-extern MolFlow* mApp;
-#endif
-
-#if defined(SYNRAD)
-extern SynRad* mApp;
-#endif
+#include <fmt/core.h>
+#include "GLTypes.h" //Error
 
 const std::map<std::string, OperandType> GLFormula::mathExpressionsMap = {
 	{"abs(", OperandType::ABS},
