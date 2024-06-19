@@ -60,12 +60,6 @@ void ImParticleLogger::Draw()
 	ImGui::BeginChild("##Result", ImVec2(0, 4 * txtH), true);
 	{
 		ImGui::TextDisabled("Result");
-		if (log.get() != nullptr && !log->pLog.empty()) {
-			statusLabel = fmt::format("{} particles logged", log->pLog.size());
-		}
-		else {
-			statusLabel = "No recording.";
-		}
 		ImGui::Text(statusLabel);
 		if (ImGui::Button("Copy to clipboard")) {
 			std::string text = LogToText();
@@ -95,17 +89,10 @@ void ImParticleLogger::Draw()
 				}
 			}
 		}
-
 	}
 	ImGui::EndChild();
 
 	ImGui::End();
-}
-
-void ImParticleLogger::Reset() {
-	enableLogging = false;
-	facetNumInput = "";
-	UpdateStatus();
 }
 
 void ImParticleLogger::Init(Interface* mApp_)
@@ -126,6 +113,10 @@ void ImParticleLogger::ApplyButtonPress()
 		ImIOWrappers::InfoPopup("Error", "Invalid max rec. number");
 		return;
 	}
+	if (facetNum-1 < 0 || facetNum-1 > interfGeom->GetNbFacet()) {
+		ImIOWrappers::InfoPopup("Error", "No such facet");
+		return;
+	}
 	mApp->worker.model->otfParams.enableLogging = enableLogging;
 	mApp->worker.model->otfParams.logFacetId = facetNum-1;
 	mApp->worker.model->otfParams.logLimit = maxRec;
@@ -143,13 +134,19 @@ void ImParticleLogger::UpdateMemoryEstimate()
 
 void ImParticleLogger::UpdateStatus()
 {
+	enableLogging = (mApp->worker.model->otfParams.enableLogging);
 	LockWrapper lW(mApp->imguiRenderLock);
 	log = mApp->worker.GetLog();
-	if (log->pLog.empty()) {
+	if (!enableLogging) {
 		statusLabel = "No recording.";
 	}
 	else {
-		statusLabel = fmt::format("{} particles logged", log->pLog.size());
+		if (log == nullptr) {
+			statusLabel = "Log data missing";
+		}
+		else {
+			statusLabel = fmt::format("Recording on facet {}: {} particles logged", mApp->worker.model->otfParams.logFacetId + 1 , log->pLog.size());
+		}
 	}
 	if (mApp->particleLogger != nullptr) mApp->particleLogger->UpdateStatus(); // update legacy gui
 	mApp->worker.UnlockLog();

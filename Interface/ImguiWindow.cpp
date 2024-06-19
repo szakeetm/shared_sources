@@ -525,7 +525,6 @@ void ImguiWindow::Reset()
     if (measForce.IsVisible()) measForce.Update();
     if (movPart.IsVisible()) movPart.Update();
     if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
-    partLog.Reset();
     partLog.UpdateStatus();
 }
 
@@ -533,6 +532,7 @@ void ImguiWindow::Clear()
 {
     mirrProjFacet.Clear();
     convPlot.Refresh();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
