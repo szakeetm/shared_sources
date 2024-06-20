@@ -136,17 +136,16 @@ void ImParticleLogger::UpdateStatus()
 {
 	enableLogging = (mApp->worker.model->otfParams.enableLogging);
 	LockWrapper lW(mApp->imguiRenderLock);
-	log = mApp->worker.GetLog();
 	if (!enableLogging) {
 		statusLabel = "No recording.";
+		return;
+	}
+	log = mApp->worker.GetLog();
+	if (log == nullptr) {
+		statusLabel = "Log data missing";
 	}
 	else {
-		if (log == nullptr) {
-			statusLabel = "Log data missing";
-		}
-		else {
-			statusLabel = fmt::format("Recording on facet {}: {} particles logged", mApp->worker.model->otfParams.logFacetId + 1 , log->pLog.size());
-		}
+		statusLabel = fmt::format("Recording on facet {}: {} particles logged", mApp->worker.model->otfParams.logFacetId + 1 , log->pLog.size());
 	}
 	if (mApp->particleLogger != nullptr) mApp->particleLogger->UpdateStatus(); // update legacy gui
 	mApp->worker.UnlockLog();

@@ -292,6 +292,7 @@ void ImTest::DeleteFacet(size_t idx)
     if (idx >= interfGeom->GetNbFacet()) return;
     std::function<void()> f = [this, idx]() {
         if (mApp->worker.IsRunning()) mApp->worker.Stop_Public();
+        if (idx >= interfGeom->GetNbFacet()) return;
         interfGeom->RemoveFacets({idx});
         mApp->UpdateModelParams();
         mApp->worker.MarkToReload();
