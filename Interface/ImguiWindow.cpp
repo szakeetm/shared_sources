@@ -212,7 +212,7 @@ void ImguiWindow::init() {
     facCoord = ImFacetCoordinates();
     facCoord.Init(mApp);
     facetMov = ImFacetMove();
-    facetMov.Init(mApp, mApp->worker.GetGeometry());
+    facetMov.Init(mApp);
     facScale = ImFacetScale();
     facScale.Init(mApp);
     mirrProjFacet = ImFacetMirrorProject();

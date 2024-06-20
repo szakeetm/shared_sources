@@ -10,7 +10,6 @@
 class ImProfilePlotter : public ImWindow {
 public:
 	void Draw();
-	void Init(Interface* mApp_);
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
 	void UpdatePlotter();
@@ -40,7 +39,6 @@ private:
 	bool correctForGas = false;
 	bool updateHilights = false;
 
-	InterfaceGeometry* interfGeom;
 	bool colorBlind = false, identProfilesInGeom = false;
 	float lineWidth = 2;
 	std::string expression;

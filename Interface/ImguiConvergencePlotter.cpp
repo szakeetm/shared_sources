@@ -12,10 +12,6 @@
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
 
-void ImConvergencePlotter::Init(Interface* mApp_) {
-	mApp = mApp_;
-}
-
 bool ImConvergencePlotter::Export(bool toFile, bool onlyVisible)
 {
 	if (data.size() == 0) {

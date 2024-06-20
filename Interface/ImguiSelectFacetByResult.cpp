@@ -109,10 +109,6 @@ void ImSelectFacetByResult::Draw() {
 	ImGui::End();
 }
 
-void ImSelectFacetByResult::Init(Interface* mApp_) {
-	mApp = mApp_;
-}
-
 void ImSelectFacetByResult::DoSelect() {
 	if (!Preprocess()) return;
 	if (!mApp) throw std::runtime_error("mApp not initialized");

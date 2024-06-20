@@ -11,7 +11,6 @@ class Interface;
 class ImFacetMove : public ImWindow{
 public:
 	void Draw();
-	void Init(Interface* mApp_, InterfaceGeometry* interfGeom_);
 protected:
 	void ExecuteFacetMove(bool copy);
 	void FacetNormalButtonPress();
@@ -21,15 +20,13 @@ protected:
 	bool BaseFacetSelectButtonPress();
 	// Internal use variables
 	std::string axis_X = "0", axis_Y = "0", axis_Z = "0", distance;
-	bool base_selected;
-	std::string title;
-	int mode;
+	bool base_selected = false;
+	std::string title = "";
+	int mode = 0;
 	Vector3d baseLocation;
-	std::string prefix;
-	std::string dirMessage;
-	std::string selection;
+	std::string prefix = "";
+	std::string dirMessage =  "";
+	std::string selection = "";
 	//enumeratior for movement modes
 	enum movementMode { absolute_offset, direction_and_distance };
-	Interface* mApp;
-	InterfaceGeometry* interfGeom;
 };

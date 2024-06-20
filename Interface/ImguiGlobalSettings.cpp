@@ -356,11 +356,6 @@ void ImGlobalSettings::Draw() {
     ImGui::End();
 }
 
-void ImGlobalSettings::Init(Interface* mApp_)
-{
-    mApp = mApp_;
-}
-
 /**
  * \brief Function to apply changes to the number of processes.
  */

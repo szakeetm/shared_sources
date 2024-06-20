@@ -78,12 +78,6 @@ void ImProfilePlotter::Draw()
 	ImGui::End();
 }
 
-void ImProfilePlotter::Init(Interface* mApp_)
-{
-	ImWindow::Init(mApp_);
-	interfGeom = mApp->worker.GetGeometry();
-}
-
 void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
 {
 	loading = true;

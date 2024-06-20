@@ -68,12 +68,6 @@ void ImTexturePlotter::Hide()
 	if (selFacet != nullptr) selFacet->UnselectElem();
 }
 
-void ImTexturePlotter::Init(Interface* mApp_)
-{
-	mApp = mApp_;
-	interfGeom = mApp->worker.GetGeometry();
-}
-
 void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
 	if (selectedFacets.size() > 0) {
@@ -146,7 +140,7 @@ void ImTexturePlotter::DrawTextureTable()
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < width; ++i) {
-			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0, columnWidth*txtW);
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0);//, columnWidth*txtW);
 		}
 		ImGui::TableNextRow();
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(186, 212, 243, 255));

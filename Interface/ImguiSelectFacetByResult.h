@@ -14,16 +14,14 @@ public:
 		btnSelect, btnAdd, btnRmv
 	};
 	void Draw();
-	void Init(Interface* mApp_);
-	double minHits, maxHits;
-	double minAbs, maxAbs;
-	double minDes, maxDes;
+	double minHits = 0, maxHits = 0;
+	double minAbs = 0, maxAbs = 0;
+	double minDes = 0, maxDes = 0;
 	std::vector<state> states;
 protected:
-	std::string minHitsInput, maxHitsInput;
-	std::string minAbsInput, maxAbsInput;
-	std::string minDesInput, maxDesInput;
+	std::string minHitsInput = "", maxHitsInput = "";
+	std::string minAbsInput = "", maxAbsInput = "";
+	std::string minDesInput = "", maxDesInput = "";
 	bool Preprocess();
 	void DoSelect();
-	Interface* mApp;
 };
