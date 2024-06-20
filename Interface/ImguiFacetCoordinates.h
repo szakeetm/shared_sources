@@ -13,8 +13,8 @@ protected:
 	void DrawTable();
 	void ApplyButtonPress();
 	void Apply();
-	void Insert(size_t pos=-1);
-	bool ValidateInputs(int idx);
+	void Insert(size_t pos);
+	bool ValidateInputs(size_t idx);
 	enum Axis : short {X,Y,Z};
 	Axis axis = X;
 	void SetAllTo(std::string val);
@@ -23,7 +23,8 @@ protected:
 	InterfaceFacet* selFacet = nullptr;
 	long long selFacetId = 0;
 	std::string name = "Facet coordinates###FCoords";
-	int selRow = -1;
+	size_t selRow = 0;
+	bool selection = false;
 
 	struct line {
 		size_t vertexId=0;

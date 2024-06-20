@@ -30,13 +30,13 @@ void ImFacetCoordinates::Draw()
 		Insert(table.size());
 	} ImGui::SameLine();
 	if (ImGui::Button("Insert before sel. row")) {
-		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		if (!selection) ImIOWrappers::InfoPopup("Error", "No row selected");
 		else {
 			Insert(selRow);
 		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove selected row")) {
-		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		if (!selection) ImIOWrappers::InfoPopup("Error", "No row selected");
 		else {
 			table.erase(table.begin() + selRow);
 			selRow--;
@@ -94,9 +94,10 @@ void ImFacetCoordinates::DrawTable()
 		for (line& ln : table) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			if (ImGui::Selectable(fmt::format("{}", i + 1), selRow == i, selRow == i ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
+			if (ImGui::Selectable(fmt::format("{}", i + 1), (selRow == i && selection), (selRow == i && selection) ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
 				if (ValidateInputs(selRow)) {
 					selRow = i;
+					selection = true;
 				}
 				wasInput = true;
 			}
@@ -104,15 +105,15 @@ void ImFacetCoordinates::DrawTable()
 			ImGui::Text(fmt::format("{}",ln.vertexId+1));
 			ImGui::TableSetColumnIndex(2);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[0]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[0]);
 			else ImGui::InputText("###FCXI", &ln.coordInput[0]);
 			ImGui::TableSetColumnIndex(3);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[1]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[1]);
 			else ImGui::InputText("###FCYI", &ln.coordInput[1]);
 			ImGui::TableSetColumnIndex(4);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[2]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[2]);
 			else ImGui::InputText("###FCZI", &ln.coordInput[2]);
 			i++;
 		}
@@ -197,7 +198,7 @@ void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selected
 		table.push_back(newLine);
 	}
 	name = "Facet coordinates #" + std::to_string(selFacetId + 1) + "###FCoords";
-	if (selRow >= table.size() || selRow<-1) selRow = -1;
+	if (selRow >= table.size() || selRow<-1) selection = false;
 }
 
 void ImFacetCoordinates::UpdateFromSelection()
@@ -212,7 +213,7 @@ void ImFacetCoordinates::UpdateFromVertexSelection()
 	insertIdInput = fmt::format("{}", v[v.size() - 1] + 1);
 }
 
-bool ImFacetCoordinates::ValidateInputs(int idx)
+bool ImFacetCoordinates::ValidateInputs(size_t idx)
 {
 	if (idx >= table.size()) return true; // no such row, noting to check
 	if (!(table[idx].vertexId >= 0 && table[idx].vertexId < interfGeom->GetNbVertex())) { //wrong coordinates at row
