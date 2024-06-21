@@ -1,7 +1,7 @@
 #include "ImguiMenu.h"
 #include "imgui.h"
-#include "imgui/imgui_fonts/IconsFontAwesome5.h"
-#include "imgui/imgui_fonts/IconsMaterialDesign.h"
+#include "imgui_fonts/IconsFontAwesome5.h"
+#include "imgui_fonts/IconsMaterialDesign.h"
 #include <Helper/MathTools.h>
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
@@ -724,7 +724,7 @@ static void ShowMenuTools() {
         mApp->imWnd->globalSet.Show();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem("Take screenshot", mApp->imWnd->ctrlText+"+R")) {
+    if (ImGui::MenuItem(ICON_FA_DESKTOP "  Take screenshot", mApp->imWnd->ctrlText+"+R")) {
         TakeScreenshotMenuPress();
     }
 
@@ -1619,7 +1619,7 @@ void ShowAppMainMenuBar() {
     if (ImGui::BeginMainMenuBar()) {
         ImGui::PopStyleVar(2);
         ImGui::AlignTextToFramePadding();
-        if (ImGui::BeginMenu(ICON_FA_FILE_ARCHIVE "  File###File")) {
+        if (ImGui::BeginMenu(ICON_FA_FILE "  File###File")) {
             ImMenu::ShowMenuFile();
             ImGui::EndMenu();
         }
