@@ -33,7 +33,7 @@ protected:
 
 // common type to use datapoints for ImPlot plots
 typedef struct {
-	size_t id;
+	size_t id = 0;
 	std::shared_ptr<std::vector<double>> x;
 	std::shared_ptr<std::vector<double>> y;
 	ImVec4 color;

@@ -21,7 +21,7 @@ protected:
 	// not behave as expected, and behavior differs accross platforms
 	// using a simple struct to wrap around the bool in order to control the
 	// behavior
-	typedef struct { bool b = false; } boolWrapper;
+	struct boolWrapper { bool b = false; };
 	std::vector<boolWrapper> changed;
 
 	int selRow = -1;
@@ -30,11 +30,11 @@ protected:
 	public:
 		void Draw();
 	};
-	int formulasSize;
+	int formulasSize = 0;
 	enum direction {up,down};
 	void Move(direction d);
 	ImFormattingHelp help;
-	ImGuiIO* io;
+	ImGuiIO* io = nullptr;
 	bool blue = false;
 	int lastMoment = 0;
 	std::string ExportCurrentFormulas();

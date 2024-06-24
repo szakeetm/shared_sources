@@ -54,7 +54,7 @@ class ImguiWindow {
 public:
     bool forceDrawNextFrame = false;
     bool skipImGuiEvents = false;
-    unsigned int textCursorPos;
+    unsigned int textCursorPos = 0;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
@@ -129,7 +129,7 @@ public:
     ImGuiKey modifier = ImGuiKey_LeftCtrl;
 protected:
     bool didIinit = false;
-    ImGuiConfigFlags storedConfigFlags;
+    ImGuiConfigFlags storedConfigFlags = 0;
 
-    double start_time; // to keep track how long the ImGui GUI is running
+    double start_time = 0.f; // to keep track how long the ImGui GUI is running
 };

@@ -41,9 +41,8 @@ protected:
 	class ImHistogramSettings : public ImWindow {
 	public:
 		void Draw();
-		float width;
 		void UpdateOnFacetChange();
-		ImHistogramPlotter* parent;
+		ImHistogramPlotter* parent = nullptr;
 		bool Apply();
 		void DrawSettingsGroup(HistogramParams& set, bool global = false, bool disabled = false);
 		void EvaluateMixedState();
@@ -52,6 +51,7 @@ protected:
 
 		HistogramParams globalHistSet, facetHistSet;
 
+		float width = 100;
 		short globalRecordBounce = 0;
 		std::string globalBouncesMaxInput = "10000";
 		std::string globalBouncesBinSizeInput = "1";
@@ -101,7 +101,6 @@ protected:
 	};
 
 	//variables
-	InterfaceGeometry* interfGeom;
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;
@@ -118,7 +117,7 @@ protected:
 	short aggregateState = 0;
 	bool mixedState = false;
 	std::vector<short> histogramDrawToggle[IM_HISTOGRAM_TABS];
-	short globalDrawToggle[IM_HISTOGRAM_TABS];
+	short globalDrawToggle[IM_HISTOGRAM_TABS] = {0,0,0};
 	void ApplyAggregateState();
 	void UpdateSidebarMasterToggle();
 };

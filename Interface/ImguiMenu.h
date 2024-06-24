@@ -13,7 +13,7 @@ class ImExplodeFacet : public ImWindow {
 public:
 	void Draw();
 private:
-	std::string input;
-	double value;
+	std::string input = "";
+	double value = 0;
 	void DoExplode();
 };
