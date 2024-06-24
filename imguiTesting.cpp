@@ -935,7 +935,7 @@ void ImTest::RegisterTests()
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Screenshot");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Tools/Take screenshot");
+        ctx->MenuClick("###Tools/###Screenshot");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
     t->TestFunc = [this](ImGuiTestContext* ctx) {

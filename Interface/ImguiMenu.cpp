@@ -724,7 +724,7 @@ static void ShowMenuTools() {
         mApp->imWnd->globalSet.Show();
     }
     ImGui::Separator();
-    if (ImGui::MenuItem(ICON_FA_DESKTOP "  Take screenshot", mApp->imWnd->ctrlText+"+R")) {
+    if (ImGui::MenuItem(ICON_FA_DESKTOP "  Take screenshot###Screenshot", mApp->imWnd->ctrlText+"+R")) {
         TakeScreenshotMenuPress();
     }
 
