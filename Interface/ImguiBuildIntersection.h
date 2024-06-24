@@ -12,6 +12,6 @@ protected:
 	void ClearUndoFacets();
 	std::string message = "";
 	std::vector<DeletedFacet> deletedFacetList;
-	size_t nbFacet, nbCreated;
+	size_t nbFacet = 0, nbCreated = 0;
 	bool undoEnabled = false;
 };

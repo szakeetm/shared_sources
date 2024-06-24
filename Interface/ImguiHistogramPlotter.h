@@ -117,7 +117,7 @@ protected:
 	short aggregateState = 0;
 	bool mixedState = false;
 	std::vector<short> histogramDrawToggle[IM_HISTOGRAM_TABS];
-	short globalDrawToggle[IM_HISTOGRAM_TABS] = {0,0,0};
+	short globalDrawToggle[IM_HISTOGRAM_TABS];
 	void ApplyAggregateState();
 	void UpdateSidebarMasterToggle();
 };
