@@ -8,7 +8,6 @@
 
 /*
 - GL Viewer has to be rendered into an SDL2 texture object which is then placed in an ImGui Window as an Image
-currently can't get drawing into texture to work
 
 based on: https://www.codingwiththomas.com/blog/rendering-an-opengl-framebuffer-into-a-dear-imgui-window
 and https://gamedev.stackexchange.com/questions/140693/how-can-i-render-an-opengl-scene-into-an-imgui-window
@@ -17,8 +16,11 @@ with help from chatGPT 3.5
 
 void ImGeoViewer::Init(Interface* mApp_) {
 	mApp = mApp_;
+	if (glGetString(GL_VERSION)[0] == 1) oldOpenGL = true;
 	// Generate framebuffer
-	glGenFramebuffers(1, &frameBufferID);
+	if (!oldOpenGL) {
+		glGenFramebuffers(1, &frameBufferID);
+	}
 	// adding an extra viewer would require significant changes to core molflow code
 	//glViewer = new GeometryViewer(4);
 }
@@ -39,13 +41,16 @@ bool ImGeoViewer::CreateTexture()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	// Attach texture to framebuffer
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID, 0);
+	if (!oldOpenGL) {
 
-	// Check framebuffer status
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		std::cerr << "Framebuffer not complete!" << std::endl;
-		return false;
+		// Attach texture to framebuffer
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID, 0);
+
+		// Check framebuffer status
+		if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+			std::cerr << "Framebuffer not complete!" << std::endl;
+			return false;
+		}
 	}
 	needsTextureResize = false;
 	return true;
@@ -66,12 +71,13 @@ void ImGeoViewer::DrawViewer()
 	glViewer->SetBounds(0, windowH - availableSpace.y - 22, availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(true);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
-	hadErrors &= !CreateTexture();
-	glClear(GL_COLOR_BUFFER_BIT);
-	if(!hadErrors) glViewer->Paint(); // only draw if there were no errors
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	if (!oldOpenGL) {
+		glBindFramebuffer(GL_FRAMEBUFFER, frameBufferID);
+		hadErrors &= !CreateTexture();
+		glClear(GL_COLOR_BUFFER_BIT);
+		if (!hadErrors) glViewer->Paint(); // only draw if there were no errors
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
 	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y-22, availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(false);
 	needsRerender = false;
@@ -118,9 +124,7 @@ void ImGeoViewer::Draw()
 	if (ImGui::GetMousePos().y > windowPos.y + 25) preventDragging = true;
 	
 	// draw the image containing the viewer
-	// despite the code to do it, the viewer does not seem to be rendered into this texture
 	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), ImVec2(0, 1), ImVec2(1, 0));
-	//ImGui::GetWindowDrawList()->AddImage((void*)(intptr_t)textureID, availableTLcorner, availableTLcorner+availableSpace);
 	
 	ImVec2 prevAvailSpace = availableSpace;
 	ImVec2 prevCorner = availableTLcorner;

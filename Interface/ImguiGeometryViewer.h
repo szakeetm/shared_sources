@@ -26,4 +26,5 @@ protected:
 	bool hadErrors;
 	bool needsRerender = true;
 	bool needsTextureResize = true;
+	bool oldOpenGL = false;
 };
