@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLTabWindow.h"
 #include "GLToolkit.h"
 #include "GLComponent.h"

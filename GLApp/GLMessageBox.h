@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLMESSAGEBOXH_
 #define _GLMESSAGEBOXH_
 

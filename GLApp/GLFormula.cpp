@@ -1,16 +1,12 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include <errno.h>
 #include "GLFormula.h"
 #include "Helper/MathTools.h"
 #include "Helper/StringHelper.h"
 #include <fmt/core.h>
 #include "GLTypes.h" //Error
-#ifndef M_PI //Windows <cmath> doesn't define it.
-#define M_PI 3.14159265358979323846
-#endif
 
 
 const std::map<std::string, OperandType> GLFormula::mathExpressionsMap = {

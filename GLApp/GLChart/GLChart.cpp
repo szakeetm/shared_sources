@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLChart.h"
 #include "../GLMenu.h"
 #include "../GLToolkit.h"

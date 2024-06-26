@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLSprite.h"
 #include "GLToolkit.h"
 #include "GLApp.h"

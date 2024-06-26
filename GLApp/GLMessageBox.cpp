@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLMessageBox.h"
 #include "GLButton.h"
 #include "GLLabel.h"

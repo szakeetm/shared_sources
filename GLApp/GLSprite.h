@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _SPRITE2DH_
 #define _SPRITE2DH_
 

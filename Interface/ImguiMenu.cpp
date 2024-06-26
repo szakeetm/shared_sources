@@ -1083,15 +1083,20 @@ void SelectionOrderMenuPress() {
         mApp->worker.MarkToReload();
     }
 }
+
 void ClearIsolatedMenuPress() {
     LockWrapper myLock(mApp->imguiRenderLock);
-    
-    interfGeom->DeleteIsolatedVertices(false);
-    mApp->UpdateModelParams();
-    if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
-    if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
-    interfGeom->BuildGLList();
+    if(interfGeom->GetNbIsolatedVertices()) { //First pass, prevents unnecessary simulation reset
+        if (mApp->AskToReset()) { //can renumber facet indices
+            interfGeom->DeleteIsolatedVertices(false);
+            mApp->UpdateModelParams();
+            if (mApp->facetCoordinates) mApp->facetCoordinates->UpdateFromSelection();
+            if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
+            interfGeom->BuildGLList();
+        }
+    }
 }
+
 void RemoveSelectedMenuPress() {
     
     if (interfGeom->IsLoaded()) {
@@ -1694,7 +1699,7 @@ void ImExplodeFacet::DoExplode()
             ImIOWrappers::InfoPopup("Error", "Empty Selection");
         }
         else if (err == -2) {
-            ImIOWrappers::InfoPopup("Error", "All selected facets must have a mesh with boudary correction enabled");
+            ImIOWrappers::InfoPopup("Error", "All selected facets must have a texture");
         }
         else if (err == 0) {
             mApp->UpdateModelParams();

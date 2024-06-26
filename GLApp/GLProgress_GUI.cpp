@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLProgress_GUI.hpp"
 #include "GLButton.h"
 #include "GLLabel.h"

@@ -1,4 +1,3 @@
-// Copyright (c) 2011 rubicon IT GmbH
 #ifndef _GLFONT2DH_
 #define _GLFONT2DH_
 
@@ -61,4 +60,4 @@ private:
 
 };
 
-#endif /* _GLFONT2DH_ */
+#endif

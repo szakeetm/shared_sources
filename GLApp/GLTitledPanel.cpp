@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLWindow.h"
 #include "GLTitledPanel.h"
 #include "GLToolkit.h"

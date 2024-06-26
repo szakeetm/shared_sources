@@ -1,13 +1,9 @@
-
 #include <Interface.h>
-//#include <direct.h> //_getcwd()
-//#include <io.h> // Check for recovery
 
 #ifdef _WIN32
-
+// Nothing currently
 #else
-//#include <sys/sysinfo.h>
-#include <unistd.h>
+#include <unistd.h> //POSIX functions
 #endif
 
 #include <filesystem>
@@ -63,8 +59,6 @@
 #include "ParticleLogger.h"
 #include "CrossSection.h"
 
-//#include "NativeFileDialog/nfd.h"
-
 //Updater
 #include "File.h" //File utils (Get extension, etc)
 
@@ -73,19 +67,11 @@
 #include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 #include "Helper/FormatHelper.h" //unit formatting
 
-#include "../../src/versionId.h"
+#include "../../src/versionId.h" //Break out from src_shared
 #include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
-//extern const char* appTitle;
-
-/*
-extern const char *fileLFilters;
-extern const char *fileInsFilters;
-extern const char *fileSFilters;
-extern const char *fileDesFilters;
-*/
 extern char fileLFilters[];
 extern char fileInsFilters[];
 extern char fileSaveFilters[];
@@ -99,13 +85,22 @@ extern int cWidth[];
 extern const char *cName[];
 
 
-Interface::Interface() : GLApplication(){
+Interface::Interface() : GLApplication() {
+#if defined(__APPLE__)
+    setlocale(LC_ALL, "en_US.UTF-8");
+#else
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+#endif
+    
     //Get number of cores
 #ifdef _WIN32
     compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     numCPU = (size_t) sysinfo.dwNumberOfProcessors;
+    //Set console to UTF-8
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
@@ -1286,7 +1281,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == -2) {
                                 GLMessageBox::Display(
-                                        "All selected facets must have a mesh with boudary correction enabled", "Error",
+                                        "All selected facets must have a texture", "Error",
                                         GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == 0) {
 
@@ -1480,11 +1475,15 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     interfGeom->SelectIsolatedVertices();
                     return true;
                 case MENU_VERTEX_CLEAR_ISOLATED:
-                    interfGeom->DeleteIsolatedVertices(false);
-                    UpdateModelParams();
-                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
-                    if (vertexCoordinates) vertexCoordinates->Update();
-                    interfGeom->BuildGLList();
+                    if(interfGeom->GetNbIsolatedVertices()) { //First pass, prevents unnecessary simulation reset
+                        if (AskToReset()) { //can renumber facet indices
+                            interfGeom->DeleteIsolatedVertices(false);
+                            UpdateModelParams();
+                            if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                            if (vertexCoordinates) vertexCoordinates->Update();
+                            interfGeom->BuildGLList();
+                        }
+                    }
                     return true;
                 case MENU_VERTEX_CREATE_POLY_CONVEX:
                     if (AskToReset()) {
