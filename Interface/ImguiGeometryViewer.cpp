@@ -16,7 +16,8 @@ with help from chatGPT 3.5
 
 void ImGeoViewer::Init(Interface* mApp_) {
 	mApp = mApp_;
-	if (glGetString(GL_VERSION)[0] == 1) oldOpenGL = true;
+	auto v = glGetString(GL_VERSION);
+	if (v[0] == '1') oldOpenGL = true;
 	// Generate framebuffer
 	if (!oldOpenGL) {
 		glGenFramebuffers(1, &frameBufferID);
@@ -37,7 +38,12 @@ bool ImGeoViewer::CreateTexture()
 	glDeleteTextures(1, &textureID);
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_2D, textureID);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	if (!oldOpenGL) {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	}
+	else {
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, NextPowOfTwo(textureWidth), NextPowOfTwo(textureHeight), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -58,6 +64,7 @@ bool ImGeoViewer::CreateTexture()
 
 void ImGeoViewer::DrawViewer()
 {
+	GLToolkit::CheckGLErrors("Debug");
 	if (!drawn) return;
 	if (!needsRerender) {
 		glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y - 22, availableSpace.x, availableSpace.y);
@@ -77,6 +84,14 @@ void ImGeoViewer::DrawViewer()
 		glClear(GL_COLOR_BUFFER_BIT);
 		if (!hadErrors) glViewer->Paint(); // only draw if there were no errors
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+	else {
+		hadErrors &= !CreateTexture();
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		if (!hadErrors) glViewer->Paint(); // only draw if there were no errors
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, NextPowOfTwo(textureWidth), NextPowOfTwo(textureHeight), 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y-22, availableSpace.x, availableSpace.y);
 	glViewer->SetVisible(false);
@@ -164,4 +179,8 @@ void ImGeoViewer::OnHide()
 	glViewer->SetFocus(false);
 	glViewer->SetVisible(true);
 	mApp->Place3DViewer();
+}
+
+int ImGeoViewer::NextPowOfTwo(unsigned int value) {
+	return (int)pow(2, ceil(log2(value)));
 }
