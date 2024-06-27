@@ -11,6 +11,7 @@ public:
 	void Init(Interface* mApp_);
 	~ImGeoViewer();
 	void DrawViewer();
+	int NextPowOfTwo(unsigned int value);
 protected:
 	float margin = 6;
 	GeometryViewer* glViewer;

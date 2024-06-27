@@ -500,7 +500,7 @@ void ImguiWindow::renderSingle() {
         ImGui::Render();
         glViewport(0, 0, (int) io.DisplaySize.x, (int) io.DisplaySize.y);
         ImGui_ImplOpenGL2_RenderDrawData(ImGui::GetDrawData());
-        geoView.DrawViewer();
+        //geoView.DrawViewer();
 
 
         // SDL_GL_SwapWindow(app->mainScreen);

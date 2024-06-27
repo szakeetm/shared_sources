@@ -576,6 +576,7 @@ void GLApplication::Run() {
        t0 = GetTick();
 
        // Call FrameMove
+       if (imWnd && imWnd->geoView.IsVisible()) imWnd->geoView.DrawViewer();
        ok = FrameMove();
 
        t1 = GetTick();
