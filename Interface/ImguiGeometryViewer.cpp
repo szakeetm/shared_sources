@@ -18,6 +18,7 @@ void ImGeoViewer::Init(Interface* mApp_) {
 	mApp = mApp_;
 	auto v = glGetString(GL_VERSION);
 	if (v[0] == '1') oldOpenGL = true;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
 	// Generate framebuffer
 	if (!oldOpenGL) {
 		glGenFramebuffers(1, &frameBufferID);
@@ -43,6 +44,7 @@ bool ImGeoViewer::CreateTexture()
 	}
 	else {
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, NextPowOfTwo(textureWidth), NextPowOfTwo(textureHeight), 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+		glGetError();
 	}
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -107,7 +109,7 @@ void ImGeoViewer::Draw()
 		ImGui::SetNextWindowPos(windowPos);
 		preventDragging = false;
 	}
-	ImGui::Begin("Geometry Viewer", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse);
+	ImGui::Begin("Geometry Viewer", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoScrollbar);
 	windowPos = ImGui::GetWindowPos();
 
 
@@ -139,7 +141,14 @@ void ImGeoViewer::Draw()
 	if (ImGui::GetMousePos().y > windowPos.y + 25) preventDragging = true;
 	
 	// draw the image containing the viewer
-	ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), ImVec2(0, 1), ImVec2(1, 0));
+	if (!oldOpenGL) {
+		ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), ImVec2(0, 1), ImVec2(1, 0));
+	}
+	else {
+		ImVec2 uv0 = ImVec2(0, (float)textureHeight / (float)NextPowOfTwo(textureHeight));
+		ImVec2 uv1 = ImVec2((float)textureWidth / (float)NextPowOfTwo(textureWidth) , 0);
+		ImGui::Image((void*)(intptr_t)textureID, ImVec2(textureWidth, textureHeight), uv0, uv1);
+	}
 	
 	ImVec2 prevAvailSpace = availableSpace;
 	ImVec2 prevCorner = availableTLcorner;
@@ -157,6 +166,12 @@ void ImGeoViewer::Draw()
 	
 	textureWidth = (int)availableSpace.x;
 	textureHeight = (int)availableSpace.y;
+
+	if (oldOpenGL) {
+		textureWidth = std::min(textureWidth, maxTextureSize);
+		textureHeight = std::min(textureHeight, maxTextureSize);
+		availableSpace.x = textureWidth;
+	}
 	
 	ImGui::Dummy(ImGui::GetContentRegionAvail());
 	if (ImGui::IsItemHovered()) preventDragging = false;

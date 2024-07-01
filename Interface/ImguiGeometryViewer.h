@@ -28,4 +28,5 @@ protected:
 	bool needsRerender = true;
 	bool needsTextureResize = true;
 	bool oldOpenGL = false;
+	GLint maxTextureSize = 0;
 };
