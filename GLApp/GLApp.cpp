@@ -441,6 +441,11 @@ void GLApplication::Run() {
   //Wait for user exit
   while( !quit )
   {
+      static bool point1 = false;
+      if (!point1) {
+          std::cout << "Entered while(!quit)" << std::endl;
+          point1 = true;
+      }
      //While there are events to handle
       while (!quit && (SDL_PollEvent(&sdlEvent)
 #ifdef DEBUG
@@ -448,6 +453,11 @@ void GLApplication::Run() {
 #endif
           ))
       {
+          static bool point2 = false;
+          if (!point2) {
+              std::cout << "Entered while(!quit && SDL_PoolEvent..." << std::endl;
+              point2 = true;
+          }
           bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
@@ -576,10 +586,20 @@ void GLApplication::Run() {
 
        // Repaint
        if (wereEvents || wereEvents_imgui > 0) {
+           static bool point3 = false;
+           if (!point3) {
+               std::cout << "Reached Repaint()" << std::endl;
+               point3 = true;
+           }
            wereEvents_imgui -= 1; // allow to queue multiple imgui passes
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
-	   }
+           static bool point4 = false;
+           if (!point4) {
+               std::cout << "Completed Repaint()" << std::endl;
+               point4 = true;
+           }
+       }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
      

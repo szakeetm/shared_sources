@@ -338,6 +338,7 @@ void ImTest::RegisterTests()
     ImGuiTest* t = NULL;
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Smart Selection");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Smart Selection") << std::endl;
         // set start state
         mApp->imWnd->smartSelect.planeDiff = 30;
         mApp->imWnd->smartSelect.planeDiffInput = "30";
@@ -377,12 +378,14 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select All");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select All") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select All Facets");
         IM_CHECK_EQ(interfGeom->GetNbFacet(), interfGeom->GetNbSelectedFacets());
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select by Number");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select by Number") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Facet Number...");
         ctx->SetRef("Select facet(s) by number");
@@ -409,6 +412,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Sticking");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Sticking") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Sticking");
         if (currentConfig == empty) {
@@ -420,6 +424,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Transparent");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Transparent") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Transparent");
         // TODO - Test Configuration with transparent facets
@@ -429,6 +434,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select 2 Sided");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select 2 Sided") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select 2 sided");
         // TODO - Test Configuration with 2-sided facets
@@ -438,6 +444,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Texture");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Texture") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Texture");
         if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
@@ -449,6 +456,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Texture Type");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select By Texture Type") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by Texture type...");
         ctx->SetRef("Select facets by texture properties");
@@ -469,6 +477,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select By Facet Result");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select By Facet Result") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select by facet result...");
         ctx->SetRef("Select facets by simulation result");
@@ -490,6 +499,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Link facets");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Link Facets") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select link facets");
         // TODO test configuration with link facets
@@ -499,6 +509,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select teleport facets");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Teleport Facets") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select teleport facets");
         // TODO test configuration with teleport facets
@@ -508,6 +519,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select non planar facets");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Non Planar Facets") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select non planar facets");
         ctx->SetRef("Select non planar facets");
@@ -551,6 +563,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select non simple");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select non Simple") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select non simple facets");
         // TODO test configuration with non-simple facets
@@ -560,6 +573,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Invert");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Invert") << std::endl;
         int expected = 0;
         if (currentConfig != empty) {
             SelectFacet(0);
@@ -571,6 +585,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Selection Memory");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Selection Memory") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Clear memorized/Clear All");
         ctx->SetRef("Clear all?");
@@ -591,6 +606,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Desorption");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Desorption") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Desorption");
         if (currentConfig == empty) {
@@ -602,6 +618,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Outgassing Map");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Outgassing Map") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Outgassing Map");
         if (currentConfig == empty || currentConfig == qPipe || currentConfig == profile) {
@@ -610,6 +627,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "SelectionMenu", "Select Reflective");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("SelectionMenu | Select Reflective") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Selection/Select Reflective");
         if (currentConfig == empty) {
@@ -621,6 +639,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Formula editor + Convergence Plotter"); // this test fails in fast mode for unknown reason
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Formula Editor + Convergence Plotter") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/###Formula editor");
         ctx->SetRef("Formula editor");
@@ -728,6 +747,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Texture Plotter") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Texture Plotter ...");
@@ -770,6 +790,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Profile plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Profile Plotter") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Profile Plotter ...");
         ctx->SetRef("Profile Plotter");
@@ -813,6 +834,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Histogram plotter"); // this test faisl in fast mode for unknown reasons
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Histogram Plotter") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Histogram Plotter...");
         ctx->SetRef("Histogram Plotter");
@@ -851,6 +873,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture scaling");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Texture scaling") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Texture scaling...");
         ctx->SetRef("###TextureScaling");
@@ -867,6 +890,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Particle Logger");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Particle Logger") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Particle logger...");
         ctx->SetRef("Particle Logger");
@@ -875,6 +899,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Global Settings");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Global Settings") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Global Settings ...");
         ctx->SetRef("Global settings");
@@ -942,11 +967,13 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Screenshot");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Screenshot") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Take screenshot");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Moving Parts") << std::endl;
         if (currentConfig != empty) {
             DeselectAll();
         }
@@ -1003,6 +1030,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Measure forces");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Measure forces") << std::endl;
         if (currentConfig != empty) {
             DeselectAll();
         }
@@ -1053,6 +1081,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet coordiantes");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet coordinates") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Facet coordinates ...");
         ctx->SetRef("###FCoords");
@@ -1092,6 +1121,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Move");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Move") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Move ...");
         ctx->SetRef("Move Facet");
@@ -1134,6 +1164,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Scale");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Scale") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Scale ...");
@@ -1177,6 +1208,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet MirrorProject");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet MirrorProject") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/###MPF");
@@ -1222,6 +1254,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Rotate");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Rotate") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Rotate ...");
@@ -1262,6 +1295,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Align");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Align") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Align to ...");
@@ -1282,6 +1316,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Extrude");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Extrude") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Extrude ...");
@@ -1344,6 +1379,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Facet Split");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Facet Split") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Split ...");
@@ -1362,6 +1398,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Create Shape");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Screate Shape") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Create shape...");
@@ -1416,6 +1453,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "VertexMenu", "Vertex Coordinates");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("VertexMenu | Vertex Coordinates") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Vertex/Vertex coordinates...");
@@ -1448,6 +1486,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "VertexMenu", "Move Vertex");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("VertexMenu | Move Vertex") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Vertex/Move...");
@@ -1475,6 +1514,7 @@ void ImTest::RegisterTests()
     // VIEW
     t = IM_REGISTER_TEST(engine, "ViewMenu", "FullScreen");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ViewMenu | FullScreen") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("View/###Full Screen");
         ctx->MouseMoveToPos(ImVec2(100, 100));
@@ -1483,6 +1523,7 @@ void ImTest::RegisterTests()
     // geometry altering tests (to be run last)
     t = IM_REGISTER_TEST(engine, "FacetMenu", "Outgassing Map");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FacetMenu | Outgassing Map") << std::endl;
         DeselectAll();
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Facet/Convert to outgassing map...");
@@ -1500,6 +1541,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "TestMenu", "Quick Pipe");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("TestMenu | Quick Pipe") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("Test/Quick Pipe");
         if (mApp->changedSinceSave) {
@@ -1510,6 +1552,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "FileMenu", "New, empty geometry");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("FileMneu | New empty geom") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###File/###NewGeom");
         if (mApp->changedSinceSave) {
@@ -1520,6 +1563,7 @@ void ImTest::RegisterTests()
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Convergence Plotter formula list");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
+        std::cout << ("ToolsMenu | Conv Plot formula list") << std::endl;
         ctx->SetRef("##MainMenuBar");
         ctx->MenuClick("###Tools/Convergence Plotter ...");
         ctx->SetRef("Convergence Plotter");
