@@ -102,6 +102,8 @@ void ImGeoViewer::DrawViewer()
 
 void ImGeoViewer::Draw()
 {
+	if (previouslyVisible && !drawn) OnHide();
+	previouslyVisible = drawn;
 	if (!drawn) return;
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 70, txtH * 20), ImVec2(txtW*1400, txtH*400));
 	if (preventDragging)

@@ -14,6 +14,7 @@ public:
 	int NextPowOfTwo(unsigned int value);
 protected:
 	float margin = 6;
+	bool previouslyVisible = false;
 	GeometryViewer* glViewer;
 	ImVec2 availableSpace, availableTLcorner, windowPos;
 	bool preventDragging = false;
