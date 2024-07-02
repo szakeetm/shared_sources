@@ -498,9 +498,20 @@ void GLApplication::Run() {
                 imWnd->skipImGuiEvents = false;
             }
             if (activeImGuiEvent) {
+                static bool point2_1 = false;
+                if (!point2_1) {
+                    std::cout << "Handling ImGui Event" << std::endl;
+                    point2_1 = true;
+                }
                 wereEvents_imgui = 3;
+
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
                     //Handle input events caught by ImGui
+                }
+                static bool point2_2 = false;
+                if (!point2_2) {
+                    std::cout << "Handled ImGui Event" << std::endl;
+                    point2_2 = true;
                 }
                 continue;
             }
