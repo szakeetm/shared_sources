@@ -569,7 +569,11 @@ void GLApplication::Run() {
        GLToolkit::printGlError(glError); 
        Exit();
      }
-
+     static int point2_1 = 0;
+     if (point2_1 < 10) {
+         std::cout << "Reached UpdateStatus() for the " << point2_1 + 1 << "th time" << std::endl;
+         point2_1++;
+     }
      UpdateStats();
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
@@ -578,6 +582,11 @@ void GLApplication::Run() {
          || mApp->imWnd->testEngine.running
 #endif*/
          ) { //Application visible
+         static int point2_2 = 0;
+         if (point2_2 < 10) {
+             std::cout << "Reached if Application visible triggered for the " << point2_2 + 1 << "th time" << std::endl;
+             point2_2++;
+         }
 //#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
@@ -620,6 +629,7 @@ void GLApplication::Run() {
 #ifdef ENABLE_IMGUI_TESTS
      if (imWnd && imWnd->testEngine.running) {
          imWnd->forceDrawNextFrame = true;
+         wereEvents_imgui = std::min(1, wereEvents_imgui);
      }
 #endif
       
