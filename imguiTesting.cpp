@@ -48,7 +48,17 @@ void ImTest::Draw()
 
 void ImTest::PostSwap()
 {
+    static bool point1 = false;
+    if (!point1) {
+        std::cout << "Entered ImTest::PostSwap" << std::endl;
+        point1 = true;
+    }
     ImGuiTestEngine_PostSwap(engine); // normal operation
+    static bool point2 = false;
+    if (!point2) {
+        std::cout << "ImGuiTestEngine_PostSwap(engine); complete" << std::endl;
+        point2 = true;
+    }
 
     ExecuteQueue();
 
