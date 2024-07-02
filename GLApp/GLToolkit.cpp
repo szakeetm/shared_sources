@@ -1141,6 +1141,7 @@ void GLToolkit::CheckGLErrors(const char *compname) {
 		   sprintf(tmp,"OpenGL: Error painting %s.",compname);
          GLToolkit::Log(tmp);
          GLToolkit::printGlError(glError); 
+         std::cout << "OpenGL Error painting " << compname << std::endl;
          //Exit();
 		 DEBUG_BREAK;
 		 /*if (!savedOnGLError) {
