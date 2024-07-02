@@ -574,9 +574,9 @@ void GLApplication::Run() {
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
      if (flags && (SDL_WINDOW_SHOWN & flags)
-#ifdef ENABLE_IMGUI_TESTS
+/*#ifdef ENABLE_IMGUI_TESTS
          || mApp->imWnd->testEngine.running
-#endif
+#endif*/
          ) { //Application visible
 //#if defined(_DEBUG)
        t0 = GetTick();
@@ -617,6 +617,11 @@ void GLApplication::Run() {
      } else {
        SDL_Delay(100);
      }
+#ifdef ENABLE_IMGUI_TESTS
+     if (imWnd && imWnd->testEngine.running) {
+         imWnd->forceDrawNextFrame = true;
+     }
+#endif
       
   }
   
