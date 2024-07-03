@@ -240,6 +240,16 @@ target_link_libraries(${PROJECT_NAME} PUBLIC ziplib)
 target_link_libraries(${PROJECT_NAME} PUBLIC imgui)
 target_link_libraries(${PROJECT_NAME} PUBLIC implot)
 
+if(CMAKE_BUILD_TYPE MATCHES Debug OR CMAKE_BUILD_TYPE MATCHES RelWithDebInfo) # case sensitive "Debug" and "RelWithDebInfo"
+    if(WIN32)
+        # Link against DbgHelp library
+        target_link_libraries(${PROJECT_NAME} PRIVATE DbgHelp)
+    else()
+        # Enable all warnings on Unix-like systems
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
+    endif()
+endif()
+
 #Suppress warnings for external libraries
 if(MSVC)
     set(SUPPRESS_WARNINGS_FLAG "/w")
