@@ -108,7 +108,7 @@ namespace ImIOWrappers {
 	}
 
 	void ImPopup::Close() {
-		this->title = "";
+		this->title = "###popup";
 		this->message = "";
 		this->buttons = std::vector<std::shared_ptr< ImButton >>();
 	}

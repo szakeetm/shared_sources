@@ -76,7 +76,7 @@ namespace ImIOWrappers {
 	protected:
 		int returnValue = notDrawn;
 		std::string message = "";
-		std::string title = "";
+		std::string title = "###popup";
 		bool drawn = false;
 		std::vector<std::shared_ptr< ImButton >> buttons;
 		friend class ImTest;

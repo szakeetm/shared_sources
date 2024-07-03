@@ -7,6 +7,8 @@
 
 #include "imgui_stdlib/imgui_stdlib.h"
 
+#include <iostream>
+
 namespace ImGui {
 // Make the UI compact because there are so many fields
     void PushStyleCompact() {
@@ -78,6 +80,11 @@ namespace ImGui {
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
             ImGui::PushID(ID=="" ? desc : ID);
+            static bool point1 = false;
+            if (!point1) {
+                std::cout << "InputDouble(\"\")" << std::endl;
+                point1 = true;
+            }
             ImGui::InputDouble("", val, 0.00f, 0.0f, format);
             ImGui::PopID();
             ImGui::PopItemWidth();
@@ -97,6 +104,11 @@ namespace ImGui {
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
             ImGui::PushID(desc);
+            static bool point1 = false;
+            if (!point1) {
+                std::cout << "InputText(\"\")" << std::endl;
+                point1 = true;
+            }
             ImGui::InputText("", buf, IM_ARRAYSIZE(buf), flags);
             ImGui::PopID();
             ImGui::PopItemWidth();

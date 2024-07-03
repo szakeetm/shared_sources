@@ -667,19 +667,32 @@ void ImTest::RegisterTests()
         ctx->SetRef("Convergence Plotter");
         std::cout << ("--Ref set to Convergence Plotter") << std::endl;
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
+        std::cout << ("--convPlot data size assert passed") << std::endl;
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
+        std::cout << ("--MenuClick") << std::endl;
         ctx->SetRef("Error");
+        std::cout << ("--Ref set to Error") << std::endl;
         ctx->ItemClick("  Ok  ");
+        std::cout << ("--Ok pressed") << std::endl;
         ctx->SetRef("Convergence Plotter");
+        std::cout << ("--Ref set to Convergence Plotter") << std::endl;
         ctx->MenuClick("Export/Plotted to clipboard");
+        std::cout << ("--MenuClick") << std::endl;
         ctx->SetRef("Error");
+        std::cout << ("--Ref set to Error") << std::endl;
         ctx->ItemClick("  Ok  ");
+        std::cout << ("--Ok pressed") << std::endl;
         ctx->SetRef("Convergence Plotter");
+        std::cout << ("--Ref set to Convergence Plotter") << std::endl;
         ctx->MenuClick("Export/Plotted to file");
+        std::cout << ("--MenuClick") << std::endl;
         ctx->SetRef("Error");
+        std::cout << ("--Ref set to Error") << std::endl;
         ctx->ItemClick("  Ok  ");
+        std::cout << ("--Ok pressed") << std::endl;
         ctx->SetRef("Convergence Plotter");
+        std::cout << ("--Ref set to Convergence Plotter") << std::endl;
         // View Menu
         ctx->MenuClick("View/Log Y");
         IM_CHECK_EQ(mApp->imWnd->convPlot.logY, true);
