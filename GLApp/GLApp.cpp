@@ -441,11 +441,6 @@ void GLApplication::Run() {
   //Wait for user exit
   while( !quit )
   {
-      static int point1 = 0;
-      if (point1 < 10) {
-          std::cout << "Entered while(!quit) for the " << point1+1 << "th time" << std::endl;
-          point1++;
-      }
      //While there are events to handle
       while (!quit && (SDL_PollEvent(&sdlEvent)
 #ifdef DEBUG
@@ -453,11 +448,6 @@ void GLApplication::Run() {
 #endif
           ))
       {
-          static int point2 = 0;
-          if (point2<10) {
-              std::cout << "Entered while(!quit && SDL_PoolEvent... for the " << point2 + 1 << "th time" << std::endl;
-              point2++;
-          }
           bool forceSkipEvents = false;
          bool activeImGuiEvent = false;
          if(imWnd) {
@@ -498,20 +488,10 @@ void GLApplication::Run() {
                 imWnd->skipImGuiEvents = false;
             }
             if (activeImGuiEvent) {
-                static int point2_1 = 0;
-                if (point2_1<10) {
-                    std::cout << "Handling ImGui Event for the " << point2_1 + 1 << "th time" << std::endl;
-                    point2_1++;
-                }
                 wereEvents_imgui = 3;
 
                 if(ImGui_ImplSDL2_ProcessEvent(&sdlEvent)){
                     //Handle input events caught by ImGui
-                }
-                static int point2_2 = 0;
-                if (point2_2<10) {
-                    std::cout << "Handled ImGui Event for the " << point2_2 + 1 << "th time" << std::endl;
-                    point2_2++;
                 }
                 continue;
             }
@@ -569,11 +549,6 @@ void GLApplication::Run() {
        GLToolkit::printGlError(glError); 
        Exit();
      }
-     static int point2_1 = 0;
-     if (point2_1 < 10) {
-         std::cout << "Reached UpdateStatus() for the " << point2_1 + 1 << "th time" << std::endl;
-         point2_1++;
-     }
      UpdateStats();
 
 	 Uint32 flags = SDL_GetWindowFlags(mainScreen);
@@ -582,11 +557,6 @@ void GLApplication::Run() {
          || mApp->imWnd->testEngine.running
 #endif*/
          ) { //Application visible
-         static int point2_2 = 0;
-         if (point2_2 < 10) {
-             std::cout << "Reached if Application visible triggered for the " << point2_2 + 1 << "th time" << std::endl;
-             point2_2++;
-         }
 //#if defined(_DEBUG)
        t0 = GetTick();
 //#endif
@@ -606,19 +576,9 @@ void GLApplication::Run() {
 
        // Repaint
        if (wereEvents || wereEvents_imgui > 0) {
-           static int point3 = 0;
-           if (point3<10) {
-               std::cout << "Reached Repaint() for the " << point3 + 1 << "th time" << std::endl;
-               point3++;
-           }
            wereEvents_imgui -= 1; // allow to queue multiple imgui passes
 		   GLWindowManager::Repaint();
 		   wereEvents = false;
-           static int point4 = 0;
-           if (point4<10) {
-               std::cout << "Completed Repaint() for the " << point4 + 1 << "th time" << std::endl;
-               point4++;
-           }
        }
 
 	   GLToolkit::CheckGLErrors("GLApplication::Paint()");
@@ -629,7 +589,7 @@ void GLApplication::Run() {
 #ifdef ENABLE_IMGUI_TESTS
      if (imWnd && imWnd->testEngine.running) {
          imWnd->forceDrawNextFrame = true;
-         if (wereEvents_imgui == 0) wereEvents_imgui++;
+         wereEvents_imgui = std::max(wereEvents_imgui, 1);
      }
 #endif
       

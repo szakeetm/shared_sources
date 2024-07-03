@@ -48,17 +48,7 @@ void ImTest::Draw()
 
 void ImTest::PostSwap()
 {
-    static int point1 = 0;
-    if (point1<10) {
-        std::cout << "Entered ImTest::PostSwap for the " << point1 + 1 << "th time" << std::endl;
-        point1++;
-    }
     ImGuiTestEngine_PostSwap(engine); // normal operation
-    static int point2 = 0;
-    if (point2<10) {
-        std::cout << "ImGuiTestEngine_PostSwap(engine); complete for the " << point2 + 1 << "th time" << std::endl;
-        point2++;
-    }
 
     ExecuteQueue();
 
@@ -104,11 +94,7 @@ void ImTest::PostSwap()
     }
     if (running) {
         mApp->imWnd->forceDrawNextFrame = true;
-        static int point3 = 0;
-        if (point3 < 10) {
-            std::cout << "PostSwap with running == true for the " << point3 + 1 << "th time" << std::endl;
-            point3++;
-        }
+
     }
 }
 
@@ -656,8 +642,11 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         std::cout << ("-ToolsMenu | Formula Editor + Convergence Plotter") << std::endl;
         ctx->SetRef("##MainMenuBar");
+        std::cout << ("--Ref set to ##MainMenuBar") << std::endl;
         ctx->MenuClick("###Tools/###Formula editor");
+        std::cout << ("--Formula editor menu entry pressed") << std::endl;
         ctx->SetRef("Formula editor");
+        std::cout << ("--Ref set to Formula editor") << std::endl;
         // -----
         ctx->ItemClick("**/##FL/##NE");
         ctx->KeyCharsReplace("10");
@@ -672,9 +661,11 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Move Up");
         ctx->ItemClick("Move Down");
         ctx->ItemClick("Open convergence plotter >>");
+        std::cout << ("--Conv plot button in Formula editor pressed") << std::endl;
         // ----- CONVERGENCE PLOTTER
         // TODO test sidebar
         ctx->SetRef("Convergence Plotter");
+        std::cout << ("--Ref set to Convergence Plotter") << std::endl;
         IM_CHECK_EQ(mApp->imWnd->convPlot.data.size(), 0);
         // Export Menu
         ctx->MenuClick("Export/All to clipboard");
@@ -718,6 +709,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("#CLOSE");
         // -----
         ctx->SetRef("Formula editor");
+        std::cout << ("--Ref set to Formula editor") << std::endl;
         if (currentConfig == empty) {
             ctx->ItemClick("**/##FL/1");
             ctx->ItemClick("**/##FL/##changeExp");
@@ -759,6 +751,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("Auto-update formulas");
         ctx->SetRef("Formula editor");
         ctx->ItemClick("#CLOSE");
+        std::cout << ("--Formula Editor + Convergence Plotter - test finished") << std::endl;
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Texture plotter");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
