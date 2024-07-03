@@ -629,7 +629,7 @@ void GLApplication::Run() {
 #ifdef ENABLE_IMGUI_TESTS
      if (imWnd && imWnd->testEngine.running) {
          imWnd->forceDrawNextFrame = true;
-         wereEvents_imgui = std::min(1, wereEvents_imgui);
+         if (wereEvents_imgui == 0) wereEvents_imgui++;
      }
 #endif
       
