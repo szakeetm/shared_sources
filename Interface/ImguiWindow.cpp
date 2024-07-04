@@ -134,7 +134,7 @@ void ImguiWindow::init() {
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
     int oversample = 1;
-    if (glGetString(GL_VERSION)[0] == 1) oversample = 0;
+    if (glGetString(GL_VERSION)[0] == '1') oversample = 0;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
     ImFontConfig fontConfig;
     fontConfig.MergeMode = true;

@@ -240,6 +240,7 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 }
 namespace MathHelper {
 	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
+	unsigned int NextPowOfTwo(unsigned int val);
 }
 
 

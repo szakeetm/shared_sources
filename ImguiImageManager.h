@@ -12,8 +12,10 @@ public:
 	void* GetTexture();
 	ImVec2 GetSize();
 	void Draw();
+	std::pair<ImVec2, ImVec2> GetTextureUVs();
 private:
 	std::string filename = "";
 	GLuint texture = 0;
 	int width = 0, height = 0;
+	bool oldOpenGL = false;
 };
