@@ -35,8 +35,9 @@ bool ImImage::LoadFromFile(const std::string& filename)
     int newWidth = MathHelper::NextPowOfTwo(image_width);
     int newHeight = MathHelper::NextPowOfTwo(image_height);
     unsigned char* resizedData = new unsigned char[newWidth * newHeight * channels];
-    stbir_resize_uint8(image_data, image_width, image_height, 0, resizedData, newWidth, newHeight, 0, channels);
-
+    if (oldOpenGL) {
+        stbir_resize_uint8(image_data, image_width, image_height, 0, resizedData, newWidth, newHeight, 0, channels);
+    }
     // Create a OpenGL texture identifier
     GLuint image_texture;
     glGenTextures(1, &image_texture);
@@ -58,23 +59,17 @@ bool ImImage::LoadFromFile(const std::string& filename)
 
     // Upload pixels into texture
 #if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-    GLToolkit::CheckGLErrors("");
     glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-    GLToolkit::CheckGLErrors("");
 #endif
+
     if (oldOpenGL) {
-        GLToolkit::CheckGLErrors("");
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newWidth, newHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-        GLToolkit::CheckGLErrors("");
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newWidth, newHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, resizedData);
     }
     else {
-        GLToolkit::CheckGLErrors("");
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-        GLToolkit::CheckGLErrors("");
     }
-    GLToolkit::CheckGLErrors("");
     stbi_image_free(image_data);
-    GLToolkit::CheckGLErrors("");
 
     texture = image_texture;
     width = image_width;
@@ -84,7 +79,6 @@ bool ImImage::LoadFromFile(const std::string& filename)
     if (width == 0) return false;
     if (height == 0) return false;
 
-    GLToolkit::CheckGLErrors("");
     return true;
 }
 
