@@ -192,7 +192,7 @@ void ImGlobalSettings::Draw() {
             ImGui::BeginDisabled();
         }
         ImGui::SameLine();
-        ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g");
+        ImGui::InputDoubleRightSide("Gas half life (s)", &halfLife, "%g", "###Gas half life (s)");
 
         if (!enableDecay) {
             ImGui::EndDisabled();
@@ -224,7 +224,7 @@ void ImGlobalSettings::Draw() {
         }
         ImGui::InputDoubleRightSide(
             "Cutoff ratio", &lowFluxCutoff,
-            "%.2e");
+            "%.2e", "###Cutoff ratio");
         if (!lowFluxMode) {
             ImGui::EndDisabled();
         }

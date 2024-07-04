@@ -968,14 +968,14 @@ void ImTest::RegisterTests()
         ctx->ItemClick("  Ok  ");
         ctx->SetRef("Global settings");
         ctx->ItemClick("split/##EnableDecay");
-        ctx->ItemClick("split/Gas half life (s)");
+        ctx->ItemClick("split/###Gas half life (s)");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("split/Apply above settings");
         ctx->ItemClick("split/##EnableDecay");
         ctx->ItemClick("split/Apply above settings");
         ctx->ItemClick("split/Enable low flux mode");
         ctx->ItemClick("split/Apply above settings");
-        ctx->ItemClick("split/Cutoff ratio");
+        ctx->ItemClick("split/###Cutoff ratio");
         ctx->KeyCharsReplaceEnter("a");
         ctx->ItemClick("split/Apply above settings");
         ctx->ItemClick("split/Enable low flux mode");

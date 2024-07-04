@@ -8,6 +8,7 @@
 #include "imgui_stdlib/imgui_stdlib.h"
 
 #include <iostream>
+#include <fmt/core.h>
 
 namespace ImGui {
 // Make the UI compact because there are so many fields
@@ -75,25 +76,18 @@ namespace ImGui {
         double tmp = *val;
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
-        {
-            // Move to right side
-            ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
-            ImGui::PushItemWidth(100.0f);
-            ImGui::PushID(ID=="" ? desc : ID);
-            static bool point1 = false;
-            if (!point1) {
-                std::cout << "InputDouble(\"\")" << std::endl;
-                point1 = true;
-            }
-            ImGui::InputDouble("", val, 0.00f, 0.0f, format);
-            ImGui::PopID();
-            ImGui::PopItemWidth();
-        }
+        // Move to right side
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(ImGui::GetContentRegionAvail().x - 120.0f, 0));
+        ImGui::SameLine();
+        ImGui::PushItemWidth(100.0f);
+        ImGui::InputDouble(fmt::format("##{}{}", desc, ID).c_str(), val, 0.00f, 0.0f, format);
+        ImGui::PopItemWidth();
 
         return *val != tmp; // true if changed
     }
 
-    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags) {
+    bool InputTextRightSide(const char* desc, const char* text, ImGuiInputTextFlags flags, const char* ID) {
         ImGui::AlignTextToFramePadding();
         ImGui::Text("%s:", desc);
 
@@ -103,14 +97,7 @@ namespace ImGui {
             // Move to right side
             ImGui::SameLine((ImGui::GetContentRegionAvail().x) - 100.0f);
             ImGui::PushItemWidth(100.0f);
-            ImGui::PushID(desc);
-            static bool point1 = false;
-            if (!point1) {
-                std::cout << "InputText(\"\")" << std::endl;
-                point1 = true;
-            }
-            ImGui::InputText("", buf, IM_ARRAYSIZE(buf), flags);
-            ImGui::PopID();
+            ImGui::InputText(fmt::format("##{}{}", desc, ID).c_str(), buf, IM_ARRAYSIZE(buf), flags);
             ImGui::PopItemWidth();
         }
 
