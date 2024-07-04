@@ -133,7 +133,9 @@ void ImHistogramPlotter::DrawPlot()
 	if(plotTab==time) xAxisName = "Time [s]";
 #endif
 	ImPlot::PushStyleVar(ImPlotStyleVar_MarkerSize, 2);
-	if (ImPlot::BeginPlot("##Histogram", xAxisName.c_str(), 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 5.7f * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit)) {
+	if (ImPlot::BeginPlot("##Histogram", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 5.7f * txtH))) {
+		ImPlot::SetupAxis(ImAxis_X1, xAxisName.c_str(), ImPlotAxisFlags_AutoFit);
+		ImPlot::SetupAxis(ImAxis_Y1, "", ImPlotAxisFlags_AutoFit);
 		if (logX) ImPlot::SetupAxisScale(ImAxis_X1, ImPlotScale_Log10);
 		if (logY) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& plot : data[plotTab]) {
@@ -151,10 +153,9 @@ void ImHistogramPlotter::DrawPlot()
 		ImPlot::EndPlot();
 	}
 	ImPlot::PopStyleVar();
-	RefreshPlots();
 }
 
-void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
+void ImHistogramPlotter::RemovePlot(size_t idx, plotTabs tab)
 {
 	for (size_t i = 0; i < data[tab].size(); i++) {
 		if (data[tab][i].id == idx) {
@@ -169,7 +170,7 @@ void ImHistogramPlotter::RemovePlot(int idx, plotTabs tab)
 	// a non-existent id was passed, fails silently here by design
 }
 
-void ImHistogramPlotter::AddPlot(int idx)
+void ImHistogramPlotter::AddPlot(size_t idx)
 {
 	if (idx < -1) return;
 	if (IsPlotted(plotTab, idx)) return;
@@ -189,7 +190,7 @@ void ImHistogramPlotter::AddPlot(int idx)
 	RefreshPlots();
 }
 
-bool ImHistogramPlotter::IsPlotted(int idx)
+bool ImHistogramPlotter::IsPlotted(size_t idx)
 {
 	if (idx == -1) {
 		return globals[plotTab].x != nullptr;
@@ -377,7 +378,7 @@ void ImHistogramPlotter::Export(bool toFile, bool plottedOnly)
 	limitPoints = preExportLimitPoints;
 }
 
-void ImHistogramPlotter::ShowFacet(int idx, bool add)
+void ImHistogramPlotter::ShowFacet(size_t idx, bool add)
 {
 	if(!add) interfGeom->UnselectAll();
 	try {
@@ -530,6 +531,7 @@ void ImHistogramPlotter::RefreshFacetLists()
 			}
 		}
 	}
+	UpdateSidebarMasterToggle();
 }
 
 void ImHistogramPlotter::Reset()
@@ -542,9 +544,11 @@ void ImHistogramPlotter::Reset()
 	RefreshFacetLists();
 }
 
-void ImHistogramPlotter::UpdateOnFacetChange()
+void ImHistogramPlotter::UpdatePlotter()
 {
 	settingsWindow.UpdateOnFacetChange();
+	RefreshFacetLists();
+	RefreshPlots();
 }
 
 void ImHistogramPlotter::DrawMenuBar()

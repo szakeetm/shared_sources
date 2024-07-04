@@ -87,9 +87,12 @@ void InterfaceGeometry::CheckNonSimple() {
 void InterfaceGeometry::CheckIsolatedVertex() {
 	int nbI = GetNbIsolatedVertices();
 	if (nbI) {
-		char tmp[256];
-		sprintf(tmp, "Remove %d isolated vertices ?", nbI);
-		if (GLMessageBox::Display(tmp, "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+		std::string question = fmt::format("Remove {} isolated vertices?",nbI);
+		if (mApp->worker.globalStatCache.globalHits.nbDesorbed) {
+			question += "\nThis will reset the simulation.";
+		}
+		if (GLMessageBox::Display(question.c_str(), "Question", GLDLG_OK | GLDLG_CANCEL, GLDLG_ICONINFO) == GLDLG_OK) {
+			mApp->ResetSimulation(false);
 			DeleteIsolatedVertices(false);
 			mApp->UpdateModelParams();
 		}
@@ -1226,7 +1229,7 @@ void InterfaceGeometry::Merge(size_t nbV, size_t nbF, Vector3d *nV, InterfaceFac
 	vertices3.resize(sh.nbVertex + nbV);
 	memcpy(&vertices3[sh.nbVertex], nV, sizeof(InterfaceVertex) * nbV);
 
-	//SAFE_FREE(vertices3);
+	
 	facets = nFacets;
 	//vertices3 = nVertices3;
 	//UnselectAllVertex();
@@ -3730,7 +3733,7 @@ void InterfaceGeometry::InsertTXTGeom(FileReader& file, size_t strIdx, bool newS
 	InterfaceVertex *tmp_vertices3 = (InterfaceVertex *)malloc((nbNewVertex + sp.nbVertex) * sizeof(InterfaceVertex));
 	memmove(tmp_vertices3, vertices3, (sp.nbVertex) * sizeof(InterfaceVertex));
 	memset(tmp_vertices3 + sp.nbVertex, 0, nbNewVertex * sizeof(InterfaceVertex));
-	SAFE_FREE(vertices3);
+	
 	vertices3 = tmp_vertices3;
 	*/
 	vertices3.resize(sh.nbVertex + nbNewVertex);

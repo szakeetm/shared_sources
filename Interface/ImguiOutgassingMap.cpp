@@ -1,17 +1,16 @@
 #include "ImguiOutgassingMap.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiPopup.h"
-#include "Interface.h"
 #include "Helper/StringHelper.h"
-#include "ImguiWindow.h"
 #include <sstream>
+#include "ImguiWindow.h"
 
 void ImOutgassingMap::Draw()
 {
 	if (!drawn) return;
 	ImGui::SetNextWindowSize(ImVec2(txtW*70, txtH*20), ImGuiCond_FirstUseEver);
 	ImGui::Begin((name + "###OgM").c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("OgMTab", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5), ImGuiChildFlags_Border);
+	ImGui::BeginChild("OgMTab", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5f), ImGuiChildFlags_Border);
 	DrawTable();
 	ImGui::EndChild();
 	
@@ -142,11 +141,11 @@ void ImOutgassingMap::PasteButtonPress()
 		std::string token;
 		columns = 0;
 		while (std::getline(lineStream, token, '\t')) {
-			if (columns < w) data[rows][columns]=token;
+			if (selection.column+columns < w) data[selection.row+rows][selection.column+columns]=token;
 			else exceeded = true;
 			columns++;
 		}
-		if (rows >= h) {
+		if (selection.row+rows >= h) {
 			exceeded = true;
 			break;
 		}
@@ -166,11 +165,13 @@ void ImOutgassingMap::DrawTable()
 		ImGui::Text("Selected facet does not have a mesh");
 		return;
 	}
-	if (ImGui::BeginTable("###Outgass", facet->sh.texWidth+1, ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg)) {
+	if (ImGui::BeginTable("###Outgass", static_cast<int>(facet->sh.texWidth+1), ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY | ImGuiTableFlags_RowBg | ImGuiTableFlags_Borders)) {
+		KeyboardNavigation();
+		ImGui::TableSetupScrollFreeze(1, 1);
 		// table setup
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
-		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
+		ImGui::TableSetupColumn(u8"v\u20D7\\u\u20D7", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < facet->sh.texWidth; ++i) {
 			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), ImGuiTableColumnFlags_WidthFixed, txtW*7);
 		}
@@ -179,18 +180,42 @@ void ImOutgassingMap::DrawTable()
 		for (auto& row : data) {
 			ImGui::TableNextRow();
 			size_t column = 0;
-			ImGui::TableSetColumnIndex(column++); // will increment column after the call
+			ImGui::TableSetColumnIndex(static_cast<int>(column++)); // will increment column after the call
 			ImGui::Text(fmt::format("{}",rowN));
+			ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.78f, 0.87f, 0.98f, 1.0f));
+			ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 			for (auto& cell : row) {
-				ImGui::TableSetColumnIndex(column);
+				ImGui::TableSetColumnIndex(static_cast<int>(column));
 				ImGui::SetNextItemWidth(txtW * 7);
-				ImGui::InputText(fmt::format("###{}-{}", rowN, column), &cell);
+				if (selection.row == rowN - 1 && selection.column == column - 1 && selection.active) {
+					cell_bg_color = ImGui::GetColorU32(ImVec4(152.f/255.f, 186.f/255.f, 225.f/255.f, 1.0f));
+					ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
+					ImGui::InputText(fmt::format("###{}-{}", rowN, column).c_str(), &cell, ImGuiInputTextFlags_CallbackAlways,  f.MyCallback);
+					if (selection.changed) {
+						ImGui::SetKeyboardFocusHere(-1);
+						selection.changed = false;
+					}
+				}
+				else {
+
+					if (ImGui::Selectable(fmt::format("{}###{}-{}", cell, rowN, column))) {
+						selection.row = rowN - 1;
+						selection.column = column - 1;
+						selection.active = true;
+						selection.changed = true;
+					}
+				}
 				column++;
 			}
 			rowN++;
 		}
 		ImGui::PopStyleVar();
 		ImGui::PopStyleVar();
+		if (selection.active && (ImGui::IsKeyDown(ImGuiKey_Enter) || ImGui::IsKeyDown(ImGuiKey_KeypadEnter))) {
+			selection.active = false;
+			selection.row = 0;
+			selection.column = 0;
+		}
 		ImGui::EndTable();
 	}
 }
@@ -237,4 +262,43 @@ void ImOutgassingMap::UpdateOnFacetChange(const std::vector<size_t>& selectedFac
 void ImOutgassingMap::OnShow()
 {
 	UpdateOnFacetChange(interfGeom->GetSelectedFacets());
+}
+
+void ImOutgassingMap::KeyboardNavigation()
+{
+	//printf("Cursor pos: %d\r", lastCursor);
+	if (!selection.active) return; // if no cell selected do not compute navigation
+	bool moved = false;
+	if (ImGui::IsKeyPressed(ImGuiKey_UpArrow)) {
+		if (selection.row > 0) {
+			selection.row--;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_DownArrow)) {
+		if (selection.row < data.size()-1) {
+			selection.row++;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_LeftArrow)) {
+		if (lastCursor == 0 && selection.column > 0) {
+			selection.column--;
+			moved = true;
+		}
+		else return;
+	}
+	else if (ImGui::IsKeyPressed(ImGuiKey_RightArrow)) {
+		if (lastCursor == data[selection.row][selection.column].size() && selection.column < data[selection.row].size()-1) {
+			selection.column++;
+			moved = true;
+		}
+		else return;
+	}
+	if (moved) {
+		selection.changed = true;
+	}
+	lastCursor = mApp->imWnd->textCursorPos;
 }

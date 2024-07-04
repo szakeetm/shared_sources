@@ -10,9 +10,9 @@ void ImFacetSplit::Draw()
 {
 	if (!drawn) return;
 
-	ImGui::SetNextWindowSize(ImVec2(txtW * 50, txtH * 11.3));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 50, txtH * 11.3f));
 	ImGui::Begin("Split Facet", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
-	ImGui::BeginChild("###FSPDM", ImVec2(0, ImGui::GetContentRegionAvail().y - txtH * 1.3), ImGuiChildFlags_Border);
+	ImGui::BeginChild("###FSPDM", ImVec2(0, ImGui::GetContentRegionAvail().y - txtH * 1.3f), ImGuiChildFlags_Border);
 	ImGui::TextDisabled("Plane definition mode");
 	if (ImGui::RadioButton("By equation", mode == Mode::equation)) mode = Mode::equation;
 	ImGui::SetNextItemWidth(txtW * 6);
@@ -70,8 +70,9 @@ void ImFacetSplit::Draw()
 			facetId = interfGeom->GetSelectedFacets()[0];
 			fIdIn = fmt::format("{}", facetId+1);
 		}
+		mode = Mode::facet;
 	}
-	if (ImGui::RadioButton("By 3 selected verticies", mode == Mode::verticies)) mode = Mode::verticies;
+	if (ImGui::RadioButton("By 3 selected vertices", mode == Mode::vertices)) mode = Mode::vertices;
 	ImGui::EndChild();
 	if (ImGui::Button("Split")) {
 		SplitButtonPress();
@@ -129,7 +130,7 @@ void ImFacetSplit::SplitButtonPress()
 			ImIOWrappers::InfoPopup("Error", "Invalid D coefficient");
 			return;
 		}
-		if (x == y == z == 0) {
+		if (x == 0 && y == 0 && z == 0) {
 			ImIOWrappers::InfoPopup("Error", "A B and C are all 0, this is not a valid plane definition");
 			return;
 		}
@@ -144,16 +145,16 @@ void ImFacetSplit::SplitButtonPress()
 			ImIOWrappers::InfoPopup("Error", "Invalid number in facet ID");
 			return;
 		}
-		if (facetId > interfGeom->GetNbFacet()) {
+		if (facetId > interfGeom->GetNbFacet() || facetId < 1) {
 			ImIOWrappers::InfoPopup("Error", "No such facet");
 			return;
 		}
 		P0 = *interfGeom->GetVertex(interfGeom->GetFacet(facetId - 1)->indices[0]);
 		N = interfGeom->GetFacet(facetId - 1)->sh.N;
 		break;
-	case verticies:
+	case vertices:
 		if (interfGeom->GetNbSelectedVertex() != 3) {
-			ImIOWrappers::InfoPopup("Error", "Select exactly 3 verticies");
+			ImIOWrappers::InfoPopup("Error", "Select exactly 3 vertices");
 			return;
 		}
 		{

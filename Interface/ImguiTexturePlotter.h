@@ -10,7 +10,6 @@ class ImTexturePlotter : public ImWindow {
 public:
 	void Draw();
 	void Hide();
-	void Init(Interface* mApp_);
 	void UpdateOnFacetChange(const std::vector<size_t>& selectedFacets);
 	void UpdatePlotter();
 protected:
@@ -40,15 +39,14 @@ protected:
 	bool fitToWindow = false;
 
 	// app + data variables
-	InterfaceGeometry* interfGeom;
-	InterfaceFacet* selFacet;
+	InterfaceFacet* selFacet = nullptr;
 	int width = 0, height = 0; // table size
 	std::vector<std::vector<std::string>> data; // 2d vector for values
-	size_t selFacetId;
-	double maxValue; // value of max value
-	size_t maxX, maxY; // column and row of max value
+	size_t selFacetId = 0;
+	double maxValue = 0; // value of max value
+	size_t maxX = 0, maxY = 0; // column and row of max value
 	int tableFlags = 0;
-	int columnWidth; // column width (is multiplied by character width)
+	int columnWidth = 6; // column width (is multiplied by character width)
 	bool scrollToSelected = false;
 	size_t profSize = 0;
 	bool wasDrawn = false;

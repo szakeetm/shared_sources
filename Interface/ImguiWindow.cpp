@@ -1,4 +1,3 @@
-
 #include "imgui.h"
 #include "ImguiExtensions.h"
 #include "ImguiWindow.h"
@@ -75,6 +74,7 @@ Open-source libraries used:
 - pugixml (https://github.com/zeux/pugixml)
 - cereal (https://github.com/USCiLab/cereal)
 - fmt (https://github.com/fmtlib/fmt)
+- stb (https://github.com/nothings/stb)
 )";
         ImGui::TextWrapped(aboutText.str());
         ImGui::PlaceAtRegionCenter("  OK  ");
@@ -134,47 +134,35 @@ void ImguiWindow::init() {
     // - Remember that in C/C++ if you want to include a backslash \ in a string
     // literal you need to write a double backslash \\ !
     int oversample = 1;
+    if (glGetString(GL_VERSION)[0] == '1') oversample = 0;
     static const ImWchar sym_ranges[] = {0x2000, 0x3000, 0};
     ImFontConfig fontConfig;
     fontConfig.MergeMode = true;
     fontConfig.PixelSnapH = true;
     fontConfig.OversampleH = oversample;
     fontConfig.OversampleV = oversample;
-    //fontConfig.RasterizerMultiply = 0;
-    //io.Fonts->AddFontDefault(&fontConfig);
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 16.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 16.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/NotoSansJP-Regular.ttf", 16.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
 
     // merge in icons from Font Awesome
     static const ImWchar icons_ranges[] = {ICON_MIN_FA, ICON_MAX_FA, 0};
     ImFontConfig icons_config;
+    oversample = 1;
     icons_config.MergeMode = true;
     icons_config.PixelSnapH = true;
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
-    //icons_config.RasterizerMultiply = 0;
     icons_config.OversampleH = oversample;
     icons_config.OversampleV = oversample;
-    //icons_config.RasterizerMultiply = 0;
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 16.0f, &icons_config, icons_ranges);
 
     io.Fonts->AddFontFromFileTTF("fonts/DroidSans.ttf", 14.0f);
     io.Fonts->AddFontFromFileTTF("fonts/FreeMono.ttf", 14.0f, &fontConfig, sym_ranges); // vector arrow
+    io.Fonts->AddFontFromFileTTF("fonts/NotoSansJP-Regular.ttf", 14.0f, &fontConfig, io.Fonts->GetGlyphRangesJapanese()); // vector arrow
     io.Fonts->AddFontFromFileTTF(FONT_ICON_FILE_NAME_FAS, 14.0f, &icons_config, icons_ranges);
 
     io.Fonts->Build();
-
-    /*io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f);
-    io.Fonts->AddFontFromFileTTF("FreeMono.ttf", 16.0f, &fontConfig, sym_ranges);*/
-
-// use FONT_ICON_FILE_NAME_FAR if you want regular instead of solid
-
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    // io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    // ImFont* font =
-    // io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f,
-    // nullptr, io.Fonts->GetGlyphRangesJapanese()); IM_ASSERT(font != nullptr);
 
     show_main_hub = false;
     show_demo_window = false;
@@ -212,8 +200,10 @@ void ImguiWindow::init() {
     profPlot.Init(mApp);
     histPlot = ImHistogramPlotter();
     histPlot.Init(mApp);
+#if defined(MOLFLOW)
     textScale = ImTextureScaling();
     textScale.Init(mApp);
+#endif
     partLog = ImParticleLogger();
     partLog.Init(mApp);
     movPart = ImMovingParts();
@@ -224,7 +214,7 @@ void ImguiWindow::init() {
     facCoord = ImFacetCoordinates();
     facCoord.Init(mApp);
     facetMov = ImFacetMove();
-    facetMov.Init(mApp, mApp->worker.GetGeometry());
+    facetMov.Init(mApp);
     facScale = ImFacetScale();
     facScale.Init(mApp);
     mirrProjFacet = ImFacetMirrorProject();
@@ -257,7 +247,7 @@ void ImguiWindow::init() {
     geoView = ImGeoViewer();
     geoView.Init(mApp);
 
-    RegisterShortcuts();
+    ImMenu::RegisterShortcuts();
 
     start_time = ImGui::GetTime();
     didIinit = true;
@@ -349,7 +339,7 @@ void ImguiWindow::renderSingle() {
         ImGui::NewFrame();
 
         if (show_app_main_menu_bar)
-            ShowAppMainMenuBar();
+            ImMenu::ShowAppMainMenuBar();
 
         if (show_app_sidebar)
             sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());
@@ -367,10 +357,7 @@ void ImguiWindow::renderSingle() {
         // 2. Show Molflow x ImGui Hub window
         if (show_main_hub) {
             ImGui::SetNextWindowPos(ImVec2(20,20), ImGuiCond_FirstUseEver);
-            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings); // Create a window called "Hello, world!"
-            // and append into it.
-
-            
+            ImGui::Begin("[BETA] _Molflow ImGui Suite_", &show_main_hub, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings);
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
@@ -462,7 +449,9 @@ void ImguiWindow::renderSingle() {
         formulaEdit.Draw();
         convPlot.Draw();
         textPlot.Draw();
+#if defined(MOLFLOW)
         profPlot.Draw();
+#endif
         histPlot.Draw();
         textScale.Draw();
         partLog.Draw();
@@ -511,31 +500,41 @@ void ImguiWindow::renderSingle() {
 
 void ImguiWindow::Refresh()
 {
-    histPlot.RefreshFacetLists();
-    histPlot.LoadHistogramSettings();
-    convPlot.Refresh();
-    movPart.Update();
-    facCoord.UpdateFromSelection();
-    vertCoord.UpdateFromSelection();
-    splitFac.Reset();
+    if (histPlot.IsVisible()) histPlot.RefreshFacetLists();
+    if (histPlot.IsVisible()) histPlot.LoadHistogramSettings();
+    if (convPlot.IsVisible()) convPlot.Refresh();
+    if (movPart.IsVisible()) movPart.Update();
+    if (facCoord.IsVisible()) facCoord.UpdateFromSelection();
+    if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
+    if (splitFac.IsVisible()) splitFac.Reset();
+    if (formulaEdit.IsVisible()) formulaEdit.Update();
+    if (measForce.IsVisible()) measForce.Update();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::Reset()
 {
-    histPlot.Reset();
-    histPlot.RefreshFacetLists();
-    histPlot.LoadHistogramSettings();
-    profPlot.Refresh();
-    convPlot.Refresh();
-    textScale.Load();
-    partLog.Reset();
-    splitFac.Reset();
+    if (histPlot.IsVisible()) histPlot.Reset();
+    if (histPlot.IsVisible()) histPlot.RefreshFacetLists();
+    if (histPlot.IsVisible()) histPlot.LoadHistogramSettings();
+    if (profPlot.IsVisible()) profPlot.Refresh();
+    if (convPlot.IsVisible()) convPlot.Refresh();
+#if defined(MOLFLOW)
+    if (textScale.IsVisible()) textScale.Load();
+#endif
+    if (splitFac.IsVisible()) splitFac.Reset();
+    if (formulaEdit.IsVisible()) formulaEdit.Update();
+    if (measForce.IsVisible()) measForce.Update();
+    if (movPart.IsVisible()) movPart.Update();
+    if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::Clear()
 {
     mirrProjFacet.Clear();
     convPlot.Refresh();
+    partLog.UpdateStatus();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
@@ -546,5 +545,9 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     if (interfaceSettings->convergencePlotterSettings.hasData) {
         convPlot.LoadSettingsFromFile(interfaceSettings->convergencePlotterSettings.logYscale, interfaceSettings->convergencePlotterSettings.viewIds);
     } else convPlot.Refresh();
+#if defined(MOLFLOW)
     textScale.Load();
+#endif
+    convPlot.Refresh();
+    profPlot.Refresh();
 }

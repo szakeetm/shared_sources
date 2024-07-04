@@ -13,12 +13,12 @@
 void ImMeasureForce::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW * 55, txtH * 9.5));
+	ImGui::SetNextWindowSize(ImVec2(txtW * 55, txtH * 9.5f));
 	ImGui::Begin("Measure forces", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
 	ImGui::Checkbox("Enable force measurement (has performance impact)", &enableForceMeasurement);
 
-	ImGui::BeginChild("###MFchild", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5), true);
+	ImGui::BeginChild("###MFchild", ImVec2(0,ImGui::GetContentRegionAvail().y-txtH*1.5f), true);
 	
 	ImGui::TextDisabled("Torque relative to...");
 
@@ -63,6 +63,22 @@ void ImMeasureForce::Draw()
 	ImGui::End();
 }
 
+void ImMeasureForce::Update()
+{
+	enableForceMeasurement = mApp->worker.model->sp.enableForceMeasurement;
+	mx = mApp->worker.model->sp.torqueRefPoint.x;
+	my = mApp->worker.model->sp.torqueRefPoint.y;
+	mz = mApp->worker.model->sp.torqueRefPoint.z;
+	mx0I = fmt::format("{:.3g}", mx);
+	my0I = fmt::format("{:.3g}", my);
+	mz0I = fmt::format("{:.3g}", mz);
+}
+
+void ImMeasureForce::OnShow()
+{
+	Update();
+}
+
 void ImMeasureForce::SelectedVertexButtonPress()
 {
 	size_t nbs = interfGeom->GetNbSelectedVertex();
@@ -70,17 +86,15 @@ void ImMeasureForce::SelectedVertexButtonPress()
 		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one vertex\n(You have selected {}).", nbs));
 		return;
 	}
-	else {
-		for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
-			if (interfGeom->GetVertex(i)->selected) {
-				mx = interfGeom->GetVertex(i)->x;
-				mx0I = fmt::format("{:.3g}", mx);
-				my = interfGeom->GetVertex(i)->y;
-				my0I = fmt::format("{:.3g}", my);
-				mz = interfGeom->GetVertex(i)->z;
-				mz0I = fmt::format("{:.3g}", mz);
-				break;
-			}
+	for (int i = 0; i < interfGeom->GetNbVertex(); i++) {
+		if (interfGeom->GetVertex(i)->selected) {
+			mx = interfGeom->GetVertex(i)->x;
+			mx0I = fmt::format("{:.3g}", mx);
+			my = interfGeom->GetVertex(i)->y;
+			my0I = fmt::format("{:.3g}", my);
+			mz = interfGeom->GetVertex(i)->z;
+			mz0I = fmt::format("{:.3g}", mz);
+			break;
 		}
 	}
 }
@@ -92,18 +106,16 @@ void ImMeasureForce::FacetCenterButtonPress()
 		ImIOWrappers::InfoPopup("Error", fmt::format("Select exactly one facet\n(You have selected {}).", nbs));
 		return;
 	}
-	else {
-		for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
-			auto f = interfGeom->GetFacet(i);
-			if (f->selected) {
-				mx = f->sh.center.x;
-				mx0I = fmt::format("{:.3g}", mx);
-				my = f->sh.center.y;
-				my0I = fmt::format("{:.3g}", my);
-				mz = f->sh.center.z;
-				mz0I = fmt::format("{:.3g}", mz);
-				break;
-			}
+	for (size_t i = 0; i < interfGeom->GetNbFacet(); i++) {
+		auto f = interfGeom->GetFacet(i);
+		if (f->selected) {
+			mx = f->sh.center.x;
+			mx0I = fmt::format("{:.3g}", mx);
+			my = f->sh.center.y;
+			my0I = fmt::format("{:.3g}", my);
+			mz = f->sh.center.z;
+			mz0I = fmt::format("{:.3g}", mz);
+			break;
 		}
 	}
 }

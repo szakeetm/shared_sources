@@ -8,15 +8,15 @@ class ImParticleLogger : public ImWindow {
 public:
 	void Draw();
 	void Init(Interface* mApp_);
-	void Reset();
+	void UpdateStatus();
+	void OnShow() override;
 private:
 	void ApplyButtonPress();
 	void UpdateMemoryEstimate();
-	void UpdateStatus();
 	std::string LogToText(const std::string& separator = "\t", FILE* file = nullptr);
-	bool enableLogging;
+	bool enableLogging = false;
 	std::string facetNumInput = "";
-	int facetNum = -1;
+	size_t facetNum = -1;
 	std::string maxRecInput = "10000";
 	size_t maxRec = 10000;
 	bool isRunning = false;

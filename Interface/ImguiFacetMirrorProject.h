@@ -15,9 +15,9 @@ private:
 		xy, yz, xz, planeOfFacet, byVerts, byEqation, none
 	};
 	PlaneDefinition mode = none;
-	int facetId;
-	std::string facetIdInput, aInput, bInput, cInput, dInput;
-	double a, b, c, d;
+	size_t facetId = 0;
+	std::string facetIdInput="", aInput = "", bInput = "", cInput = "", dInput = "";
+	double a=0, b=0, c=0, d=0;
 	bool enableUndo = false;
 	friend class ImTest;
 };

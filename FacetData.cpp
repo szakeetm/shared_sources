@@ -1,11 +1,3 @@
-
-
-// M_PI define
-#ifdef _WIN32
-#define _USE_MATH_DEFINES // activate defines, e.g. M_PI_2
-#endif
-#include <cmath>
-
 #include "FacetData.h"
 #include "Polygon.h"
 #include "Helper/MathTools.h"

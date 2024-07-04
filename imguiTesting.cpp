@@ -238,7 +238,7 @@ void ImTest::SelectVertex(size_t idx, bool add)
     if (idx >= interfGeom->GetNbVertex()) return;
     std::function<void()> f = [this, idx, add]() {
         if (!add) interfGeom->EmptySelectedVertexList();
-        interfGeom->SelectVertex(idx);
+        interfGeom->SelectVertex(static_cast<int>(idx));
         interfGeom->UpdateSelection();
         mApp->imWnd->Refresh();
         };
@@ -264,10 +264,10 @@ void ImTest::DeselectAll()
         interfGeom->UnselectAll();
         };
     callQueue.push(f);
-    DeselectAllVerticies();
+    DeselectAllvertices();
 }
 
-void ImTest::DeselectAllVerticies()
+void ImTest::DeselectAllvertices()
 {
     std::function<void()> f = [this]() {
         interfGeom->UnselectAllVertex();
@@ -303,6 +303,7 @@ void ImTest::DeleteFacet(size_t idx)
     if (idx >= interfGeom->GetNbFacet()) return;
     std::function<void()> f = [this, idx]() {
         if (mApp->worker.IsRunning()) mApp->worker.Stop_Public();
+        if (idx >= interfGeom->GetNbFacet()) return;
         interfGeom->RemoveFacets({idx});
         mApp->UpdateModelParams();
         mApp->worker.MarkToReload();
@@ -322,6 +323,7 @@ bool ImTest::SetFacetProfile(size_t facetIdx, int profile)
         mApp->UpdateFacetParams(false);
         if (mApp->imWnd && mApp->imWnd->profPlot.IsVisible()) mApp->imWnd->profPlot.Refresh();
     }
+    return true;
 }
 
 void ImTest::ExecuteQueue()
@@ -990,7 +992,7 @@ void ImTest::RegisterTests()
     t->TestFunc = [this](ImGuiTestContext* ctx) {
         std::cout << ("-ToolsMenu | Screenshot") << std::endl;
         ctx->SetRef("##MainMenuBar");
-        ctx->MenuClick("###Tools/Take screenshot");
+        ctx->MenuClick("###Tools/###Screenshot");
         };
     t = IM_REGISTER_TEST(engine, "ToolsMenu", "Moving Parts");
     t->TestFunc = [this](ImGuiTestContext* ctx) {
@@ -1290,7 +1292,7 @@ void ImTest::RegisterTests()
         ctx->ItemClick("/**/U vector");
         ctx->ItemClick("/**/V vector");
         ctx->ItemClick("/**/Normal vector");
-        ctx->ItemClick("/**/Define by 2 verticies");
+        ctx->ItemClick("/**/###2V");
         ctx->ItemClick("/**/Define by equation:");
         ctx->ItemClick("Rotate facet");
         ctx->ItemClick("//Nothing to rotate/  Ok  ");
@@ -1367,9 +1369,9 @@ void ImTest::RegisterTests()
             ctx->ItemClick("/**/##extrusion length:");
             ctx->KeyCharsReplaceEnter("1");
             ctx->ItemClick("Extrude");
-            ctx->ItemClick("/**/Direction vector");
             DeselectAll();
             SelectVertex(0);
+            ctx->ItemClick("/**/Direction vector");
             ctx->ItemClick("/**/Get Base Vertex");
             ctx->MouseMoveToPos(ImVec2(100, 100));
             DeselectAll();
@@ -1610,6 +1612,8 @@ void ImTest::RegisterTests()
             ctx->ItemClick("/**/All");
             IM_CHECK_GT(mApp->imWnd->convPlot.formulaDrawToggle.size(), 0);
         }
-        ConfigureGeometryMidTest(currentConfig);
+        //ConfigureGeometryMidTest(currentConfig);
+        ctx->SetRef("Convergence Plotter");
+        ctx->ItemClick("#CLOSE");
         };
 }

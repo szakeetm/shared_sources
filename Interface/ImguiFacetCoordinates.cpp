@@ -21,7 +21,7 @@ void ImFacetCoordinates::Draw()
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings);
 	if (selFacet == nullptr) ImGui::BeginDisabled();
 	DrawTable();
-	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5 * txtH), true);
+	ImGui::BeginChild("##FCC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.5f * txtH), true);
 	ImGui::TextDisabled("Insert / Remove vertex");
 	ImGui::Text("Vertex Id to insert:"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 10);
@@ -30,14 +30,13 @@ void ImFacetCoordinates::Draw()
 		Insert(table.size());
 	} ImGui::SameLine();
 	if (ImGui::Button("Insert before sel. row")) {
-		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		if (!selection) ImIOWrappers::InfoPopup("Error", "No row selected");
 		else {
 			Insert(selRow);
-			selRow--;
 		}
 	} ImGui::SameLine();
 	if (ImGui::Button("Remove selected row")) {
-		if (selRow == -1) ImIOWrappers::InfoPopup("Error", "No row selected");
+		if (!selection) ImIOWrappers::InfoPopup("Error", "No row selected");
 		else {
 			table.erase(table.begin() + selRow);
 			selRow--;
@@ -90,14 +89,15 @@ void ImFacetCoordinates::DrawTable()
 		ImGui::TableSetupColumn("Y");
 		ImGui::TableSetupColumn("Z");
 		ImGui::TableHeadersRow();
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 		for (line& ln : table) {
 			ImGui::TableNextRow();
 			ImGui::TableSetColumnIndex(0);
-			if (ImGui::Selectable(fmt::format("{}", i + 1), selRow == i, selRow == i ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
+			if (ImGui::Selectable(fmt::format("{}", i + 1), (selRow == i && selection), (selRow == i && selection) ? ImGuiSelectableFlags_None : ImGuiSelectableFlags_SpanAllColumns)) {
 				if (ValidateInputs(selRow)) {
 					selRow = i;
+					selection = true;
 				}
 				wasInput = true;
 			}
@@ -105,15 +105,15 @@ void ImFacetCoordinates::DrawTable()
 			ImGui::Text(fmt::format("{}",ln.vertexId+1));
 			ImGui::TableSetColumnIndex(2);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[0]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[0]);
 			else ImGui::InputText("###FCXI", &ln.coordInput[0]);
 			ImGui::TableSetColumnIndex(3);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[1]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[1]);
 			else ImGui::InputText("###FCYI", &ln.coordInput[1]);
 			ImGui::TableSetColumnIndex(4);
 			ImGui::SetNextItemWidth(txtW * 14);
-			if (selRow != i) ImGui::Text(ln.coordInput[2]);
+			if (!selection || selRow != i) ImGui::Text(ln.coordInput[2]);
 			else ImGui::InputText("###FCZI", &ln.coordInput[2]);
 			i++;
 		}
@@ -157,7 +157,7 @@ void ImFacetCoordinates::Apply()
 	mApp->worker.MarkToReload();
 }
 
-void ImFacetCoordinates::Insert(int pos)
+void ImFacetCoordinates::Insert(size_t pos)
 {
 	if (!Util::getNumber(&insertID, insertIdInput)) {
 		ImIOWrappers::InfoPopup("Error", "Could not parse vertex ID");
@@ -167,6 +167,7 @@ void ImFacetCoordinates::Insert(int pos)
 		ImIOWrappers::InfoPopup("Error", fmt::format("Invalid vertex id Vertex {} doesn't exist.", insertID));
 		return;
 	}
+	if (pos != table.size()) selRow = pos + 1;
 	line newLine;
 	newLine.vertexId = insertID-1;
 	newLine.coord = *(mApp->worker.GetGeometry()->GetVertex(newLine.vertexId));
@@ -174,7 +175,6 @@ void ImFacetCoordinates::Insert(int pos)
 	newLine.coordInput[1] = fmt::format("{:.10g}", newLine.coord.y);
 	newLine.coordInput[2] = fmt::format("{:.10g}", newLine.coord.z);
 	table.insert(table.begin() + pos, newLine);
-	selRow = pos;
 }
 
 void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selectedFacets)
@@ -198,7 +198,7 @@ void ImFacetCoordinates::UpdateFromSelection(const std::vector<size_t>& selected
 		table.push_back(newLine);
 	}
 	name = "Facet coordinates #" + std::to_string(selFacetId + 1) + "###FCoords";
-	if (selRow >= table.size() || selRow<-1) selRow = -1;
+	if (selRow >= table.size() || selRow<-1) selection = false;
 }
 
 void ImFacetCoordinates::UpdateFromSelection()
@@ -206,7 +206,14 @@ void ImFacetCoordinates::UpdateFromSelection()
 	UpdateFromSelection(interfGeom->GetSelectedFacets());
 }
 
-bool ImFacetCoordinates::ValidateInputs(int idx)
+void ImFacetCoordinates::UpdateFromVertexSelection()
+{
+	std::vector<size_t> v = interfGeom->GetSelectedVertices();
+	if (v.size() == 0) return;
+	insertIdInput = fmt::format("{}", v[v.size() - 1] + 1);
+}
+
+bool ImFacetCoordinates::ValidateInputs(size_t idx)
 {
 	if (idx >= table.size()) return true; // no such row, noting to check
 	if (!(table[idx].vertexId >= 0 && table[idx].vertexId < interfGeom->GetNbVertex())) { //wrong coordinates at row

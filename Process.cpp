@@ -135,7 +135,7 @@ DWORD StartProc(char **procv, int mode) { //minimized in Debug mode, hidden in R
 	si.dwFlags = STARTF_USESHOWWINDOW;
 	DWORD launchMode;
 
-#if defined(_DEBUG) || defined(DEBUG)
+#if defined(DEBUG)
     launchMode = CREATE_NEW_CONSOLE;
     if (mode == STARTPROC_NORMAL) {
         si.wShowWindow = SW_MINIMIZE;

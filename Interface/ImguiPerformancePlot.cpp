@@ -75,9 +75,11 @@ void ShowPerfoPlot(bool *p_open, Interface *mApp) {
             sprintf(overlay, "avg %f hit/s", average);
             //ImGui::PlotLines(""*//*"Hit/s"*//*, values, IM_ARRAYSIZE(values), values_offset, overlay, min_val * 0.95f, max_val * 1.05f,ImVec2(0, 80.0f));
 
-            ImPlot::SetNextAxisLimits(ImAxis_Y1 ,std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
-            if (ImPlot::BeginPlot("##Perfo", "time (s)", "performance (hit/s)", ImVec2(-1, -1),
-                                  ImPlotAxisFlags_AutoFit/* | ImPlotAxisFlags_Time*//*, ImPlotAxisFlags_AutoFit*/)) {
+            if (ImPlot::BeginPlot("##Perfo", ImVec2(-1, -1), 0)) {
+                ImPlot::SetupAxis(ImAxis_X1, "time(s)", ImPlotAxisFlags_AutoFit);
+                ImPlot::SetupAxis(ImAxis_Y1, "performance(hit / s)");
+                ImPlot::SetupAxisLimits(ImAxis_Y1 ,std::max(0.0f, min_val * 0.8f),max_val * 1.2f, ImGuiCond_Always);
+                
                 ImPlot::PushStyleVar(ImPlotStyleVar_FillAlpha, 0.25f);
                 ImPlot::PlotLine("Hit/s", tvalues, values, IM_ARRAYSIZE(values), values_offset);
                 ImPlot::PlotShaded("Hit/s", tvalues, values, IM_ARRAYSIZE(values), -INFINITY, values_offset);

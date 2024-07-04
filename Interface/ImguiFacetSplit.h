@@ -11,13 +11,13 @@ protected:
 		none,
 		equation,
 		facet,
-		verticies
+		vertices
 	};
 	Mode mode = none;
-	std::string xIn, yIn, zIn, wIn, fIdIn;
-	double x, y, z, w;
-	std::string output;
-	size_t facetId, nbFacet, nbCreated;
+	std::string xIn = "", yIn = "", zIn = "", wIn = "", fIdIn = "";
+	double x = 0, y = 0, z = 0, w = 0;
+	std::string output = "";
+	size_t facetId = 0, nbFacet = 0, nbCreated = 0;
 	bool enableUndo = false;
 	std::vector<DeletedFacet> deletedFacetList;
 

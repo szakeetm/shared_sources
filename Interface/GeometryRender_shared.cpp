@@ -416,6 +416,7 @@ void InterfaceGeometry::SelectVertex(int x1, int y1, int x2, int y2, bool shiftD
 
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 	if (mApp->imWnd) mApp->imWnd->vertCoord.UpdateFromSelection();
+	if (mApp->imWnd) mApp->imWnd->facCoord.UpdateFromVertexSelection();
 }
 
 void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool shiftDown, bool ctrlDown, bool facetBound) {
@@ -480,6 +481,7 @@ void InterfaceGeometry::SelectVertex(int x, int y, int width, int height, bool s
 
 	//UpdateSelection();
 	if (mApp->imWnd) mApp->imWnd->vertCoord.UpdateFromSelection();
+	if (mApp->imWnd) mApp->imWnd->facCoord.UpdateFromVertexSelection();
 	if (mApp->vertexCoordinates) mApp->vertexCoordinates->Update();
 }
 

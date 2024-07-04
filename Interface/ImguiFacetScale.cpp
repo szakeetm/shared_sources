@@ -38,6 +38,7 @@ void ImFacetScale::Draw()
 	ImGui::SameLine();
 	ImGui::SetNextItemWidth(100);
 	ImGui::InputText("###facetN", &facetIdInput);
+	if (invPt != Facet) ImGui::EndDisabled();
 	ImGui::SameLine();
 	if (ImGui::Button("<-Get selected")) {
 		if (interfGeom->GetNbSelectedFacets() != 1) {
@@ -51,12 +52,12 @@ void ImFacetScale::Draw()
 				}
 			}
 			facetIdInput = fmt::format("{}", facetId+1);
+			invPt = Facet;
 		}
 	}
-	if (invPt != Facet) ImGui::EndDisabled();
 
 	ImGui::EndChild();
-	ImGui::BeginChild("##FSC2", ImVec2(0, 4.5 * txtH), true);
+	ImGui::BeginChild("##FSC2", ImVec2(0, 4.5f * txtH), true);
 	ImGui::TextDisabled("Scale factor");
 	if (ImGui::RadioButton("Uniform", scaleFac==Uniform)) scaleFac=Uniform;
 	if (scaleFac != Uniform) ImGui::BeginDisabled();
@@ -125,12 +126,15 @@ void ImFacetScale::Apply(Action action)
 	case Coords:
 		if (!Util::getNumber(&invariant.x, invariantPointInput[X])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid X coordinate");
+			return;
 		}
 		if (!Util::getNumber(&invariant.y, invariantPointInput[Y])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid Y coordinate");
+			return;
 		}
 		if (!Util::getNumber(&invariant.z, invariantPointInput[Z])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid Z coordinate");
+			return;
 		}
 		break;
 	case Vertex:
@@ -153,6 +157,7 @@ void ImFacetScale::Apply(Action action)
 		break;
 	default:
 		ImIOWrappers::InfoPopup("Error", "Select an invariant definition mode.");
+		return;
 	}
 	
 	switch (scaleFac) {
@@ -165,12 +170,15 @@ void ImFacetScale::Apply(Action action)
 	case Distorted:
 		if (!Util::getNumber(&distortedScaleFactor[X], distortedScaleFactorInput[X])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid X scale factor number");
+			return;
 		}
 		if (!Util::getNumber(&distortedScaleFactor[Y], distortedScaleFactorInput[Y])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid Y scale factor number");
+			return;
 		}
 		if (!Util::getNumber(&distortedScaleFactor[Z], distortedScaleFactorInput[Z])) {
 			ImIOWrappers::InfoPopup("Error", "Invalid Z scale factor number");
+			return;
 		}
 		break;
 	}

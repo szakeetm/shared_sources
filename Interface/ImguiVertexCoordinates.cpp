@@ -10,7 +10,7 @@ void ImVertexCoordinates::Draw()
 	if (!drawn) return;
 	ImGui::SetNextWindowSize(ImVec2(txtW * 50, txtH * 20), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Vertex coordinates", &drawn, ImGuiWindowFlags_NoSavedSettings);
-	ImGui::BeginChild("###VCTC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.3 * txtH), ImGuiChildFlags_Border);
+	ImGui::BeginChild("###VCTC", ImVec2(0, ImGui::GetContentRegionAvail().y - 1.3f * txtH), ImGuiChildFlags_Border);
 	DrawTable();
 	ImGui::EndChild();
 	if (ImGui::Button("X")) {
@@ -62,7 +62,7 @@ void ImVertexCoordinates::DrawTable()
 		ImGui::TableSetupColumn("Z");
 		ImGui::TableHeadersRow();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1));  // Adjusts row height
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0, txtH * 0.1f));  // Adjusts row height
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));     // No padding between cells
 
 		for (vCoords& v : data) {
@@ -91,15 +91,8 @@ void ImVertexCoordinates::DrawTable()
 
 void ImVertexCoordinates::ApplyButtonPress()
 {
-	mApp->imWnd->popup.Open("Apply?", "Apply changes to geometry?", { std::make_shared<ImIOWrappers::ImButtonFunc>("Ok", ([this]() { Apply(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter),
-		std::make_shared<ImIOWrappers::ImButtonInt>("Cancel",0,ImGuiKey_Escape)});
-}
-
-void ImVertexCoordinates::Apply()
-{
 	size_t row = 1; // user facing so indexing from 1
-	// using two loops to prevent partial completion
-	for (vCoords& v : data) { // first loop to verify
+	for (vCoords& v : data) {
 		if (!Util::getNumber(&v.x, v.xIn)) {
 			ImIOWrappers::InfoPopup("Error", fmt::format("Invalid X coordinate in row {}", row));
 			return;
@@ -113,6 +106,12 @@ void ImVertexCoordinates::Apply()
 			return;
 		}
 	}
+	mApp->imWnd->popup.Open("Apply?", "Apply changes to geometry?", { std::make_shared<ImIOWrappers::ImButtonFunc>("Ok", ([this]() { Apply(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter),
+		std::make_shared<ImIOWrappers::ImButtonInt>("Cancel",0,ImGuiKey_Escape)});
+}
+
+void ImVertexCoordinates::Apply()
+{
 	LockWrapper lW(mApp->imguiRenderLock);
 	if (!mApp->AskToReset(&mApp->worker)) return;
 

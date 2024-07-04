@@ -1,11 +1,5 @@
-// Copyright (c) 2011 rubicon IT GmbH
-#ifndef _GLWINDOWH_
-#define _GLWINDOWH_
-
-//#include <SDL2/SDL.h>
-//#include <SDL2/SDL_opengl.h>
+#pragma once
 #include "GLContainer.h"
-//#include "GLMenu.h"
 class GLMenu;
 #include <string>
 
@@ -138,5 +132,3 @@ private:
   size_t lastClick;
 
 };
-
-#endif /* _GLWINDOWH_ */

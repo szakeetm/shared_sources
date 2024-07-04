@@ -13,11 +13,6 @@
 #include "../../src/SynRad.h"
 #endif
 
-void ImFacetMove::Init(Interface* mApp_, InterfaceGeometry* interfGeom_) {
-    mApp = mApp_;
-    interfGeom = interfGeom_;
-}
-
 void ImFacetMove::Draw()
 {
     if (!drawn) return;

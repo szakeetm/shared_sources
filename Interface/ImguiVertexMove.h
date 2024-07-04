@@ -18,8 +18,8 @@ protected:
 		directionDist
 	};
 	MovementMode mode = absOffset;
-	std::string xIn, yIn, zIn, dIn;
-	double x, y, z, d;
+	std::string xIn = "", yIn = "", zIn = "", dIn = "";
+	double x = 0, y = 0, z = 0, d = 0;
 	std::string baseMsg="Nothing chosen", dirMsg = "Choose base first";
 	Vector3d baseLocation;
 	bool selectedBase = false;

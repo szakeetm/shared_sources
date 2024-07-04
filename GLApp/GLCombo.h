@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLCOMBOH_
 #define _GLCOMBOH_
 

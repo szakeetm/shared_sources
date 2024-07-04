@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLToolkit.h"
 #include "Helper/MathTools.h" //Min max saturate
 #include "GLFont.h"
@@ -710,7 +710,7 @@ void GLToolkit::DrawBorder(const int x,const int y,const int width,
     _glVertex2i(x+width,y);
     glEnd();
 
-    #if defined(_DEBUG)
+    #if defined(DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -759,7 +759,7 @@ void GLToolkit::DrawBorder(const int x,const int y,const int width,
     _glVertex2i(x,y+height);
     glEnd();
 
-    #if defined(_DEBUG)
+    #if defined(DEBUG)
       theApp->nbLine+=4;
     #endif
 
@@ -792,7 +792,7 @@ void GLToolkit::DrawBox(const int x,const int y,const int width,const int height
   glVertex2i(x,y+height);
   glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly++;
 #endif
 

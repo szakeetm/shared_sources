@@ -23,27 +23,26 @@ public:
 	bool IsPlotted(plotTabs tab, size_t facetId);
 	void RefreshFacetLists();
 	void Reset(); // hard reset, retain no data
-	void UpdateOnFacetChange();
+	void UpdatePlotter();
 protected:
 	//functions
 	void OnShow() override;
 	void DrawPlot();
-	void RemovePlot(int idx, plotTabs tab);
-	void AddPlot(int idx);
-	bool IsPlotted(int idx);
+	void RemovePlot(size_t idx, plotTabs tab);
+	void AddPlot(size_t idx);
+	bool IsPlotted(size_t idx);
 	void DrawMenuBar();
 	void RefreshPlots();
 	void Export(bool toFile, bool plottedOnly);
-	void ShowFacet(int idx, bool add);
+	void ShowFacet(size_t idx, bool add);
 	
 
 	//types
 	class ImHistogramSettings : public ImWindow {
 	public:
 		void Draw();
-		float width;
 		void UpdateOnFacetChange();
-		ImHistogramPlotter* parent;
+		ImHistogramPlotter* parent = nullptr;
 		bool Apply();
 		void DrawSettingsGroup(HistogramParams& set, bool global = false, bool disabled = false);
 		void EvaluateMixedState();
@@ -52,6 +51,7 @@ protected:
 
 		HistogramParams globalHistSet, facetHistSet;
 
+		float width = 100;
 		short globalRecordBounce = 0;
 		std::string globalBouncesMaxInput = "10000";
 		std::string globalBouncesBinSizeInput = "1";
@@ -101,7 +101,6 @@ protected:
 	};
 
 	//variables
-	InterfaceGeometry* interfGeom;
 	plotTabs plotTab = bounces, prevPlotTab = none;
 	std::string xAxisName = "Number of bounces";
 	bool normalize = false;

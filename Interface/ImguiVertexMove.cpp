@@ -29,7 +29,7 @@ void ImVertexMove::Draw() {
 	ImGui::SetNextItemWidth(txtW * 20);
 	ImGui::InputText("cm###zIn", &zIn);
 
-	ImGui::BeginChild("###MVD", ImVec2(0, ImGui::GetContentRegionAvail().y-txtH*1.3),ImGuiChildFlags_Border);
+	ImGui::BeginChild("###MVD", ImVec2(0, ImGui::GetContentRegionAvail().y-txtH*1.3f),ImGuiChildFlags_Border);
 
 	ImGui::Text("In direction");
 	if (mode != directionDist)	ImGui::BeginDisabled();
@@ -178,7 +178,7 @@ void ImVertexMove::ApplyButtonPress(bool copy)
 			ImIOWrappers::InfoPopup("Error", "Invalid offset distance");
 			return;
 		}
-		if (x == y == z == 0.0) {
+		if (x == 0.0 && y == 0.0 && z == 0.0) {
 			ImIOWrappers::InfoPopup("Error", "Direction can't be a null-vector");
 			return;
 		}

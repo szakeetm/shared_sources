@@ -29,11 +29,13 @@ void ImFacetMirrorProject::Draw()
 	if (mode != planeOfFacet) ImGui::BeginDisabled();
 	ImGui::SetNextItemWidth(txtW * 6);
 	ImGui::InputText("###FPDMfacet", &facetIdInput); ImGui::SameLine();
+	if (mode != planeOfFacet) ImGui::EndDisabled();
 	if (ImGui::Button("<-Get selected")) {
 		if (interfGeom->GetNbSelectedFacets() != 1) {
-			ImIOWrappers::InfoPopup("Error", "Select exactly one vacet.");
+			ImIOWrappers::InfoPopup("Error", "Select exactly one facet.");
 		}
 		else {
+			mode = planeOfFacet;
 			for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
 				if (interfGeom->GetFacet(i)->selected) {
 					facetId = i;
@@ -43,7 +45,6 @@ void ImFacetMirrorProject::Draw()
 			facetIdInput = fmt::format("{}", facetId + 1);
 		}
 	}
-	if (mode != planeOfFacet) ImGui::EndDisabled();
 	if(ImGui::RadioButton("Define by 3 selected vertices", mode == byVerts)) mode = byVerts;
 	if(ImGui::RadioButton("Define by plane equation", mode == byEqation)) mode = byEqation;
 	if (mode != byEqation) ImGui::BeginDisabled();
@@ -166,15 +167,16 @@ void ImFacetMirrorProject::DoMirrorProject(Action action, bool copy)
 			ImIOWrappers::InfoPopup("Error", "Invalid D coefficient");
 			return;
 		}
-		if ((a == 0.0) && (b == 0.0) && (c == 0.0) && (d == 0.0)) {
+		if ((a == 0.0) && (b == 0.0) && (c == 0.0)) {
 			ImIOWrappers::InfoPopup("Error", "A, B, C are all zero.That's not a plane.");
 			return;
 		}
 		N.x = a; N.y = b; N.z = c;
-		P0.x = 0.0; P0.y = 0; P0.z = 0;
-		if (a != 0) P0.x = -d / a;
-		else if (b != 0) P0.y = -d / b;
-		else if (c != 0) P0.z = -d / c;
+		N=N.Normalized();
+		P0.x = 0.0; P0.y = 0.0; P0.z = 0.0;
+		if (a != 0.0) P0.x = -d / a;
+		else if (b != 0.0) P0.y = -d / b;
+		else if (c != 0.0) P0.z = -d / c;
 		break;
 	default:
 		ImIOWrappers::InfoPopup("Error", "Select a plane definition mode.");

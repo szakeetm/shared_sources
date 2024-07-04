@@ -29,7 +29,7 @@ void ImTexturePlotter::Draw()
 	tableFlags |= resizableColumns ? ImGuiTableFlags_Resizable : 0;
 	tableFlags |= fitToWindow ? 0 : ImGuiTableFlags_ScrollX;
 	
-	ImGui::SetNextWindowSizeConstraints(ImVec2(78 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
+	ImGui::SetNextWindowSizeConstraints(ImVec2(50 * txtW, 15 * txtH), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin(name.c_str(), &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
 	DrawMenuBar();
 	ImGui::BeginChild("##TPTab", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5f * txtH),true);
@@ -68,12 +68,6 @@ void ImTexturePlotter::Hide()
 	if (selFacet != nullptr) selFacet->UnselectElem();
 }
 
-void ImTexturePlotter::Init(Interface* mApp_)
-{
-	mApp = mApp_;
-	interfGeom = mApp->worker.GetGeometry();
-}
-
 void ImTexturePlotter::UpdateOnFacetChange(const std::vector<size_t>& selectedFacets)
 {
 	if (selectedFacets.size() > 0) {
@@ -108,10 +102,13 @@ void ImTexturePlotter::OnShow()
 void ImTexturePlotter::DrawTextureTable()
 {
 	if (width < 1 || height < 1) return;
+#ifdef DEBUG // in debug mode imgui has an assert that will trigger above 511 columns, actual number is limited by capacity of type int 
 	if (width > 511) {
 		ImGui::TextColored(ImVec4(1, 0, 0, 1), "Unsuported table width");
 		return;
 	}
+#endif
+
 
 	static ImVec2 selectionStart;
 	static ImVec2 selectionEnd;
@@ -143,7 +140,7 @@ void ImTexturePlotter::DrawTextureTable()
 		//headers
 		ImGui::TableSetupColumn("v\\u", ImGuiTableColumnFlags_WidthFixed, txtW * 3); // corner
 		for (int i = 0; i < width; ++i) {
-			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0, columnWidth*txtW);
+			ImGui::TableSetupColumn(std::to_string(i + 1).c_str(), 0);//, columnWidth*txtW);
 		}
 		ImGui::TableNextRow();
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, IM_COL32(186, 212, 243, 255));
@@ -164,6 +161,8 @@ void ImTexturePlotter::DrawTextureTable()
 			for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
 				ImGui::TableNextRow();
 				ImGui::TableSetColumnIndex(0); // move to first column
+				ImU32 cell_bg_color = ImGui::GetColorU32(ImVec4(0.78f, 0.87f, 0.98f, 1.0f));
+				ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, cell_bg_color);
 				if (ImGui::Selectable(std::to_string(i + 1), false)) {	//label row
 					SelectRow(i);
 					scrollToSelected = false;

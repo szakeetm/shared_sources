@@ -22,9 +22,9 @@ protected:
 	short reflectionCheck = 2;
 	short transpPassCheck = 2;
 	short directionCheck = 2;
-	double exactlyValue;
-	double minValue;
-	double maxValue;
+	double exactlyValue = 0;
+	double minValue = 0;
+	double maxValue = 0;
 	std::string exactlyInput = "";
 	std::string minInput = "";
 	std::string maxInput = "";

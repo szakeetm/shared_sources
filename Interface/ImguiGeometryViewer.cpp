@@ -19,7 +19,7 @@ void ImGeoViewer::Draw()
 	availableSpace = ImMath::SubstractVec2(ImGui::GetWindowSize(), ImVec2(2*margin, margin+22));
 	availableTLcorner = ImMath::AddVec2(ImGui::GetWindowPos(),ImVec2(margin,0));
 
-	glViewer->SetBounds(availableTLcorner.x, availableTLcorner.y, availableSpace.x, availableSpace.y);
+	glViewer->SetBounds(static_cast<int>(availableTLcorner.x), static_cast<int>(availableTLcorner.y), static_cast<int>(availableSpace.x), static_cast<int>(availableSpace.y));
 	// event passthrough when window is in focus and viewer is hovered
 	if (ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImMath::IsInsideVec2(ImMath::AddVec2(availableTLcorner, ImVec2(0, 22)), ImMath::AddVec2(availableTLcorner, ImMath::AddVec2(availableSpace, ImVec2(0, 22))), ImGui::GetMousePos())) {
 		mApp->imWnd->skipImGuiEvents = true;

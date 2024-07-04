@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLFont.h"
 #include "GLToolkit.h"
 #include "GLApp.h"
@@ -237,7 +237,7 @@ void GLFont2D::GLDrawLargeText(int cx,int cy,const char *text,float sizeFactor,b
   
   glEnd();
   //glScalef(1.0f/factor,1.0f/factor,1.0f/factor);
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -297,7 +297,7 @@ void GLFont2D::GLDrawText(const int cx,const int cy,const char *text,const bool 
   }
   glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -346,7 +346,7 @@ void GLFont2D::GLDrawTextFast(int cx,int cy,const char *text) {
   }
   glEnd();
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 
@@ -407,7 +407,7 @@ void GLFont2D::GLDrawTextV(int x,int y,char *text,bool loadMatrix) {
 
   }
 
-#if defined(_DEBUG)
+#if defined(DEBUG)
   theApp->nbPoly+=lgth;
 #endif
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLWINDOWMANAGERH_
 #define _GLWINDOWMANAGERH_
 
@@ -34,15 +34,6 @@ public:
   static void      BringToFront(GLWindow *wnd);
   static void      SetDefault();
 
-  // Key info
-  //static bool      IsCtrlDown();
-  //static bool      IsShiftDown();
-  //static bool      IsAltDown();
-  //static bool      IsCapsLockOn();
-  //static bool      IsSpaceDown();
-  //static bool		IsTabDown();
-  //static int	GetModState();
-
   // Registering
   static void RegisterWindow(GLWindow *wnd);
   static void UnRegisterWindow(GLWindow *wnd);
@@ -51,6 +42,7 @@ public:
   // Processing
   static bool RestoreDeviceObjects(int width,int height);
   static bool ManageEvent(SDL_Event *evt);
+  static bool ManageEvent(SDL_Event *evt, bool skipShortcuts);
   static bool SearchKeyboardShortcut(SDL_Event *evt,bool processAcc);
   static void RestoreDeviceObjects();
   static void InvalidateDeviceObjects();

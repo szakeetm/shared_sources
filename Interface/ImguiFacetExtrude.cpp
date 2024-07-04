@@ -22,13 +22,15 @@ void ImFacetExtrude::Draw()
 	ImGui::SetNextWindowPos(ImVec2(txtW * 5, txtH * 3), ImGuiCond_FirstUseEver);
 	ImGui::Begin("Extrude Facet", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
-	ImGui::BeginChild("###EF1", ImVec2(0,txtH*4.25), true);
+	ImGui::BeginChild("###EF1", ImVec2(0,txtH*4.25f), true);
 	ImGui::TextDisabled("Towards/against normal");
 	if (ImGui::RadioButton("Towards normal", mode == facetNormal)) mode = facetNormal;
 	ImGui::SameLine();
 	if (ImGui::RadioButton("Against normal", mode == facetAntinormal)) mode = facetAntinormal;
 	if (!(mode == facetNormal || mode == facetAntinormal)) ImGui::BeginDisabled();
 	ImGui::InputTextLLabel("extrusion length:", &facetLengthInput, 0, txtW * 6);
+	ImGui::SameLine();
+	ImGui::Text("cm");
 	if (!(mode == facetNormal || mode == facetAntinormal)) ImGui::EndDisabled();
 	ImGui::EndChild();
 
@@ -110,13 +112,13 @@ void ImFacetExtrude::Draw()
 	}
 
 	ImGui::Text("dX:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DX", &curveDXInput); ImGui::SameLine();
 	ImGui::Text("cm\tdY:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DY", &curveDYInput); ImGui::SameLine();
 	ImGui::Text("cm\tdZ:"); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 6);
+	ImGui::SetNextItemWidth(txtW * 7);
 	ImGui::InputText("###EF3DZ", &curveDZInput); ImGui::SameLine();
 	ImGui::Text("cm");
 
@@ -248,77 +250,77 @@ std::optional<size_t> ImFacetExtrude::AssertOneFacetSelected()
 	else return selectedFacets[0];
 }
 
-void ImFacetExtrude::PreProcessExtrude() {
+bool ImFacetExtrude::PreProcessExtrude() {
 	
 	if (mode == directionVector && !Util::getNumber(&pathDX, pathDXInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dX value");
-		return;
+		return false;
 	}
 	if (mode == directionVector && !Util::getNumber(&pathDY, pathDYInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dY value");
-		return;
+		return false;
 	}
 	if (mode == directionVector && !Util::getNumber(&pathDZ, pathDZInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid direction vector dZ value");
-		return;
+		return false;
 	}
 
 	if ((mode == facetNormal || mode == facetAntinormal)
 		&& !Util::getNumber(&facetLength, facetLengthInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid extrusion length value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveX0, curveX0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base X0 value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveY0, curveY0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base Y0 value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveZ0, curveZ0Input)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius base Z0 value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDX, curveDXInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dX value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDY, curveDYInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dY value");
-		return;
+		return false;
 	}if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveDZ, curveDZInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid radius direction dZ value");
-		return;
+		return false;
 	}
 
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&radius, radiusInput)){
 		ImIOWrappers::InfoPopup("Error","Invalid radius length value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&angleDeg, angleDegInput)){
 		ImIOWrappers::InfoPopup("Error", "Invalid total angle (deg) value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&curveLength, curveLengthInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid total length value");
-		return;
+		return false;
 	}
 	if ((mode == curveNormal || mode == curveAntinormal)
 		&& !Util::getNumber(&steps, stepsInput)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid 'number of steps' value");
-		return;
+		return false;
 	}
 	/*
 	int mode;
@@ -329,22 +331,22 @@ void ImFacetExtrude::PreProcessExtrude() {
 	std::string warning = "";
 	if ((mode == directionVector) && pathDX * pathDX + pathDY * pathDY + pathDZ * pathDZ < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Direction is a null-vector");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && curveDX * curveDX + curveDY * curveDY + curveDZ * curveDZ < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Direction is a null-vector");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && std::abs(radius) < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Radius length can't be 0");
-		return;
+		return false;
 	} if ((mode == facetNormal || mode == facetAntinormal) && std::abs(facetLength) < 1E-8) {
 		ImIOWrappers::InfoPopup("Error", "Extrusion length can't be 0");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && (std::abs(angleDeg) < 1E-8 || angleDeg > 360)) {
 		ImIOWrappers::InfoPopup("Error", "Total angle can't be 0");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && !(steps > 0)) {
 		ImIOWrappers::InfoPopup("Error", "Invalid number of steps");
-		return;
+		return false;
 	} if ((mode == curveAntinormal || mode == curveNormal) && (angleDeg < -360 || angleDeg>360)) {
 		warning.append("Total angle outside -360..+360 degree. Are you sure?\n");
 	} if ((mode == curveAntinormal || mode == curveNormal) && (steps > 50)) {
@@ -353,9 +355,9 @@ void ImFacetExtrude::PreProcessExtrude() {
 	if (warning != "") {
 		if (warning[warning.size() - 1] == '\n') warning.erase(warning.end() - 1);
 		mApp->imWnd->popup.Open("Warning", warning, { std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
-		return;
+		return false;
 	}
-	DoExtrude();
+	return true;
 }
 
 void ImFacetExtrude::DoExtrude()
@@ -404,16 +406,17 @@ void ImFacetExtrude::ExtrudeButtonPress()
 		ImIOWrappers::InfoPopup("Nothing to move", "No facets selected");
 		return;
 	}
-	else if (mode == none) {
+	if (mode == none) {
 		ImIOWrappers::InfoPopup("Error", "No mode selected");
 		return;
 	}
-	else if (interfGeom->GetNbSelectedFacets() > 1) {
+	if (!PreProcessExtrude()) return;
+	if (interfGeom->GetNbSelectedFacets() > 1) {
 		mApp->imWnd->popup.Open("Extrusion of more than one facet", fmt::format("Extrude {} facets at once?", interfGeom->GetNbSelectedFacets()),
-			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { PreProcessExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
+			{ std::make_shared<ImIOWrappers::ImButtonFunc>("Yes", ([this]()->void { DoExtrude(); }), ImGuiKey_Enter, ImGuiKey_KeypadEnter), std::make_shared<ImIOWrappers::ImButtonInt>("Cancel") });
 		return;
 	}
-	PreProcessExtrude();
+	DoExtrude();
 }
 
 void ImFacetExtrude::GetBaseButtonPress()
@@ -425,9 +428,9 @@ void ImFacetExtrude::GetBaseButtonPress()
 			pathDY=(interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ=(interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);
 
-			pathDXInput = fmt::format("{}", pathDX);
-			pathDYInput = fmt::format("{}", pathDY);
-			pathDZInput = fmt::format("{}", pathDZ);
+			pathDXInput = fmt::format("{:.3g}", pathDX);
+			pathDYInput = fmt::format("{:.3g}", pathDY);
+			pathDZInput = fmt::format("{:.3g}", pathDZ);
 		}
 	}
 }
@@ -441,9 +444,9 @@ void ImFacetExtrude::GetDirectionButtonPress()
 			pathDY = (interfGeom->GetVertex(dirId)->y - interfGeom->GetVertex(baseId)->y);
 			pathDZ = (interfGeom->GetVertex(dirId)->z - interfGeom->GetVertex(baseId)->z);
 
-			pathDXInput = fmt::format("{}", pathDX);
-			pathDYInput = fmt::format("{}", pathDY);
-			pathDZInput = fmt::format("{}", pathDZ);
+			pathDXInput = fmt::format("{:.3g}", pathDX);
+			pathDYInput = fmt::format("{:.3g}", pathDY);
+			pathDZInput = fmt::format("{:.3g}", pathDZ);
 		}
 	}
 }
@@ -457,9 +460,9 @@ void ImFacetExtrude::FacetCenterButtonPress()
 		curveY0=(center3d.y);
 		curveZ0=(center3d.z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -474,9 +477,9 @@ void ImFacetExtrude::FacetIndex1ButtonPress()
 		curveY0=(interfGeom->GetVertex(vertexId)->y);
 		curveZ0=(interfGeom->GetVertex(vertexId)->z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -489,9 +492,9 @@ void ImFacetExtrude::CurveGetBaseButtonPress()
 		curveY0=(interfGeom->GetVertex(*foundId)->y);
 		curveZ0=(interfGeom->GetVertex(*foundId)->z);
 
-		curveX0Input = fmt::format("{}", curveX0);
-		curveY0Input = fmt::format("{}", curveY0);
-		curveZ0Input = fmt::format("{}", curveZ0);
+		curveX0Input = fmt::format("{:.3g}", curveX0);
+		curveY0Input = fmt::format("{:.3g}", curveY0);
+		curveZ0Input = fmt::format("{:.3g}", curveZ0);
 	}
 }
 
@@ -504,9 +507,9 @@ void ImFacetExtrude::CurveFacetUButtonPress()
 		curveDY=(interfGeom->GetFacet(*foundId)->sh.U.y);
 		curveDZ=(interfGeom->GetFacet(*foundId)->sh.U.z);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -519,9 +522,9 @@ void ImFacetExtrude::CurveFacetVButtonPress()
 		curveDY = (interfGeom->GetFacet(*foundId)->sh.V.y);
 		curveDZ = (interfGeom->GetFacet(*foundId)->sh.V.z);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -534,9 +537,9 @@ void ImFacetExtrude::CurveGetDirectionButtonPress()
 			curveDY=(interfGeom->GetVertex(*foundId)->y - curveY0);
 			curveDZ=(interfGeom->GetVertex(*foundId)->z - curveZ0);
 
-			curveDXInput = fmt::format("{}", curveDX);
-			curveDYInput = fmt::format("{}", curveDY);
-			curveDZInput = fmt::format("{}", curveDZ);
+			curveDXInput = fmt::format("{:.3g}", curveDX);
+			curveDYInput = fmt::format("{:.3g}", curveDY);
+			curveDZInput = fmt::format("{:.3g}", curveDZ);
 		}
 	}
 }
@@ -550,9 +553,9 @@ void ImFacetExtrude::FacetNXButtonPress()
 		curveDY=(interfGeom->GetFacet(*foundId)->sh.N.z);
 		curveDZ=(-interfGeom->GetFacet(*foundId)->sh.N.y);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -565,9 +568,9 @@ void ImFacetExtrude::FacetNYButtonPress()
 		curveDY = 0;
 		curveDZ = (interfGeom->GetFacet(*foundId)->sh.N.x);
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }
 
@@ -580,8 +583,8 @@ void ImFacetExtrude::FacetNZButtonPress()
 		curveDY = (-interfGeom->GetFacet(*foundId)->sh.N.x);
 		curveDZ = 0;
 
-		curveDXInput = fmt::format("{}", curveDX);
-		curveDYInput = fmt::format("{}", curveDY);
-		curveDZInput = fmt::format("{}", curveDZ);
+		curveDXInput = fmt::format("{:.3g}", curveDX);
+		curveDYInput = fmt::format("{:.3g}", curveDY);
+		curveDZInput = fmt::format("{:.3g}", curveDZ);
 	}
 }

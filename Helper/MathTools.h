@@ -1,12 +1,12 @@
 
 #pragma once
-
+#include <cmath>
 #include <vector>
 #include <algorithm> //std::find
 #include <string>
 #include <cassert>
 #include <Vector.h>
-#include <cmath>
+
 
 bool    IsEqual(const double a, const double b, double toleranceRatio=1E-6);
 double RoundAngle(double a);
@@ -240,6 +240,7 @@ std::vector<T>& operator+=(std::vector<T>& lhs, const std::vector<T>& rhs)
 }
 namespace MathHelper {
 	double mapRange(double value, double inMin, double inMax, double outMin, double outMax);
+	unsigned int NextPowOfTwo(unsigned int val);
 }
 
 

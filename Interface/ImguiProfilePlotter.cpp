@@ -22,7 +22,6 @@ void ImProfilePlotter::Draw()
 		FacetHiglighting(drawn ? identProfilesInGeom : false);
 	}
 	if (!drawn) return;
-	float dummyWidth;
 	ImGui::SetNextWindowPos(ImVec2(3 * txtW, 4 * txtW), ImGuiCond_FirstUseEver);
 	ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 82, txtH * 20), ImVec2(1000 * txtW, 100 * txtH));
 	ImGui::Begin("Profile Plotter", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_MenuBar);
@@ -77,12 +76,6 @@ void ImProfilePlotter::Draw()
 	}
 	ImGui::EndGroup();
 	ImGui::End();
-}
-
-void ImProfilePlotter::Init(Interface* mApp_)
-{
-	ImWindow::Init(mApp_);
-	interfGeom = mApp->worker.GetGeometry();
 }
 
 void ImProfilePlotter::LoadSettingsFromFile(bool log, std::vector<int> plotted)
@@ -144,7 +137,9 @@ void ImProfilePlotter::DrawProfileGraph()
 	lockYtoZero = data.size() == 0 && !drawManual;
 	if (colorBlind) ImPlot::PushColormap(ImPlotColormap_BrBG); // colormap without green for red-green colorblindness
 	ImPlot::PushStyleVar(ImPlotStyleVar_LineWeight, lineWidth);
-	if (ImPlot::BeginPlot("##ProfilePlot", "", 0, ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5 * txtH), 0, ImPlotAxisFlags_AutoFit, ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0))) {
+	if (ImPlot::BeginPlot("##ProfilePlot", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetWindowSize().y - 4.5f * txtH))) {
+		ImPlot::SetupAxis(ImAxis_X1, "", ImPlotAxisFlags_AutoFit);
+		ImPlot::SetupAxis(ImAxis_Y1, "", ImPlotAxisFlags_AutoFit | (setLog ? ImPlotScale_Log10 : 0));
 		if (setLog) ImPlot::SetupAxisScale(ImAxis_Y1, ImPlotScale_Log10);
 		for (auto& profile : data) {
 			std::string name = "F#" + std::to_string(profile.id+1);
@@ -173,7 +168,7 @@ void ImProfilePlotter::DrawProfileGraph()
 	}
 }
 
-void ImProfilePlotter::ShowFacet(int id, bool add)
+void ImProfilePlotter::ShowFacet(size_t id, bool add)
 {
 	if(!add) interfGeom->UnselectAll();
 	if (id != -1) {
@@ -182,7 +177,7 @@ void ImProfilePlotter::ShowFacet(int id, bool add)
 	UpdateSelection();
 }
 
-void ImProfilePlotter::RemoveCurve(int id)
+void ImProfilePlotter::RemoveCurve(size_t id)
 {
 	updateHilights = true;
 	if (data.size() == 0) return;

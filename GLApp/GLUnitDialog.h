@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #ifndef _GLUNITDIALOGH_
 #define _GLUNITDIALOGH_
 //#include <SDL2/SDL_opengl.h>

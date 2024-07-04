@@ -1,4 +1,4 @@
-// Copyright (c) 2011 rubicon IT GmbH
+
 #include "GLChart.h"
 #include "../GLMenu.h"
 #include "../GLToolkit.h"
@@ -14,9 +14,7 @@
 #include "../Helper/StringHelper.h"
 #include "../Buffer_shared.h" //PROFILE_SIZE
 
-//#include <malloc.h>
 #include <list>
-#include <cmath>
 #include <sstream>
 #include <cstring> //strcpy, etc.
 

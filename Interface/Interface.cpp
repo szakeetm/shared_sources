@@ -1,13 +1,9 @@
-
 #include <Interface.h>
-//#include <direct.h> //_getcwd()
-//#include <io.h> // Check for recovery
 
 #ifdef _WIN32
-
+// Nothing currently
 #else
-//#include <sys/sysinfo.h>
-#include <unistd.h>
+#include <unistd.h> //POSIX functions
 #endif
 
 #include <filesystem>
@@ -63,8 +59,6 @@
 #include "ParticleLogger.h"
 #include "CrossSection.h"
 
-//#include "NativeFileDialog/nfd.h"
-
 //Updater
 #include "File.h" //File utils (Get extension, etc)
 
@@ -73,19 +67,11 @@
 #include "Helper/StringHelper.h" //abbreviate long file paths in recent menus
 #include "Helper/FormatHelper.h" //unit formatting
 
-#include "../../src/versionId.h"
+#include "../../src/versionId.h" //Break out from src_shared
 #include "ImguiWindow.h"
 
 extern Worker worker;
 extern std::vector<std::string> formulaPrefixes;
-//extern const char* appTitle;
-
-/*
-extern const char *fileLFilters;
-extern const char *fileInsFilters;
-extern const char *fileSFilters;
-extern const char *fileDesFilters;
-*/
 extern char fileLFilters[];
 extern char fileInsFilters[];
 extern char fileSaveFilters[];
@@ -99,13 +85,22 @@ extern int cWidth[];
 extern const char *cName[];
 
 
-Interface::Interface() : GLApplication(){
+Interface::Interface() : GLApplication() {
+#if defined(__APPLE__)
+    setlocale(LC_ALL, "en_US.UTF-8");
+#else
+    std::setlocale(LC_ALL, "en_US.UTF-8");
+#endif
+    
     //Get number of cores
 #ifdef _WIN32
     compressProcessHandle = nullptr;
     SYSTEM_INFO sysinfo;
     GetSystemInfo(&sysinfo);
     numCPU = (size_t) sysinfo.dwNumberOfProcessors;
+    //Set console to UTF-8
+    SetConsoleCP(CP_UTF8);
+    SetConsoleOutputCP(CP_UTF8);
 #else
     numCPU = (unsigned int)sysconf(_SC_NPROCESSORS_ONLN);
 #endif
@@ -138,7 +133,7 @@ Interface::Interface() : GLApplication(){
 
     idSelection = 0;
 
-#if defined(_DEBUG) || defined(DEBUG)
+#if defined(DEBUG)
     nbProc = 1;
 #else
     nbProc = numCPU; //numCPU also displayed in Global Settings
@@ -150,7 +145,7 @@ Interface::Interface() : GLApplication(){
     imWnd = nullptr;
 
     m_strWindowTitle = appTitle;
-    wnd->SetBackgroundColor(212, 208, 200);
+    masterWindowPtr->SetBackgroundColor(212, 208, 200);
     m_bResizable = true;
     m_minScreenWidth = 800;
     m_minScreenHeight = 600;
@@ -224,6 +219,7 @@ void Interface::ResetSimulation(bool askConfirm) {
         if (mApp->imWnd) mApp->ImRefresh();
         if(formulaEditor) formulaEditor->UpdateValues();
         if(particleLogger) particleLogger->UpdateStatus();
+        if (mApp->imWnd && mApp->imWnd->partLog.IsVisible()) mApp->imWnd->partLog.UpdateStatus();
     }
     UpdatePlotters();
 }
@@ -498,7 +494,7 @@ void Interface::AnimateViewerChange(int next) {
         int x2 = lround(xs2 + t * (xe2 - xs2));
         int y2 = lround(ys2 + t * (ye2 - ys2));
         viewers[next]->SetBounds(x1, y1, x2 - x1, y2 - y1);
-        wnd->Paint();
+        masterWindowPtr->Paint();
         // Overides moving component
         viewers[next]->Paint();
         // Paint modeless
@@ -593,7 +589,7 @@ void Interface::OneTimeSceneInit_shared_pre() {
 
 
     menu = new GLMenuBar(0);
-    wnd->SetMenuBar(menu);
+    masterWindowPtr->SetMenuBar(menu);
     menu->Add("File");
     menu->GetSubMenu("File")->Add("New, empty geometry", MENU_FILE_NEW);
     menu->GetSubMenu("File")->Add("&Load", MENU_FILE_LOAD, SDLK_o, CTRL_MODIFIER);
@@ -1285,7 +1281,7 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                                 GLMessageBox::Display("Empty selection", "Error", GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == -2) {
                                 GLMessageBox::Display(
-                                        "All selected facets must have a mesh with boudary correction enabled", "Error",
+                                        "All selected facets must have a texture", "Error",
                                         GLDLG_OK, GLDLG_ICONERROR);
                             } else if (err == 0) {
 
@@ -1479,11 +1475,15 @@ bool Interface::ProcessMessage_shared(GLComponent *src, int message) {
                     interfGeom->SelectIsolatedVertices();
                     return true;
                 case MENU_VERTEX_CLEAR_ISOLATED:
-                    interfGeom->DeleteIsolatedVertices(false);
-                    UpdateModelParams();
-                    if (facetCoordinates) facetCoordinates->UpdateFromSelection();
-                    if (vertexCoordinates) vertexCoordinates->Update();
-                    interfGeom->BuildGLList();
+                    if(interfGeom->GetNbIsolatedVertices()) { //First pass, prevents unnecessary simulation reset
+                        if (AskToReset()) { //can renumber facet indices
+                            interfGeom->DeleteIsolatedVertices(false);
+                            UpdateModelParams();
+                            if (facetCoordinates) facetCoordinates->UpdateFromSelection();
+                            if (vertexCoordinates) vertexCoordinates->Update();
+                            interfGeom->BuildGLList();
+                        }
+                    }
                     return true;
                 case MENU_VERTEX_CREATE_POLY_CONVEX:
                     if (AskToReset()) {
@@ -1731,6 +1731,7 @@ Open-source libraries used:
 - pugixml (https://github.com/zeux/pugixml)
 - cereal (https://github.com/USCiLab/cereal)
 - fmt (https://github.com/fmtlib/fmt)
+- stb (https://github.com/nothings/stb)
 )";
                     GLMessageBox::Display(aboutText.str().c_str(), "About", GLDLG_OK, GLDLG_ICONINFO);
                     return true;
@@ -2560,6 +2561,8 @@ int Interface::FrameMove() {
                 formulaEditor->UpdateValues();
             }
             if (particleLogger && particleLogger->IsVisible()) particleLogger->UpdateStatus();
+            if (mApp->imWnd && mApp->imWnd->partLog.IsVisible()) mApp->imWnd->partLog.UpdateStatus();
+
             //lastUpdate = GetTick(); //changed from m_fTime: include update duration
 
             // Update timing measurements
@@ -2798,5 +2801,5 @@ void Interface::RefreshPlotterCombos() {
     //Removes non-present views, rebuilds combobox and refreshes plotted data
     if (histogramPlotter) histogramPlotter->Refresh();
     if (convergencePlotter) convergencePlotter->Refresh();
-    ImRefresh();
+    ImRefresh(); 
 }

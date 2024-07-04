@@ -1,3 +1,4 @@
+#include "MathTools.h"
 
 #include "MathTools.h"
 #include "Random.h"
@@ -269,6 +270,11 @@ PolarToCartesian(const Vector3d& normU, const Vector3d& normV, const Vector3d& n
 
 double MathHelper::mapRange(double value, double inMin, double inMax, double outMin, double outMax) {
 	return outMin + (value - inMin) * (outMax - outMin) / (inMax - inMin);
+}
+
+unsigned int MathHelper::NextPowOfTwo(unsigned int value)
+{
+	return (int)pow(2, ceil(log2(value)));
 }
 
 double GenerateExponentialRnd(const double one_per_lambda, const double rnd) {

@@ -10,7 +10,6 @@
 class ImProfilePlotter : public ImWindow {
 public:
 	void Draw();
-	void Init(Interface* mApp_);
 	void LoadSettingsFromFile(bool log, std::vector<int> plotted);
 	void Refresh();
 	void UpdatePlotter();
@@ -21,8 +20,8 @@ private:
 	void DrawProfileGraph();
 
 	// button actions
-	void ShowFacet(int id = -1, bool add = false);
-	void RemoveCurve(int id);
+	void ShowFacet(size_t id, bool add = false);
+	void RemoveCurve(size_t id);
 	void ComputeProfiles();
 	void FacetHiglighting(bool toggle);
 	void DrawMenuBar();
@@ -40,7 +39,6 @@ private:
 	bool correctForGas = false;
 	bool updateHilights = false;
 
-	InterfaceGeometry* interfGeom;
 	bool colorBlind = false, identProfilesInGeom = false;
 	float lineWidth = 2;
 	std::string expression;

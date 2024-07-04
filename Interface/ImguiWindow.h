@@ -17,7 +17,6 @@
 #include "ImguiTexturePlotter.h"
 #include "ImguiProfilePlotter.h"
 #include "ImguiHistogramPlotter.h"
-#include "ImguiTextureScaling.h"
 #include "ImguiParticleLogger.h"
 #include "ImguiMovingParts.h"
 #include "ImguiMeasureForce.h"
@@ -41,6 +40,7 @@
 
 #if defined(MOLFLOW)
 #include "../../src/MolFlow.h"
+#include "../../src/Interface/ImguiTextureScaling.h"
 #else
 #include "../../src/SynRad.h"
 #endif
@@ -54,6 +54,7 @@ class ImguiWindow {
 public:
     bool forceDrawNextFrame = false;
     bool skipImGuiEvents = false;
+    unsigned int textCursorPos = 0;
     explicit ImguiWindow(GLApplication* app) {this->app = app;};
     void init();
     void destruct();
@@ -100,7 +101,9 @@ public:
     ImTexturePlotter textPlot;
     ImProfilePlotter profPlot;
     ImHistogramPlotter histPlot;
+#if defined(MOLFLOW)
     ImTextureScaling textScale;
+#endif
     ImParticleLogger partLog;
     ImMovingParts movPart;
     ImMeasureForce measForce;
@@ -121,9 +124,12 @@ public:
     ImExplodeFacet expFac;
 
     ImGeoViewer geoView;
+
+    std::string ctrlText = "CTRL";
+    ImGuiKey modifier = ImGuiKey_LeftCtrl;
 protected:
     bool didIinit = false;
-    ImGuiConfigFlags storedConfigFlags;
+    ImGuiConfigFlags storedConfigFlags = 0;
 
-    double start_time; // to keep track how long the ImGui GUI is running
+    double start_time = 0.f; // to keep track how long the ImGui GUI is running
 };
