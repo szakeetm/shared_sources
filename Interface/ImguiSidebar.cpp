@@ -145,7 +145,6 @@ void ImSidebar::ApplyFacetSettings() {
 
     sel->sh.desorbType = fSet.des_idx;
     sel->sh.outgassing = fSet.og / 10;
-    sel->sh.area = fSet.og / fSet.og_area;
     sel->sh.sticking = fSet.sf;
     sel->sh.is2sided = fSet.sides_idx;
     sel->sh.opacity = fSet.opacity;
@@ -174,12 +173,12 @@ void ImSidebar::DrawSectionSelectedFacet()
             ImGui::Text("Desorption"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
             // TODO handle mixed selection
-            if(ImGui::Combo("##Desorption", &fSet.des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0"))
+            if (ImGui::Combo("##Desorption", &fSet.des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0"))
                 fSet.facetSettingsChanged = true;
             if (fSet.des_idx == 3) {
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(txtW * 4);
-                if(ImGui::InputText("##exponent", &fSet.exponentInput))
+                if (ImGui::InputText("##exponent", &fSet.exponentInput))
                     fSet.facetSettingsChanged = true;
             }
 
@@ -217,79 +216,111 @@ void ImSidebar::DrawSectionSelectedFacet()
             }
             ImGui::TreePop();
         }
-        if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) 
+        if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen))
             ImGui::Text("Sticking Factor"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##StickingFactor", &fSet.sfInput)) {
-                if (Util::getNumber(&fSet.sf, fSet.sfInput)) {
-                    // could work incorrectly correctly if area and temperature are changed
-                    fSet.ps = PumpingSpeedFromSticking(fSet.sf, fSet.area, fSet.temp);
-                    fSet.psInput = std::to_string(fSet.ps);
-                    fSet.facetSettingsChanged = true;
-                }
-            }
-            ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##PumpingSpeed", &fSet.psInput)) {
-                if (Util::getNumber(&fSet.ps, fSet.psInput)) {
-                    // could work incorrectly correctly if area and temperature are changed
-                    fSet.sf = StickingFromPumpingSpeed(fSet.ps, fSet.area, fSet.temp);
-                    fSet.sfInput = std::to_string(fSet.sf);
-                    fSet.facetSettingsChanged = true;
-                }
-            }
-            if (fSet.sf < 0 || fSet.sf > 1) { // if sf is out of range display warning
-                ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Sticking factor \u2209[0,1]");
-            }
-            else if (sel && fSet.facetSettingsChanged) { // and only assign sf to facet if it is in range
-            }
-            ImGui::TreePop();
-        }
-#endif
-        {
-            if (ImGui::Combo("Sides", &fSet.sides_idx, "1 Sided\0 2 Sided\0")) {
+        ImGui::SetNextItemWidth(txtW * 10);
+        if (ImGui::InputText("##StickingFactor", &fSet.sfInput)) {
+            if (Util::getNumber(&fSet.sf, fSet.sfInput)) {
+                // could work incorrectly correctly if area and temperature are changed
+                fSet.ps = PumpingSpeedFromSticking(fSet.sf, fSet.area, fSet.temp);
+                fSet.psInput = std::to_string(fSet.ps);
                 fSet.facetSettingsChanged = true;
             }
-            ImGui::Text("Opacity"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
-                if (Util::getNumber(&fSet.opacity, fSet.opacityInput)) { // try to convert it to a number
-                    fSet.facetSettingsChanged = true; // if success set update flag
-                }
+        }
+        ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
+        ImGui::SetNextItemWidth(txtW * 10);
+        if (ImGui::InputText("##PumpingSpeed", &fSet.psInput)) {
+            if (Util::getNumber(&fSet.ps, fSet.psInput)) {
+                // could work incorrectly correctly if area and temperature are changed
+                fSet.sf = StickingFromPumpingSpeed(fSet.ps, fSet.area, fSet.temp);
+                fSet.sfInput = std::to_string(fSet.sf);
+                fSet.facetSettingsChanged = true;
             }
-            if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
-                ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
+        }
+        if (fSet.sf < 0 || fSet.sf > 1) { // if sf is out of range display warning
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Sticking factor \u2209[0,1]");
+        }
+        else if (sel && fSet.facetSettingsChanged) { // and only assign sf to facet if it is in range
+        }
+        ImGui::TreePop();
+    }
+#endif
+    {
+        if (ImGui::Combo("Sides", &fSet.sides_idx, "1 Sided\0 2 Sided\0")) {
+            fSet.facetSettingsChanged = true;
+        }
+        ImGui::Text("Opacity"); ImGui::SameLine();
+        ImGui::SetNextItemWidth(txtW * 10);
+        if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
+            if (Util::getNumber(&fSet.opacity, fSet.opacityInput)) { // try to convert it to a number
+                fSet.facetSettingsChanged = true; // if success set update flag
             }
+        }
+        if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
+        }
 
 #if defined(MOLFLOW)
-            ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
-                if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
-                    fSet.facetSettingsChanged = true;
-                }
-            }
-            if (fSet.temp <= 0) {
-                ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
-            }
-#endif
-            ImGui::BeginDisabled();
-            ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
-            ImGui::EndDisabled();
-
-            if (ImGui::Combo("Profile", &fSet.prof_idx,
-                "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
+        ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
+        ImGui::SetNextItemWidth(txtW * 10);
+        if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
+            if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
                 fSet.facetSettingsChanged = true;
             }
         }
-        bool disabled = !fSet.facetSettingsChanged;
-        if (disabled) ImGui::BeginDisabled();
-        if (ImGui::Button("Apply")) {
-            ApplyFacetSettings();
+        if (fSet.temp <= 0) {
+            ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
         }
-        if (disabled) ImGui::EndDisabled();
-        if (sel == nullptr) ImGui::EndDisabled();
+#endif
+        ImGui::BeginDisabled();
+        ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
+        ImGui::EndDisabled();
+
+        if (ImGui::Combo("Profile", &fSet.prof_idx,
+            "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
+            fSet.facetSettingsChanged = true;
+        }
     }
+    if (ImGui::Button("<<Adv.")) {}
+    ImGui::SameLine();
+    if (ImGui::Button("Details")) {}
+    ImGui::SameLine();
+    if (ImGui::Button("Coords")) {}
+    ImGui::SameLine();
+    bool disabled = !fSet.facetSettingsChanged;
+    if (disabled) ImGui::BeginDisabled();
+    if (ImGui::Button("Apply")) {
+        ApplyFacetSettings();
+    }
+    if (disabled) ImGui::EndDisabled();
+    if (sel == nullptr) ImGui::EndDisabled();
+}
+
+void ImSidebar::UpdateSimulationData() {
+    runningState = mApp->worker.IsRunning();
+    if ((mApp->worker.simuTimer.Elapsed() <= 2.0f) && runningState) {
+        hit_stat = "Starting...";
+        des_stat = "Starting...";
+    }
+    else {
+        double current_avg = 0.0;
+        if (!runningState) current_avg = mApp->hps_runtotal.avg();
+        else current_avg = (current_avg != 0.0) ? current_avg : mApp->hps.last();
+
+        hit_stat = fmt::format("{} ({})",
+            Util::formatInt(mApp->worker.globalStatCache.globalHits.nbMCHit, "hit"),
+            Util::formatPs(current_avg, "hit"));
+
+        current_avg = 0.0;
+        if (!runningState) current_avg = mApp->dps_runtotal.avg();
+        else current_avg = (current_avg != 0.0) ? current_avg : mApp->dps.last();
+
+        des_stat = fmt::format("{} ({})",
+            Util::formatInt(mApp->worker.globalStatCache.globalHits.nbDesorbed, "des"),
+            Util::formatPs(current_avg, "des"));
+        // TODO leaks
+    }
+}
 
 void ImSidebar::DrawSectionSimulation()
 {
@@ -330,89 +361,26 @@ void ImSidebar::DrawSectionSimulation()
         if (mApp->autoFrameMove) {
             ImGui::BeginDisabled();
         }
+        ImGui::SameLine();
         if (ImGui::Button("Update")) {
             mApp->updateRequested = true;
-            //mApp->FrameMove();
         }
         if (mApp->autoFrameMove) {
             ImGui::EndDisabled();
         }
 
-        ImVec2 outer_size = ImVec2(std::max(0.0f, ImGui::GetContentRegionAvail().x), 0.0f);
-        // for layouting Simulation stats are inside a table/grid
-        if (ImGui::BeginTable("simugrid", 2, ImGuiTableFlags_None/*ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
-                                             ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter |
-                                             ImGuiTableFlags_BordersV | ImGuiTableFlags_Resizable |
-                                             ImGuiTableFlags_Reorderable | ImGuiTableFlags_Hideable |
-                                             ImGuiTableFlags_Sortable*/, outer_size)) {
-
-            static std::string hit_stat;
-            static std::string des_stat;
-            bool runningState = mApp->worker.IsRunning();
-            if ((mApp->worker.simuTimer.Elapsed() <= 2.0f) && runningState) {
-                hit_stat = "Starting...";
-                des_stat = "Starting...";
-            }
-            else {
-                double current_avg = 0.0;
-                if (!runningState) current_avg = mApp->hps_runtotal.avg();
-                else current_avg = (current_avg != 0.0) ? current_avg : mApp->hps.last();
-
-                hit_stat = fmt::format("{} ({})",
-                    Util::formatInt(mApp->worker.globalStatCache.globalHits.nbMCHit, "hit"),
-                    Util::formatPs(current_avg, "hit"));
-
-                current_avg = 0.0;
-                if (!runningState) current_avg = mApp->dps_runtotal.avg();
-                else current_avg = (current_avg != 0.0) ? current_avg : mApp->dps.last();
-
-                des_stat = fmt::format("{} ({})",
-                    Util::formatInt(mApp->worker.globalStatCache.globalHits.nbDesorbed, "des"),
-                    Util::formatPs(current_avg, "des"));
-            }
-
-
-            ImGui::TableSetupColumn("name", ImGuiTableColumnFlags_WidthFixed, 0.0f);
-            ImGui::TableSetupColumn("field", ImGuiTableColumnFlags_WidthStretch, 0.0f);
-            //ImGui::TableHeadersRow();
-
-            static char inputName[128] = "";
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Hits");
-            ImGui::TableNextColumn();
-            strcpy(inputName, fmt::format("{}", hit_stat).c_str());
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::InputText("##hit", inputName, IM_ARRAYSIZE(inputName));
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Des.");
-            ImGui::TableNextColumn();
-            strcpy(inputName, fmt::format("{}", des_stat).c_str());
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::InputText("##des", inputName, IM_ARRAYSIZE(inputName));
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Leaks");
-            ImGui::TableNextColumn();
-            strcpy(inputName, fmt::format("{}", "None").c_str());
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::InputText("##leak", inputName, IM_ARRAYSIZE(inputName));
-            ImGui::TableNextRow();
-            ImGui::TableNextColumn();
-            ImGui::Text("Time");
-            if (runningState)
-                strcpy(inputName,
-                    fmt::format("Running: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
-            else
-                strcpy(inputName,
-                    fmt::format("Stopped: {}", Util::formatTime(mApp->worker.simuTimer.Elapsed())).c_str());
-            ImGui::TableNextColumn();
-            ImGui::SetNextItemWidth(-FLT_MIN);
-            ImGui::InputText("##time", inputName, IM_ARRAYSIZE(inputName));
-
-            ImGui::EndTable();
-        }
+        ImGui::TextWithMargin("Hits: ", txtW*10);
+        ImGui::SameLine();
+        ImGui::Text(fmt::format("{}", hit_stat));
+        ImGui::TextWithMargin("Des: ", txtW*10);
+        ImGui::SameLine();
+        ImGui::Text(fmt::format("{}", des_stat));
+        ImGui::TextWithMargin("Leaks: ", txtW*10);
+        ImGui::SameLine();
+        ImGui::Text(fmt::format("{}", leak_stat));
+        ImGui::TextWithMargin("Time: ", txtW*10);
+        ImGui::SameLine();
+        ImGui::Text(fmt::format("{}: {}", runningState ? "Running" : "Stopped", Util::formatTime(mApp->worker.simuTimer.Elapsed())));
     }
 }
 
@@ -559,4 +527,5 @@ void ImSidebar::Update()
 {
     UpdateTable();
     UpdateFacetSettings();
+    UpdateSimulationData();
 }

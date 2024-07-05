@@ -547,6 +547,7 @@ void Worker::Update(float appTime) {
 		mApp->facetAdvParams->Refresh(interfGeom->GetSelectedFacets());
 	}
 #endif
+	mApp->ImRefresh();
 }
 
 void Worker::GetProcStatus(ProcComm& procInfoList) {

@@ -92,6 +92,7 @@ protected:
     void UpdateFacetSettings();
     void ApplyFacetSettings();
 	void DrawSectionSelectedFacet();
+    void UpdateSimulationData();
 	void DrawSectionSimulation();
 	void DrawFacetTable();
 	void UpdateTable();
@@ -126,4 +127,9 @@ protected:
         double area = 1.0;
     };
     FacetSettings fSet;
+
+    std::string hit_stat;
+    std::string des_stat;
+    std::string leak_stat = "None";
+    bool runningState = false;
 };
