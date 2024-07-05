@@ -100,254 +100,196 @@ void ImSidebar::DrawSectionViewerSettings()
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("VertexIDs", &viewer->showVertexId);
             }
-
             ImGui::EndTable();
-
         }
     }
+}
+
+void ImSidebar::UpdateFacetSettings() {
+    nbSelectedFacets = interfGeom->GetNbSelectedFacets();
+    if (nbSelectedFacets > 1) {
+        title = fmt::format("Selected Facet ({} selected)", nbSelectedFacets);
+    }
+    else if (nbSelectedFacets == 1) {
+        title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front() + 1);
+    }
+    else {
+        title = fmt::format("Selected Facet (none)");
+    }
+    selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
+    sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
+    if (sel == nullptr) return;
+    fSet.des_idx = sel->sh.desorbType;
+    // TODO use time-depended sh.stickingParam if defined
+    fSet.og = sel->sh.outgassing * 10; // from bar to mbar
+    fSet.og_area = fSet.og / sel->sh.area;
+    fSet.area = sel->sh.area;
+    fSet.sf = sel->sh.sticking;
+    fSet.sides_idx = sel->sh.is2sided;
+    fSet.opacity = sel->sh.opacity;
+    fSet.temp = sel->sh.temperature;
+    fSet.prof_idx = sel->sh.profileType;
+
+
+    fSet.outgassingInput = std::to_string(fSet.og);
+    fSet.sfInput = std::to_string(fSet.sf);
+    fSet.outgassingAreaInput = std::to_string(fSet.og_area);
+    fSet.ps = PumpingSpeedFromSticking(fSet.sf, sel->sh.area, sel->sh.temperature);
+    fSet.psInput = std::to_string(fSet.ps);
+    fSet.opacityInput = std::to_string(fSet.opacity);
+    fSet.temperatureInput = std::to_string(fSet.temp);
+}
+
+void ImSidebar::ApplyFacetSettings() {
+    LockWrapper lW(mApp->imguiRenderLock);
+
+    sel->sh.desorbType = fSet.des_idx;
+    sel->sh.outgassing = fSet.og / 10;
+    sel->sh.area = fSet.og / fSet.og_area;
+    sel->sh.sticking = fSet.sf;
+    sel->sh.is2sided = fSet.sides_idx;
+    sel->sh.opacity = fSet.opacity;
+    sel->sh.temperature = fSet.temp;
+    
+    if (!mApp->AskToReset()) return;
+    mApp->changedSinceSave = true;
+
+    sel->sh.profileType = fSet.prof_idx;
+    sel->sh.maxSpeed = 4.0 * sqrt(2.0 * 8.31 * sel->sh.temperature / 0.001 / mApp->worker.model->sp.gasMass);
+    sel->UpdateFlags();
+
+    mApp->worker.MarkToReload();
+    fSet.facetSettingsChanged = false;
+    
+    mApp->ImRefresh();
 }
 
 void ImSidebar::DrawSectionSelectedFacet()
 {
     // remember last state to see if values need updating
-    static int lastNbFacets = -1;
-    static int lastFacetId = -1;
-    size_t nbSelectedFacets = interfGeom->GetNbSelectedFacets();
-    if (nbSelectedFacets > 1) {
-        title = fmt::format("Selected Facet ({} selected)", nbSelectedFacets);
-    }
-    else if (nbSelectedFacets == 1) {
-        title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front()+1);
-    }
-    else {
-        title = fmt::format("Selected Facet (none)");
-    }
     if (ImGui::CollapsingHeader(title.c_str(), ImGuiTreeNodeFlags_DefaultOpen)) {
-        size_t selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
-        auto sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
-
-        bool updateFacetInterfaceValues = (lastNbFacets != nbSelectedFacets || lastFacetId != selected_facet_id); // check if state changed
-        lastNbFacets = static_cast<int>(nbSelectedFacets);
-        lastFacetId = static_cast<int>(selected_facet_id);
         if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
         if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
-            // declare variables
-            enum { use_og = 0, use_og_area = 1 };
-            static int des_idx = 0;
-            static std::string exponentInput = "";
-            static std::string outgassingInput = "1.0";
-            static std::string outgassingAreaInput = "1.0";
-            static bool modeOfOg = use_og;
-            static double og = 1.0;
-            static double og_area = 1.0;
-            /***********MISSING MIXED AND TIME-DEPENDENT STATES************/
-            if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
-                des_idx = sel->sh.desorbType;
-                // TODO use time-depended sh.stickingParam if defined
-                og = sel->sh.outgassing * 10; // from bar to mbar
-                og_area = og / sel->sh.area;
-                outgassingInput = std::to_string(og);
-                outgassingAreaInput = std::to_string(og_area);
-            }
-
             ImGui::Text("Desorption"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
             // TODO handle mixed selection
-            if (ImGui::Combo("##Desorption", &des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0")) {
-                sel->sh.desorbType = des_idx;
-                switch (des_idx) {
-                case 0:
-                    fmt::print("none");
-                    break;
-                case 1:
-                    fmt::print("uni");
-                    break;
-                case 2:
-                    fmt::print("cos");
-                    break;
-                case 3:
-                    fmt::print(u8"cos \u207f");
-                    break;
-                case 4:
-                    fmt::print("rec");
-                    break;
-                }
-            }
-            if (des_idx == 3) {
+            if(ImGui::Combo("##Desorption", &fSet.des_idx, u8"None\0Uniform\0Cosine\0Cosine\u207f\0Recorded\0"))
+                fSet.facetSettingsChanged = true;
+            if (fSet.des_idx == 3) {
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(txtW * 4);
-                ImGui::InputText("##exponent", &exponentInput);
+                if(ImGui::InputText("##exponent", &fSet.exponentInput))
+                    fSet.facetSettingsChanged = true;
             }
 
-            if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", modeOfOg == use_og)) {
-                modeOfOg = use_og;
+            if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", fSet.modeOfOg == fSet.use_og)) {
+                fSet.modeOfOg = fSet.use_og;
             }
             ImGui::SameLine();
-            if (ImGui::InputText("##in", &outgassingInput)) {
-                modeOfOg = use_og;
+            ImGui::SetNextItemWidth(txtW * 10);
+            if (ImGui::InputText("##in", &fSet.outgassingInput)) {
+                fSet.modeOfOg = fSet.use_og;
                 // if value changed
-                if (Util::getNumber(&og, outgassingInput)) { // and conversion was a success
+                if (Util::getNumber(&fSet.og, fSet.outgassingInput)) { // and conversion was a success
                     //update the other value
-                    og_area = og / sel->sh.area;
-                    outgassingAreaInput = std::to_string(og_area);
-                    sel->sh.outgassing = og / 10;
+                    fSet.og_area = fSet.og / fSet.area;
+                    fSet.outgassingAreaInput = std::to_string(fSet.og_area);
+                    fSet.facetSettingsChanged = true;
                 }
                 else {
                     // TODO apply user string as time-depended parameter name
                 }
             }
-            if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", modeOfOg == use_og_area)) {
-                modeOfOg = use_og_area;
+            if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", fSet.modeOfOg == fSet.use_og_area)) {
+                fSet.modeOfOg = fSet.use_og_area;
+                fSet.facetSettingsChanged = true;
             }
             ImGui::SameLine();
-            if (ImGui::InputText("##ina", &outgassingAreaInput)) {
-                modeOfOg = use_og_area;
-                if (Util::getNumber(&og_area, outgassingAreaInput)) {
-                    og = og_area * sel->sh.area;
-                    outgassingInput = std::to_string(og);
-                    sel->sh.outgassing = og / 10;
+            ImGui::SetNextItemWidth(txtW * 10);
+            if (ImGui::InputText("##ina", &fSet.outgassingAreaInput)) {
+                fSet.modeOfOg = fSet.use_og_area;
+                if (Util::getNumber(&fSet.og_area, fSet.outgassingAreaInput)) {
+                    fSet.og = fSet.og_area * fSet.area;
+                    fSet.outgassingInput = std::to_string(fSet.og);
+                    fSet.facetSettingsChanged = true;
                 }
             }
             ImGui::TreePop();
         }
-        bool updateFacetProperties = false;
-        if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-            static std::string sfInput = "1.0";
-            static std::string psInput = "1.0";
-            static double sf = 1.0;
-            static double ps = 1.0;
-
-            if (updateFacetInterfaceValues && sel) { // if selection changed, recalculate all values
-                sf = sel->sh.sticking;
-                sfInput = std::to_string(sf);
-                ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature);
-                psInput = std::to_string(ps);
-            }
+        if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) 
             ImGui::Text("Sticking Factor"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##StickingFactor", &sfInput)) {
-                if (Util::getNumber(&sf, sfInput)) {
+            if (ImGui::InputText("##StickingFactor", &fSet.sfInput)) {
+                if (Util::getNumber(&fSet.sf, fSet.sfInput)) {
                     // could work incorrectly correctly if area and temperature are changed
-                    ps = PumpingSpeedFromSticking(sf, sel->sh.area, sel->sh.temperature);
-                    psInput = std::to_string(ps);
-                    updateFacetProperties = true;
+                    fSet.ps = PumpingSpeedFromSticking(fSet.sf, fSet.area, fSet.temp);
+                    fSet.psInput = std::to_string(fSet.ps);
+                    fSet.facetSettingsChanged = true;
                 }
             }
             ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##PumpingSpeed", &psInput)) {
-                if (Util::getNumber(&ps, psInput)) {
+            if (ImGui::InputText("##PumpingSpeed", &fSet.psInput)) {
+                if (Util::getNumber(&fSet.ps, fSet.psInput)) {
                     // could work incorrectly correctly if area and temperature are changed
-                    sf = StickingFromPumpingSpeed(ps, sel->sh.area, sel->sh.temperature);
-                    sfInput = std::to_string(sf);
-                    updateFacetProperties = true;
+                    fSet.sf = StickingFromPumpingSpeed(fSet.ps, fSet.area, fSet.temp);
+                    fSet.sfInput = std::to_string(fSet.sf);
+                    fSet.facetSettingsChanged = true;
                 }
             }
-            if (sf < 0 || sf > 1) { // if sf is out of range display warning
+            if (fSet.sf < 0 || fSet.sf > 1) { // if sf is out of range display warning
                 ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Sticking factor \u2209[0,1]");
             }
-            else if (sel && updateFacetProperties) { // and only assign sf to facet if it is in range
-                sel->sh.sticking = sf;
+            else if (sel && fSet.facetSettingsChanged) { // and only assign sf to facet if it is in range
             }
             ImGui::TreePop();
         }
 #endif
         {
-            static int sides_idx = 0;
-            if (updateFacetInterfaceValues && sel) sides_idx = sel->sh.is2sided;
-            if (ImGui::Combo("Sides", &sides_idx, "1 Sided\0 2 Sided\0")) {
-                sel->sh.is2sided = sides_idx;
-                switch (sides_idx) {
-                case 0:
-                    fmt::print("1s");
-                    break;
-                case 1:
-                    fmt::print("2s");
-                    break;
-                }
-            }
-
-            static double opacity = 1.0;
-            static std::string opacityInput = "1.0";
-            updateFacetProperties = false;
-            if (updateFacetInterfaceValues && sel) { // update if selection changed
-                opacity = sel->sh.opacity;
-                opacityInput = std::to_string(opacity);
+            if (ImGui::Combo("Sides", &fSet.sides_idx, "1 Sided\0 2 Sided\0")) {
+                fSet.facetSettingsChanged = true;
             }
             ImGui::Text("Opacity"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##Opacity", &opacityInput)) { // if text changed
-                if (Util::getNumber(&opacity, opacityInput)) { // try to convert it to a number
-                    updateFacetProperties = true; // if success set update flag
+            if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
+                if (Util::getNumber(&fSet.opacity, fSet.opacityInput)) { // try to convert it to a number
+                    fSet.facetSettingsChanged = true; // if success set update flag
                 }
             }
-            if (opacity < 0 || opacity > 1) { // if opacity is out of range display the warining
+            if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
                 ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
-            }
-            else if (updateFacetProperties) { // set new facet opacity
-                sel->sh.opacity = opacity;
             }
 
 #if defined(MOLFLOW)
-            static double temp = 1.0;
-            static std::string temperatureInput = "1.0";
-            updateFacetProperties = false;
-            if (updateFacetInterfaceValues && sel) {
-                temp = sel->sh.temperature;
-                temperatureInput = std::to_string(temp);
-            }
             ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##Temperature", &temperatureInput)) {
-                if (Util::getNumber(&temp, temperatureInput)) {
-                    updateFacetProperties = true;
+            if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
+                if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
+                    fSet.facetSettingsChanged = true;
                 }
             }
-            if (temp <= 0) {
+            if (fSet.temp <= 0) {
                 ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
             }
-            else if (updateFacetProperties) {
-                sel->sh.temperature = temp;
-            }
 #endif
+            ImGui::BeginDisabled();
+            ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
+            ImGui::EndDisabled();
 
-            static double area = 1.0;
-            if (sel) area = sel->sh.area;
-            ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &area);
-
-            static int prof_idx = 0;
-            if (sel) prof_idx = sel->sh.profileType;
-            if (ImGui::Combo("Profile", &prof_idx,
+            if (ImGui::Combo("Profile", &fSet.prof_idx,
                 "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
-                switch (prof_idx) {
-                case 0:
-                    fmt::print("None");
-                    break;
-                case 1:
-                    fmt::print("Pu");
-                    break;
-                case 2:
-                    fmt::print("Pv");
-                    break;
-                case 3:
-                    fmt::print("Angle");
-                    break;
-                case 4:
-                    fmt::print("Speed");
-                    break;
-                case 5:
-                    fmt::print("Ortho vel");
-                    break;
-                case 6:
-                    fmt::print("Tangen vel");
-                    break;
-                }
+                fSet.facetSettingsChanged = true;
             }
         }
+        bool disabled = !fSet.facetSettingsChanged;
+        if (disabled) ImGui::BeginDisabled();
+        if (ImGui::Button("Apply")) {
+            ApplyFacetSettings();
+        }
+        if (disabled) ImGui::EndDisabled();
         if (sel == nullptr) ImGui::EndDisabled();
     }
-}
 
 void ImSidebar::DrawSectionSimulation()
 {
@@ -358,16 +300,16 @@ void ImSidebar::DrawSectionSimulation()
         ImGui::SameLine();
         {
             if (mApp->worker.IsRunning()) {
-                title = fmt::format("Pause");
+                simBtnLabel = fmt::format("Pause");
             }
             else if (mApp->worker.globalStatCache.globalHits.nbMCHit > 0) {
-                title = fmt::format("Resume");
+                simBtnLabel = fmt::format("Resume");
             }
             else {
-                title = fmt::format("Begin");
+                simBtnLabel = fmt::format("Begin");
             }
         }
-        if (ImGui::Button(title.c_str())) {
+        if (ImGui::Button(simBtnLabel.c_str())) {
             mApp->changedSinceSave = true;
             if (molApp != nullptr) {
                 LockWrapper lW(mApp->imguiRenderLock);
@@ -375,14 +317,14 @@ void ImSidebar::DrawSectionSimulation()
             }
         }
         ImGui::SameLine();
-        if (!mApp->worker.IsRunning() && mApp->worker.globalStatCache.globalHits.nbDesorbed > 0)
-            ImGui::BeginDisabled();
+        bool disable = mApp->worker.globalStatCache.globalHits.nbDesorbed <= 0;
+        if (disable) ImGui::BeginDisabled();
         if (ImGui::Button("Reset")) {
             mApp->changedSinceSave = true;
+            LockWrapper lW(mApp->imguiRenderLock);
             mApp->ResetSimulation();
         }
-        if (!mApp->worker.IsRunning() && mApp->worker.globalStatCache.globalHits.nbDesorbed > 0)
-            ImGui::EndDisabled();
+        if (disable) ImGui::EndDisabled();
 
         ImGui::Checkbox("Auto update scene", &mApp->autoFrameMove);
         if (mApp->autoFrameMove) {
@@ -480,7 +422,6 @@ void ImSidebar::DrawFacetTable()
         // Facet list
         if (interfGeom->IsLoaded()) {
             // TODO: Colors for moment highlighting
-
             // Create item list that is sortable etc.
 
             static ImGuiTableFlags tFlags =
@@ -583,9 +524,7 @@ void ImSidebar::UpdateSelectionFromTable(bool shift, bool ctrl)
 void ImSidebar::Draw() {
     if (!drawn) return;
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
-
     float width = txtW * 40;
-
     // set size and pos on every draw so it updates when window resizes
     ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - width, viewport->WorkPos.y));
     ImGui::SetNextWindowSize(ImVec2(width, viewport->WorkSize.y));
@@ -619,4 +558,5 @@ void ImSidebar::OnShow()
 void ImSidebar::Update()
 {
     UpdateTable();
+    UpdateFacetSettings();
 }

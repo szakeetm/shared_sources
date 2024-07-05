@@ -89,14 +89,41 @@ protected:
 	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature);
 	void DrawSectionDebug();
 	void DrawSectionViewerSettings();
+    void UpdateFacetSettings();
+    void ApplyFacetSettings();
 	void DrawSectionSelectedFacet();
 	void DrawSectionSimulation();
 	void DrawFacetTable();
 	void UpdateTable();
     void UpdateSelectionFromTable(bool shift = false, bool ctrl = false);
 	ImVector<FacetData> items;
-	std::string title;
+    size_t nbSelectedFacets = 0, selected_facet_id = 0;
+    InterfaceFacet* sel;
+	std::string title, simBtnLabel;
 #ifdef MOLFLOW
 	MolFlow* molApp = nullptr;
 #endif
+    struct FacetSettings {
+        enum { use_og = 0, use_og_area = 1 };
+        int des_idx = 0;
+        std::string exponentInput = "";
+        std::string outgassingInput = "1.0";
+        std::string outgassingAreaInput = "1.0";
+        bool modeOfOg = use_og;
+        double og = 1.0;
+        double og_area = 1.0;
+        std::string sfInput = "1.0";
+        std::string psInput = "1.0";
+        double sf = 1.0;
+        double ps = 1.0;
+        int sides_idx = 0;
+        double opacity = 1.0;
+        std::string opacityInput = "1.0";
+        double temp = 1.0;
+        std::string temperatureInput = "1.0";
+        bool facetSettingsChanged = false;
+        int prof_idx = 0;
+        double area = 1.0;
+    };
+    FacetSettings fSet;
 };

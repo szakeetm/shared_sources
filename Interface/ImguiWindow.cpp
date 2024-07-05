@@ -501,6 +501,7 @@ void ImguiWindow::Refresh()
     if (histPlot.IsVisible()) histPlot.RefreshFacetLists();
     if (histPlot.IsVisible()) histPlot.LoadHistogramSettings();
     if (convPlot.IsVisible()) convPlot.Refresh();
+    if (profPlot.IsVisible()) profPlot.Refresh();
     if (movPart.IsVisible()) movPart.Update();
     if (facCoord.IsVisible()) facCoord.UpdateFromSelection();
     if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
