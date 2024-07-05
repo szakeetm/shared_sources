@@ -21,77 +21,6 @@
 #include "Helper/MathTools.h"
 #include "ImguiWindow.h"
 
-// Dummy data structure that we use for the Table demo.
-// (pre-C++11 doesn't allow us to instantiate ImVector<MyItem> template if this structure if defined inside the demo function)
-namespace {
-    // We are passing our own identifier to TableSetupColumn() to facilitate identifying columns in the sorting code.
-    // This identifier will be passed down into ImGuiTableSortSpec::ColumnUserID.
-    // But it is possible to omit the user id parameter of TableSetupColumn() and just use the column index instead! (ImGuiTableSortSpec::ColumnIndex)
-    // If you don't use sorting, you will generally never care about giving column an ID!
-    enum FacetDataColumnID {
-        FacetDataColumnID_ID,
-        FacetDataColumnID_Hits,
-        FacetDataColumnID_Des,
-        FacetDataColumnID_Abs
-    };
-
-    struct FacetData {
-        int ID;
-        size_t hits;
-        size_t des;
-        double abs;
-
-        // We have a problem which is affecting _only this demo_ and should not affect your code:
-        // As we don't rely on std:: or other third-party library to compile dear imgui, we only have reliable access to qsort(),
-        // however qsort doesn't allow passing user data to comparing function.
-        // As a workaround, we are storing the sort specs in a static/global for the comparing function to access.
-        // In your own use case you would probably pass the sort specs to your sorting/comparing functions directly and not use a global.
-        // We could technically call ImGui::TableGetSortSpecs() in CompareWithSortSpecs(), but considering that this function is called
-        // very often by the sorting algorithm it would be a little wasteful.
-        static const ImGuiTableSortSpecs* s_current_sort_specs;
-
-        // Compare function to be used by qsort()
-        static int IMGUI_CDECL CompareWithSortSpecs(const void* lhs, const void* rhs) {
-            const FacetData* a = (const FacetData*)lhs;
-            const FacetData* b = (const FacetData*)rhs;
-            for (int n = 0; n < s_current_sort_specs->SpecsCount; n++) {
-                // Here we identify columns using the ColumnUserID value that we ourselves passed to TableSetupColumn()
-                // We could also choose to identify columns based on their index (sort_spec->ColumnIndex), which is simpler!
-                const ImGuiTableColumnSortSpecs* sort_spec = &s_current_sort_specs->Specs[n];
-                int delta = 0;
-                switch (sort_spec->ColumnUserID) {
-                case FacetDataColumnID_ID:
-                    delta = (a->ID - b->ID);
-                    break;
-                case FacetDataColumnID_Hits:
-                    delta = (a->hits > b->hits) ? 1 : (a->hits == b->hits) ? 0 : -1;
-                    break;
-                case FacetDataColumnID_Des:
-                    delta = (a->des > b->des) ? 1 : (a->des == b->des) ? 0 : -1;
-                    break;
-                case FacetDataColumnID_Abs:
-                    delta = (a->abs > b->abs) ? 1 : (a->abs == b->abs) ? 0 : -1;
-                    break;
-                default:
-                    IM_ASSERT(0);
-                    break;
-                }
-                if (delta > 0)
-                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? +1 : -1;
-                if (delta < 0)
-                    return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : +1;
-            }
-
-            // qsort() is instable so always return a way to differenciate items.
-            // Your own compare function may want to avoid fallback on implicit sort specs e.g. a Name compare if it wasn't already part of the sort specs.
-            return (a->ID - b->ID);
-        }
-    };
-
-    const ImGuiTableSortSpecs* FacetData::s_current_sort_specs = nullptr;
-};
-
-
 #ifdef MOLFLOW
 double ImSidebar::PumpingSpeedFromSticking(double sticking, double area, double temperature) {
     return 1.0 * sticking * area / 10.0 / 4.0 * sqrt(8.0 * 8.31 * temperature / PI / (mApp->worker.model->sp.gasMass * 0.001));
@@ -188,7 +117,7 @@ void ImSidebar::DrawSectionSelectedFacet()
         title = fmt::format("Selected Facet ({} selected)", nbSelectedFacets);
     }
     else if (nbSelectedFacets == 1) {
-        title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front());
+        title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front()+1);
     }
     else {
         title = fmt::format("Selected Facet (none)");
@@ -440,7 +369,10 @@ void ImSidebar::DrawSectionSimulation()
         }
         if (ImGui::Button(title.c_str())) {
             mApp->changedSinceSave = true;
-            if (molApp != nullptr) molApp->StartStopSimulation();
+            if (molApp != nullptr) {
+                LockWrapper lW(mApp->imguiRenderLock);
+                molApp->StartStopSimulation();
+            }
         }
         ImGui::SameLine();
         if (!mApp->worker.IsRunning() && mApp->worker.globalStatCache.globalHits.nbDesorbed > 0)
@@ -550,27 +482,6 @@ void ImSidebar::DrawFacetTable()
             // TODO: Colors for moment highlighting
 
             // Create item list that is sortable etc.
-            static ImVector<FacetData> items;
-            if (items.Size != interfGeom->GetNbFacet()) {
-                items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
-                for (int n = 0; n < items.Size; n++) {
-                    InterfaceFacet* f = interfGeom->GetFacet(n);
-                    FacetData& item = items[n];
-                    item.ID = n;
-                    item.hits = f->facetHitCache.nbMCHit;
-                    item.des = f->facetHitCache.nbDesorbed;
-                    item.abs = f->facetHitCache.nbAbsEquiv;
-                }
-            }
-            else if (mApp->worker.IsRunning()) {
-                for (int n = 0; n < items.Size; n++) {
-                    InterfaceFacet* f = interfGeom->GetFacet(n);
-                    FacetData& item = items[n];
-                    item.hits = f->facetHitCache.nbMCHit;
-                    item.des = f->facetHitCache.nbDesorbed;
-                    item.abs = f->facetHitCache.nbAbsEquiv;
-                }
-            }
 
             static ImGuiTableFlags tFlags =
                 ImGuiTableFlags_ScrollY | ImGuiTableFlags_SizingFixedFit |
@@ -604,17 +515,30 @@ void ImSidebar::DrawFacetTable()
                 clipper.Begin(items.size());
                 while (clipper.Step()) {
                     for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++) {
-                        FacetData* item = &items[i];
+                        FacetData &item = items[i];
                         //ImGui::PushID(item->ID);
                         ImGui::TableNextRow();
                         ImGui::TableSetColumnIndex(0);
-                        ImGui::Text("%d", item->ID);
+                        if (ImGui::Selectable(fmt::format("{}", item.ID+1), item.selected, ImGuiSelectableFlags_SpanAllColumns)) {
+                            if (!ImGui::IsKeyDown(ImGuiKey_LeftCtrl)) { // if ctrl not held
+                                item.selected = true;
+                                for (int j = 0; j < items.Size; j++) {
+                                    if (items[j].ID != item.ID)
+                                        items[j].selected = false; // deselect all others
+                                }
+                            }
+                            else { // if ctrl is pressed
+                                // do not change the state of others
+                                item.selected = !item.selected; // and invert the clicked
+                            }
+                            UpdateSelectionFromTable(); // apply the changes in the actual geometry
+                        }
                         ImGui::TableNextColumn();
-                        ImGui::Text("%zd", item->hits);
+                        ImGui::Text("%zd", item.hits);
                         ImGui::TableNextColumn();
-                        ImGui::Text("%zd", item->des);
+                        ImGui::Text("%zd", item.des);
                         ImGui::TableNextColumn();
-                        ImGui::Text("%g", item->abs);
+                        ImGui::Text("%g", item.abs);
                         //ImGui::PopID();
                     }
                 }
@@ -628,6 +552,32 @@ void ImSidebar::DrawFacetTable()
         sprintf(errMsg, "%s\nError while updating facet hits", e.what());
         /*GLMessageBox::Display(errMsg, "Error", GLDLG_OK, GLDLG_ICONERROR);*/
     }
+}
+
+void ImSidebar::UpdateTable()
+{
+    if (items.Size != interfGeom->GetNbFacet()) {
+        items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
+    }
+    for (int n = 0; n < items.Size; n++) {
+        InterfaceFacet* f = interfGeom->GetFacet(n);
+        FacetData& item = items[n];
+        item.ID = n;
+        item.hits = f->facetHitCache.nbMCHit;
+        item.des = f->facetHitCache.nbDesorbed;
+        item.abs = f->facetHitCache.nbAbsEquiv;
+        item.selected = f->selected;
+    };
+}
+
+void ImSidebar::UpdateSelectionFromTable(bool shift, bool ctrl)
+{
+    std::vector<size_t> newSelection;
+    for (const FacetData &f : items) {
+        if (f.selected) newSelection.push_back(f.ID);
+    }
+    interfGeom->SetSelection(newSelection, shift, ctrl);
+    interfGeom->UpdateSelection();
 }
 
 void ImSidebar::Draw() {
@@ -663,4 +613,10 @@ void ImSidebar::OnShow()
 #ifndef DEBUG
     ImIOWrappers::InfoPopup("WARNING", "Sidebar is not properly implemented yet. Most features do not work!");
 #endif
+    Update();
+}
+
+void ImSidebar::Update()
+{
+    UpdateTable();
 }

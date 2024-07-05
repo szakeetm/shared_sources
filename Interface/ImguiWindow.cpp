@@ -508,6 +508,7 @@ void ImguiWindow::Refresh()
     if (formulaEdit.IsVisible()) formulaEdit.Update();
     if (measForce.IsVisible()) measForce.Update();
     partLog.UpdateStatus();
+    sideBar.Update();
 }
 
 void ImguiWindow::Reset()
@@ -526,6 +527,7 @@ void ImguiWindow::Reset()
     if (movPart.IsVisible()) movPart.Update();
     if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
     partLog.UpdateStatus();
+    sideBar.Update();
 }
 
 void ImguiWindow::Clear()
@@ -533,6 +535,7 @@ void ImguiWindow::Clear()
     mirrProjFacet.Clear();
     convPlot.Refresh();
     partLog.UpdateStatus();
+    sideBar.Update();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
@@ -548,4 +551,5 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
 #endif
     convPlot.Refresh();
     profPlot.Refresh();
+    sideBar.Update();
 }
