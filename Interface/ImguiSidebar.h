@@ -1,21 +1,27 @@
+#pragma once
 
-
-#ifndef MOLFLOW_PROJ_IMGUISIDEBAR_H
-#define MOLFLOW_PROJ_IMGUISIDEBAR_H
-
-class InterfaceGeometry;
-#if defined(MOLFLOW)
+#include "ImguiWindowBase.h"
 class MolFlow;
-class ImGuiSidebar {
-public:
-	void ShowAppSidebar(bool *p_open, MolFlow *mApp, InterfaceGeometry *interfGeom);
-protected:
-	double PumpingSpeedFromSticking(double sticking, double area, double temperature, MolFlow* mApp);
-	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature, MolFlow* mApp);
-};
-#else
-class SynRad;
-void ShowAppSidebar(bool *p_open, SynRad *mApp, InterfaceGeometry *interfGeom);
-#endif
 
-#endif //MOLFLOW_PROJ_IMGUISIDEBAR_H
+class ImSidebar : public ImWindow
+{
+public:
+	void Draw();
+	void Init(Interface* mApp_);
+	void OnShow() override;
+protected:
+	ImGuiWindowFlags flags =
+		ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoSavedSettings |
+		ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollbar;
+	double PumpingSpeedFromSticking(double sticking, double area, double temperature);
+	double StickingFromPumpingSpeed(double pumpingSpeed, double area, double temperature);
+	void DrawSectionDebug();
+	void DrawSectionViewerSettings();
+	void DrawSectionSelectedFacet();
+	void DrawSectionSimulation();
+	void DrawFacetTable();
+	std::string title;
+#ifdef MOLFLOW
+	MolFlow* molApp = nullptr;
+#endif
+};

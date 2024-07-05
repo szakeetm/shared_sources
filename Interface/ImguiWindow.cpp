@@ -33,10 +33,6 @@ bool ImguiWindow::ToggleMainMenu(){
     show_app_main_menu_bar = !show_app_main_menu_bar;
     return show_app_main_menu_bar;
 }
-bool ImguiWindow::ToggleSimSidebar(){
-    show_app_sidebar = !show_app_sidebar;
-    return show_app_sidebar;
-}
 bool ImguiWindow::ToggleDemoWindow(){
     show_demo_window = !show_demo_window;
     return show_demo_window;
@@ -167,7 +163,6 @@ void ImguiWindow::init() {
     show_main_hub = false;
     show_demo_window = false;
     show_app_main_menu_bar = false;
-    show_app_sidebar = false;
     show_perfo = false;
     show_window_license = false;
 
@@ -176,7 +171,8 @@ void ImguiWindow::init() {
     input = ImIOWrappers::ImInputPopup();
     progress = ImProgress();
     progress.Init(mApp);
-    sideBar = ImGuiSidebar();
+    sideBar = ImSidebar();
+    sideBar.Init(mApp);
     shortcutMan = ShortcutManager();
     // selection
     smartSelect = ImSmartSelection();
@@ -341,9 +337,6 @@ void ImguiWindow::renderSingle() {
         if (show_app_main_menu_bar)
             ImMenu::ShowAppMainMenuBar();
 
-        if (show_app_sidebar)
-            sideBar.ShowAppSidebar(&show_app_sidebar, mApp, mApp->worker.GetGeometry());
-
         // 1. Show the big demo window (Most of the sample code is in
         // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
         // ImGui!).
@@ -361,7 +354,10 @@ void ImguiWindow::renderSingle() {
             ImGui::Checkbox(
                     "Demo Window",
                     &show_demo_window); // Edit bools storing our window open/close state
-            ImGui::Checkbox("Sidebar [NOT WORKING]", &show_app_sidebar);
+            bool sidebar = sideBar.IsVisible();
+            if (ImGui::Checkbox("Sidebar [NOT WORKING]", &sidebar)) {
+                sideBar.SetVisible(sidebar);
+            }
             
             bool globalSettings = globalSet.IsVisible();
             if (ImGui::Checkbox("Global settings", &globalSettings)) {
@@ -439,6 +435,8 @@ void ImguiWindow::renderSingle() {
         popup.Draw();
         input.Draw();
         progress.Draw();
+
+        sideBar.Draw();
 
         smartSelect.Draw();
         selByNum.Draw();

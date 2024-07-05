@@ -1773,9 +1773,7 @@ Open-source libraries used:
                         imWnd = new ImguiWindow(this);
                         imWnd->init();
                     }
-                    if (!imWnd->show_app_sidebar) {
-                        imWnd->ToggleSimSidebar();
-                    }
+                    imWnd->sideBar.Toggle();
                     return true;
                 }
 #endif
