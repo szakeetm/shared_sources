@@ -26,80 +26,6 @@
 #include <unistd.h> //_exit()
 #endif
 
-#include <iostream>
-#include <cstdlib>
-#ifdef DEBUG
-#ifdef _WIN32
-// Win
-#include <windows.h>
-#include <dbghelp.h>
-
-void print_stack_trace(CONTEXT* context) {
-    HANDLE process = GetCurrentProcess();
-    HANDLE thread = GetCurrentThread();
-
-    SymInitialize(process, NULL, TRUE);
-
-    STACKFRAME64 stack;
-    memset(&stack, 0, sizeof(STACKFRAME64));
-    DWORD imageType = IMAGE_FILE_MACHINE_AMD64;
-    stack.AddrPC.Offset = context->Rip;
-    stack.AddrPC.Mode = AddrModeFlat;
-    stack.AddrFrame.Offset = context->Rbp;
-    stack.AddrFrame.Mode = AddrModeFlat;
-    stack.AddrStack.Offset = context->Rsp;
-    stack.AddrStack.Mode = AddrModeFlat;
-
-    while (StackWalk64(imageType, process, thread, &stack, context, NULL,
-        SymFunctionTableAccess64, SymGetModuleBase64, NULL)) {
-        std::cerr << "Frame: " << stack.AddrPC.Offset << std::endl;
-    }
-
-    SymCleanup(process);
-}
-
-LONG WINAPI exception_handler(EXCEPTION_POINTERS* ExceptionInfo) {
-    std::cerr << "Error: Exception code " << ExceptionInfo->ExceptionRecord->ExceptionCode << std::endl;
-    print_stack_trace(ExceptionInfo->ContextRecord);
-    exit(ExceptionInfo->ExceptionRecord->ExceptionCode);
-    return EXCEPTION_EXECUTE_HANDLER;
-}
-
-void setup_signal_handler() {
-    SetUnhandledExceptionFilter(exception_handler);
-}
-#else
-// Linux
-#include <execinfo.h>
-#include <signal.h>
-#include <unistd.h>
-
-void print_stack_trace() {
-    void* array[10];
-    size_t size = backtrace(array, 10);
-    char** messages = backtrace_symbols(array, size);
-
-    std::cerr << "Stack trace:" << std::endl;
-    for (size_t i = 0; i < size; i++) {
-        std::cerr << messages[i] << std::endl;
-    }
-    free(messages);
-}
-
-void signal_handler(int signum) {
-    std::cerr << "Error: signal " << signum << ":" << std::endl;
-    print_stack_trace();
-    exit(signum);
-}
-
-void setup_signal_handler() {
-    signal(SIGSEGV, signal_handler);
-    signal(SIGABRT, signal_handler);
-    // Add other signals as needed
-}
-#endif
-#endif
-
 GLApplication *theApp=NULL;
 
 /*#ifdef _WIN32
@@ -524,9 +450,6 @@ void GLApplication::Run() {
       imWnd->testEngine.RunTests();
   }
 #endif
-#ifdef DEBUG
-    setup_signal_handler();
-#endif // DEBUG
 
   //Wait for user exit
   while( !quit )
