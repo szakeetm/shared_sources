@@ -133,4 +133,10 @@ protected:
     std::string leak_stat = "None";
     std::string time_stat;
     bool runningState = false;
+    std::string desorpComboOpts[5] = { "None","Uniform","Cosine",u8"Cosine\u207f","Recorded" };
+    std::string desorpComboContent = "";
+    bool mixedDesorp = false;
+    std::string sidesComboContent = "";
+    std::string profileComboOpts[7] = { "None","Pressure u","Pressure v","Incident angle","Speed distribution","Orthogonal velocity","Tangential velocity" };
+    std::string profileComboContent = "";
 };
