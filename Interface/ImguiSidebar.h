@@ -131,5 +131,6 @@ protected:
     std::string hit_stat;
     std::string des_stat;
     std::string leak_stat = "None";
+    std::string time_stat;
     bool runningState = false;
 };

@@ -57,10 +57,6 @@ void ImSidebar::DrawSectionViewerSettings()
         auto curViewer = mApp->curViewer;
         auto viewer = mApp->viewers[curViewer];
         if (ImGui::BeginTable("table_3dviewer", 3, ImGuiTableFlags_None)) {
-            /*ImGui::TableSetupColumn("col1");
-            ImGui::TableSetupColumn("col2");
-            ImGui::TableSetupColumn("col3");
-            ImGui::TableHeadersRow();*/
             ImGui::TableNextRow();
             {
                 ImGui::TableNextColumn();
@@ -141,6 +137,9 @@ void ImSidebar::UpdateFacetSettings() {
 }
 
 void ImSidebar::ApplyFacetSettings() {
+    // take values from nput fields and apply them to geometry facet
+    // TODO deal with multiple facet selections
+
     LockWrapper lW(mApp->imguiRenderLock);
 
     sel->sh.desorbType = fSet.des_idx;
@@ -243,57 +242,57 @@ void ImSidebar::DrawSectionSelectedFacet()
         else if (sel && fSet.facetSettingsChanged) { // and only assign sf to facet if it is in range
         }
         ImGui::TreePop();
-    }
 #endif
-    {
-        if (ImGui::Combo("Sides", &fSet.sides_idx, "1 Sided\0 2 Sided\0")) {
-            fSet.facetSettingsChanged = true;
-        }
-        ImGui::Text("Opacity"); ImGui::SameLine();
-        ImGui::SetNextItemWidth(txtW * 10);
-        if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
-            if (Util::getNumber(&fSet.opacity, fSet.opacityInput)) { // try to convert it to a number
-                fSet.facetSettingsChanged = true; // if success set update flag
+        {
+            if (ImGui::Combo("Sides", &fSet.sides_idx, "1 Sided\0 2 Sided\0")) {
+                fSet.facetSettingsChanged = true;
             }
-        }
-        if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
-            ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
-        }
+            ImGui::Text("Opacity"); ImGui::SameLine();
+            ImGui::SetNextItemWidth(txtW * 10);
+            if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
+                if (Util::getNumber(&fSet.opacity, fSet.opacityInput)) { // try to convert it to a number
+                    fSet.facetSettingsChanged = true; // if success set update flag
+                }
+            }
+            if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Opacity \u2209[0,1]");
+            }
 
 #if defined(MOLFLOW)
-        ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
-        ImGui::SetNextItemWidth(txtW * 10);
-        if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
-            if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
+            ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
+            ImGui::SetNextItemWidth(txtW * 10);
+            if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
+                if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
+                    fSet.facetSettingsChanged = true;
+                }
+            }
+            if (fSet.temp <= 0) {
+                ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
+            }
+#endif
+            ImGui::BeginDisabled();
+            ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
+            ImGui::EndDisabled();
+
+            if (ImGui::Combo("Profile", &fSet.prof_idx,
+                "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
                 fSet.facetSettingsChanged = true;
             }
         }
-        if (fSet.temp <= 0) {
-            ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Temperature must be positive (\u212a)");
+        if (ImGui::Button("<<Adv.")) {}
+        ImGui::SameLine();
+        if (ImGui::Button("Details")) {}
+        ImGui::SameLine();
+        if (ImGui::Button("Coords")) {}
+        ImGui::SameLine();
+        bool disabled = !fSet.facetSettingsChanged;
+        if (disabled) ImGui::BeginDisabled();
+        if (ImGui::Button("Apply")) {
+            ApplyFacetSettings();
         }
-#endif
-        ImGui::BeginDisabled();
-        ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
-        ImGui::EndDisabled();
-
-        if (ImGui::Combo("Profile", &fSet.prof_idx,
-            "None\0Pressure u\0Pressure v\0Incident angle\0Speed distribution\0Orthogonal velocity\0 Tangential velocity\0")) {
-            fSet.facetSettingsChanged = true;
-        }
+        if (disabled) ImGui::EndDisabled();
+        if (sel == nullptr) ImGui::EndDisabled();
     }
-    if (ImGui::Button("<<Adv.")) {}
-    ImGui::SameLine();
-    if (ImGui::Button("Details")) {}
-    ImGui::SameLine();
-    if (ImGui::Button("Coords")) {}
-    ImGui::SameLine();
-    bool disabled = !fSet.facetSettingsChanged;
-    if (disabled) ImGui::BeginDisabled();
-    if (ImGui::Button("Apply")) {
-        ApplyFacetSettings();
-    }
-    if (disabled) ImGui::EndDisabled();
-    if (sel == nullptr) ImGui::EndDisabled();
 }
 
 void ImSidebar::UpdateSimulationData() {
@@ -318,8 +317,15 @@ void ImSidebar::UpdateSimulationData() {
         des_stat = fmt::format("{} ({})",
             Util::formatInt(mApp->worker.globalStatCache.globalHits.nbDesorbed, "des"),
             Util::formatPs(current_avg, "des"));
-        // TODO leaks
+        if (mApp->worker.globalStatCache.nbLeakTotal) {
+            leak_stat = fmt::format("{} ({})", mApp->worker.globalStatCache.nbLeakTotal,
+                mApp->worker.globalStatCache.nbLeakTotal * 100 / mApp->worker.globalStatCache.globalHits.nbDesorbed);
+        }
+        else {
+            leak_stat = "None";
+        }
     }
+    time_stat = fmt::format("{}: {}", runningState ? "Running" : "Stopped", Util::formatTime(mApp->worker.simuTimer.Elapsed()));
 }
 
 void ImSidebar::DrawSectionSimulation()
@@ -380,7 +386,7 @@ void ImSidebar::DrawSectionSimulation()
         ImGui::Text(fmt::format("{}", leak_stat));
         ImGui::TextWithMargin("Time: ", txtW*10);
         ImGui::SameLine();
-        ImGui::Text(fmt::format("{}: {}", runningState ? "Running" : "Stopped", Util::formatTime(mApp->worker.simuTimer.Elapsed())));
+        ImGui::Text(time_stat);
     }
 }
 
@@ -481,6 +487,7 @@ void ImSidebar::UpdateTable()
 
 void ImSidebar::UpdateSelectionFromTable(bool shift, bool ctrl)
 {
+    // when selection inside the sidebar table changes update geometry selection to match
     std::vector<size_t> newSelection;
     for (const FacetData &f : items) {
         if (f.selected) newSelection.push_back(f.ID);
