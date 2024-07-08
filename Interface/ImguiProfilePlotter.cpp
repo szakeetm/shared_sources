@@ -190,13 +190,16 @@ void ImProfilePlotter::RemoveCurve(size_t id)
 
 void ImProfilePlotter::ComputeProfiles()
 {
+	if (profiledFacets.size() == 0) return;
+	if (data.size() == 0) return;
+
 	{
 		LockWrapper lW(mApp->imguiRenderLock);
 		if (!mApp->worker.ReloadIfNeeded())
 			return;
 	}
 	
-	auto lock = GetHitLock(mApp->worker.globalState.get(), 10000);
+	auto lock = GetHitLock(mApp->worker.globalState.get(), 30);
 	if (!lock) return;
 	
 	ProfileDisplayModes displayMode = static_cast<ProfileDisplayModes>(viewIdx); //Choosing by index is error-prone
