@@ -104,13 +104,15 @@ void ImSidebar::DrawSectionViewerSettings()
 void ImSidebar::UpdateFacetSettings() {
     nbSelectedFacets = interfGeom->GetNbSelectedFacets();
     if (nbSelectedFacets > 1) {
-        title = fmt::format("Selected Facet ({} selected)", nbSelectedFacets);
+        title = fmt::format("Selected Facet ({} selected)##facetDetails", nbSelectedFacets);
     }
     else if (nbSelectedFacets == 1) {
-        title = fmt::format("Selected Facet (#{})", interfGeom->GetSelectedFacets().front() + 1);
+        title = fmt::format("Selected Facet (#{})##facetDetails", interfGeom->GetSelectedFacets().front() + 1);
     }
     else {
-        title = fmt::format("Selected Facet (none)");
+        title = fmt::format("Selected Facet (none)##facetDetails");
+        sel = nullptr;
+        fSet = FacetSettings();
         return;
     }
     selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
@@ -154,7 +156,7 @@ void ImSidebar::UpdateFacetSettings() {
         fSet.psInput = std::to_string(fSet.ps);
         fSet.opacityInput = std::to_string(fSet.opacity);
         fSet.temperatureInput = std::to_string(fSet.temp);
-        sidesComboContent = std::to_string(fSet.sides_idx + 1);
+        sidesComboContent = fmt::format("{} Sided", fSet.sides_idx+1);
     }
 }
 
@@ -555,6 +557,7 @@ void ImSidebar::UpdateTable()
     if (items.Size != interfGeom->GetNbFacet()) {
         items.resize(static_cast<int>(interfGeom->GetNbFacet()), FacetData());
     }
+    LockWrapper lW(mApp->imguiRenderLock);
     for (int n = 0; n < items.Size; n++) {
         InterfaceFacet* f = interfGeom->GetFacet(n);
         FacetData& item = items[n];

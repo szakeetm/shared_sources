@@ -100,7 +100,7 @@ protected:
 	ImVector<FacetData> items;
     size_t nbSelectedFacets = 0, selected_facet_id = 0;
     InterfaceFacet* sel;
-	std::string title, simBtnLabel;
+	std::string title = "##facetDetails", simBtnLabel;
 #ifdef MOLFLOW
 	MolFlow* molApp = nullptr;
 #endif
@@ -124,7 +124,7 @@ protected:
         std::string temperatureInput = "1.0";
         bool facetSettingsChanged = false;
         int prof_idx = 0;
-        double area = 1.0;
+        double area = 0.0;
     };
     FacetSettings fSet;
 
