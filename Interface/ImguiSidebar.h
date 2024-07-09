@@ -107,21 +107,22 @@ protected:
     struct FacetSettings {
         enum { use_og = 0, use_og_area = 1 };
         int des_idx = 0;
+        double des_exponent = 0.0;
         std::string exponentInput = "";
-        std::string outgassingInput = "1.0";
-        std::string outgassingAreaInput = "1.0";
+        std::string outgassingInput = "";
+        std::string outgassingAreaInput = "";
         bool modeOfOg = use_og;
         double og = 1.0;
         double og_area = 1.0;
-        std::string sfInput = "1.0";
-        std::string psInput = "1.0";
+        std::string sfInput = "";
+        std::string psInput = "";
         double sf = 1.0;
         double ps = 1.0;
         int sides_idx = 0;
         double opacity = 1.0;
-        std::string opacityInput = "1.0";
+        std::string opacityInput = "";
         double temp = 1.0;
-        std::string temperatureInput = "1.0";
+        std::string temperatureInput = "";
         bool facetSettingsChanged = false;
         int prof_idx = 0;
         double area = 0.0;

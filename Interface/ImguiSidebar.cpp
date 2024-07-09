@@ -103,6 +103,7 @@ void ImSidebar::DrawSectionViewerSettings()
 
 void ImSidebar::UpdateFacetSettings() {
     nbSelectedFacets = interfGeom->GetNbSelectedFacets();
+    fSet = FacetSettings();
     if (nbSelectedFacets > 1) {
         title = fmt::format("Selected Facet ({} selected)##facetDetails", nbSelectedFacets);
     }
@@ -112,12 +113,12 @@ void ImSidebar::UpdateFacetSettings() {
     else {
         title = fmt::format("Selected Facet (none)##facetDetails");
         sel = nullptr;
-        fSet = FacetSettings();
         return;
     }
     selected_facet_id = nbSelectedFacets ? interfGeom->GetSelectedFacets().front() : 0;
     sel = nbSelectedFacets ? interfGeom->GetFacet(selected_facet_id) : nullptr;
     if (sel == nullptr) return;
+
     fSet.des_idx = sel->sh.desorbType;
     desorpComboContent = desorpComboOpts[fSet.des_idx];
     // TODO use time-depended sh.stickingParam if defined
@@ -136,62 +137,126 @@ void ImSidebar::UpdateFacetSettings() {
         Loop over selection, replace differing values with '...' in interface
         */
         fSet.area = 0;
+        fSet.psInput = "...";
         std::vector<size_t>& facets = interfGeom->GetSelectedFacets();
         for (size_t& fID : facets) {
             InterfaceFacet& f = *interfGeom->GetFacet(fID);
             if (fSet.des_idx != f.sh.desorbType) desorpComboContent = "...";
-            if (fSet.sf != f.sh.sticking) fSet.sfInput = "..."; fSet.psInput = "...";
+            if (fSet.og != f.sh.outgassing * 10 || sel->sh.outgassingParam != f.sh.outgassingParam) {
+                fSet.outgassingInput = "...";
+                fSet.outgassingAreaInput = "...";
+            }
+            if (fSet.sf != f.sh.sticking || sel->sh.stickingParam != f.sh.stickingParam) {
+                fSet.sfInput = "...";
+                fSet.psInput = "...";
+            }
             if (fSet.sides_idx != f.sh.is2sided) sidesComboContent = "...";
-            if (fSet.opacity != f.sh.opacity) fSet.opacityInput = "...";
-            if (fSet.temp != f.sh.temperature) fSet.temperatureInput = "...";
+            if (fSet.opacity != f.sh.opacity || sel->sh.opacityParam != f.sh.opacityParam) fSet.opacityInput = "...";
+            if (fSet.temp != f.sh.temperature || sel->sh.temperatureParam != f.sh.temperatureParam) fSet.temperatureInput = "...";
             fSet.area += f.sh.area;
             if (fSet.prof_idx != f.sh.profileType) profileComboContent = "...";
         }
     }
-    else {
-        fSet.outgassingInput = std::to_string(fSet.og);
-        fSet.sfInput = std::to_string(fSet.sf);
-        fSet.outgassingAreaInput = std::to_string(fSet.og_area);
-        fSet.ps = PumpingSpeedFromSticking(fSet.sf, sel->sh.area, sel->sh.temperature);
-        fSet.psInput = std::to_string(fSet.ps);
-        fSet.opacityInput = std::to_string(fSet.opacity);
-        fSet.temperatureInput = std::to_string(fSet.temp);
-        sidesComboContent = fmt::format("{} Sided", fSet.sides_idx+1);
+    if (fSet.outgassingInput == "") {
+        if (sel->sh.outgassingParam == "") fSet.outgassingInput = std::to_string(fSet.og);
+        else fSet.outgassingInput = sel->sh.outgassingParam;
     }
+    if (fSet.outgassingAreaInput == "") {
+        fSet.outgassingAreaInput = std::to_string(fSet.og_area);
+    }
+    if (fSet.sfInput == "") {
+        if (sel->sh.stickingParam == "") fSet.sfInput = std::to_string(fSet.sf);
+        else fSet.sfInput = sel->sh.stickingParam;
+    }
+    fSet.ps = PumpingSpeedFromSticking(fSet.sf, sel->sh.area, sel->sh.temperature);
+    if (fSet.psInput == "") fSet.psInput = std::to_string(fSet.ps);
+
+    if (fSet.opacityInput == "") {
+        if (sel->sh.opacityParam == "") fSet.opacityInput = std::to_string(fSet.opacity);
+        else fSet.opacityInput = sel->sh.opacityParam;
+    }
+    if (fSet.temperatureInput == "") {
+        if (sel->sh.temperatureParam == "") fSet.temperatureInput = std::to_string(fSet.temp);
+        else fSet.temperatureInput = sel->sh.temperatureParam;
+    }
+    sidesComboContent = fmt::format("{} Sided", fSet.sides_idx+1);
 }
 
 void ImSidebar::ApplyFacetSettings() {
     // take values from nput fields and apply them to geometry facet
-    // TODO deal with multiple facet selections
 
     LockWrapper lW(mApp->imguiRenderLock);
-
-    if (desorpComboContent != "...")
-    {
-        sel->sh.desorbType = fSet.des_idx;
-        sel->sh.outgassing = fSet.og / 10;
-    }
-    if (fSet.sfInput != "...") {
-        sel->sh.sticking = fSet.sf;
-    }
-    if (sidesComboContent != "...") {
-        sel->sh.is2sided = fSet.sides_idx;
-    }
-    if (fSet.opacityInput != "...") {
-        sel->sh.opacity = fSet.opacity;
-    }
-    if (fSet.temperatureInput != "...") {
-        sel->sh.temperature = fSet.temp;
-    }
     if (!mApp->AskToReset()) return;
-    mApp->changedSinceSave = true;
 
-    if (profileComboContent != "...") {
-        sel->sh.profileType = fSet.prof_idx;
+    std::vector<size_t>& facets = interfGeom->GetSelectedFacets();
+    for (size_t& fID : facets) {
+        InterfaceFacet& f = *interfGeom->GetFacet(fID);
+
+        if (desorpComboContent != "...")
+        {
+            f.sh.desorbType = fSet.des_idx;
+            if (fSet.des_idx == 3) {
+                if (fSet.exponentInput != "...") {
+                    if (!Util::getNumber(&fSet.des_exponent, fSet.exponentInput)) {
+                        ImIOWrappers::InfoPopup("Error", "Invalid desorption type exponent");
+                        return;
+                    }
+                    else {
+                        f.sh.desorbTypeN = fSet.des_exponent;
+                    }
+                }
+            }
+        }
+        if (fSet.outgassingInput != "...") {
+            if (!Util::getNumber(&fSet.og_area, fSet.outgassingInput)) {
+                f.sh.outgassingParam = fSet.outgassingInput;
+            }
+            else {
+                f.sh.outgassing = fSet.og / 10; // unit conversion
+                f.sh.outgassingParam = "";
+            }
+        }
+        if (fSet.sfInput != "...") {
+            if (!Util::getNumber(&fSet.sf, fSet.sfInput)) {
+                // input is NaN
+                f.sh.stickingParam = fSet.sfInput;
+            }
+            else {
+                // input is a valid number
+                f.sh.sticking = fSet.sf;
+                f.sh.stickingParam = "";
+            }
+        }
+        if (sidesComboContent != "...") {
+            f.sh.is2sided = fSet.sides_idx;
+        }
+        if (fSet.opacityInput != "...") {
+            if (!Util::getNumber(&fSet.opacity, fSet.opacityInput)) {
+                f.sh.opacityParam = fSet.opacityInput;
+            }
+            else {
+                f.sh.opacity = fSet.opacity;
+                f.sh.opacityParam = "";
+            }
+        }
+        if (fSet.temperatureInput != "...") {
+            if (!Util::getNumber(&fSet.temp, fSet.temperatureInput)) {
+                f.sh.temperatureParam = fSet.temperatureInput;
+            }
+            else {
+                f.sh.temperature = fSet.temp;
+                f.sh.temperatureParam = "";
+            }
+        }
+        mApp->changedSinceSave = true;
+
+        if (profileComboContent != "...") {
+            f.sh.profileType = fSet.prof_idx;
+        }
+        f.sh.maxSpeed = 4.0 * sqrt(2.0 * 8.31 * f.sh.temperature / 0.001 / mApp->worker.model->sp.gasMass);
+
+        f.UpdateFlags();
     }
-    sel->sh.maxSpeed = 4.0 * sqrt(2.0 * 8.31 * sel->sh.temperature / 0.001 / mApp->worker.model->sp.gasMass);
-    sel->UpdateFlags();
-
     mApp->worker.MarkToReload();
     fSet.facetSettingsChanged = false;
     
@@ -227,8 +292,7 @@ void ImSidebar::DrawSectionSelectedFacet()
             if (fSet.des_idx == 3 && desorpComboContent != "...") {
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(txtW * 4);
-                if (ImGui::InputText("##exponent", &fSet.exponentInput))
-                    fSet.facetSettingsChanged = true;
+                if (ImGui::InputText("##exponent", &fSet.exponentInput)) fSet.facetSettingsChanged = true;
             }
             if (fSet.des_idx == 0 || desorpComboContent == "...") ImGui::BeginDisabled();
 
@@ -244,11 +308,8 @@ void ImSidebar::DrawSectionSelectedFacet()
                     //update the other value
                     fSet.og_area = fSet.og / fSet.area;
                     fSet.outgassingAreaInput = std::to_string(fSet.og_area);
-                    fSet.facetSettingsChanged = true;
                 }
-                else {
-                    // TODO apply user string as time-depended parameter name
-                }
+                fSet.facetSettingsChanged = true;
             }
             if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", fSet.modeOfOg == fSet.use_og_area)) {
                 fSet.modeOfOg = fSet.use_og_area;
@@ -261,8 +322,8 @@ void ImSidebar::DrawSectionSelectedFacet()
                 if (Util::getNumber(&fSet.og_area, fSet.outgassingAreaInput)) {
                     fSet.og = fSet.og_area * fSet.area;
                     fSet.outgassingInput = std::to_string(fSet.og);
-                    fSet.facetSettingsChanged = true;
                 }
+                fSet.facetSettingsChanged = true;
             }
             if (fSet.des_idx == 0 || desorpComboContent == "...") ImGui::EndDisabled();
             ImGui::TreePop();
@@ -278,6 +339,7 @@ void ImSidebar::DrawSectionSelectedFacet()
                 }
                 fSet.facetSettingsChanged = true;
             }
+            if (nbSelectedFacets > 1) ImGui::BeginDisabled();
             ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
             if (ImGui::InputText("##PumpingSpeed", &fSet.psInput)) {
@@ -288,6 +350,7 @@ void ImSidebar::DrawSectionSelectedFacet()
                 }
                 fSet.facetSettingsChanged = true;
             }
+            if (nbSelectedFacets > 1) ImGui::EndDisabled();
             if (fSet.sf < 0 || fSet.sf > 1) { // if sf is out of range display warning
                 ImGui::TextColored(ImVec4(1, 0, 0, 1), u8"Sticking factor \u2209[0,1]");
             }
@@ -316,8 +379,8 @@ void ImSidebar::DrawSectionSelectedFacet()
             }
             ImGui::Text("Opacity"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            if (ImGui::InputText("##Opacity", &fSet.opacityInput)) { // if text changed
-                Util::getNumber(&fSet.opacity, fSet.opacityInput); // try to convert it to a number
+            if (ImGui::InputText("##Opacity", &fSet.opacityInput)) {
+                Util::getNumber(&fSet.opacity, fSet.opacityInput); // converto to number so the warning can be displayed
                 fSet.facetSettingsChanged = true;
             }
             if (fSet.opacity < 0 || fSet.opacity > 1) { // if opacity is out of range display the warining
@@ -362,9 +425,9 @@ void ImSidebar::DrawSectionSelectedFacet()
                 ImGui::EndCombo();
             }
         }
-        if (ImGui::Button("<<Adv.")) {}
+        if (ImGui::Button("<<Adv.")) {} // TODO open advanced facet params window
         ImGui::SameLine();
-        if (ImGui::Button("Details")) {}
+        if (ImGui::Button("Details")) {} // TODO open facet details window
         ImGui::SameLine();
         if (ImGui::Button("Coords")) mApp->imWnd->facCoord.Toggle();
         ImGui::SameLine();
