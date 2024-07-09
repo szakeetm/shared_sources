@@ -140,4 +140,6 @@ protected:
     std::string sidesComboContent = "";
     std::string profileComboOpts[7] = { "None","Pressure u","Pressure v","Incident angle","Speed distribution","Orthogonal velocity","Tangential velocity" };
     std::string profileComboContent = "";
+
+    ImVec2 pos, size;
 };

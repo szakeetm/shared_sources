@@ -5,10 +5,14 @@
 void ImViewerSettings::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW*35, txtH*30));
+	ImGui::SetNextWindowSize(ImVec2(txtW*35, txtH*30), ImGuiCond_FirstUseEver);
+	if (positionChangePending) {
+		ImGui::SetNextWindowPos(newPos);
+		positionChangePending = false;
+	}
 	ImGui::Begin("3D Viewer Settings", &drawn, ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoResize);
 
-	ImGui::TextDisabled("Viewer#1"); // TODO: make dynamic based on selected viewer
+	ImGui::TextDisabled(title.c_str()); // TODO: make dynamic based on selected viewer
 
 	ImGui::TextWithMargin("Show facet", txtW * 14); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 14);
@@ -50,11 +54,13 @@ void ImViewerSettings::Draw()
 	ImGui::Checkbox("Large dots for hits", &largerHitDot);
 	ImGui::Checkbox("Show Teleports", &showTeleports);
 	ImGui::Checkbox("Show time overlay", &showTimeOverlay);
-	ImGui::Checkbox(u8"Hide Normals, u\u20D7, v\u20D7 vectors, indices", &hideUIByLimit);
+	ImGui::Checkbox(u8"Hide Normals, u\u20D7, v\u20D7 vectors, indices", &supressUI);
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("when more than"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 6);
-	ImGui::InputText("##hideLimitIn", &hideUILimitIn); ImGui::SameLine();
+	if (supressUI) ImGui::BeginDisabled();
+	ImGui::InputText("##hideLimitIn", &supressUILimitIn); ImGui::SameLine();
+	if (supressUI) ImGui::EndDisabled();
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("facets sel.");
 
@@ -77,10 +83,62 @@ void ImViewerSettings::Draw()
 	ImGui::End();
 }
 
+void ImViewerSettings::SetPos(ImVec2 pos)
+{
+	newPos = pos;
+	positionChangePending = true;
+}
+
 void ImViewerSettings::CrossSectionButtonPress()
 {
+	// TODO: open ImGUi CrossSection tool
 }
 
 void ImViewerSettings::ApplyButtonPress()
 {
+
+}
+
+void ImViewerSettings::Update()
+{
+	viewer = mApp->viewers[mApp->curViewer];
+	fMode = (ShowFacetMode)viewer->volumeRenderMode;
+	showHiddenEdges = viewer->showHiddenFacet;
+	showHiddenVertex = viewer->showHiddenVertex;
+	showTextureGrid = viewer->showMesh;
+	showTimeOverlay = viewer->showTime;
+
+	largerHitDot = viewer->bigDots;
+	showDirection = viewer->showDir;
+	showTeleports = viewer->showTP;
+
+	transitionStep = viewer->transStep;
+	transitionStepIn = fmt::format("{}", transitionStep);
+
+	angleStep = viewer->angleStep;
+	angleStepIn = fmt::format("{}", angleStep);
+
+	numOfLines = viewer->dispNumHits;
+	numOfLinesIn = fmt::format("{}", numOfLines);
+
+	numOfLeaks = viewer->dispNumLeaks;
+	numOfLeaksIn = fmt::format("{}", numOfLeaks);
+
+	title = fmt::format("Viewer#{}", mApp->curViewer + 1);
+	
+	normeRatio = interfGeom->GetNormeRatio();
+	normeRatioIn = fmt::format("{}", normeRatio);
+	normalize = interfGeom->GetAutoNorme();
+	center = interfGeom->GetCenterNorme();
+
+	supressUI = viewer->hideLot != -1;
+	supressUILimit = viewer->hideLot;
+	if (supressUI) supressUILimitIn = fmt::format("{}", supressUILimit);
+	else supressUILimitIn = "";
+	
+}
+
+void ImViewerSettings::OnShow()
+{
+	Update();
 }

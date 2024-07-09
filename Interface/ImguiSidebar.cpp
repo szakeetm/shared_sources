@@ -83,6 +83,7 @@ void ImSidebar::DrawSectionViewerSettings()
                 ImGui::TableNextColumn();
                 if (ImGui::Button("<< View")) {
                     mApp->imWnd->viewSet.Toggle();
+                    mApp->imWnd->viewSet.SetPos(ImVec2(pos.x-txtW*35, pos.y+txtH));
                 }
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("Indices", &viewer->showIndex);
@@ -641,8 +642,10 @@ void ImSidebar::Draw() {
     const ImGuiViewport* viewport = ImGui::GetMainViewport();
     float width = txtW * 40;
     // set size and pos on every draw so it updates when window resizes
-    ImGui::SetNextWindowPos(ImVec2(viewport->Size.x - width, viewport->WorkPos.y));
-    ImGui::SetNextWindowSize(ImVec2(width, viewport->WorkSize.y));
+    pos = ImVec2(viewport->Size.x - width, viewport->WorkPos.y);
+    ImGui::SetNextWindowPos(pos);
+    size = ImVec2(width, viewport->WorkSize.y);
+    ImGui::SetNextWindowSize(size);
 
     ImGui::Begin("[BETA] Molflow Sidebar", &drawn, flags);
 #if defined(DEBUG)

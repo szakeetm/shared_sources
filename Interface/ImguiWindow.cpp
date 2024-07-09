@@ -513,6 +513,7 @@ void ImguiWindow::Refresh()
     if (measForce.IsVisible()) measForce.Update();
     partLog.UpdateStatus();
     sideBar.Update();
+    viewSet.Update();
 }
 
 void ImguiWindow::Reset()
@@ -532,6 +533,7 @@ void ImguiWindow::Reset()
     if (vertCoord.IsVisible()) vertCoord.UpdateFromSelection();
     partLog.UpdateStatus();
     sideBar.Update();
+    viewSet.Update();
 }
 
 void ImguiWindow::Clear()
@@ -540,6 +542,7 @@ void ImguiWindow::Clear()
     convPlot.Refresh();
     partLog.UpdateStatus();
     sideBar.Update();
+    viewSet.Update();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
@@ -556,4 +559,5 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     convPlot.Refresh();
     profPlot.Refresh();
     sideBar.Update();
+    viewSet.Update();
 }
