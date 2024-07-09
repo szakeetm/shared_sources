@@ -113,7 +113,7 @@ public:
 	  GLProgress_Abstract& prg);
   void LoadTexturesGEO(FileReader& f, int version);
   void FacetHitCacheToSimModel(); //only .geo and .txt with no time-dep moment state loading
-  int SendAngleMaps();
+  void SendAngleMaps(); //Throws error
   void ResetMoments();
 
   double GetMoleculesPerTP(size_t moment) const;
