@@ -82,14 +82,7 @@ void ImSidebar::DrawSectionViewerSettings()
                 ImGui::TableNextRow();
                 ImGui::TableNextColumn();
                 if (ImGui::Button("<< View")) {
-                    LockWrapper myLock(mApp->imguiRenderLock);
-                    if (!mApp->viewer3DSettings)
-                        mApp->viewer3DSettings = new Viewer3DSettings();
-                    mApp->viewer3DSettings->SetVisible(!mApp->viewer3DSettings->IsVisible());
-                    mApp->viewer3DSettings->Reposition();
-                    auto curViewer = mApp->curViewer;
-                    auto viewer = mApp->viewers[curViewer];
-                    mApp->viewer3DSettings->Refresh(mApp->worker.GetGeometry(), viewer);
+                    mApp->imWnd->viewSet.Toggle();
                 }
                 ImGui::TableNextColumn();
                 ImGui::Checkbox("Indices", &viewer->showIndex);
@@ -121,7 +114,6 @@ void ImSidebar::UpdateFacetSettings() {
 
     fSet.des_idx = sel->sh.desorbType;
     desorpComboContent = desorpComboOpts[fSet.des_idx];
-    // TODO use time-depended sh.stickingParam if defined
     fSet.og = sel->sh.outgassing * 10; // from bar to mbar
     fSet.og_area = fSet.og / sel->sh.area;
     fSet.area = sel->sh.area;
@@ -138,7 +130,7 @@ void ImSidebar::UpdateFacetSettings() {
         */
         fSet.area = 0;
         fSet.psInput = "...";
-        std::vector<size_t>& facets = interfGeom->GetSelectedFacets();
+        std::vector<size_t> facets = interfGeom->GetSelectedFacets();
         for (size_t& fID : facets) {
             InterfaceFacet& f = *interfGeom->GetFacet(fID);
             if (fSet.des_idx != f.sh.desorbType) desorpComboContent = "...";
@@ -157,6 +149,7 @@ void ImSidebar::UpdateFacetSettings() {
             if (fSet.prof_idx != f.sh.profileType) profileComboContent = "...";
         }
     }
+    // values that are not "..." can be filled now
     if (fSet.outgassingInput == "") {
         if (sel->sh.outgassingParam == "") fSet.outgassingInput = std::to_string(fSet.og);
         else fSet.outgassingInput = sel->sh.outgassingParam;

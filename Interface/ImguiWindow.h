@@ -33,6 +33,7 @@
 #include "ImguiOutgassingMap.h"
 #include "ImguiVertexCoordinates.h"
 #include "ImguiVertexMove.h"
+#include "ImguiViewer3DSettings.h"
 
 #include "ImguiMenu.h"
 
@@ -92,6 +93,7 @@ public:
     ImFacetMove facetMov;
     ShortcutManager shortcutMan;
     ImSidebar sideBar;
+    ImViewerSettings viewSet;
     ImGlobalSettings globalSet;
     ImSelectFacetByResult selFacetByResult;
     ImFormulaEditor formulaEdit;
