@@ -182,7 +182,7 @@ void ImSidebar::ApplyFacetSettings() {
     LockWrapper lW(mApp->imguiRenderLock);
     if (!mApp->AskToReset()) return;
 
-    std::vector<size_t>& facets = interfGeom->GetSelectedFacets();
+    std::vector<size_t> facets = interfGeom->GetSelectedFacets();
     for (size_t& fID : facets) {
         InterfaceFacet& f = *interfGeom->GetFacet(fID);
 
@@ -430,7 +430,8 @@ void ImSidebar::DrawSectionSelectedFacet()
                 ImGui::EndCombo();
             }
         }
-        if (ImGui::Button("<<Adv.")) {} // TODO open advanced facet params window
+        if (sel == nullptr) ImGui::EndDisabled();
+        if (ImGui::Button("<<Adv.")) mApp->imWnd->advFacPar.Show(); // TODO open advanced facet params window
         ImGui::SameLine();
         if (ImGui::Button("Details")) {} // TODO open facet details window
         ImGui::SameLine();
@@ -442,7 +443,6 @@ void ImSidebar::DrawSectionSelectedFacet()
             ApplyFacetSettings();
         }
         if (disabled) ImGui::EndDisabled();
-        if (sel == nullptr) ImGui::EndDisabled();
     }
 }
 

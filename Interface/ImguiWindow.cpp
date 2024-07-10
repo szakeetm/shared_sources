@@ -173,6 +173,8 @@ void ImguiWindow::init() {
     progress.Init(mApp);
     sideBar = ImSidebar();
     sideBar.Init(mApp);
+    advFacPar = ImAdvFacetParams();
+    advFacPar.Init(mApp);
     viewSet = ImViewerSettings();
     viewSet.Init(mApp);
     shortcutMan = ShortcutManager();
@@ -440,6 +442,7 @@ void ImguiWindow::renderSingle() {
 
         sideBar.Draw();
         viewSet.Draw();
+        advFacPar.Draw();
 
         smartSelect.Draw();
         selByNum.Draw();
