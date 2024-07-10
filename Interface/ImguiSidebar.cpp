@@ -264,6 +264,7 @@ void ImSidebar::DrawSectionSelectedFacet()
         if (sel == nullptr) ImGui::BeginDisabled();
 #if defined(MOLFLOW)
         if (ImGui::TreeNodeEx("Particles in", ImGuiTreeNodeFlags_DefaultOpen)) {
+            ImGui::AlignTextToFramePadding();
             ImGui::Text("Desorption"); ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
             if (ImGui::BeginCombo("##Desorption", desorpComboContent)) {
@@ -285,16 +286,18 @@ void ImSidebar::DrawSectionSelectedFacet()
             }
             if (fSet.des_idx == 3 && desorpComboContent != "...") {
                 ImGui::SameLine();
-                ImGui::SetNextItemWidth(txtW * 4);
+                ImGui::SetNextItemWidth(txtW * 6);
                 if (ImGui::InputText("##exponent", &fSet.exponentInput)) fSet.facetSettingsChanged = true;
             }
             if (fSet.des_idx == 0 || desorpComboContent == "...") ImGui::BeginDisabled();
 
-            if (ImGui::RadioButton(u8"Outgassing [mbar\u00b7l/s]", fSet.modeOfOg == fSet.use_og)) {
+            if (ImGui::RadioButton("##OutGas", fSet.modeOfOg == fSet.use_og)) {
                 fSet.modeOfOg = fSet.use_og;
             }
             ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin(u8"Outgassing [mbar\u00b7l/s]", txtW * 18);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##in", &fSet.outgassingInput)) {
                 fSet.modeOfOg = fSet.use_og;
                 // if value changed
@@ -305,12 +308,13 @@ void ImSidebar::DrawSectionSelectedFacet()
                 }
                 fSet.facetSettingsChanged = true;
             }
-            if (ImGui::RadioButton(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", fSet.modeOfOg == fSet.use_og_area)) {
+            if (ImGui::RadioButton("##OutGasArea", fSet.modeOfOg == fSet.use_og_area)) {
                 fSet.modeOfOg = fSet.use_og_area;
-                fSet.facetSettingsChanged = true;
             }
             ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin(u8"Outg/area [mbar\u00b7l/s/cm\u00b2]", txtW * 18);
+            ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##ina", &fSet.outgassingAreaInput)) {
                 fSet.modeOfOg = fSet.use_og_area;
                 if (Util::getNumber(&fSet.og_area, fSet.outgassingAreaInput)) {
@@ -323,8 +327,8 @@ void ImSidebar::DrawSectionSelectedFacet()
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
-            ImGui::Text("Sticking Factor"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin("Sticking Factor", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##StickingFactor", &fSet.sfInput)) {
                 if (Util::getNumber(&fSet.sf, fSet.sfInput)) {
                     // could work incorrectly correctly if area and temperature are changed
@@ -334,8 +338,8 @@ void ImSidebar::DrawSectionSelectedFacet()
                 fSet.facetSettingsChanged = true;
             }
             if (nbSelectedFacets > 1) ImGui::BeginDisabled();
-            ImGui::Text("Pumping speed [l/s]"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin("Pumping speed [l/s]", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##PumpingSpeed", &fSet.psInput)) {
                 if (Util::getNumber(&fSet.ps, fSet.psInput)) {
                     // could work incorrectly correctly if area and temperature are changed
@@ -352,7 +356,10 @@ void ImSidebar::DrawSectionSelectedFacet()
         }
 #endif
         {
-            if (ImGui::BeginCombo("Sides", sidesComboContent)) {
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextWithMargin("Sides", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::BeginCombo("##Sides", sidesComboContent)) {
                 if (nbSelectedFacets > 1) {
                     if (ImGui::Selectable("...")) {
                         // explicidly choose to not change facet sidedness
@@ -371,8 +378,8 @@ void ImSidebar::DrawSectionSelectedFacet()
                 }
                 ImGui::EndCombo();
             }
-            ImGui::Text("Opacity"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin("Opacity", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##Opacity", &fSet.opacityInput)) {
                 Util::getNumber(&fSet.opacity, fSet.opacityInput); // converto to number so the warning can be displayed
                 fSet.facetSettingsChanged = true;
@@ -382,8 +389,8 @@ void ImSidebar::DrawSectionSelectedFacet()
             }
 
 #if defined(MOLFLOW)
-            ImGui::Text(u8"Temperature [\u212a]"); ImGui::SameLine();
-            ImGui::SetNextItemWidth(txtW * 10);
+            ImGui::TextWithMargin(u8"Temperature [\u212a]", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
                 Util::getNumber(&fSet.temp, fSet.temperatureInput);
                 fSet.facetSettingsChanged = true;
@@ -393,17 +400,21 @@ void ImSidebar::DrawSectionSelectedFacet()
             }
 #endif
             {
-                ImGui::BeginDisabled();
                 if (nbSelectedFacets > 1) {
-                    ImGui::InputDoubleRightSide(u8"Sum area [cm\u00b2]", &fSet.area);
+                    ImGui::TextWithMargin(u8"Sum area [cm\u00b2]", txtW * 14);
                 }
                 else {
-                    ImGui::InputDoubleRightSide(u8"Area [cm\u00b2]", &fSet.area);
+                    ImGui::TextWithMargin(u8"Area [cm\u00b2]", txtW * 14);
                 }
+                ImGui::SameLine();
+                ImGui::SetNextItemWidth(-1);
+                ImGui::BeginDisabled();
+                ImGui::InputDouble("##Area", &fSet.area);
                 ImGui::EndDisabled();
             }
-
-            if (ImGui::BeginCombo("Profile", profileComboContent)) {
+            ImGui::TextWithMargin("Profile", txtW * 14); ImGui::SameLine();
+            ImGui::SetNextItemWidth(-1);
+            if (ImGui::BeginCombo("##Profile", profileComboContent)) {
                 if (nbSelectedFacets > 1) {
                     if (ImGui::Selectable("...")) {
                         profileComboContent = "...";
