@@ -16,8 +16,8 @@ protected:
 	};
 	ShowFacetMode fMode = front_back;
 	std::string comboText = "Front & Back";
-	double transitionStep = 1.0, angleStep = 0.005;
-	std::string transitionStepIn = "1.0", angleStepIn = "0.005";
+	double translationStep = 1.0, angleStep = 0.005;
+	std::string translationStepIn = "1.0", angleStepIn = "0.005";
 	size_t numOfLines = 2048, numOfLeaks = 2048;
 	std::string numOfLinesIn = "2048", numOfLeaksIn = "2048";
 	bool showHiddenEdges = false, showHiddenVertex = true, showTextureGrid = false,

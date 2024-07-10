@@ -1,11 +1,13 @@
 #include "ImguiViewer3DSettings.h"
 #include "ImguiExtensions.h"
 #include "imgui_stdlib/imgui_stdlib.h"
+#include "Helper/StringHelper.h"
+#include "ImguiPopup.h"
 
 void ImViewerSettings::Draw()
 {
 	if (!drawn) return;
-	ImGui::SetNextWindowSize(ImVec2(txtW*35, txtH*30), ImGuiCond_FirstUseEver);
+	ImGui::SetNextWindowSize(ImVec2(txtW*33, txtH*29), ImGuiCond_FirstUseEver);
 	if (positionChangePending) {
 		ImGui::SetNextWindowPos(newPos);
 		positionChangePending = false;
@@ -15,7 +17,7 @@ void ImViewerSettings::Draw()
 	ImGui::TextDisabled(title.c_str()); // TODO: make dynamic based on selected viewer
 
 	ImGui::TextWithMargin("Show facet", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
+	ImGui::SetNextItemWidth(-1);
 	if (ImGui::BeginCombo("##ShowFacetCombo", comboText)) {
 		if (ImGui::Selectable("Front & Back")) {
 			comboText = "Front & Back";
@@ -33,19 +35,19 @@ void ImViewerSettings::Draw()
 	}
 
 	ImGui::TextWithMargin("Translation step", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
-	ImGui::InputText("##TranslationStepIn", &transitionStepIn);
+	ImGui::SetNextItemWidth(-1);
+	ImGui::InputText("##TranslationStepIn", &translationStepIn);
 
 	ImGui::TextWithMargin("Angle step", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::InputText("##AngleStepIn", &angleStepIn);
 
 	ImGui::TextWithMargin("Number of lines", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::InputText("##numberOfLinesIn", &numOfLinesIn);
 
 	ImGui::TextWithMargin("Number of leaks", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::InputText("##numberofLeaksIn", &numOfLeaksIn);
 
 	ImGui::Checkbox("Show hidden edges (selected facets)", &showHiddenEdges);
@@ -58,25 +60,26 @@ void ImViewerSettings::Draw()
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("when more than"); ImGui::SameLine();
 	ImGui::SetNextItemWidth(txtW * 6);
-	if (supressUI) ImGui::BeginDisabled();
+	if (!supressUI) ImGui::BeginDisabled();
 	ImGui::InputText("##hideLimitIn", &supressUILimitIn); ImGui::SameLine();
-	if (supressUI) ImGui::EndDisabled();
+	if (!supressUI) ImGui::EndDisabled();
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("facets sel.");
 
 	if (ImGui::Button("Cross section")) CrossSectionButtonPress();
 
+	ImGui::Separator();
 	ImGui::TextDisabled("Direction field");
 	ImGui::Checkbox("Show direction (selected viewer only)", &showDirection);
 	ImGui::AlignTextToFramePadding();
 	ImGui::Text("Set for all viewers:");
 	ImGui::TextWithMargin("Norme ratio", txtW * 14); ImGui::SameLine();
-	ImGui::SetNextItemWidth(txtW * 14);
+	ImGui::SetNextItemWidth(-1);
 	ImGui::InputText("##normeRatioIn", &normeRatioIn);
 	ImGui::Checkbox("Normalize", &normalize); ImGui::SameLine();
 	ImGui::Checkbox("Center", & center);
 
-	ImGui::Dummy(ImVec2(txtW, txtH));
+	ImGui::Separator();
 
 	if (ImGui::Button("Apply")) ApplyButtonPress();
 
@@ -96,7 +99,74 @@ void ImViewerSettings::CrossSectionButtonPress()
 
 void ImViewerSettings::ApplyButtonPress()
 {
+	// validate user input
+	if(!Util::getNumber(&translationStep, translationStepIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid translation step value");
+		return;
+	}
+	if (!Util::getNumber(&angleStep, angleStepIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid angle step value");
+		return;
+	}
+	if (!Util::getNumber(&numOfLines, numOfLinesIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid number of displayed hits value");
+		return;
+	}
+	else if (numOfLines < 1 || numOfLines > 2048) {
+		ImIOWrappers::InfoPopup("Error", "Invalid number of displayed hits.\nMust be between 1 and 2048");
+		return;
+	}
+	if (!Util::getNumber(&numOfLeaks, numOfLeaksIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid number of displayed leaks value");
+		return;
+	}
+	else if (numOfLeaks < 1 || numOfLeaks > 2048) {
+		ImIOWrappers::InfoPopup("Error", "Invalid number of leaks hits.\nMust be between 1 and 2048");
+		return;
+	}
+	if (supressUI) {
+		if (!Util::getNumber(&supressUILimit, supressUILimitIn)) {
+			ImIOWrappers::InfoPopup("Error", "Invalid number of selected facets value");
+			return;
+		}
+		else if (supressUILimit < 2) {
+			ImIOWrappers::InfoPopup("Error", "Invalid number of selected facets.\nMust be larger than 2");
+			return;
+		}
+	}
+	if (!Util::getNumber(&normeRatio, normeRatioIn)) {
+		ImIOWrappers::InfoPopup("Error", "Invalid norme ratio value");
+		return;
+	}
+	// assign values
+	viewer->volumeRenderMode = static_cast<VolumeRenderMode>(fMode);
+	viewer->transStep = translationStep;
+	viewer->angleStep = angleStep;
+	viewer->dispNumHits = numOfLines;
+	viewer->dispNumLeaks = numOfLeaks;
+	viewer->showHiddenFacet = showHiddenEdges;
+	viewer->showHiddenVertex = showHiddenVertex;
+	viewer->showMesh = showTextureGrid;
+	viewer->bigDots = largerHitDot;
+	viewer->showDir = showDirection;
+	viewer->showTime = showTimeOverlay;
+	viewer->showTP = showTeleports;
 
+	interfGeom->SetNormeRatio(normeRatio);
+	interfGeom->SetAutoNorme(normalize);
+	interfGeom->SetCenterNorme(center);
+
+	viewer->hideLot = supressUI ? supressUILimit : -1;
+
+	bool neededMesh = mApp->needsMesh;
+	mApp->CheckNeedsTexture();
+	bool needsMesh = mApp->needsMesh;
+	if (!needsMesh && neededMesh) { //We just disabled mesh
+		interfGeom->ClearFacetMeshLists();
+	}
+	else if (needsMesh && !neededMesh) { //We just enabled mesh
+		interfGeom->BuildFacetMeshLists();
+	}
 }
 
 void ImViewerSettings::Update()
@@ -112,8 +182,8 @@ void ImViewerSettings::Update()
 	showDirection = viewer->showDir;
 	showTeleports = viewer->showTP;
 
-	transitionStep = viewer->transStep;
-	transitionStepIn = fmt::format("{}", transitionStep);
+	translationStep = viewer->transStep;
+	translationStepIn = fmt::format("{}", translationStep);
 
 	angleStep = viewer->angleStep;
 	angleStepIn = fmt::format("{}", angleStep);
