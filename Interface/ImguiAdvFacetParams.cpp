@@ -1,12 +1,14 @@
 #include "ImguiAdvFacetParams.h"
 #include "imgui_stdlib/imgui_stdlib.h"
 #include "ImguiExtensions.h"
+#include "Facet_shared.h"
 
 void ImAdvFacetParams::Draw()
 {
     if (!drawn) return;
     ImGui::SetNextWindowSizeConstraints(ImVec2(txtW * 55, txtH * 10), ImVec2(txtW * 500, txtH * 100));
 	ImGui::Begin("Advanced Facet Parameters", &drawn, ImGuiWindowFlags_NoSavedSettings);
+    if (nbSelected == 0) ImGui::BeginDisabled();
     if (ImGui::CollapsingHeader("Texture properties"))
     {
         ImGui::Checkbox("Enable texture", &enableTexture);
@@ -137,11 +139,11 @@ void ImAdvFacetParams::Draw()
 
     if (ImGui::CollapsingHeader("View settings"))
     {
-        ImGui::Checkbox("Draw Texture", &drawTexture);
+        ImGui::TriState("Draw Texture", &drawTexture, drawTextureAllowMixed);
         ImGui::SameLine();
-        ImGui::Checkbox("Draw Volume", &drawVolume);
+        ImGui::TriState("Draw Volume", &drawVolume, drawVolumeAllowMixed);
         ImGui::SameLine();
-        if (ImGui::Button("<- Change draw")) {}
+        if (ImGui::Button("<- Change draw")) ApplyDrawSettings();
     }
 
     if (ImGui::CollapsingHeader("Dynamic desorption"))
@@ -223,5 +225,47 @@ void ImAdvFacetParams::Draw()
         ImGui::SameLine();
         if (ImGui::Button("Release recorded")) {}
     }
-	ImGui::End();
+    if (nbSelected == 0) ImGui::EndDisabled();
+    ImGui::End();
+}
+
+void ImAdvFacetParams::Update()
+{
+    nbSelected = interfGeom->GetNbSelectedFacets();
+    if (nbSelected == 0) {
+        return;
+    }
+    std::vector<size_t> selected = interfGeom->GetSelectedFacets();
+    InterfaceFacet* f0 = interfGeom->GetFacet(selected[0]);
+    drawTexture = f0->viewSettings.textureVisible;
+    drawTextureAllowMixed = false;
+    drawVolume = f0->viewSettings.volumeVisible;
+    drawVolumeAllowMixed = false;
+    for (int i = 1; i < interfGeom->GetNbFacet(); i++) {
+        InterfaceFacet* f = interfGeom->GetFacet(i);
+        if (f->selected) {
+            if (drawTexture != f->viewSettings.textureVisible) {
+                drawTexture = 2;
+                drawTextureAllowMixed = true;
+            }
+            if (drawVolume != f->viewSettings.volumeVisible) {
+                drawVolume = 2;
+                drawVolumeAllowMixed = true;
+            }
+        }
+    }
+}
+
+void ImAdvFacetParams::ApplyDrawSettings()
+{
+    for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+        InterfaceFacet* f = interfGeom->GetFacet(i);
+        if (f->selected) {
+
+            if (drawTexture < 2) f->viewSettings.textureVisible = drawTexture;
+            if (drawVolume < 2) f->viewSettings.volumeVisible = drawVolume;
+        }
+    }
+    LockWrapper lW(mApp->imguiRenderLock);
+    interfGeom->BuildGLList(); //Re-render facets
 }

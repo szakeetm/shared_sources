@@ -4,7 +4,10 @@
 class ImAdvFacetParams : public ImWindow {
 public:
 	void Draw();
+    void Update();
 protected:
+    void ApplyDrawSettings();
+    size_t nbSelected;
     bool enableTexture;
     bool useSquareCells;
     float resolutionA, resolutionB;
@@ -35,8 +38,10 @@ protected:
     float freq, binding;
     std::string freqIn, bindingIn;
 
-    bool drawTexture;
-    bool drawVolume;
+    short drawTexture;
+    bool drawTextureAllowMixed;
+    short drawVolume;
+    bool drawVolumeAllowMixed;
 
     float avg1, avg2, avg3;
     std::string avg1In, avg2In, avg3In;

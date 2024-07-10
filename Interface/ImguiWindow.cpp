@@ -517,6 +517,7 @@ void ImguiWindow::Refresh()
     partLog.UpdateStatus();
     sideBar.Update();
     viewSet.Update();
+    advFacPar.Update();
 }
 
 void ImguiWindow::Reset()
@@ -537,6 +538,7 @@ void ImguiWindow::Reset()
     partLog.UpdateStatus();
     sideBar.Update();
     viewSet.Update();
+    advFacPar.Update();
 }
 
 void ImguiWindow::Clear()
@@ -544,8 +546,8 @@ void ImguiWindow::Clear()
     mirrProjFacet.Clear();
     convPlot.Refresh();
     partLog.UpdateStatus();
-    sideBar.Update();
     viewSet.Update();
+    advFacPar.Update();
 }
 
 void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSettings>& interfaceSettings)
@@ -563,4 +565,5 @@ void ImguiWindow::LoadProfileFromFile(const std::unique_ptr<MolflowInterfaceSett
     profPlot.Refresh();
     sideBar.Update();
     viewSet.Update();
+    advFacPar.Update();
 }
