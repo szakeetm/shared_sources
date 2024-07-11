@@ -16,6 +16,7 @@ protected:
     void UpdateMemoryEstimate();
     void UpdateCellCount();
     void EditCellCount();
+    void CalcSojournTime();
     std::pair<double, double> GetRatioForNbCell(size_t nbCellsU, size_t nbCellsV);
     size_t nbSelected;
     short enableTexture;
@@ -54,7 +55,7 @@ protected:
     bool movingPart;
     bool wallSojourn;
     float freq, binding;
-    std::string freqIn, bindingIn;
+    std::string freqIn, bindingIn, sojournText = "Wall sojourn time";
 
     short drawTexture;
     bool drawTextureAllowMixed;
@@ -67,4 +68,6 @@ protected:
     bool record;
     float theta, max, nVals, phi;
     std::string thetaIn, maxIn, nValsIn, phiIn;
+
+    friend class ImSidebar;
 };

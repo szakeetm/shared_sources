@@ -5,6 +5,7 @@
 #include "Facet_shared.h"
 #include "Helper/StringHelper.h"
 #include "Helper/MathTools.h"
+#include "ImguiWindow.h"
 
 #ifdef MOLFLOW
 #include "MolFlow.h"
@@ -187,7 +188,7 @@ void ImAdvFacetParams::Draw()
         ImGui::InputText("##LinkTo", &linkIn);
 
         ImGui::Checkbox("Moving part", &movingPart);
-        ImGui::Checkbox("Wall sojourn time", &wallSojourn);
+        ImGui::Checkbox(fmt::format("{}###Wall sojourn time", sojournText).c_str(), & wallSojourn);
         ImGui::SameLine();
         ImGui::HelpMarker(R"(Sojourn time calculated by Frenkel's equation
 
@@ -210,12 +211,20 @@ from C. Benvenutti http://cds.cern.ch/record/454180
         ImGui::Text("Attempt freq:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##AttemptFreq", &freqIn);
+        if (ImGui::InputText("##AttemptFreq", &freqIn)) {
+            if (Util::getNumber(&freq, freqIn)) {
+                CalcSojournTime();
+            }
+        }
         ImGui::SameLine();
         ImGui::Text("Hz\t Binding E:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##BindingE", &bindingIn);
+        if (ImGui::InputText("##BindingE", &bindingIn)) {
+            if (Util::getNumber(&binding, bindingIn)) {
+                CalcSojournTime();
+            }
+        }
         ImGui::SameLine();
         ImGui::Text("J/mole");
     }
@@ -669,6 +678,20 @@ void ImAdvFacetParams::EditCellCount()
             UpdateMemoryEstimate();
         }
     }
+}
+
+void ImAdvFacetParams::CalcSojournTime()
+{
+    if (wallSojourn == 0
+        || !(Util::getNumber(&freq, freqIn)
+        || !(Util::getNumber(&binding, bindingIn))
+        || !(Util::getNumber(&mApp->imWnd->sideBar.fSet.temp, mApp->imWnd->sideBar.fSet.temperatureInput)))) {
+        sojournText = ("Wall sojourn time");
+        return;
+    }
+    std::ostringstream tmp;
+    tmp << "Wall sojourn time (mean=" << 1.0 / (freq * exp(-binding / (8.31 * mApp->imWnd->sideBar.fSet.temp))) << " s)";
+    sojournText = tmp.str();
 }
 
 // copied from legacy

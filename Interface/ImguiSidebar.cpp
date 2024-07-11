@@ -392,7 +392,7 @@ void ImSidebar::DrawSectionSelectedFacet()
             ImGui::TextWithMargin(u8"Temperature [\u212a]", txtW * 14); ImGui::SameLine();
             ImGui::SetNextItemWidth(-1);
             if (ImGui::InputText("##Temperature", &fSet.temperatureInput)) {
-                Util::getNumber(&fSet.temp, fSet.temperatureInput);
+                if (Util::getNumber(&fSet.temp, fSet.temperatureInput)) mApp->imWnd->advFacPar.CalcSojournTime();
                 fSet.facetSettingsChanged = true;
             }
             if (fSet.temp <= 0) {

@@ -142,4 +142,5 @@ protected:
     std::string profileComboContent = "";
 
     ImVec2 pos, size;
+    friend class ImAdvFacetParams;
 };
