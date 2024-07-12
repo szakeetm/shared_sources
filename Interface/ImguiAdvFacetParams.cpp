@@ -219,33 +219,39 @@ void ImAdvFacetParams::Draw()
         ImGui::TextWithMargin("part cosine^", txtW * 10);
         ImGui::SetNextItemWidth(txtW * 6);
         ImGui::SameLine();
-        if(ImGui::InputText("##cosineNIn", &reflextionExponentIn))
+        if (ImGui::InputText("##cosineNIn", &reflextionExponentIn))
             mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("Accomodation coefficient:", txtW * 20);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-1);
-        ImGui::InputText("##Accommodation", &accommodationIn);
-
-
+        if(ImGui::InputText("##Accommodation", &accomodationIn))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("Teleport to facet:", txtW * 20);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(-1);
-        ImGui::InputText("##TeleportTo", &teleportIn);
+        if (ImGui::InputText("##TeleportTo", &teleportIn))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+
 
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Structure:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 10);
-        ImGui::InputText("##Structure", &structureIn);
+        if (ImGui::InputText("##Structure", &structureIn))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
         ImGui::SameLine();
         ImGui::Text("Link to:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 10);
-        ImGui::InputText("##LinkTo", &linkIn);
+        if (ImGui::InputText("##LinkTo", &linkIn))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
 
-        ImGui::Checkbox("Moving part", &movingPart);
+        if (ImGui::TriState("Moving part", &movingPart, movingPartAllowMixed)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+        }
         if (ImGui::TriState(fmt::format("{}###Wall sojourn time", sojournText).c_str(), &wallSojourn, wallSojournAllowMixed)) {
             mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
             CalcSojournTime();
@@ -449,6 +455,17 @@ void ImAdvFacetParams::Update()
     reflextionExponent = f0->sh.reflection.cosineExponent;
     reflextionExponentIn = fmt::format("{}", reflextionExponent);
 
+    accomodation = f0->sh.accomodationFactor;
+    accomodationIn = fmt::format("{}", accomodation);
+    teleport = f0->sh.teleportDest;
+    teleportIn = fmt::format("{}", teleport);
+    structure = f0->sh.superIdx;
+    structureIn = structure == -1 ? "All" : fmt::format("{}", structure + 1);
+    link = f0->sh.superDest;
+    linkIn = link == 0 ? "No" : fmt::format("{}", link);
+
+    movingPart = f0->sh.isMoving;
+
     for (int i = 0; i < selected.size(); i++) {
         InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
         // draw toggles
@@ -522,6 +539,22 @@ void ImAdvFacetParams::Update()
         }
         if (reflextionExponent != f->sh.reflection.cosineExponent) {
             reflextionExponentIn = "...";
+        }
+        if (accomodation != f->sh.accomodationFactor) {
+            accomodationIn = "...";
+        }
+        if (teleport != f->sh.teleportDest) {
+            teleportIn = "...";
+        }
+        if (structure != f->sh.superIdx) {
+            structureIn = "...";
+        }
+        if (link != f->sh.superDest) {
+            linkIn = "...";
+        }
+        if (movingPart != f->sh.isMoving) {
+            movingPart = 2;
+            movingPartAllowMixed = true;
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -799,8 +832,6 @@ void ImAdvFacetParams::CalcSojournTime()
 
 bool ImAdvFacetParams::Apply()
 {
-    // TODO: Reflection, accommodation, teleportation, Structuresm Links, Moving Part
-
     // check inputs before the loop to not have to do it for every selected facet
     bool doSojournFreq = false;
     // slight change from legacy: does not change the freq if wall sojourn is disabled
@@ -867,7 +898,7 @@ bool ImAdvFacetParams::Apply()
     }
     bool doReflExp = false;
     if (Util::getNumber(&reflextionExponent, reflextionExponentIn)) {
-        if (reflextionExponent <= 1.0) {
+        if (reflextionExponent <= -1.0) {
             ImIOWrappers::InfoPopup("Error", "Cosine^N exponent must be greater than or equal to -1");
             return false;
         }
@@ -875,6 +906,73 @@ bool ImAdvFacetParams::Apply()
     }
     else if (reflextionExponentIn != "...") {
         ImIOWrappers::InfoPopup("Error", "Invalid cosine^N reflection exponent");
+        return false;
+    }
+
+    bool doAccomodation = false;
+    if (Util::getNumber(&accomodation, accomodationIn)) {
+        if (accomodation < 0.0 || accomodation > 1.0) {
+            ImIOWrappers::InfoPopup("Error", "Facet accomodation factor must be between 0 and 1");
+            return false;
+        }
+        doAccomodation = true;
+    }
+    else if (accomodationIn != "...") {
+        ImIOWrappers::InfoPopup("Error", "Invalid accomodation factor number");
+        return false;
+    }
+    bool doTeleport = false;
+    if (Util::getNumber(&teleport, teleportIn)) {
+        if (teleport<-1 || teleport>interfGeom->GetNbFacet()) {
+            ImIOWrappers::InfoPopup("Error", "Invalid teleport destination\n(If no teleport: set number to 0)");
+            return false;
+        }
+        else if (teleport > 0 && interfGeom->GetFacet(teleport - 1)->selected) {
+            ImIOWrappers::InfoPopup("Error", fmt::format("The teleport destination of facet #{} can't be itself!", teleport));
+            return false;
+        }
+    }
+    else if (teleportIn != "...") {
+        ImIOWrappers::InfoPopup("Error", "Invalid teleport destination input\n(If no teleport: set number to 0)");
+        return false;
+    }
+
+    bool structureChanged = false;
+    bool doStructure = false;
+    // Had to completely rewrite this if from legacy, it is far simpler now
+    if (Util::getNumber(&structure, structureIn)) { // input is a valid number
+        structure--;
+        doStructure = true;
+    }
+    else if (Contains({ "All", "all" }, structureIn)) { // input is NaN but is the word All
+        structure = -1;
+        doStructure = true;
+    }
+    else if (structureIn != "...") { // input is neither a number, 'all' nor '...' so it is invalid
+        ImIOWrappers::InfoPopup("Error", "Invalid input in superstructure number");
+        return false;
+    }
+    // it will only get here if structureIn == "..." in which case doStructure is false by default
+
+    bool doLink = false;
+    // same deal as above
+    if (Util::getNumber(&link, linkIn)) {
+        if (structure + 1 == link) {
+            ImIOWrappers::InfoPopup("Error", "Link and superstructure can't be the same");
+            return false;
+        }
+        else if (link < 0 || link > interfGeom->GetNbStructure()) {
+            ImIOWrappers::InfoPopup("Error", "Link destination points to a structure that doesn't exist");
+            return false;
+        }
+        doLink = true;
+    }
+    else if (Contains({ "none", "no" }, linkIn)) {
+        doLink = true;
+        link = 0;
+    }
+    else if (linkIn != "...") {
+        ImIOWrappers::InfoPopup("Error", "Invalid superstructure destination");
         return false;
     }
 
@@ -894,7 +992,25 @@ bool ImAdvFacetParams::Apply()
         if (doDiffuse) f->sh.reflection.diffusePart = diffuse;
         if (doSpecular) f->sh.reflection.specularPart = specular;
         if (doReflExp) f->sh.reflection.cosineExponent = reflextionExponent;
+
+        if (doAccomodation) f->sh.accomodationFactor = accomodation;
+        if (doTeleport) f->sh.teleportDest = teleport - 1;
+        if (doStructure) {
+            if (f->sh.superIdx != structure) {
+                structureChanged = true;
+                f->sh.superIdx = structure;
+            }
+        }
+        if (doLink) {
+            f->sh.superDest = link;
+            if (link) f->sh.opacity = 1.0;
+        }
+        if (movingPart < 2) f->sh.isMoving = movingPart;
     }
+
+    //Re-render facets (LockWrapper is alredy set)
+    if (structureChanged) interfGeom->BuildGLList();
+
     ApplyTexture(false);
     return true;
 }

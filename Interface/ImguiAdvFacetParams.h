@@ -48,12 +48,13 @@ protected:
     float diffuse, specular, cosine, reflextionExponent;
     std::string diffuseIn, specularIn, cosineIn, reflextionExponentIn;
     float accomodation;
-    std::string accommodationIn;
+    std::string accomodationIn;
     int teleport;
     std::string teleportIn;
     int structure, link;
     std::string structureIn, linkIn;
-    bool movingPart;
+    short movingPart;
+    bool movingPartAllowMixed;
 
     short wallSojourn;
     bool wallSojournAllowMixed;
