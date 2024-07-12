@@ -66,10 +66,14 @@ protected:
     short drawVolume;
     bool drawVolumeAllowMixed;
 
-    float avg1, avg2, avg3;
-    std::string avg1In, avg2In, avg3In;
-
     bool record;
+    std::vector<std::string> comboOpts;
+    int comboSel = 0;
+
+    // yield, flux, dose
+    float molPerPhoton_yield, photonPerSecPerArea_flux, photonPerArea_dose;
+    std::string molPerPhoton_yield_In, photonPerSecPerArea_flux_In, photonPerArea_dose_In;
+
     float theta, max, nVals, phi;
     std::string thetaIn, maxIn, nValsIn, phiIn;
 

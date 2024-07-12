@@ -323,7 +323,7 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::TextWithMargin("Avg", txtW * 6);
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            ImGui::InputText("##Avg2", &avg2In);
+            ImGui::InputText("##Avg2", &photonPerSecPerArea_flux_In);
             ImGui::SameLine();
             ImGui::TextWithMargin("ph/s/cm2", txtW * 5);
             
@@ -332,7 +332,7 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::Text("Avg");
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            ImGui::InputText("##Avg1", &avg1In);
+            ImGui::InputText("##Avg1", &molPerPhoton_yield_In);
             ImGui::SameLine();
             ImGui::Text("mol/ph");
 
@@ -340,9 +340,9 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::Text("Avg");
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
-            ImGui::InputText("##Avg3", &avg3In);
+            ImGui::InputText("##Avg3", &photonPerArea_dose_In);
             ImGui::SameLine();
-            ImGui::Text("pg/cm2");
+            ImGui::Text("ph/cm2");
 
             ImGui::EndTable();
         }
@@ -466,6 +466,29 @@ void ImAdvFacetParams::Update()
 
     movingPart = f0->sh.isMoving;
 
+    comboOpts.clear();
+    if (f0->hasOutgassingFile) { // first facet has it
+        comboOpts.push_back("Use user values"); // [0]
+        comboOpts.push_back("Use des. file"); // [1]
+
+        comboSel = (f0->sh.useOutgassingFile);
+        
+        photonPerSecPerArea_flux = f0->ogMap.totalFlux / f0->sh.area;
+        photonPerSecPerArea_flux_In = fmt::format("{}", photonPerSecPerArea_flux);
+        
+        photonPerArea_dose = f0->ogMap.totalDose / f0->sh.area;
+        photonPerArea_dose_In = fmt::format("{}", photonPerSecPerArea_flux);
+        
+        molPerPhoton_yield = f0->sh.totalOutgassing / (1.38E-23 * f0->sh.temperature) / f0->ogMap.totalFlux;
+        molPerPhoton_yield_In = fmt::format("{}", molPerPhoton_yield);
+    }
+    else { // first facet does not have it
+        comboOpts.push_back("No map loaded"); // [0]
+        photonPerSecPerArea_flux_In = "";
+        photonPerArea_dose_In = "";
+        molPerPhoton_yield_In = "";
+    }
+
     for (int i = 0; i < selected.size(); i++) {
         InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
         // draw toggles
@@ -555,6 +578,10 @@ void ImAdvFacetParams::Update()
         if (movingPart != f->sh.isMoving) {
             movingPart = 2;
             movingPartAllowMixed = true;
+        }
+        if (f0->hasOutgassingFile != f->hasOutgassingFile) { // mixed outgassing file
+            comboOpts.clear();
+            comboOpts.push_back("...");
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -967,7 +994,7 @@ bool ImAdvFacetParams::Apply()
         }
         doLink = true;
     }
-    else if (Contains({ "none", "no" }, linkIn)) {
+    else if (Contains({ "none", "no", "None", "No" }, linkIn)) {
         doLink = true;
         link = 0;
     }
