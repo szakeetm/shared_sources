@@ -17,7 +17,7 @@ protected:
     void UpdateCellCount();
     void EditCellCount();
     void CalcSojournTime();
-    void Apply();
+    bool Apply();
     std::pair<double, double> GetRatioForNbCell(size_t nbCellsU, size_t nbCellsV);
     size_t nbSelected;
     short enableTexture;
@@ -45,8 +45,8 @@ protected:
 
     std::string memory, cells;
 
-    float diffuse, specular, cosine, cosineN;
-    std::string diffuseIn, specularIn, cosineIn, cosineNIn;
+    float diffuse, specular, cosine, reflextionExponent;
+    std::string diffuseIn, specularIn, cosineIn, reflextionExponentIn;
     float accomodation;
     std::string accommodationIn;
     int teleport;

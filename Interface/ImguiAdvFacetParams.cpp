@@ -183,24 +183,44 @@ void ImAdvFacetParams::Draw()
         ImGui::TextWithMargin("Reflection:", txtW * 10);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##diffuseIn", &diffuseIn);
+        if (ImGui::InputText("##diffuseIn", &diffuseIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            if (Util::getNumber(&diffuse, diffuseIn)) {
+                cosine = 1.0 - diffuse - specular;
+                cosineIn = fmt::format("{:.3g}", cosine);
+            }
+        }
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::TextWithMargin("part diffuse.", txtW * 10);
+        ImGui::TextWithMargin("part diffuse,", txtW * 10);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##specularIn", &specularIn);
+        if (ImGui::InputText("##specularIn", &specularIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            if (Util::getNumber(&specular, specularIn)) {
+                cosine = 1.0 - diffuse - specular;
+                cosineIn = fmt::format("{:.3g}", cosine);
+            }
+        }
+        ImGui::SameLine();
+        ImGui::Text("part specular,");
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin(" \t", txtW * 10);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
+        // in legacy the input into this box is not used anywhere
+        // it is just displaying information so to not confuse users
+        // I made it disabled
+        ImGui::BeginDisabled();
         ImGui::InputText("##cosineIn", &cosineIn);
+        ImGui::EndDisabled();
+
         ImGui::SameLine();
         ImGui::TextWithMargin("part cosine^", txtW * 10);
         ImGui::SetNextItemWidth(txtW * 6);
         ImGui::SameLine();
-        ImGui::InputText("##cosineNIn", &cosineNIn);
-
+        if(ImGui::InputText("##cosineNIn", &reflextionExponentIn))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("Accomodation coefficient:", txtW * 20);
         ImGui::SameLine();
@@ -420,6 +440,15 @@ void ImAdvFacetParams::Update()
     binding = f0->sh.sojournE;
     bindingIn = fmt::format("{:.5g}", binding);
 
+    diffuse = f0->sh.reflection.diffusePart;
+    diffuseIn = fmt::format("{}", diffuse);
+    specular = f0->sh.reflection.specularPart;
+    specularIn = fmt::format("{}", specular);
+    cosine = 1.0 - diffuse - specular;
+    cosineIn = fmt::format("{}", cosine);
+    reflextionExponent = f0->sh.reflection.cosineExponent;
+    reflextionExponentIn = fmt::format("{}", reflextionExponent);
+
     for (int i = 0; i < selected.size(); i++) {
         InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
         // draw toggles
@@ -481,6 +510,18 @@ void ImAdvFacetParams::Update()
         }
         if (binding != f->sh.sojournE) {
             bindingIn = "...";
+        }
+        if (diffuse != f->sh.reflection.diffusePart) {
+            diffuseIn = "...";
+        }
+        if (specular != f->sh.reflection.specularPart) {
+            specularIn = "...";
+        }
+        if (!IsEqual(cosine, 1.0 - f->sh.reflection.diffusePart - f->sh.reflection.specularPart)) {
+            cosineIn = "...";
+        }
+        if (reflextionExponent != f->sh.reflection.cosineExponent) {
+            reflextionExponentIn = "...";
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -756,7 +797,7 @@ void ImAdvFacetParams::CalcSojournTime()
     sojournText = tmp.str();
 }
 
-void ImAdvFacetParams::Apply()
+bool ImAdvFacetParams::Apply()
 {
     // TODO: Reflection, accommodation, teleportation, Structuresm Links, Moving Part
 
@@ -768,13 +809,13 @@ void ImAdvFacetParams::Apply()
             // is a valid number
             if (freq <= 0.0) {
                 ImIOWrappers::InfoPopup("Error", "Wall sojourn time frequency has to be postive");
-                return;
+                return false;
             }
             doSojournFreq = true;
         }
         else if (freqIn != "...") { // is NaN and not "..."
             ImIOWrappers::InfoPopup("Error", "Invalid wall sojourn time frequency");
-            return;
+            return false;
         }
         // is "..." ('do' bool remains false)
     }
@@ -784,19 +825,61 @@ void ImAdvFacetParams::Apply()
             // is a valid number
             if (binding <= 0.0) {
                 ImIOWrappers::InfoPopup("Error", "Wall sojourn time second coefficient (Energy) has to be positive");
-                return;
+                return false;
             }
             doSojournEnergy = true;
         }
         else if (bindingIn != "...") { // is NaN and not "..."
             ImIOWrappers::InfoPopup("Error", "Invalid wall sojourn time second coefficient (Energy)");
-            return;
+            return false;
         }
         // is "..." ('do' bool remains false)
     }
+    bool doDiffuse = false;
+    if (Util::getNumber(&diffuse, diffuseIn)) {
+        if (diffuse < 0.0 || diffuse > 1.0) {
+            ImIOWrappers::InfoPopup("Error", "Diffuse reflection ratio must be vetween 0 and 1");
+            return false; // early return if out of range
+        }
+        doDiffuse = true; // numer in range
+    }
+    else if (diffuseIn != "...") {
+        // NaN and not "..."
+        ImIOWrappers::InfoPopup("Error", "Invalid diffuse reflection ratio");
+        return false;
+    }
+    bool doSpecular = false;
+    if (Util::getNumber(&specular, specularIn)) {
+        if (specular < 0.0 || specular > 1.0) {
+            ImIOWrappers::InfoPopup("Error", "Specular reflection ratio must be vetween 0 and 1");
+            return false; // early return if out of range
+        }
+        doSpecular = true; // numer in range
+    }
+    else if (specularIn != "...") {
+        // NaN and not "..."
+        ImIOWrappers::InfoPopup("Error", "Invalid specular reflection ratio");
+        return false;
+    }
+    if (diffuse + specular > 1) {
+        ImIOWrappers::InfoPopup("Error", "The sum of diffuse and specular reflection ratios cannot be larger than 1");
+        return false;
+    }
+    bool doReflExp = false;
+    if (Util::getNumber(&reflextionExponent, reflextionExponentIn)) {
+        if (reflextionExponent <= 1.0) {
+            ImIOWrappers::InfoPopup("Error", "Cosine^N exponent must be greater than or equal to -1");
+            return false;
+        }
+        doReflExp = true;
+    }
+    else if (reflextionExponentIn != "...") {
+        ImIOWrappers::InfoPopup("Error", "Invalid cosine^N reflection exponent");
+        return false;
+    }
 
     LockWrapper lW(mApp->imguiRenderLock);
-    if (!mApp->AskToReset(&mApp->worker)) return;
+    if (!mApp->AskToReset(&mApp->worker)) return false;
 
     auto selectedFacets = interfGeom->GetSelectedFacets();
     for (auto& sel : selectedFacets) {
@@ -807,8 +890,13 @@ void ImAdvFacetParams::Apply()
         if (wallSojourn < 2) f->sh.enableSojournTime = wallSojourn;
         if (doSojournFreq) f->sh.sojournFreq = freq;
         if (doSojournEnergy) f->sh.sojournE = binding;
+
+        if (doDiffuse) f->sh.reflection.diffusePart = diffuse;
+        if (doSpecular) f->sh.reflection.specularPart = specular;
+        if (doReflExp) f->sh.reflection.cosineExponent = reflextionExponent;
     }
     ApplyTexture(false);
+    return true;
 }
 
 // copied from legacy

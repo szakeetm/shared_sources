@@ -177,8 +177,9 @@ void ImSidebar::UpdateFacetSettings() {
 }
 
 void ImSidebar::ApplyFacetSettings() {
-    // take values from nput fields and apply them to geometry facet
+    if (!mApp->imWnd->advFacPar.Apply()) return;
 
+    // take values from nput fields and apply them to geometry facets
     LockWrapper lW(mApp->imguiRenderLock);
     if (!mApp->AskToReset()) return;
 
@@ -251,7 +252,6 @@ void ImSidebar::ApplyFacetSettings() {
 
         f.UpdateFlags();
     }
-    mApp->imWnd->advFacPar.Apply();
     mApp->worker.MarkToReload();
     fSet.facetSettingsChanged = false;
     
