@@ -12,11 +12,12 @@ protected:
     void ReleaseRecordedButtonPress();
     void ImportCVSButtonPress();
     void ForceRemeshButtonPress();
-    void ApplyTexture(bool force);
+    void ApplyTexture(bool force = false);
     void UpdateMemoryEstimate();
     void UpdateCellCount();
     void EditCellCount();
     void CalcSojournTime();
+    void Apply();
     std::pair<double, double> GetRatioForNbCell(size_t nbCellsU, size_t nbCellsV);
     size_t nbSelected;
     short enableTexture;
@@ -53,8 +54,10 @@ protected:
     int structure, link;
     std::string structureIn, linkIn;
     bool movingPart;
-    bool wallSojourn;
-    float freq, binding;
+
+    short wallSojourn;
+    bool wallSojournAllowMixed;
+    double freq, binding;
     std::string freqIn, bindingIn, sojournText = "Wall sojourn time";
 
     short drawTexture;

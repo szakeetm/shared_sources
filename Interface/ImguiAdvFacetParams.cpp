@@ -19,15 +19,18 @@ void ImAdvFacetParams::Draw()
     if (nbSelected == 0) ImGui::BeginDisabled();
     if (ImGui::CollapsingHeader("Texture properties"))
     {
-        ImGui::TriState("Enable texture", &enableTexture, enableTextureAllowMixed);
+        if (ImGui::TriState("Enable texture", &enableTexture, enableTextureAllowMixed))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
         ImGui::SameLine();
-        ImGui::TriState("Use square cells", &useSquareCells, useSquareCellsAllowMixed);
+        if (ImGui::TriState("Use square cells", &useSquareCells, useSquareCellsAllowMixed))
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
         ImGui::SameLine();
         if (ImGui::Button("Force remesh")) ForceRemeshButtonPress();
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Resolution:");
         ImGui::SetNextItemWidth(txtW * 6);
         if (ImGui::InputText("##ResolutionU", &resolutionUIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
             enableTexture = true;
             if (Util::getNumber(&resolutionU, resolutionUIn)) {
                 cellSizeU = 1.0 / resolutionU;
@@ -52,6 +55,7 @@ void ImAdvFacetParams::Draw()
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 6);
             if (ImGui::InputText("###ResolutionV", &resolutionVIn)) {
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
                 enableTexture = true;
                 if (Util::getNumber(&resolutionV, resolutionVIn)) {
                     cellSizeVIn = fmt::format("{}", 1.0 / resolutionV);
@@ -67,6 +71,7 @@ void ImAdvFacetParams::Draw()
         ImGui::Text("cells/cm");
         ImGui::SetNextItemWidth(txtW * 6);
         if (ImGui::InputText("##sizeU", &cellSizeUIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
             if (Util::getNumber(&cellSizeU, cellSizeUIn)) {
                 resolutionU = 1.0 / cellSizeU;
                 resolutionUIn = fmt::format("{}", resolutionU);
@@ -89,6 +94,7 @@ void ImAdvFacetParams::Draw()
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 6);
             if (ImGui::InputText("###sizeV", &cellSizeVIn)) {
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
                 enableTexture = true;
                 if (Util::getNumber(&cellSizeV, cellSizeVIn)) {
                     resolutionVIn = fmt::format("{}", 1.0 / cellSizeV);
@@ -109,25 +115,57 @@ void ImAdvFacetParams::Draw()
         ImGui::Text("Number of cells:");
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        if (ImGui::InputText("##CellsU", &cellsUIn)) EditCellCount();
+        if (ImGui::InputText("##CellsU", &cellsUIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            EditCellCount();
+        }
         ImGui::SameLine();
         ImGui::Text("x");
+        if (useSquareCells == 1) ImGui::BeginDisabled();
         ImGui::SetNextItemWidth(txtW * 6);
         ImGui::SameLine();
-        if (ImGui::InputText("##CellsV", &cellsVIn)) EditCellCount();
+        if (ImGui::InputText("##CellsV", &cellsVIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            EditCellCount();
+        }
+        if (useSquareCells == 1) ImGui::EndDisabled();
 
         if (nbSelected != 1) ImGui::EndDisabled();
 
         if (ImGui::BeginTable("##AFPLayoutHelper", 2)) {
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
-            ImGui::TriState("Count desorption", &countDesorption, countDesorptionAllowMixed);
-            ImGui::TriState("Count absorption", &countAbsorption, countAbsorptionAllowMixed);
-            ImGui::TriState("Angular coefficient", &angularCoefficient, angularCoefficientAllowMixed);
+            if (ImGui::TriState("Count desorption", &countDesorption, countDesorptionAllowMixed))
+            {
+                if (countDesorption == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
+            if (ImGui::TriState("Count absorption", &countAbsorption, countAbsorptionAllowMixed))
+            {
+                if (countAbsorption == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
+            if (ImGui::TriState("Angular coefficient", &angularCoefficient, angularCoefficientAllowMixed))
+            {
+                if (angularCoefficient == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
             ImGui::TableNextColumn();
-            ImGui::TriState("Count reflection", &countReflection, countReflectionAllowMixed);
-            ImGui::TriState("Count transparent pass", &countTransparentPass, countTransparentPassAllowMixed);
-            ImGui::TriState("Record direction vectors", &recordDirectionVectors, recordDirectionVectorsAllowMixed);
+            if (ImGui::TriState("Count reflection", &countReflection, countReflectionAllowMixed))
+            {
+                if (countReflection == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
+            if (ImGui::TriState("Count transparent pass", &countTransparentPass, countTransparentPassAllowMixed))
+            {
+                if (countTransparentPass == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
+            if (ImGui::TriState("Record direction vectors", &recordDirectionVectors, recordDirectionVectorsAllowMixed))
+            {
+                if (recordDirectionVectors == 1 && enableTexture == 0) enableTexture = 1;
+                mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            }
             ImGui::EndTable();
         }
 
@@ -188,7 +226,10 @@ void ImAdvFacetParams::Draw()
         ImGui::InputText("##LinkTo", &linkIn);
 
         ImGui::Checkbox("Moving part", &movingPart);
-        ImGui::Checkbox(fmt::format("{}###Wall sojourn time", sojournText).c_str(), & wallSojourn);
+        if (ImGui::TriState(fmt::format("{}###Wall sojourn time", sojournText).c_str(), &wallSojourn, wallSojournAllowMixed)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
+            CalcSojournTime();
+        }
         ImGui::SameLine();
         ImGui::HelpMarker(R"(Sojourn time calculated by Frenkel's equation
 
@@ -206,12 +247,13 @@ mean= 1/(A*f) = 1/f*exp(E/(kT))
 More info: read report CERN-OPEN-2000-265
 from C. Benvenutti http://cds.cern.ch/record/454180
 )");
-
+        if (wallSojourn == 0) ImGui::BeginDisabled();
         ImGui::AlignTextToFramePadding();
         ImGui::Text("Attempt freq:");
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(txtW * 6);
+        ImGui::SetNextItemWidth(txtW * 10);
         if (ImGui::InputText("##AttemptFreq", &freqIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
             if (Util::getNumber(&freq, freqIn)) {
                 CalcSojournTime();
             }
@@ -219,14 +261,16 @@ from C. Benvenutti http://cds.cern.ch/record/454180
         ImGui::SameLine();
         ImGui::Text("Hz\t Binding E:");
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(txtW * 6);
+        ImGui::SetNextItemWidth(txtW * 10);
         if (ImGui::InputText("##BindingE", &bindingIn)) {
+            mApp->imWnd->sideBar.fSet.facetSettingsChanged = true;
             if (Util::getNumber(&binding, bindingIn)) {
                 CalcSojournTime();
             }
         }
         ImGui::SameLine();
         ImGui::Text("J/mole");
+        if (wallSojourn == 0) ImGui::EndDisabled();
     }
 
     if (ImGui::CollapsingHeader("View settings"))
@@ -318,6 +362,8 @@ from C. Benvenutti http://cds.cern.ch/record/454180
         if (ImGui::Button("Release recorded")) ReleaseRecordedButtonPress();
     }
     if (nbSelected == 0) ImGui::EndDisabled();
+    ImGui::Separator();
+    if (ImGui::Button("Apply all")) mApp->imWnd->sideBar.ApplyFacetSettings(); // sidebars apply calls this class's apply
     ImGui::End();
 }
 
@@ -367,59 +413,74 @@ void ImAdvFacetParams::Update()
     cellSizeV = 1.0 / resolutionV;
     cellSizeVIn = fmt::format("{}", cellsV);
 
-    for (int i = 1; i < interfGeom->GetNbFacet(); i++) {
-        InterfaceFacet* f = interfGeom->GetFacet(i);
-        if (f->selected) {
-            // draw toggles
-            if (drawTexture != f->viewSettings.textureVisible) {
-                drawTexture = 2;
-                drawTextureAllowMixed = true;
-            }
-            if (drawVolume != f->viewSettings.volumeVisible) {
-                drawVolume = 2;
-                drawVolumeAllowMixed = true;
-            }
-            // texture properties
-            if (enableTexture != f->sh.isTextured) {
-                enableTexture = 2;
-                enableTextureAllowMixed = true;
-            }
-            if (useSquareCells != std::abs(f->tRatioU - f->tRatioV) < 1E-8 ? 1 : 0) {
-                useSquareCells = 2;
-                useSquareCellsAllowMixed = true;
-            }
-            if (countDesorption != f->sh.countDes) {
-                countDesorption = 2;
-                countDesorptionAllowMixed = true;
-            }
-            if (countReflection != f->sh.countRefl) {
-                countReflection = 2;
-                countReflectionAllowMixed = true;
-            }
-            if (countAbsorption != f->sh.countAbs) {
-                countAbsorption = 2;
-                countAbsorptionAllowMixed = true;
-            }
-            if (countTransparentPass != f->sh.countTrans) {
-                countTransparentPass = 2;
-                countTransparentPassAllowMixed = true;
-            }
-            if (angularCoefficient != f->sh.countACD) {
-                angularCoefficient = 2;
-                angularCoefficientAllowMixed = true;
-            }
-            if (recordDirectionVectors != f->sh.countDirection) {
-                recordDirectionVectors = 2;
-                recordDirectionVectorsAllowMixed = true;
-            }
-            if (resolutionU != f->tRatioU || resolutionV != f->tRatioV) {
-                resolutionUIn = "...";
-                resolutionVIn = "...";
-                cellSizeUIn = "...";
-                cellSizeVIn = "...";
-                cellsUIn = "...";
-                cellsVIn = "...";
-            }
+    wallSojourn = f0->sh.enableSojournTime;
+    wallSojournAllowMixed = false;
+    freq = f0->sh.sojournFreq;
+    freqIn = fmt::format("{:.5g}", freq);
+    binding = f0->sh.sojournE;
+    bindingIn = fmt::format("{:.5g}", binding);
+
+    for (int i = 0; i < selected.size(); i++) {
+        InterfaceFacet* f = interfGeom->GetFacet(selected[i]);
+        // draw toggles
+        if (drawTexture != f->viewSettings.textureVisible) {
+            drawTexture = 2;
+            drawTextureAllowMixed = true;
+        }
+        if (drawVolume != f->viewSettings.volumeVisible) {
+            drawVolume = 2;
+            drawVolumeAllowMixed = true;
+        }
+        // texture properties
+        if (enableTexture != f->sh.isTextured) {
+            enableTexture = 2;
+            enableTextureAllowMixed = true;
+        }
+        if (useSquareCells != std::abs(f->tRatioU - f->tRatioV) < 1E-8 ? 1 : 0) {
+            useSquareCells = 2;
+            useSquareCellsAllowMixed = true;
+        }
+        if (countDesorption != f->sh.countDes) {
+            countDesorption = 2;
+            countDesorptionAllowMixed = true;
+        }
+        if (countReflection != f->sh.countRefl) {
+            countReflection = 2;
+            countReflectionAllowMixed = true;
+        }
+        if (countAbsorption != f->sh.countAbs) {
+            countAbsorption = 2;
+            countAbsorptionAllowMixed = true;
+        }
+        if (countTransparentPass != f->sh.countTrans) {
+            countTransparentPass = 2;
+            countTransparentPassAllowMixed = true;
+        }
+        if (angularCoefficient != f->sh.countACD) {
+            angularCoefficient = 2;
+            angularCoefficientAllowMixed = true;
+        }
+        if (recordDirectionVectors != f->sh.countDirection) {
+            recordDirectionVectors = 2;
+            recordDirectionVectorsAllowMixed = true;
+        }
+        if (resolutionU != f->tRatioU || resolutionV != f->tRatioV) {
+            resolutionUIn = "...";
+            resolutionVIn = "...";
+            cellSizeUIn = "...";
+            cellSizeVIn = "...";
+            cellsUIn = "...";
+            cellsVIn = "...";
+        }
+        if (wallSojourn != f->sh.enableSojournTime) {
+            wallSojourn = 2;
+            wallSojournAllowMixed = true;
+        }
+        if (freq != f->sh.sojournFreq) {
+            freqIn = "...";
+        }
+        if (binding != f->sh.sojournE) {
+            bindingIn = "...";
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -431,6 +492,7 @@ void ImAdvFacetParams::Update()
         cellsVIn = "";
     }
     UpdateMemoryEstimate();
+    CalcSojournTime();
 }
 
 void ImAdvFacetParams::ApplyDrawSettings()
@@ -692,6 +754,61 @@ void ImAdvFacetParams::CalcSojournTime()
     std::ostringstream tmp;
     tmp << "Wall sojourn time (mean=" << 1.0 / (freq * exp(-binding / (8.31 * mApp->imWnd->sideBar.fSet.temp))) << " s)";
     sojournText = tmp.str();
+}
+
+void ImAdvFacetParams::Apply()
+{
+    // TODO: Reflection, accommodation, teleportation, Structuresm Links, Moving Part
+
+    // check inputs before the loop to not have to do it for every selected facet
+    bool doSojournFreq = false;
+    // slight change from legacy: does not change the freq if wall sojourn is disabled
+    if (wallSojourn != 0) {
+        if (Util::getNumber(&freq, freqIn)) {
+            // is a valid number
+            if (freq <= 0.0) {
+                ImIOWrappers::InfoPopup("Error", "Wall sojourn time frequency has to be postive");
+                return;
+            }
+            doSojournFreq = true;
+        }
+        else if (freqIn != "...") { // is NaN and not "..."
+            ImIOWrappers::InfoPopup("Error", "Invalid wall sojourn time frequency");
+            return;
+        }
+        // is "..." ('do' bool remains false)
+    }
+    bool doSojournEnergy = false;
+    if (wallSojourn != 0) {
+        if (Util::getNumber(&binding, bindingIn)) {
+            // is a valid number
+            if (binding <= 0.0) {
+                ImIOWrappers::InfoPopup("Error", "Wall sojourn time second coefficient (Energy) has to be positive");
+                return;
+            }
+            doSojournEnergy = true;
+        }
+        else if (bindingIn != "...") { // is NaN and not "..."
+            ImIOWrappers::InfoPopup("Error", "Invalid wall sojourn time second coefficient (Energy)");
+            return;
+        }
+        // is "..." ('do' bool remains false)
+    }
+
+    LockWrapper lW(mApp->imguiRenderLock);
+    if (!mApp->AskToReset(&mApp->worker)) return;
+
+    auto selectedFacets = interfGeom->GetSelectedFacets();
+    for (auto& sel : selectedFacets) {
+        InterfaceFacet* f = interfGeom->GetFacet(sel);
+        if (drawTexture < 2) f->viewSettings.textureVisible = drawTexture;
+        if (drawVolume < 2) f->viewSettings.volumeVisible = drawVolume;
+
+        if (wallSojourn < 2) f->sh.enableSojournTime = wallSojourn;
+        if (doSojournFreq) f->sh.sojournFreq = freq;
+        if (doSojournEnergy) f->sh.sojournE = binding;
+    }
+    ApplyTexture(false);
 }
 
 // copied from legacy

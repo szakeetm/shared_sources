@@ -251,6 +251,7 @@ void ImSidebar::ApplyFacetSettings() {
 
         f.UpdateFlags();
     }
+    mApp->imWnd->advFacPar.Apply();
     mApp->worker.MarkToReload();
     fSet.facetSettingsChanged = false;
     
