@@ -501,13 +501,13 @@ void ImAdvFacetParams::Update()
         comboSel = (f0->sh.useOutgassingFile);
         
         photonPerSecPerArea_flux = f0->ogMap.totalFlux / f0->sh.area;
-        photonPerSecPerArea_flux_In = fmt::format("{}", photonPerSecPerArea_flux);
+        photonPerSecPerArea_flux_In = fmt::format("{:.4g}", photonPerSecPerArea_flux);
         
         photonPerArea_dose = f0->ogMap.totalDose / f0->sh.area;
-        photonPerArea_dose_In = fmt::format("{}", photonPerSecPerArea_flux);
+        photonPerArea_dose_In = fmt::format("{:.4g}", photonPerSecPerArea_flux);
         
         molPerPhoton_yield = f0->sh.totalOutgassing / (1.38E-23 * f0->sh.temperature) / f0->ogMap.totalFlux;
-        molPerPhoton_yield_In = fmt::format("{}", molPerPhoton_yield);
+        molPerPhoton_yield_In = fmt::format("{:.4g}", molPerPhoton_yield);
     }
     else { // first facet does not have it
         comboOpts.push_back("No map loaded"); // [0]
@@ -611,6 +611,23 @@ void ImAdvFacetParams::Update()
             comboOpts.clear();
             comboOpts.push_back("...");
             comboSel = 0;
+        }
+        if (photonPerSecPerArea_flux != f->ogMap.totalFlux / f->sh.area) {
+            photonPerSecPerArea_flux_In = "...";
+        }
+        if (photonPerArea_dose != f->ogMap.totalDose / f->sh.area) {
+            photonPerArea_dose_In = "...";
+        }
+        // total flux can be zero, make sure to correctly display NaN (comparing two NaN-s does not work reliably
+        double molPerPhoton_yield_f = f->sh.totalOutgassing / (1.38E-23 * f->sh.temperature) / f->ogMap.totalFlux;
+        if (!IsEqual(molPerPhoton_yield, molPerPhoton_yield_f)) {
+            molPerPhoton_yield_In = "...";
+            if (std::isnan(molPerPhoton_yield) && std::isnan(molPerPhoton_yield_f)) {
+                molPerPhoton_yield_In = "NaN";
+                if (std::signbit(molPerPhoton_yield) && std::signbit(molPerPhoton_yield_f)) {
+                    molPerPhoton_yield_In = "-NaN";
+                }
+            }
         }
         if (record != f->sh.anglemapParams.record) {
             record = 2;
