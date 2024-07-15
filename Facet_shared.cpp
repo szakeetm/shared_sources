@@ -122,13 +122,13 @@ int InterfaceFacet::InvalidateDeviceObjects() {
 * \return true if texture was set
 */
 bool InterfaceFacet::SetTextureProperties(double width, double height) {
-	bool dimOK = (width*height > 0.0000001);
+	bool dimOK = (width*height > 1E-10);
 	if (dimOK) {
-        const double ceilCutoff = 0.9999999;
+        const double ceilCutoff = 1.0; //Was 0.99999999, caused rare over-the-limit texture increments, now be conservative and don't shrink texture
         sh.texWidth_precise = width;
 		sh.texHeight_precise = height;
-		sh.texWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
-		sh.texHeight = (int)ceil(height * ceilCutoff);
+		sh.texWidth = (int)std::ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2) -> not anymore
+		sh.texHeight = (int)std::ceil(height * ceilCutoff);
 		dimOK = (sh.texWidth > 0 && sh.texHeight > 0);
 	}
 	else {
@@ -589,10 +589,10 @@ std::pair<size_t, size_t> InterfaceFacet::GetNbCellForRatio(double ratioU, doubl
     double width = nU*ratioU;
     double height = nV*ratioV;
 
-    bool dimOK = (width*height > 0.0000001);
+    bool dimOK = (width*height > 1E-10);
     if (dimOK) {
-        const double ceilCutoff = 0.9999999;
-        int iWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
+        const double ceilCutoff = 1.0;  //Was 0.99999999, caused rare over-the-limit texture increments, now be conservative and don't shrink texture
+        int iWidth = (int)ceil(width * ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2) -> not anymore
         int iHeight = (int)ceil(height * ceilCutoff);
         return std::make_pair(iWidth, iHeight);
     }

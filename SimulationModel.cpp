@@ -43,10 +43,10 @@ int SimulationModel::InitializeFacets() {
 
         // Set some texture parameters
         // bool Facet::SetTexture(double width, double height, bool useMesh)
-        if (facet.sh.texWidth_precise * facet.sh.texHeight_precise > 0.0000001) {
-            const double ceilCutoff = 0.9999999;
+        if (facet.sh.texWidth_precise * facet.sh.texHeight_precise > 1e-10) {
+            const double ceilCutoff = 1.0;  //Was 0.99999999, caused rare over-the-limit texture increments, now be conservative and don't shrink texture
             facet.sh.texWidth = (int) std::ceil(facet.sh.texWidth_precise *
-                                                ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2)
+                                                ceilCutoff); //0.9999999: cut the last few digits (convert rounding error 1.00000001 to 1, not 2) -> not anymore
             facet.sh.texHeight = (int) std::ceil(facet.sh.texHeight_precise * ceilCutoff);
         } else {
             facet.sh.texWidth = 0;
