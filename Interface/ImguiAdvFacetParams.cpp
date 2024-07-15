@@ -333,7 +333,7 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::SetNextItemWidth(txtW * 10);
             ImGui::InputText("##Avg2", &photonPerSecPerArea_flux_In);
             ImGui::SameLine();
-            ImGui::TextWithMargin("ph/s/cm2", txtW * 5);
+            ImGui::TextWithMargin(u8"ph/s/cm\u00b2", txtW * 5);
             
             ImGui::TableNextColumn();
 
@@ -350,7 +350,7 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::SetNextItemWidth(txtW * 10);
             ImGui::InputText("##Avg3", &photonPerArea_dose_In);
             ImGui::SameLine();
-            ImGui::Text("ph/cm2");
+            ImGui::Text(u8"ph/cm\u00b2");
             ImGui::EndDisabled();
             ImGui::EndTable();
         }
@@ -358,32 +358,40 @@ from C. Benvenutti http://cds.cern.ch/record/454180
 
     if (ImGui::CollapsingHeader("Incident angle distribution"))
     {
-        ImGui::Checkbox("Record", &record);
+        ImGui::TriState("Record", &record, recordAllowMixed);
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("Theta (grazing angle):", txtW * 15);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##Theta", &thetaIn);
+        if(ImGui::InputText("##ThetaLow", &thetaLowIn)) record = true;
         ImGui::SameLine();
         ImGui::TextWithMargin("values from 0 to", txtW * 11);
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##max", &maxIn);
+        ImGui::SetNextItemWidth(txtW * 12);
+        if (ImGui::InputText("##ThetaMax", &thetaLimitIn)) {
+            record = true;
+            if (Util::getNumber(&thetaLimit, thetaLimitIn)) {
+                label = fmt::format("values from {:.5g} to PI/2", thetaLimit);
+            }
+            else {
+                label = "values from limit to PI/2";
+            }
+        }
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("\t", txtW * 15);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##nVals", &nValsIn);
+        if (ImGui::InputText("##high", &thetaHighIn)) record = true;
         ImGui::SameLine();
-        ImGui::Text("values from limit to PI/2");
+        ImGui::Text(label);
 
         ImGui::AlignTextToFramePadding();
         ImGui::TextWithMargin("Phi (azimith with U):", txtW * 15);
         ImGui::SameLine();
         ImGui::SetNextItemWidth(txtW * 6);
-        ImGui::InputText("##Phi", &phiIn);
+        if(ImGui::InputText("##Phi", &phiIn)) record = true;
         ImGui::SameLine();
         ImGui::Text("values from -PI to +PI");
 
@@ -473,6 +481,17 @@ void ImAdvFacetParams::Update()
     linkIn = link == 0 ? "No" : fmt::format("{}", link);
 
     movingPart = f0->sh.isMoving;
+
+    record = f0->sh.anglemapParams.record;
+    phi = f0->sh.anglemapParams.phiWidth;
+    phiIn = fmt::format("{:.5g}", phi);
+    thetaLow = f0->sh.anglemapParams.thetaLowerRes;
+    thetaLowIn = fmt::format("{}", thetaLow);
+    thetaHigh = f0->sh.anglemapParams.thetaHigherRes;
+    thetaHighIn = fmt::format("{}", thetaHigh);
+    thetaLimit = f0->sh.anglemapParams.thetaLimit;
+    thetaLimitIn = fmt::format("{}", thetaLimit);
+    label = fmt::format("values from {} to PI/2", thetaLimit);
 
     comboOpts.clear();
     if (f0->hasOutgassingFile) { // first facet has it
@@ -593,14 +612,22 @@ void ImAdvFacetParams::Update()
             comboOpts.push_back("...");
             comboSel = 0;
         }
-        if (photonPerSecPerArea_flux != f->ogMap.totalFlux / f->sh.area) {
-            photonPerSecPerArea_flux_In = "...";
+        if (record != f->sh.anglemapParams.record) {
+            record = 2;
+            recordAllowMixed = true;
         }
-        if (photonPerArea_dose != f->ogMap.totalDose / f->sh.area) {
-            photonPerArea_dose_In = "...";
+        if (phi != f->sh.anglemapParams.phiWidth) {
+            phiIn = "...";
         }
-        if (molPerPhoton_yield != f->sh.totalOutgassing / (1.38E-23 * f->sh.temperature) / f->ogMap.totalFlux) {
-            molPerPhoton_yield_In = "...";
+        if (thetaLow != f->sh.anglemapParams.thetaLowerRes) {
+            thetaLowIn = "...";
+        }
+        if (thetaHigh != f->sh.anglemapParams.thetaHigherRes) {
+            thetaHighIn = "...";
+        }
+        if (thetaLimit != f->sh.anglemapParams.thetaLimit) {
+            thetaLimitIn = "...";
+            label = "values from limit to PI/2";
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -985,6 +1012,70 @@ bool ImAdvFacetParams::Apply()
         return false;
     }
 
+    bool doPhi = false;
+    if (record == 1 && phiIn != "...") {
+        if (Util::getNumber(&phi, phiIn)) {
+            if (phi <= 0) {
+                ImIOWrappers::InfoPopup("Error", "Angle map width (phi) has to be positive");
+                return false;
+            }
+            doPhi = true;
+        }
+        else {
+            ImIOWrappers::InfoPopup("Error", "Invalid angle map width (phi)");
+            return false;
+        }
+    }
+
+    bool doThetaLow = false;
+    if (record == 1 && thetaLowIn != "...") {
+        if (Util::getNumber(&thetaLow, thetaLowIn)) {
+            if (thetaLow < 0) {
+                ImIOWrappers::InfoPopup("Error", "Angle map resolution (below theta limit) has to be positive");
+                return false;
+            }
+            doThetaLow = true;
+        }
+        else {
+            ImIOWrappers::InfoPopup("Error", "Invalid angle map resolution (bellow theta limit)");
+            return false;
+        }
+    }
+
+    bool doThetaHigh = false;
+    if (record == 1 && thetaHighIn != "...") {
+        if (Util::getNumber(&thetaHigh, thetaHighIn)) {
+            if (thetaHigh < 0) {
+                ImIOWrappers::InfoPopup("Error", "Angle map resolution (above theta limit) has to be positivie.");
+                return false;
+            }
+            doThetaHigh = true;
+        }
+        else {
+            ImIOWrappers::InfoPopup("Error", "Invalid angle map resolution (above theta limit)");
+            return false;
+        }
+    }
+    if (doThetaLow && doThetaHigh && ((thetaLow + thetaHigh) <= 0)) {
+        ImIOWrappers::InfoPopup("Error", "Angle map total theta height (sum of below and above limit) must be positive");
+        return false;
+    }
+
+    bool doThetaLimit = false;
+    if (record == 1 && thetaLimitIn != "...") {
+        if (Util::getNumber(&thetaLimit, thetaLimitIn)) {
+            if (!(thetaLimit >= 0 && thetaLimit <= M_PI_2)) {
+                ImIOWrappers::InfoPopup("Error", "Angle map theta limit must be between 0 and PI/2");
+                return false;
+            }
+            doThetaLimit = true;
+        }
+        else {
+            ImIOWrappers::InfoPopup("Error", "Invalid angle map theta limit");
+            return false;
+        }
+    }
+
     bool structureChanged = false;
     bool doStructure = false;
     // Had to completely rewrite this if from legacy, it is far simpler now
@@ -1075,6 +1166,32 @@ bool ImAdvFacetParams::Apply()
         if (movingPart < 2) f->sh.isMoving = movingPart;
 
         if (doUseMapA) f->sh.useOutgassingFile = comboSel;
+        
+        if (record < 2) f->sh.anglemapParams.record = record;
+        if (doPhi) {
+            if (phi != f->sh.anglemapParams.phiWidth) {
+                f->angleMapCache.clear();
+                f->sh.anglemapParams.phiWidth = phi;
+            }
+        }
+        if (doThetaLow) {
+            if (thetaLow != f->sh.anglemapParams.thetaLowerRes) {
+                f->angleMapCache.clear();
+                f->sh.anglemapParams.thetaLowerRes = thetaLow;
+            }
+        }
+        if (doThetaHigh) {
+            if (thetaHigh != f->sh.anglemapParams.thetaHigherRes) {
+                f->angleMapCache.clear();
+                f->sh.anglemapParams.thetaHigherRes = thetaHigh;
+            }
+        }
+        if (doThetaLimit) {
+            if (!IsEqual(thetaLimit, f->sh.anglemapParams.thetaLimit)) {
+                f->angleMapCache.clear();
+                f->sh.anglemapParams.thetaLimit = thetaLimit;
+            }
+        }
     }
 
     //Re-render facets (LockWrapper is alredy set)

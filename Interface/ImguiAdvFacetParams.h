@@ -66,7 +66,8 @@ protected:
     short drawVolume;
     bool drawVolumeAllowMixed;
 
-    bool record;
+    short record;
+    bool recordAllowMixed;
     std::vector<std::string> comboOpts;
     int comboSel = 0;
 
@@ -74,8 +75,8 @@ protected:
     double molPerPhoton_yield, photonPerSecPerArea_flux, photonPerArea_dose;
     std::string molPerPhoton_yield_In, photonPerSecPerArea_flux_In, photonPerArea_dose_In;
 
-    double theta, max, nVals, phi;
-    std::string thetaIn, maxIn, nValsIn, phiIn;
+    double thetaLow, thetaLimit, thetaHigh, phi;
+    std::string thetaLowIn, thetaLimitIn, thetaHighIn, phiIn, label = "values from limit to PI/2";
 
     friend class ImSidebar;
 };
