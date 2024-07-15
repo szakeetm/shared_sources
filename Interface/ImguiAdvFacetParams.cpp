@@ -311,15 +311,23 @@ from C. Benvenutti http://cds.cern.ch/record/454180
     if (ImGui::CollapsingHeader("Dynamic desorption"))
     {
         if (ImGui::BeginTable("##DeynDesorpLayoutHelper", 2)) {
+            if (comboOpts[comboSel] == "..." || comboOpts[0] == "No map loaded") ImGui::BeginDisabled();
             ImGui::TableNextRow();
             ImGui::TableNextColumn();
             ImGui::AlignTextToFramePadding();
             ImGui::TextWithMargin("Use file:", txtW * 6);
             ImGui::SameLine();
             ImGui::SetNextItemWidth(-1);
-            if (ImGui::BeginCombo("##UseFile", "")) {
+            if (ImGui::BeginCombo("##UseFile", comboSel<comboOpts.size() ? comboOpts[comboSel] : "")) {
+                for (unsigned short i = 0; i < comboOpts.size(); i++) {
+                    if (ImGui::Selectable(comboOpts[i])) {
+                        comboSel = i;
+                    }
+                }
                 ImGui::EndCombo();
             }
+            if (comboOpts[comboSel] == "..." || comboOpts[0] == "No map loaded") ImGui::EndDisabled();
+            ImGui::BeginDisabled();
             ImGui::TextWithMargin("Avg", txtW * 6);
             ImGui::SameLine();
             ImGui::SetNextItemWidth(txtW * 10);
@@ -343,7 +351,7 @@ from C. Benvenutti http://cds.cern.ch/record/454180
             ImGui::InputText("##Avg3", &photonPerArea_dose_In);
             ImGui::SameLine();
             ImGui::Text("ph/cm2");
-
+            ImGui::EndDisabled();
             ImGui::EndTable();
         }
     }
@@ -484,6 +492,7 @@ void ImAdvFacetParams::Update()
     }
     else { // first facet does not have it
         comboOpts.push_back("No map loaded"); // [0]
+        comboSel = 0;
         photonPerSecPerArea_flux_In = "";
         photonPerArea_dose_In = "";
         molPerPhoton_yield_In = "";
@@ -533,7 +542,7 @@ void ImAdvFacetParams::Update()
             recordDirectionVectors = 2;
             recordDirectionVectorsAllowMixed = true;
         }
-        if (resolutionU != f->tRatioU || resolutionV != f->tRatioV) {
+        if (!IsEqual(resolutionU,f->tRatioU) || !IsEqual(resolutionV, f->tRatioV)) {
             resolutionUIn = "...";
             resolutionVIn = "...";
             cellSizeUIn = "...";
@@ -582,6 +591,16 @@ void ImAdvFacetParams::Update()
         if (f0->hasOutgassingFile != f->hasOutgassingFile) { // mixed outgassing file
             comboOpts.clear();
             comboOpts.push_back("...");
+            comboSel = 0;
+        }
+        if (photonPerSecPerArea_flux != f->ogMap.totalFlux / f->sh.area) {
+            photonPerSecPerArea_flux_In = "...";
+        }
+        if (photonPerArea_dose != f->ogMap.totalDose / f->sh.area) {
+            photonPerArea_dose_In = "...";
+        }
+        if (molPerPhoton_yield != f->sh.totalOutgassing / (1.38E-23 * f->sh.temperature) / f->ogMap.totalFlux) {
+            molPerPhoton_yield_In = "...";
         }
     }
     if (enableTexture == 0) { // none of the facets have textures
@@ -731,6 +750,7 @@ void ImAdvFacetParams::ApplyTexture(bool force)
         nbPerformed++;
         //prg.SetProgress((double)nbPerformed / (double)selectedFacets.size());
     } //main cycle end
+    if (force) Update();
     return;
 }
 
@@ -823,6 +843,7 @@ void ImAdvFacetParams::EditCellCount()
             InterfaceFacet* fac = interfGeom->GetFacet(selected.front());
             auto nbCells = fac->GetNbCellForRatio(ratio.first, ratio.first);
             cellsV = nbCells.second;
+            cellsVIn = fmt::format("{}", cellsV);
         }
         if (Util::getNumber(&cellsV, cellsVIn) && cellsV != 0) {
             auto ratio = GetRatioForNbCell(cellsU, cellsU);
@@ -1003,6 +1024,25 @@ bool ImAdvFacetParams::Apply()
         return false;
     }
 
+    bool doUseMapA = false;
+    if (comboOpts[comboSel] != "...") {
+        bool missingMap = false;
+        int missingMapId;
+        if (comboSel == 1) {
+            for (int i = 0; i < interfGeom->GetNbFacet(); i++) {
+                if (interfGeom->GetFacet(i)->selected && !interfGeom->GetFacet(i)->hasOutgassingFile) {
+                    missingMap = true;
+                    missingMapId = i;
+                }
+            }
+        }
+        if (missingMap) {
+            ImIOWrappers::InfoPopup("Can't use map on all facets", fmt::format("{} is selected but doesn't have any outgassing map loaded.", missingMapId));
+            return false;
+        }
+        doUseMapA = true;
+    }
+
     LockWrapper lW(mApp->imguiRenderLock);
     if (!mApp->AskToReset(&mApp->worker)) return false;
 
@@ -1033,6 +1073,8 @@ bool ImAdvFacetParams::Apply()
             if (link) f->sh.opacity = 1.0;
         }
         if (movingPart < 2) f->sh.isMoving = movingPart;
+
+        if (doUseMapA) f->sh.useOutgassingFile = comboSel;
     }
 
     //Re-render facets (LockWrapper is alredy set)

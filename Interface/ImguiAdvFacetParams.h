@@ -24,9 +24,9 @@ protected:
     bool enableTextureAllowMixed;
     short useSquareCells;
     bool useSquareCellsAllowMixed;
-    float resolutionU, resolutionV;
+    double resolutionU, resolutionV;
     std::string resolutionUIn, resolutionVIn;
-    float cellSizeU, cellSizeV;
+    double cellSizeU, cellSizeV;
     std::string cellSizeUIn, cellSizeVIn;
     int cellsU, cellsV;
     std::string cellsUIn, cellsVIn;
@@ -45,9 +45,9 @@ protected:
 
     std::string memory, cells;
 
-    float diffuse, specular, cosine, reflextionExponent;
+    double diffuse, specular, cosine, reflextionExponent;
     std::string diffuseIn, specularIn, cosineIn, reflextionExponentIn;
-    float accomodation;
+    double accomodation;
     std::string accomodationIn;
     int teleport;
     std::string teleportIn;
@@ -71,10 +71,10 @@ protected:
     int comboSel = 0;
 
     // yield, flux, dose
-    float molPerPhoton_yield, photonPerSecPerArea_flux, photonPerArea_dose;
+    double molPerPhoton_yield, photonPerSecPerArea_flux, photonPerArea_dose;
     std::string molPerPhoton_yield_In, photonPerSecPerArea_flux_In, photonPerArea_dose_In;
 
-    float theta, max, nVals, phi;
+    double theta, max, nVals, phi;
     std::string thetaIn, maxIn, nValsIn, phiIn;
 
     friend class ImSidebar;

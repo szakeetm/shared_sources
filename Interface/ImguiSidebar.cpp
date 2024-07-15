@@ -290,7 +290,7 @@ void ImSidebar::DrawSectionSelectedFacet()
                 ImGui::SetNextItemWidth(txtW * 6);
                 if (ImGui::InputText("##exponent", &fSet.exponentInput)) fSet.facetSettingsChanged = true;
             }
-            if (fSet.des_idx == 0 || desorpComboContent == "..." || sel->sh.useOutgassingFile) ImGui::BeginDisabled();
+            if (fSet.des_idx == 0 || desorpComboContent == "..." || mApp->imWnd->advFacPar.comboSel != 0) ImGui::BeginDisabled();
 
             if (ImGui::RadioButton("##OutGas", fSet.modeOfOg == fSet.use_og)) {
                 fSet.modeOfOg = fSet.use_og;
@@ -324,7 +324,7 @@ void ImSidebar::DrawSectionSelectedFacet()
                 }
                 fSet.facetSettingsChanged = true;
             }
-            if (fSet.des_idx == 0 || desorpComboContent == "..." || sel->sh.useOutgassingFile) ImGui::EndDisabled();
+            if (fSet.des_idx == 0 || desorpComboContent == "..." || mApp->imWnd->advFacPar.comboSel != 0) ImGui::EndDisabled();
             ImGui::TreePop();
         }
         if (ImGui::TreeNodeEx("Particles out", ImGuiTreeNodeFlags_DefaultOpen)) {
