@@ -35,6 +35,7 @@
 #include "ImguiVertexMove.h"
 #include "ImguiViewer3DSettings.h"
 #include "ImguiAdvFacetParams.h"
+#include "ImguiFacetDetails.h"
 
 #include "ImguiMenu.h"
 
@@ -123,6 +124,7 @@ public:
     ImVertexCoordinates vertCoord;
     ImVertexMove vertMov;
 
+    ImFacetDetails facDet;
     ImExplodeFacet expFac;
 
     ImGeoViewer geoView;

@@ -178,6 +178,8 @@ void ImguiWindow::init() {
     viewSet = ImViewerSettings();
     viewSet.Init(mApp);
     shortcutMan = ShortcutManager();
+    facDet = ImFacetDetails();
+    facDet.Init(mApp);
     // selection
     smartSelect = ImSmartSelection();
     smartSelect.Init(mApp);
@@ -439,10 +441,11 @@ void ImguiWindow::renderSingle() {
         popup.Draw();
         input.Draw();
         progress.Draw();
-
+        // ---
         sideBar.Draw();
         viewSet.Draw();
         advFacPar.Draw();
+        facDet.Draw();
 
         smartSelect.Draw();
         selByNum.Draw();
@@ -518,6 +521,7 @@ void ImguiWindow::Refresh()
     sideBar.Update();
     viewSet.Update();
     advFacPar.Update();
+    facDet.Update();
 }
 
 void ImguiWindow::Reset()
@@ -539,6 +543,7 @@ void ImguiWindow::Reset()
     sideBar.Update();
     viewSet.Update();
     advFacPar.Update();
+    facDet.Update();
 }
 
 void ImguiWindow::Clear()

@@ -434,7 +434,7 @@ void ImSidebar::DrawSectionSelectedFacet()
         if (sel == nullptr) ImGui::EndDisabled();
         if (ImGui::Button("<<Adv.")) mApp->imWnd->advFacPar.Show(); // TODO open advanced facet params window
         ImGui::SameLine();
-        if (ImGui::Button("Details")) {} // TODO open facet details window
+        if (ImGui::Button("Details")) mApp->imWnd->facDet.Show();
         ImGui::SameLine();
         if (ImGui::Button("Coords")) mApp->imWnd->facCoord.Toggle();
         ImGui::SameLine();

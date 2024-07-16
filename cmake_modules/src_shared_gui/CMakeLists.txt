@@ -76,6 +76,7 @@ set(INTERFACE_FILES
         ${INTERFACE_DIR}/ImguiVertexMove.cpp
         ${INTERFACE_DIR}/ImguiViewer3DSettings.cpp
         ${INTERFACE_DIR}/ImguiAdvFacetParams.cpp
+        ${INTERFACE_DIR}/ImguiFacetDetails.cpp
 
         ${INTERFACE_DIR}/ImguiGeometryViewer.cpp
         ${CPP_DIR_SRC_SHARED}/Facet_shared.cpp
